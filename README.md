@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hockey App Web
 
-## Getting Started
+Next.js frontend for the hockey player development app.
 
-First, run the development server:
+This repo is the mobile-first web client. It handles Google sign-in with Auth.js and talks to the separate Fastify API in `hockey-app-service`.
+
+## Tech Stack
+
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- Auth.js (`next-auth` v5)
+- Prisma (shared Postgres schema with the backend)
+
+## Setup
+
+Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a local environment file:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Required values:
 
-## Learn More
+- `DATABASE_URL` — same Postgres database as `hockey-app-service`
+- `AUTH_SECRET` — must match the backend service
+- `AUTH_URL` — frontend URL, e.g. `http://localhost:3000`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth web client
+- `NEXT_PUBLIC_API_URL` — Fastify API URL, e.g. `http://localhost:3001`
 
-To learn more about Next.js, take a look at the following resources:
+Generate the Prisma client:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn db:generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Database migrations are owned by `hockey-app-service`. Run migrations there, not in this repo.
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Start the frontend:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+yarn dev
+```
+
+Start the API separately from `hockey-app-service`:
+
+```bash
+yarn dev
+```
+
+Then open:
+
+- Public home: `http://localhost:3000/`
+- Protected test route: `http://localhost:3000/dashboard`
+
+## Auth Flow
+
+1. User clicks **Continue with Google** on `/`
+2. Auth.js completes Google OAuth and stores auth records in Postgres
+3. Auth.js creates a JWT session signed with `AUTH_SECRET`
+4. `/dashboard` reads the JWT and calls `GET /api/auth/me` on the Fastify API
+5. The backend validates the JWT and creates/links the app `AppUser`
+
+Only `/` and `/api/auth/*` are public. All other routes require sign-in.
+
+## Scripts
+
+```bash
+yarn dev           # Start Next.js dev server
+yarn build         # Production build
+yarn start         # Run production server
+yarn typecheck     # Run TypeScript checks
+yarn lint          # Run ESLint
+yarn lint:fix      # Run ESLint with auto-fix
+yarn format        # Format files with Prettier
+yarn format:check  # Check Prettier formatting
+yarn knip          # Check for unused files/dependencies
+yarn test          # Run tests once
+yarn test:watch    # Run tests in watch mode
+yarn verify        # Run typecheck, lint, format check, knip, and tests
+yarn db:generate   # Generate Prisma client
+yarn db:studio     # Open Prisma Studio
+```
+
+## Google OAuth Redirect URI
+
+For local development, configure this redirect URI in Google Cloud Console:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```

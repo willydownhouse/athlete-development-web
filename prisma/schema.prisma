@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  parent
+  player
+  coach
+}
+
+enum EventCategory {
+  training
+  competition
+  recovery
+  health
+  nutrition
+  mood
+  measurement
+  note
+  travel
+  equipment
+  other
+}
+
+enum EventSource {
+  chat
+  form
+  voice
+  manual
+}
+
+enum EventIntensity {
+  light
+  moderate
+  hard
+}
+
+// Auth.js identity (Google OAuth, sessions). Table: auth_users.
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  appUser       AppUser?
+
+  @@map("auth_users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// App product user (athletes, events, chat). Table: users.
+model AppUser {
+  id         String   @id @default(uuid()) @db.Uuid
+  authUserId String?  @unique @map("auth_user_id")
+  email      String   @unique
+  name       String?
+  role       UserRole @default(parent)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  authUser User?     @relation(fields: [authUserId], references: [id], onDelete: SetNull)
+  athletes Athlete[]
+
+  @@map("users")
+}
+
+model Sport {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  athletes   Athlete[]
+  eventTypes EventType[]
+  events     Event[]
+
+  @@map("sports")
+}
+
+model EventType {
+  id        String        @id @default(uuid()) @db.Uuid
+  sportId   String?       @map("sport_id") @db.Uuid
+  category  EventCategory
+  slug      String
+  name      String
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  sport  Sport?  @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@unique([sportId, slug])
+  @@index([sportId])
+  @@index([category])
+  @@map("event_types")
+}
+
+model Athlete {
+  id           String    @id @default(uuid()) @db.Uuid
+  ownerUserId  String    @map("owner_user_id") @db.Uuid
+  focusSportId String    @map("focus_sport_id") @db.Uuid
+  name         String
+  birthYear    Int?      @map("birth_year")
+  heightCm     Int?      @map("height_cm")
+  weightKg     Int?      @map("weight_kg")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  owner      AppUser         @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  focusSport Sport           @relation(fields: [focusSportId], references: [id], onDelete: Restrict)
+  profile    AthleteProfile?
+  events     Event[]
+
+  @@index([ownerUserId])
+  @@index([ownerUserId, deletedAt])
+  @@index([focusSportId])
+  @@map("athletes")
+}
+
+model AthleteProfile {
+  id                  String   @id @default(uuid()) @db.Uuid
+  athleteId           String   @unique @map("athlete_id") @db.Uuid
+  teamName            String?  @map("team_name")
+  level               String?
+  strengths           Json?
+  developmentAreas    Json?    @map("development_areas")
+  trainingEnvironment Json?    @map("training_environment")
+  injuryNotes         String?  @map("injury_notes") @db.Text
+  motivationNotes     String?  @map("motivation_notes") @db.Text
+  parentObservations  String?  @map("parent_observations") @db.Text
+  sportSpecificData   Json?    @map("sport_specific_data")
+  aiProfileSummary    String?  @map("ai_profile_summary") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@map("athlete_profiles")
+}
+
+model Event {
+  id              String          @id @default(uuid()) @db.Uuid
+  athleteId       String          @map("athlete_id") @db.Uuid
+  eventTypeId     String          @map("event_type_id") @db.Uuid
+  sportId         String?         @map("sport_id") @db.Uuid
+  category        EventCategory
+  title           String?
+  description     String?
+  occurredAt      DateTime        @map("occurred_at")
+  durationMinutes Int?            @map("duration_minutes")
+  intensity       EventIntensity?
+  source          EventSource
+  originalInput   String?         @map("original_input") @db.Text
+  structuredData  Json?           @map("structured_data")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  athlete   Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  eventType EventType @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
+  sport     Sport?    @relation(fields: [sportId], references: [id], onDelete: SetNull)
+
+  @@index([athleteId, occurredAt])
+  @@index([athleteId, category])
+  @@index([eventTypeId])
+  @@index([sportId])
+  @@map("events")
+}

@@ -6,10 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "knip": "knip",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "concurrently -n typecheck,lint,format,knip,test -c blue,green,cyan,yellow,magenta \"yarn typecheck\" \"yarn lint\" \"yarn format:check\" \"yarn knip\" \"yarn test\"",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@auth/core": "^0.41.3",
+    "@auth/prisma-adapter": "^2.11.3",
+    "@prisma/client": "^6.5.0",
     "next": "16.2.11",
+    "next-auth": "5.0.0-beta.32",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -18,9 +32,19 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "eslint-config-prettier": "^10.1.8",
+    "knip": "^6.29.0",
+    "prettier": "^3.9.6",
+    "prisma": "^6.5.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
