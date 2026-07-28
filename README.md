@@ -41,7 +41,7 @@ Generate the Prisma client:
 yarn db:generate
 ```
 
-This first syncs an auth-only Prisma schema from `hockey-app-service`, then generates the client. Database migrations are owned by `hockey-app-service`. Run migrations there, not in this repo.
+This generates the Prisma client from the committed web schema and is safe to run in CI, where only the web repo is checked out. Database migrations are owned by `hockey-app-service`. Run migrations there, not in this repo.
 
 ### Web Prisma schema
 
@@ -55,6 +55,12 @@ The web Prisma schema is intentionally not a full copy of the backend schema. It
 The sync script copies those models from `hockey-app-service/prisma/schema.prisma` and removes backend-only relations from the generated web schema. For example, the backend `User` model has an `appUser AppUser?` relation so the service can link Auth.js identities to product users, but the web app does not need the `AppUser` model to run Auth.js.
 
 Keep Auth.js Prisma field names such as `userId` intact for adapter compatibility. Database column names can still use project naming through Prisma `@map(...)`, for example `userId @map("auth_user_id")`.
+
+When working locally with both repos checked out as siblings, run this to refresh the web schema from the backend schema and regenerate the client:
+
+```bash
+yarn db:generate:synced
+```
 
 ## Development
 
@@ -102,7 +108,8 @@ yarn test:watch    # Run tests in watch mode
 yarn verify        # Run typecheck, lint, format check, knip, and tests
 yarn db:sync-schema   # Sync auth-only Prisma schema from hockey-app-service
 yarn db:check-schema  # Check that the synced Prisma schema is up to date
-yarn db:generate      # Sync schema and generate Prisma client
+yarn db:generate      # Generate Prisma client from the committed web schema
+yarn db:generate:synced  # Sync schema and generate Prisma client locally
 yarn db:studio     # Open Prisma Studio
 ```
 
