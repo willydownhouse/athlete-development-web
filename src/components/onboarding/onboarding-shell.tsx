@@ -5,15 +5,10 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
-import type { Athlete } from "@/lib/types";
 
-import { athleteInitials } from "./athlete-meta";
-
-type DashboardShellProps = {
+type OnboardingShellProps = {
   userEmail: string;
   isAdmin?: boolean;
-  athletes: Athlete[];
-  selectedAthlete: Athlete | null;
   children: React.ReactNode;
 };
 
@@ -39,16 +34,9 @@ function navLinkClass(active: boolean): string {
   }`;
 }
 
-export function DashboardShell({
-  userEmail,
-  isAdmin = false,
-  athletes,
-  selectedAthlete,
-  children,
-}: DashboardShellProps) {
+export function OnboardingShell({ userEmail, isAdmin = false, children }: OnboardingShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const canSwitchAthletes = athletes.length > 1;
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -92,7 +80,9 @@ export function DashboardShell({
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">App</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Onboarding
+            </p>
             <p className="mt-1 text-lg font-semibold text-white">Athlete Development Service</p>
           </div>
           <button
@@ -127,35 +117,6 @@ export function DashboardShell({
               </Link>
             ) : null}
           </nav>
-
-          {canSwitchAthletes ? (
-            <div className="mt-6">
-              <p className="px-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                Athletes
-              </p>
-              <div className="mt-2 space-y-1">
-                {athletes.map((athlete) => {
-                  const selected = athlete.id === selectedAthlete?.id;
-
-                  return (
-                    <Link
-                      key={athlete.id}
-                      href={`/dashboard?athleteId=${athlete.id}`}
-                      onClick={closeMobile}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-white/5 ${
-                        selected ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
-                      }`}
-                    >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
-                        {athleteInitials(athlete.name)}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
@@ -177,7 +138,7 @@ export function DashboardShell({
           </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">Athlete Development Service</p>
-            <p className="truncate text-xs text-zinc-500">Today</p>
+            <p className="truncate text-xs text-zinc-500">Onboarding</p>
           </div>
         </header>
 
