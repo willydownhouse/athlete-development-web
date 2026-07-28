@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "concurrently -n typecheck,lint,format,knip,test -c blue,green,cyan,yellow,magenta \"yarn typecheck\" \"yarn lint\" \"yarn format:check\" \"yarn knip\" \"yarn test\"",
-    "db:generate": "prisma generate",
+    "db:sync-schema": "node scripts/sync-auth-schema.mjs",
+    "db:check-schema": "node scripts/sync-auth-schema.mjs --check",
+    "db:generate": "yarn db:sync-schema && prisma generate",
     "db:studio": "prisma studio"
   },
   "dependencies": {
