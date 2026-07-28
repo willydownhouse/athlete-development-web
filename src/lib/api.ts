@@ -1,8 +1,10 @@
+import type { UserRole } from "./types";
+
 export type AppUser = {
   id: string;
   email: string;
   name: string | null;
-  role: "parent" | "player" | "coach";
+  role: UserRole;
 };
 
 export function getApiBaseUrl(): string {

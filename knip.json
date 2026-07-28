@@ -7,7 +7,9 @@
     "src/auth.ts",
     "src/app/**/page.tsx",
     "src/app/**/layout.tsx",
-    "src/app/**/route.ts"
+    "src/app/**/route.ts",
+    "src/app/admin/actions.ts",
+    "src/app/actions/auth.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": ["tailwindcss", "@tailwindcss/postcss"],

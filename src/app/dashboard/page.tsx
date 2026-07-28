@@ -82,6 +82,21 @@ export default async function DashboardPage() {
         )}
       </section>
 
+      {appUser?.role === "admin" ? (
+        <section className="rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Admin</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Manage sports, event types, and metric definitions.
+          </p>
+          <Link
+            href="/admin"
+            className="mt-4 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            Open admin dashboard
+          </Link>
+        </section>
+      ) : null}
+
       <Link href="/" className="text-sm font-medium text-slate-600 hover:text-slate-900">
         Back to home
       </Link>

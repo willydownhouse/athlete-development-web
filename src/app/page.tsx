@@ -12,7 +12,9 @@ export default async function HomePage() {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center gap-8 px-6 py-16">
       <div className="space-y-4">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Hockey App</p>
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
+          Athlete Development Service
+        </p>
         <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
           Build your player&apos;s development memory
         </h1>

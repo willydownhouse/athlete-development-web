@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hockey App",
-  description: "AI-assisted hockey player development for parents and young athletes.",
+  title: "Athlete Development Service",
+  description: "AI-assisted athlete development for parents, coaches, and young athletes.",
 };
 
 export default function RootLayout({
