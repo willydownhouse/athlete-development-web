@@ -83,7 +83,7 @@ export function OnboardingShell({ userEmail, isAdmin = false, children }: Onboar
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Onboarding
             </p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Service</p>
+            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
           </div>
           <button
             type="button"
@@ -137,7 +137,7 @@ export function OnboardingShell({ userEmail, isAdmin = false, children }: Onboar
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Athlete Development Service</p>
+            <p className="truncate text-sm font-semibold text-white">Athlete Development Center</p>
             <p className="truncate text-xs text-zinc-500">Onboarding</p>
           </div>
         </header>

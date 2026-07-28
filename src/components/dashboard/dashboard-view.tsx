@@ -1,4 +1,4 @@
-import type { Athlete } from "@/lib/types";
+import type { Athlete, EventType } from "@/lib/types";
 
 import { AiInsightCard } from "./ai-insight-card";
 import { DashboardBottomNav } from "./bottom-nav";
@@ -13,6 +13,8 @@ type DashboardViewProps = {
   isAdmin?: boolean;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
+  eventTypes: EventType[];
+  eventTypesError?: string | null;
   loadError?: string | null;
 };
 
@@ -21,6 +23,8 @@ export function DashboardView({
   isAdmin = false,
   athletes,
   selectedAthlete,
+  eventTypes,
+  eventTypesError,
   loadError,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
@@ -34,7 +38,7 @@ export function DashboardView({
     >
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-6">
         <p className="mb-6 hidden text-right text-sm font-medium tracking-wide text-zinc-300 lg:block">
-          Athlete Development Service
+          Athlete Development Center
         </p>
 
         <DashboardHeader selectedAthlete={selectedAthlete} />
@@ -50,13 +54,13 @@ export function DashboardView({
             <>
               <AiInsightCard />
               <TodaysEventsCard />
-              <QuickLogCard />
+              <QuickLogCard eventTypes={eventTypes} loadError={eventTypesError} />
               <ThisWeekCard />
             </>
           ) : (
             <>
               <TodaysEventsCard empty />
-              <QuickLogCard />
+              <QuickLogCard eventTypes={eventTypes} loadError={eventTypesError} />
               <ThisWeekCard empty />
             </>
           )}

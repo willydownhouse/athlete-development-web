@@ -30,15 +30,6 @@ export const MOCK_TODAY_EVENTS: MockTodayEvent[] = [
   },
 ];
 
-export const MOCK_QUICK_LOG_ACTIONS = [
-  "Ice",
-  "Game",
-  "Shooting",
-  "Skating",
-  "Recovery",
-  "Note",
-] as const;
-
 export const MOCK_WEEK_DAYS: MockWeekDay[] = [
   { day: "Mon", label: "Ice", tone: "ice", height: 88 },
   { day: "Tue", label: "Rec", tone: "recovery", height: 36 },

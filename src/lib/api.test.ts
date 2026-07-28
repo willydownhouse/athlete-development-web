@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchAthletes, fetchCurrentAppUser, getApiBaseUrl } from "./api";
+import { fetchAthletes, fetchCurrentAppUser, fetchEventTypes, getApiBaseUrl } from "./api";
 
 describe("api client", () => {
   afterEach(() => {
@@ -68,6 +68,34 @@ describe("api client", () => {
     });
     expect(athletes).toHaveLength(1);
     expect(athletes[0]?.name).toBe("Leo Laine");
+  });
+
+  it("fetches public event types, optionally filtered by sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "33333333-3333-4333-8333-333333333333",
+            name: "Ice practice",
+            slug: "ice_practice",
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const sportId = "44444444-4444-4444-8444-444444444444";
+    const eventTypes = await fetchEventTypes(sportId);
+
+    expect(fetchMock).toHaveBeenCalledWith(`http://api.test/api/event-types?sportId=${sportId}`, {
+      cache: "no-store",
+    });
+    expect(eventTypes).toHaveLength(1);
+    expect(eventTypes[0]?.name).toBe("Ice practice");
   });
 
   it("throws when the API responds with an error", async () => {
