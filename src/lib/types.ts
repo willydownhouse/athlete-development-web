@@ -1,5 +1,45 @@
 export type UserRole = "owner" | "athlete" | "coach" | "admin";
 
+type AthleteProfile = {
+  id: string;
+  athleteId: string;
+  teamName: string | null;
+  level: string | null;
+  strengths: unknown | null;
+  developmentAreas: unknown | null;
+  trainingEnvironment: unknown | null;
+  injuryNotes: string | null;
+  motivationNotes: string | null;
+  parentObservations: string | null;
+  sportSpecificData: unknown | null;
+  aiProfileSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Athlete = {
+  id: string;
+  ownerUserId: string;
+  focusSportId: string;
+  name: string;
+  birthYear: number | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  createdAt: string;
+  deletedAt: string | null;
+  focusSport: Sport;
+  profile: AthleteProfile | null;
+};
+
+export type AthleteListResponse = {
+  items: Athlete[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
 export type EventCategory =
   | "training"
   | "competition"

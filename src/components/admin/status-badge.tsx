@@ -6,7 +6,7 @@ export function StatusBadge({ active }: StatusBadgeProps) {
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
+        active ? "bg-emerald-500/15 text-emerald-300" : "bg-white/10 text-zinc-400"
       }`}
     >
       {active ? "Active" : "Inactive"}

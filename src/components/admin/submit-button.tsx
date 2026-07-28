@@ -9,10 +9,10 @@ type SubmitButtonProps = {
 };
 
 const variantClasses = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400",
-  danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400",
+  primary: "bg-[#b7d7ec] text-[#1a2430] hover:bg-[#c5dff0] disabled:opacity-50",
+  danger: "bg-red-700 text-white hover:bg-red-600 disabled:opacity-50",
   secondary:
-    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:bg-slate-100",
+    "border border-white/10 bg-[#1c222c] text-zinc-200 hover:bg-[#252b36] disabled:opacity-50",
 };
 
 export function SubmitButton({ children, variant = "primary", className = "" }: SubmitButtonProps) {
@@ -22,7 +22,7 @@ export function SubmitButton({ children, variant = "primary", className = "" }: 
     <button
       type="submit"
       disabled={pending}
-      className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed sm:w-auto sm:py-2 ${variantClasses[variant]} ${className}`}
+      className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed sm:w-auto sm:py-2 ${variantClasses[variant]} ${className}`}
     >
       {pending ? "Saving…" : children}
     </button>

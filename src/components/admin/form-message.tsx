@@ -4,20 +4,20 @@ type FormMessageProps = {
 };
 
 export function FormMessage({ error, success }: FormMessageProps) {
-  if (!error && !success) {
-    return null;
-  }
-
   if (error) {
     return (
-      <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      <p className="rounded-xl border border-red-500/30 bg-[#2a1717] px-3 py-2 text-sm text-red-300">
         {error}
       </p>
     );
   }
 
+  if (!success) {
+    return null;
+  }
+
   return (
-    <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+    <p className="rounded-xl border border-emerald-500/30 bg-[#14241a] px-3 py-2 text-sm text-emerald-300">
       {success}
     </p>
   );

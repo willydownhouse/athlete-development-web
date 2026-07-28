@@ -10,7 +10,7 @@ import { METRIC_VALUE_TYPES, type Sport } from "@/lib/types";
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type CreateMetricDefinitionFormProps = {
   sports: Sport[];
@@ -25,7 +25,7 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Key</span>
+          <span className="font-medium text-zinc-300">Key</span>
           <input
             name="key"
             required
@@ -35,11 +35,11 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Name</span>
+          <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Shot count" className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Value type</span>
+          <span className="font-medium text-zinc-300">Value type</span>
           <select name="valueType" required className={inputClassName}>
             {METRIC_VALUE_TYPES.map((valueType) => (
               <option key={valueType} value={valueType}>
@@ -49,11 +49,11 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Canonical unit</span>
+          <span className="font-medium text-zinc-300">Canonical unit</span>
           <input name="canonicalUnit" placeholder="shots" className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Sport</span>
+          <span className="font-medium text-zinc-300">Sport</span>
           <select name="sportId" defaultValue="" className={inputClassName}>
             <option value="general">General (all sports)</option>
             {sports.map((sport) => (
@@ -66,7 +66,7 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-slate-700">Description</span>
+        <span className="font-medium text-zinc-300">Description</span>
         <textarea
           name="description"
           rows={2}
@@ -75,8 +75,13 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input name="active" type="checkbox" defaultChecked className="rounded border-slate-300" />
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <input
+          name="active"
+          type="checkbox"
+          defaultChecked
+          className="rounded border-white/20 bg-[#1c222c]"
+        />
         Active
       </label>
 

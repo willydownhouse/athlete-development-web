@@ -36,20 +36,20 @@ export default async function AdminEventTypesPage({ searchParams }: AdminEventTy
 
       <EventTypeFilters sports={sports} />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-medium text-slate-900">Create event type</h2>
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-white">Create event type</h2>
         <div className="mt-4">
           <CreateEventTypeForm sports={sports} />
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
-          <h2 className="text-lg font-medium text-slate-900">Event types ({eventTypes.length})</h2>
+      <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+        <div className="border-b border-white/10 px-4 py-4 sm:px-6">
+          <h2 className="text-lg font-medium text-white">Event types ({eventTypes.length})</h2>
         </div>
 
         {eventTypes.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-slate-600 sm:px-6">
+          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">
             No event types match the filters.
           </p>
         ) : (

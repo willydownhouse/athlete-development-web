@@ -29,10 +29,8 @@ export function AdminNav({ onNavigate }: AdminNavProps) {
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-              isActive
-                ? "bg-slate-800 text-white"
-                : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+            className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              isActive ? "bg-white/5 text-white" : "text-zinc-300 hover:bg-white/5 hover:text-white"
             }`}
           >
             {item.label}

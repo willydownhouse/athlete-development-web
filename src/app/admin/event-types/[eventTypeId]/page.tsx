@@ -61,7 +61,7 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
       <div className="space-y-3">
         <Link
           href="/admin/event-types"
-          className="inline-flex text-sm font-medium text-slate-600 hover:text-slate-900"
+          className="inline-flex text-sm font-medium text-zinc-400 hover:text-white"
         >
           ← Back to event types
         </Link>
@@ -69,19 +69,19 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
           title={eventType.name}
           description={`Manage event type settings and allowed metrics for ${eventType.slug}.`}
         />
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
           <StatusBadge active={eventType.active} />
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 capitalize">
+          <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-zinc-300 capitalize">
             {formatCategoryLabel(eventType.category)}
           </span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5">
+          <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-zinc-300">
             {eventType.sport?.name ?? "General"}
           </span>
         </div>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-medium text-slate-900">Event type settings</h2>
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-white">Event type settings</h2>
         <div className="mt-4">
           <UpdateEventTypeForm eventType={eventType} sports={sports} />
         </div>

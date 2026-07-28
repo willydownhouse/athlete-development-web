@@ -10,7 +10,7 @@ import { EVENT_CATEGORIES, formatCategoryLabel, type EventType, type Sport } fro
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type UpdateEventTypeFormProps = {
   eventType: EventType;
@@ -27,7 +27,7 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Slug</span>
+          <span className="font-medium text-zinc-300">Slug</span>
           <input
             name="slug"
             required
@@ -37,11 +37,11 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Name</span>
+          <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={eventType.name} className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Category</span>
+          <span className="font-medium text-zinc-300">Category</span>
           <select name="category" defaultValue={eventType.category} className={inputClassName}>
             {EVENT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
@@ -51,7 +51,7 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Sport</span>
+          <span className="font-medium text-zinc-300">Sport</span>
           <select
             name="sportId"
             defaultValue={eventType.sportId ?? "general"}
@@ -68,13 +68,13 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
       </div>
 
       <input type="hidden" name="active" value="false" />
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
         <input
           name="active"
           type="checkbox"
           value="true"
           defaultChecked={eventType.active}
-          className="rounded border-slate-300"
+          className="rounded border-white/20 bg-[#1c222c]"
         />
         Active
       </label>

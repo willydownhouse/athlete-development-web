@@ -38,48 +38,48 @@ export default async function AdminMetricDefinitionsPage({
 
       <MetricDefinitionFilters sports={sports} />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-medium text-slate-900">Create metric definition</h2>
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-white">Create metric definition</h2>
         <div className="mt-4">
           <CreateMetricDefinitionForm sports={sports} />
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
-          <h2 className="text-lg font-medium text-slate-900">
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+        <div className="border-b border-white/10 px-4 py-4 sm:px-6">
+          <h2 className="text-lg font-medium text-white">
             Metric definitions ({metricDefinitions.length})
           </h2>
         </div>
 
         {metricDefinitions.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-slate-600 sm:px-6">
+          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">
             No metric definitions match the filters.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-200">
+          <ul className="divide-y divide-white/10">
             {metricDefinitions.map((metric) => (
               <li key={metric.id} className="px-4 py-5 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-slate-900">{metric.name}</h3>
+                      <h3 className="font-medium text-white">{metric.name}</h3>
                       <StatusBadge active={metric.active} />
                     </div>
-                    <p className="mt-1 font-mono text-sm text-slate-500">{metric.key}</p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 font-mono text-sm text-zinc-500">{metric.key}</p>
+                    <p className="mt-1 text-sm text-zinc-400">
                       {metric.valueType}
                       {metric.canonicalUnit ? ` · ${metric.canonicalUnit}` : ""}
                       {" · "}
                       {metric.sport?.name ?? "General"}
                     </p>
                     {metric.description ? (
-                      <p className="mt-2 text-sm text-slate-600">{metric.description}</p>
+                      <p className="mt-2 text-sm text-zinc-400">{metric.description}</p>
                     ) : null}
                   </div>
                   <Link
                     href={`/admin/event-types?active=true`}
-                    className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-800"
+                    className="shrink-0 text-sm font-medium text-[#9ec9e8] hover:text-[#b7d7ec]"
                   >
                     Map to event types →
                   </Link>

@@ -10,7 +10,7 @@ import { METRIC_VALUE_TYPES, type MetricDefinition, type Sport } from "@/lib/typ
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type UpdateMetricDefinitionFormProps = {
   metric: MetricDefinition;
@@ -27,7 +27,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Key</span>
+          <span className="font-medium text-zinc-300">Key</span>
           <input
             name="key"
             required
@@ -37,11 +37,11 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Name</span>
+          <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={metric.name} className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Value type</span>
+          <span className="font-medium text-zinc-300">Value type</span>
           <select name="valueType" defaultValue={metric.valueType} className={inputClassName}>
             {METRIC_VALUE_TYPES.map((valueType) => (
               <option key={valueType} value={valueType}>
@@ -51,7 +51,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Canonical unit</span>
+          <span className="font-medium text-zinc-300">Canonical unit</span>
           <input
             name="canonicalUnit"
             defaultValue={metric.canonicalUnit ?? ""}
@@ -59,7 +59,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Sport</span>
+          <span className="font-medium text-zinc-300">Sport</span>
           <select
             name="sportId"
             defaultValue={metric.sportId ?? "general"}
@@ -76,7 +76,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-slate-700">Description</span>
+        <span className="font-medium text-zinc-300">Description</span>
         <textarea
           name="description"
           rows={2}
@@ -86,13 +86,13 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
       </label>
 
       <input type="hidden" name="active" value="false" />
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
         <input
           name="active"
           type="checkbox"
           value="true"
           defaultChecked={metric.active}
-          className="rounded border-slate-300"
+          className="rounded border-white/20 bg-[#1c222c]"
         />
         Active
       </label>

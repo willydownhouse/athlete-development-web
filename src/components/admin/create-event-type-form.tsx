@@ -10,7 +10,7 @@ import { EVENT_CATEGORIES, formatCategoryLabel, type Sport } from "@/lib/types";
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type CreateEventTypeFormProps = {
   sports: Sport[];
@@ -25,7 +25,7 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Slug</span>
+          <span className="font-medium text-zinc-300">Slug</span>
           <input
             name="slug"
             required
@@ -35,11 +35,11 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Name</span>
+          <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Ice practice" className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Category</span>
+          <span className="font-medium text-zinc-300">Category</span>
           <select name="category" required className={inputClassName}>
             {EVENT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
@@ -49,7 +49,7 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Sport</span>
+          <span className="font-medium text-zinc-300">Sport</span>
           <select name="sportId" defaultValue="" className={inputClassName}>
             <option value="general">General (all sports)</option>
             {sports.map((sport) => (
@@ -61,8 +61,13 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
         </label>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input name="active" type="checkbox" defaultChecked className="rounded border-slate-300" />
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <input
+          name="active"
+          type="checkbox"
+          defaultChecked
+          className="rounded border-white/20 bg-[#1c222c]"
+        />
         Active
       </label>
 

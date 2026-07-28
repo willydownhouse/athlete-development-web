@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchCurrentAppUser, getApiBaseUrl } from "./api";
+import { fetchAthletes, fetchCurrentAppUser, getApiBaseUrl } from "./api";
 
 describe("api client", () => {
   afterEach(() => {
@@ -38,6 +38,36 @@ describe("api client", () => {
       cache: "no-store",
     });
     expect(appUser.email).toBe("parent@example.com");
+  });
+
+  it("fetches athletes for the logged-in user", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            name: "Leo Laine",
+          },
+        ],
+        pagination: { limit: 100, offset: 0, total: 1 },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const athletes = await fetchAthletes("test-token");
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/athletes?limit=100", {
+      headers: {
+        Authorization: "Bearer test-token",
+      },
+      cache: "no-store",
+    });
+    expect(athletes).toHaveLength(1);
+    expect(athletes[0]?.name).toBe("Leo Laine");
   });
 
   it("throws when the API responds with an error", async () => {

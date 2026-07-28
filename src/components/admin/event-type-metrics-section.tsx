@@ -15,7 +15,7 @@ import type { EventTypeMetricDefinition, MetricDefinition } from "@/lib/types";
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type AddEventTypeMetricFormProps = {
   eventTypeId: string;
@@ -27,7 +27,7 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
 
   if (availableMetrics.length === 0) {
     return (
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-zinc-400">
         All compatible metrics are already allowed for this event type.
       </p>
     );
@@ -40,7 +40,7 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-medium text-slate-700">Metric</span>
+          <span className="font-medium text-zinc-300">Metric</span>
           <select name="metricDefinitionId" required className={inputClassName}>
             <option value="">Select a metric</option>
             {availableMetrics.map((metric) => (
@@ -51,13 +51,13 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Sort order</span>
+          <span className="font-medium text-zinc-300">Sort order</span>
           <input name="sortOrder" type="number" defaultValue={0} className={inputClassName} />
         </label>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input name="required" type="checkbox" className="rounded border-slate-300" />
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <input name="required" type="checkbox" className="rounded border-white/20 bg-[#1c222c]" />
         Required metric
       </label>
 
@@ -75,12 +75,12 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
   const [state, formAction] = useActionState(updateEventTypeMetricAction, initialState);
 
   return (
-    <li className="rounded-xl border border-slate-200 p-3 sm:p-4">
+    <li className="rounded-xl border border-white/10 bg-[#1c222c] p-3 sm:p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium text-slate-900">{mapping.metricDefinition.name}</p>
-          <p className="font-mono text-sm text-slate-500">{mapping.metricDefinition.key}</p>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="font-medium text-white">{mapping.metricDefinition.name}</p>
+          <p className="font-mono text-sm text-zinc-500">{mapping.metricDefinition.key}</p>
+          <p className="mt-1 text-sm text-zinc-400">
             {mapping.metricDefinition.valueType}
             {mapping.metricDefinition.canonicalUnit
               ? ` · ${mapping.metricDefinition.canonicalUnit}`
@@ -96,7 +96,7 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Sort order</span>
+            <span className="font-medium text-zinc-300">Sort order</span>
             <input
               name="sortOrder"
               type="number"
@@ -104,12 +104,12 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
               className={`${inputClassName} w-28`}
             />
           </label>
-          <label className="flex items-center gap-2 pb-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 pb-2 text-sm text-zinc-300">
             <input
               name="required"
               type="checkbox"
               defaultChecked={mapping.required}
-              className="rounded border-slate-300"
+              className="rounded border-white/20 bg-[#1c222c]"
             />
             Required
           </label>
@@ -139,18 +139,18 @@ export function EventTypeMetricsSection({
 }: EventTypeMetricsSectionProps) {
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-medium text-slate-900">Allow metric</h2>
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-white">Allow metric</h2>
         <div className="mt-4">
           <AddEventTypeMetricForm eventTypeId={eventTypeId} availableMetrics={availableMetrics} />
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-medium text-slate-900">Allowed metrics ({mappings.length})</h2>
+      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-white">Allowed metrics ({mappings.length})</h2>
 
         {mappings.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-600">No metrics allowed yet.</p>
+          <p className="mt-4 text-sm text-zinc-400">No metrics allowed yet.</p>
         ) : (
           <ul className="mt-4 space-y-4">
             {mappings.map((mapping) => (

@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
+import type { Athlete } from "@/lib/types";
 
-import { AdminNav } from "./admin-nav";
+import { athleteInitials } from "./athlete-meta";
 
-type AdminShellProps = {
+type DashboardShellProps = {
   userEmail: string;
+  isAdmin?: boolean;
+  athletes: Athlete[];
+  selectedAthlete: Athlete | null;
   children: React.ReactNode;
 };
 
@@ -28,8 +32,15 @@ function CloseIcon() {
   );
 }
 
-export function AdminShell({ userEmail, children }: AdminShellProps) {
+export function DashboardShell({
+  userEmail,
+  isAdmin = false,
+  athletes,
+  selectedAthlete,
+  children,
+}: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const canSwitchAthletes = athletes.length > 1;
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -73,7 +84,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Admin</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">App</p>
             <p className="mt-1 text-lg font-semibold text-white">Athlete Development Service</p>
           </div>
           <button
@@ -87,18 +98,50 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <AdminNav onNavigate={closeMobile} />
+          <nav className="space-y-1">
+            {isAdmin ? (
+              <Link
+                href="/admin"
+                onClick={closeMobile}
+                className="block rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white"
+              >
+                Admin
+              </Link>
+            ) : null}
+          </nav>
+
+          {canSwitchAthletes ? (
+            <div className={isAdmin ? "mt-6" : undefined}>
+              <p className="px-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                Athletes
+              </p>
+              <div className="mt-2 space-y-1">
+                {athletes.map((athlete) => {
+                  const selected = athlete.id === selectedAthlete?.id;
+
+                  return (
+                    <Link
+                      key={athlete.id}
+                      href={`/dashboard?athleteId=${athlete.id}`}
+                      onClick={closeMobile}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-white/5 ${
+                        selected ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
+                      }`}
+                    >
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
+                        {athleteInitials(athlete.name)}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
           <p className="truncate text-xs text-zinc-500">{userEmail}</p>
-          <Link
-            href="/dashboard"
-            className="block text-sm text-zinc-300 transition hover:text-white"
-            onClick={closeMobile}
-          >
-            Back to app
-          </Link>
           <SignOutButton className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]" />
         </div>
       </aside>
@@ -115,14 +158,12 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Admin</p>
-            <p className="truncate text-xs text-zinc-500">Athlete Development Service</p>
+            <p className="truncate text-sm font-semibold text-white">Athlete Development Service</p>
+            <p className="truncate text-xs text-zinc-500">Today</p>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-          {children}
-        </main>
+        {children}
       </div>
     </div>
   );

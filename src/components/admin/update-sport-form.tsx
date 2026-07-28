@@ -10,7 +10,7 @@ import type { Sport } from "@/lib/types";
 const initialState: ActionState = {};
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 type UpdateSportFormProps = {
   sport: Sport;
@@ -26,7 +26,7 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Slug</span>
+          <span className="font-medium text-zinc-300">Slug</span>
           <input
             name="slug"
             required
@@ -36,19 +36,19 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Name</span>
+          <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={sport.name} className={inputClassName} />
         </label>
       </div>
 
       <input type="hidden" name="active" value="false" />
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-zinc-300">
         <input
           name="active"
           type="checkbox"
           value="true"
           defaultChecked={sport.active}
-          className="rounded border-slate-300"
+          className="rounded border-white/20 bg-[#1c222c]"
         />
         Active
       </label>
