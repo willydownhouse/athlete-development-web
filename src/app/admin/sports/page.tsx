@@ -1,3 +1,4 @@
+import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateSportForm } from "@/components/admin/create-sport-form";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -11,17 +12,15 @@ export default async function AdminSportsPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <PageHeader
-        title="Sports"
-        description="Create and manage sports available in the platform."
-      />
-
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Create sport</h2>
-        <div className="mt-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Sports"
+          description="Create and manage sports available in the platform."
+        />
+        <AdminCreateModal title="Create sport" buttonLabel="Create sport">
           <CreateSportForm />
-        </div>
-      </section>
+        </AdminCreateModal>
+      </div>
 
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">

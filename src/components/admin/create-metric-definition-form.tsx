@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
+import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
@@ -18,6 +19,13 @@ type CreateMetricDefinitionFormProps = {
 
 export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFormProps) {
   const [state, formAction] = useActionState(createMetricDefinitionAction, initialState);
+  const closeModal = useAdminCreateModalClose();
+
+  useEffect(() => {
+    if (state.success) {
+      closeModal?.();
+    }
+  }, [state.success, closeModal]);
 
   return (
     <form action={formAction} className="space-y-4">

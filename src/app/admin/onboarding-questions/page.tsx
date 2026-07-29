@@ -1,3 +1,4 @@
+import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateOnboardingQuestionForm } from "@/components/admin/create-onboarding-question-form";
 import { OnboardingQuestionFilters } from "@/components/admin/onboarding-question-filters";
 import { PageHeader } from "@/components/admin/page-header";
@@ -32,19 +33,17 @@ export default async function AdminOnboardingQuestionsPage({
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <PageHeader
-        title="Onboarding questions"
-        description="Configure common and sport-specific questions used in guided athlete onboarding."
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Onboarding questions"
+          description="Configure common and sport-specific questions used in guided athlete onboarding."
+        />
+        <AdminCreateModal title="Create onboarding question" buttonLabel="Create question">
+          <CreateOnboardingQuestionForm sports={sports} />
+        </AdminCreateModal>
+      </div>
 
       <OnboardingQuestionFilters sports={sports} />
-
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Create onboarding question</h2>
-        <div className="mt-4">
-          <CreateOnboardingQuestionForm sports={sports} />
-        </div>
-      </section>
 
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">

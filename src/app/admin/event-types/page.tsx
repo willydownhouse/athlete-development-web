@@ -1,3 +1,4 @@
+import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateEventTypeForm } from "@/components/admin/create-event-type-form";
 import { EventTypeFilters } from "@/components/admin/event-type-filters";
 import { EventTypeList } from "@/components/admin/event-type-list";
@@ -25,23 +26,19 @@ export default async function AdminEventTypesPage({ searchParams }: AdminEventTy
     }),
   ]);
 
-  console.log("eventTypes", eventTypes);
-
   return (
     <div className="space-y-6 sm:space-y-8">
-      <PageHeader
-        title="Event types"
-        description="Configure event types and manage allowed metrics per type."
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Event types"
+          description="Configure event types and manage allowed metrics per type."
+        />
+        <AdminCreateModal title="Create event type" buttonLabel="Create event type">
+          <CreateEventTypeForm sports={sports} />
+        </AdminCreateModal>
+      </div>
 
       <EventTypeFilters sports={sports} />
-
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Create event type</h2>
-        <div className="mt-4">
-          <CreateEventTypeForm sports={sports} />
-        </div>
-      </section>
 
       <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">

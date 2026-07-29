@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
+import { AdminCreateModal, useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import {
@@ -24,21 +25,20 @@ type AddEventTypeMetricFormProps = {
 
 function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeMetricFormProps) {
   const [state, formAction] = useActionState(createEventTypeMetricAction, initialState);
+  const closeModal = useAdminCreateModalClose();
 
-  if (availableMetrics.length === 0) {
-    return (
-      <p className="text-sm text-zinc-400">
-        All compatible metrics are already allowed for this event type.
-      </p>
-    );
-  }
+  useEffect(() => {
+    if (state.success) {
+      closeModal?.();
+    }
+  }, [state.success, closeModal]);
 
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="eventTypeId" value={eventTypeId} />
       <FormMessage error={state.error} success={state.success} />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
           <span className="font-medium text-zinc-300">Metric</span>
           <select name="metricDefinitionId" required className={inputClassName}>
@@ -140,14 +140,28 @@ export function EventTypeMetricsSection({
   return (
     <div className="space-y-6">
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Allow metric</h2>
-        <div className="mt-4">
-          <AddEventTypeMetricForm eventTypeId={eventTypeId} availableMetrics={availableMetrics} />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-medium text-white">Allowed metrics ({mappings.length})</h2>
+            <p className="mt-1 text-sm text-zinc-400">
+              Metrics available when logging this event type.
+            </p>
+          </div>
+          {availableMetrics.length > 0 ? (
+            <AdminCreateModal title="Allow metric" buttonLabel="Allow metric">
+              <AddEventTypeMetricForm
+                eventTypeId={eventTypeId}
+                availableMetrics={availableMetrics}
+              />
+            </AdminCreateModal>
+          ) : null}
         </div>
-      </section>
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Allowed metrics ({mappings.length})</h2>
+        {availableMetrics.length === 0 && mappings.length > 0 ? (
+          <p className="mt-4 text-sm text-zinc-400">
+            All compatible metrics are already allowed for this event type.
+          </p>
+        ) : null}
 
         {mappings.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-400">No metrics allowed yet.</p>

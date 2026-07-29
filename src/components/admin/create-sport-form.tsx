@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
+import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createSportAction, type ActionState } from "@/app/admin/actions";
@@ -13,6 +14,13 @@ const inputClassName =
 
 export function CreateSportForm() {
   const [state, formAction] = useActionState(createSportAction, initialState);
+  const closeModal = useAdminCreateModalClose();
+
+  useEffect(() => {
+    if (state.success) {
+      closeModal?.();
+    }
+  }, [state.success, closeModal]);
 
   return (
     <form action={formAction} className="space-y-4">

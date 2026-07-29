@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateMetricDefinitionForm } from "@/components/admin/create-metric-definition-form";
 import { MetricDefinitionFilters } from "@/components/admin/metric-definition-filters";
 import { PageHeader } from "@/components/admin/page-header";
@@ -31,19 +32,17 @@ export default async function AdminMetricDefinitionsPage({
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <PageHeader
-        title="Metric definitions"
-        description="Define queryable metrics used on events and mapped to event types."
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Metric definitions"
+          description="Define queryable metrics used on events and mapped to event types."
+        />
+        <AdminCreateModal title="Create metric definition" buttonLabel="Create metric">
+          <CreateMetricDefinitionForm sports={sports} />
+        </AdminCreateModal>
+      </div>
 
       <MetricDefinitionFilters sports={sports} />
-
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Create metric definition</h2>
-        <div className="mt-4">
-          <CreateMetricDefinitionForm sports={sports} />
-        </div>
-      </section>
 
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
