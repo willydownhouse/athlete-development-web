@@ -14,12 +14,34 @@ export function athleteInitials(name: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function ageGroupFromBirthYear(birthYear: number | null): string | null {
-  if (birthYear === null) {
+function ageFromDateOfBirth(dateOfBirth: string | null): number | null {
+  if (!dateOfBirth) {
     return null;
   }
 
-  const age = new Date().getFullYear() - birthYear;
+  const birthDate = new Date(dateOfBirth);
+
+  if (Number.isNaN(birthDate.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  return age;
+}
+
+function ageGroupFromDateOfBirth(dateOfBirth: string | null): string | null {
+  const age = ageFromDateOfBirth(dateOfBirth);
+
+  if (age === null) {
+    return null;
+  }
 
   if (age < 7) {
     return `U${age + 1}`;
@@ -45,7 +67,7 @@ function positionFromProfile(athlete: Athlete): string | null {
 }
 
 export function athleteSubtitle(athlete: Athlete, eventsThisWeek: number): string {
-  const level = athlete.profile?.level?.trim() || ageGroupFromBirthYear(athlete.birthYear);
+  const level = athlete.profile?.level?.trim() || ageGroupFromDateOfBirth(athlete.dateOfBirth);
   const position = positionFromProfile(athlete);
   const identity = [level, position].filter(Boolean).join(" ");
   const eventsLabel = `${eventsThisWeek} event${eventsThisWeek === 1 ? "" : "s"} this week`;

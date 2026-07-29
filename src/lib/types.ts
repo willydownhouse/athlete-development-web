@@ -22,7 +22,7 @@ export type Athlete = {
   ownerUserId: string;
   focusSportId: string;
   name: string;
-  birthYear: number | null;
+  dateOfBirth: string | null;
   heightCm: number | null;
   weightKg: number | null;
   createdAt: string;
@@ -117,6 +117,34 @@ export type OnboardingQuestion = {
   createdAt: string;
   updatedAt: string;
   sport: Sport | null;
+};
+
+export type OnboardingAnswer = {
+  id: string;
+  sessionId: string;
+  athleteId: string;
+  sportId: string;
+  questionId: string;
+  questionKey: string;
+  promptSnapshot: string;
+  rawAnswer: string;
+  structuredValue: unknown | null;
+  answeredAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OnboardingSession = {
+  id: string;
+  athleteId: string;
+  sportId: string;
+  status: "in_progress" | "completed" | "abandoned";
+  startedAt: string;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  sport: Sport;
+  answers?: OnboardingAnswer[];
 };
 
 export const EVENT_CATEGORIES: EventCategory[] = [

@@ -1,12 +1,10 @@
 import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateOnboardingQuestionForm } from "@/components/admin/create-onboarding-question-form";
 import { OnboardingQuestionFilters } from "@/components/admin/onboarding-question-filters";
+import { OnboardingQuestionList } from "@/components/admin/onboarding-question-list";
 import { PageHeader } from "@/components/admin/page-header";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { UpdateOnboardingQuestionForm } from "@/components/admin/update-onboarding-question-form";
 import { listAdminOnboardingQuestions, listAdminSports } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
-import { formatAnswerTypeLabel } from "@/lib/types";
 
 type AdminOnboardingQuestionsPageProps = {
   searchParams: Promise<{ sportId?: string; active?: string }>;
@@ -29,7 +27,9 @@ export default async function AdminOnboardingQuestionsPage({
     }),
   ]);
 
-  const sortedQuestions = [...questions].sort((a, b) => a.sortOrder - b.sortOrder);
+  const sortedQuestions = [...questions].sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.key.localeCompare(b.key),
+  );
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -45,7 +45,7 @@ export default async function AdminOnboardingQuestionsPage({
 
       <OnboardingQuestionFilters sports={sports} />
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+      <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">
             Onboarding questions ({sortedQuestions.length})
@@ -57,39 +57,7 @@ export default async function AdminOnboardingQuestionsPage({
             No onboarding questions match the filters.
           </p>
         ) : (
-          <ul className="divide-y divide-white/10">
-            {sortedQuestions.map((question) => (
-              <li key={question.id} className="px-4 py-5 sm:px-6">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-medium text-white">{question.prompt}</h3>
-                    <StatusBadge active={question.active} />
-                  </div>
-                  <p className="mt-1 font-mono text-sm text-zinc-500">{question.key}</p>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    {formatAnswerTypeLabel(question.answerType)}
-                    {" · "}
-                    sort {question.sortOrder}
-                    {" · "}
-                    {question.required ? "required" : "optional"}
-                    {" · "}
-                    {question.sport?.name ?? "Common"}
-                  </p>
-                  {question.helpText ? (
-                    <p className="mt-2 text-sm text-zinc-400">{question.helpText}</p>
-                  ) : null}
-                  {question.mapsToField ? (
-                    <p className="mt-1 font-mono text-xs text-zinc-500">
-                      maps to {question.mapsToField}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="mt-4">
-                  <UpdateOnboardingQuestionForm question={question} sports={sports} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <OnboardingQuestionList questions={sortedQuestions} />
         )}
       </section>
     </div>

@@ -286,6 +286,16 @@ export async function listAdminOnboardingQuestions(
   return result.items;
 }
 
+export async function getAdminOnboardingQuestion(
+  token: string,
+  onboardingQuestionId: string,
+): Promise<OnboardingQuestion> {
+  return adminFetch<OnboardingQuestion>(
+    token,
+    `/api/admin/onboarding-questions/${onboardingQuestionId}`,
+  );
+}
+
 export async function createAdminOnboardingQuestion(
   token: string,
   body: {

@@ -1,9 +1,12 @@
 import { OnboardingShell } from "./onboarding-shell";
+import { SportSelect } from "./sport-select";
+import type { Sport } from "@/lib/types";
 
 type OnboardingViewProps = {
   userEmail: string;
   userName?: string | null;
   isAdmin?: boolean;
+  sports: Sport[];
   loadError?: string | null;
 };
 
@@ -11,28 +14,45 @@ export function OnboardingView({
   userEmail,
   userName,
   isAdmin = false,
+  sports,
   loadError,
 }: OnboardingViewProps) {
   const greetingName = userName?.trim().split(/\s+/)[0];
 
   return (
     <OnboardingShell userEmail={userEmail} isAdmin={isAdmin}>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
-        <section className="rounded-[1.35rem] bg-[#171b22] px-5 py-8">
-          <p className="text-sm text-zinc-400">Welcome{greetingName ? `, ${greetingName}` : ""}</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
-            Welcome to athlete onboarding
-          </h1>
-          <p className="mt-4 text-[15px] leading-relaxed text-zinc-300">
-            Next we&apos;ll set up your athlete profile and focus sport. The full onboarding flow is
-            coming soon.
-          </p>
-
-          {loadError ? (
-            <p className="mt-6 rounded-xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">
-              {loadError}
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-5xl lg:px-10 lg:py-16">
+        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)] lg:items-start lg:gap-16">
+          <div>
+            <p className="text-sm text-zinc-400 lg:text-base">
+              Welcome{greetingName ? `, ${greetingName}` : ""}
             </p>
-          ) : null}
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
+              Let&apos;s set up your athlete profile
+            </h1>
+            <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:space-y-4 lg:text-base lg:leading-7">
+              <p>
+                This setup creates the starting point for your athlete profile and long-term
+                development memory.
+              </p>
+              <p>
+                The more useful context you share with us — training, recovery, and everyday
+                observations — the better we can support your athlete&apos;s journey.
+              </p>
+              <p>
+                This helps future guidance stay personal, practical, and grounded in your
+                athlete&apos;s real situation and goals.
+              </p>
+            </div>
+          </div>
+
+          <div className="lg:sticky lg:top-10">
+            {loadError ? (
+              <p className="rounded-xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">{loadError}</p>
+            ) : (
+              <SportSelect sports={sports} />
+            )}
+          </div>
         </section>
       </div>
     </OnboardingShell>

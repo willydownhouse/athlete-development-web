@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { OnboardingView } from "@/components/onboarding/onboarding-view";
-import { fetchAthletes, fetchCurrentAppUser } from "@/lib/api";
+import { fetchCurrentAppUser, fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import type { Sport } from "@/lib/types";
 
 export default async function OnboardingPage() {
   const session = await auth();
@@ -15,33 +16,34 @@ export default async function OnboardingPage() {
   const token = await getAuthBearerToken();
 
   let isAdmin = false;
-  let athletesLoaded = false;
+  let sports: Sport[] = [];
+  let sportsLoaded = false;
+
+  try {
+    sports = await fetchSports();
+    sportsLoaded = true;
+  } catch {
+    sportsLoaded = false;
+  }
 
   if (token) {
-    const [athletesResult, appUserResult] = await Promise.allSettled([
-      fetchAthletes(token),
-      fetchCurrentAppUser(token),
-    ]);
-
-    if (athletesResult.status === "fulfilled") {
-      athletesLoaded = true;
-
-      if (athletesResult.value.length > 0) {
-        redirect("/dashboard");
-      }
-    }
-
-    if (appUserResult.status === "fulfilled") {
-      isAdmin = appUserResult.value.role === "admin";
+    try {
+      const appUser = await fetchCurrentAppUser(token);
+      isAdmin = appUser.role === "admin";
+    } catch {
+      isAdmin = false;
     }
   }
+
+  const loadError = !sportsLoaded ? "Unable to load sports" : null;
 
   return (
     <OnboardingView
       userEmail={session.user.email ?? ""}
       userName={session.user.name}
       isAdmin={isAdmin}
-      loadError={athletesLoaded ? null : "Unable to verify athlete status"}
+      sports={sports}
+      loadError={loadError}
     />
   );
 }

@@ -397,6 +397,7 @@ export async function updateOnboardingQuestionAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/onboarding-questions");
+    revalidatePath(`/admin/onboarding-questions/${onboardingQuestionId}`);
     return { success: "Onboarding question updated" };
   } catch (error) {
     return actionError(error);

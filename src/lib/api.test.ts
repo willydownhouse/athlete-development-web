@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchAthletes, fetchCurrentAppUser, fetchEventTypes, getApiBaseUrl } from "./api";
+import {
+  fetchAthletes,
+  fetchCurrentAppUser,
+  fetchEventTypes,
+  fetchSports,
+  getApiBaseUrl,
+} from "./api";
 
 describe("api client", () => {
   afterEach(() => {
@@ -31,12 +37,11 @@ describe("api client", () => {
 
     const appUser = await fetchCurrentAppUser("test-token");
 
-    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/auth/me", {
-      headers: {
-        Authorization: "Bearer test-token",
-      },
-      cache: "no-store",
-    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/auth/me");
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(appUser.email).toBe("parent@example.com");
   });
 
@@ -60,14 +65,43 @@ describe("api client", () => {
 
     const athletes = await fetchAthletes("test-token");
 
-    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/athletes?limit=100", {
-      headers: {
-        Authorization: "Bearer test-token",
-      },
-      cache: "no-store",
-    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/athletes?limit=100");
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athletes).toHaveLength(1);
     expect(athletes[0]?.name).toBe("Leo Laine");
+  });
+
+  it("fetches public sports", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            slug: "hockey",
+            name: "Hockey",
+            active: true,
+            createdAt: "2026-07-25T12:00:00.000Z",
+            updatedAt: "2026-07-25T12:00:00.000Z",
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const sports = await fetchSports();
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports", {
+      cache: "no-store",
+    });
+    expect(sports).toHaveLength(1);
+    expect(sports[0]?.slug).toBe("hockey");
   });
 
   it("fetches public event types, optionally filtered by sport", async () => {
@@ -104,6 +138,9 @@ describe("api client", () => {
       vi.fn().mockResolvedValue({
         ok: false,
         status: 401,
+        json: async () => {
+          throw new Error("no body");
+        },
       }),
     );
 
