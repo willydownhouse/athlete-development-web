@@ -1,17 +1,3 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": [
-    "next.config.ts",
-    "postcss.config.mjs",
-    "src/middleware.ts",
-    "src/auth.ts",
-    "src/app/**/page.tsx",
-    "src/app/**/layout.tsx",
-    "src/app/**/route.ts",
-    "src/app/admin/actions.ts",
-    "src/app/actions/auth.ts"
-  ],
-  "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["tailwindcss", "@tailwindcss/postcss"],
-  "ignore": ["src/types/**"]
+  "$schema": "https://unpkg.com/knip@6/schema.json"
 }

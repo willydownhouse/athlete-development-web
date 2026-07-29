@@ -7,11 +7,13 @@ import {
   createAdminEventType,
   createAdminEventTypeMetricDefinition,
   createAdminMetricDefinition,
+  createAdminOnboardingQuestion,
   createAdminSport,
   deleteAdminEventTypeMetricDefinition,
   updateAdminEventType,
   updateAdminEventTypeMetricDefinition,
   updateAdminMetricDefinition,
+  updateAdminOnboardingQuestion,
   updateAdminSport,
 } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -70,6 +72,44 @@ function readSportId(formData: FormData): string | null | undefined {
   }
 
   return value;
+}
+
+function parseOptionalJson(
+  formData: FormData,
+  key: string,
+): { ok: true; value: unknown | undefined } | { ok: false; error: string } {
+  const raw = readString(formData, key);
+
+  if (raw === "") {
+    return { ok: true, value: undefined };
+  }
+
+  try {
+    return { ok: true, value: JSON.parse(raw) as unknown };
+  } catch {
+    return { ok: false, error: `${key} must be valid JSON` };
+  }
+}
+
+function parseNullableJson(
+  formData: FormData,
+  key: string,
+): { ok: true; value: unknown | null | undefined } | { ok: false; error: string } {
+  if (!formData.has(key)) {
+    return { ok: true, value: undefined };
+  }
+
+  const raw = readString(formData, key);
+
+  if (raw === "") {
+    return { ok: true, value: null };
+  }
+
+  try {
+    return { ok: true, value: JSON.parse(raw) as unknown };
+  } catch {
+    return { ok: false, error: `${key} must be valid JSON` };
+  }
 }
 
 // Sports
@@ -284,4 +324,81 @@ export async function deleteEventTypeMetricAction(formData: FormData): Promise<v
 
   await deleteAdminEventTypeMetricDefinition(token, eventTypeId, mappingId);
   revalidatePath(`/admin/event-types/${eventTypeId}`);
+}
+
+// Onboarding questions
+
+export async function createOnboardingQuestionAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const sportId = readSportId(formData);
+    const optionsResult = parseOptionalJson(formData, "options");
+
+    if (!optionsResult.ok) {
+      return { error: optionsResult.error };
+    }
+
+    await createAdminOnboardingQuestion(token, {
+      sportId,
+      key: readString(formData, "key"),
+      prompt: readString(formData, "prompt"),
+      helpText: readOptionalString(formData, "helpText"),
+      sortOrder: readOptionalInt(formData, "sortOrder"),
+      answerType: readString(formData, "answerType"),
+      options: optionsResult.value,
+      mapsToField: readOptionalString(formData, "mapsToField"),
+      required: readBoolean(formData, "required"),
+      active: readBoolean(formData, "active"),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/onboarding-questions");
+    return { success: "Onboarding question created" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function updateOnboardingQuestionAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const onboardingQuestionId = readString(formData, "onboardingQuestionId");
+    const sportId = readSportId(formData);
+    const helpText = formData.has("helpText")
+      ? readString(formData, "helpText") || null
+      : undefined;
+    const mapsToField = formData.has("mapsToField")
+      ? readString(formData, "mapsToField") || null
+      : undefined;
+    const optionsResult = parseNullableJson(formData, "options");
+
+    if (!optionsResult.ok) {
+      return { error: optionsResult.error };
+    }
+
+    await updateAdminOnboardingQuestion(token, onboardingQuestionId, {
+      sportId,
+      key: readOptionalString(formData, "key"),
+      prompt: readOptionalString(formData, "prompt"),
+      helpText,
+      sortOrder: readOptionalInt(formData, "sortOrder"),
+      answerType: readOptionalString(formData, "answerType"),
+      options: optionsResult.value,
+      mapsToField,
+      required: formData.has("required") ? readBoolean(formData, "required") : undefined,
+      active: readBoolean(formData, "active"),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/onboarding-questions");
+    return { success: "Onboarding question updated" };
+  } catch (error) {
+    return actionError(error);
+  }
 }

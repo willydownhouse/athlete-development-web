@@ -55,6 +55,9 @@ export type EventCategory =
 
 export type MetricValueType = "number" | "text" | "boolean";
 
+export type OnboardingAnswerType =
+  "text" | "number" | "boolean" | "single_select" | "multi_select" | "date" | "json";
+
 export type Sport = {
   id: string;
   slug: string;
@@ -99,6 +102,23 @@ export type EventTypeMetricDefinition = {
   metricDefinition: MetricDefinition;
 };
 
+export type OnboardingQuestion = {
+  id: string;
+  sportId: string | null;
+  key: string;
+  prompt: string;
+  helpText: string | null;
+  sortOrder: number;
+  answerType: OnboardingAnswerType;
+  options: unknown | null;
+  mapsToField: string | null;
+  required: boolean;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  sport: Sport | null;
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",
@@ -115,6 +135,20 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 
 export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean"];
 
+export const ONBOARDING_ANSWER_TYPES: OnboardingAnswerType[] = [
+  "text",
+  "number",
+  "boolean",
+  "single_select",
+  "multi_select",
+  "date",
+  "json",
+];
+
 export function formatCategoryLabel(category: EventCategory): string {
   return category.replace(/_/g, " ");
+}
+
+export function formatAnswerTypeLabel(answerType: OnboardingAnswerType): string {
+  return answerType.replace(/_/g, " ");
 }
