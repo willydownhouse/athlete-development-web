@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { createAthleteBasicsAction, type OnboardingActionState } from "@/app/onboarding/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { DatePickerInput } from "@/components/date-picker-input";
 
 const initialState: OnboardingActionState = {};
 
@@ -39,7 +40,12 @@ export function AthleteBasicsForm({ sportId, sportName }: AthleteBasicsFormProps
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm lg:text-base">
           <span className="font-medium text-zinc-300">Date of birth</span>
-          <input name="dateOfBirth" type="date" className={inputClassName} />
+          <DatePickerInput
+            name="dateOfBirth"
+            placeholder="Select date"
+            className={inputClassName}
+            disabledDates={{ after: new Date() }}
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm lg:text-base">
           <span className="font-medium text-zinc-300">Height (cm)</span>
