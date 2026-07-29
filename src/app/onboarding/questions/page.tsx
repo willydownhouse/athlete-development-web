@@ -10,6 +10,7 @@ import {
   getOnboardingSession,
 } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { OnboardingQuestion } from "@/lib/types";
 
 type OnboardingQuestionsPageProps = {
@@ -39,6 +40,7 @@ export default async function OnboardingQuestionsPage({
   }
 
   const token = await getAuthBearerToken();
+  const onboardingSessions = await loadShellOnboardingSessions(token);
 
   if (!token) {
     redirect("/");
@@ -93,7 +95,11 @@ export default async function OnboardingQuestionsPage({
   }
 
   return (
-    <OnboardingShell userEmail={session.user.email ?? ""} isAdmin={isAdmin}>
+    <OnboardingShell
+      userEmail={session.user.email ?? ""}
+      isAdmin={isAdmin}
+      onboardingSessions={onboardingSessions}
+    >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <div className="mb-5 lg:mb-7">
           <p className="text-sm text-zinc-400 lg:text-base">

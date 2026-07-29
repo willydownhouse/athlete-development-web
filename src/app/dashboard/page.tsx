@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { fetchAthletes, fetchCurrentAppUser, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { EventType } from "@/lib/types";
 
 type DashboardPageProps = {
@@ -19,6 +20,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const { athleteId } = await searchParams;
   const token = await getAuthBearerToken();
+  const onboardingSessions = await loadShellOnboardingSessions(token);
 
   let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
   let isAdmin = false;
@@ -68,6 +70,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       eventTypes={eventTypes}
       eventTypesError={eventTypesError}
       loadError={loadError}
+      onboardingSessions={onboardingSessions}
     />
   );
 }

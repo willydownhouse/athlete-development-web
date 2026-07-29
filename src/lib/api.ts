@@ -5,6 +5,7 @@ import type {
   OnboardingAnswer,
   OnboardingQuestion,
   OnboardingSession,
+  OnboardingSessionSummary,
   Sport,
   UserRole,
 } from "./types";
@@ -132,6 +133,14 @@ export async function fetchOnboardingQuestions(
   const result = await apiFetch<{ items: OnboardingQuestion[] }>(
     token,
     `/api/onboarding/questions?sportId=${encodeURIComponent(sportId)}`,
+  );
+  return result.items;
+}
+
+export async function fetchOnboardingSessions(token: string): Promise<OnboardingSessionSummary[]> {
+  const result = await apiFetch<{ items: OnboardingSessionSummary[] }>(
+    token,
+    "/api/onboarding/sessions",
   );
   return result.items;
 }

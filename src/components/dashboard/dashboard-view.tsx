@@ -1,4 +1,4 @@
-import type { Athlete, EventType } from "@/lib/types";
+import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
 
 import { AiInsightCard } from "./ai-insight-card";
 import { DashboardBottomNav } from "./bottom-nav";
@@ -17,6 +17,7 @@ type DashboardViewProps = {
   eventTypes: EventType[];
   eventTypesError?: string | null;
   loadError?: string | null;
+  onboardingSessions: OnboardingSessionSummary[];
 };
 
 export function DashboardView({
@@ -27,6 +28,7 @@ export function DashboardView({
   eventTypes,
   eventTypesError,
   loadError,
+  onboardingSessions,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
 
@@ -36,6 +38,7 @@ export function DashboardView({
       isAdmin={isAdmin}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
+      onboardingSessions={onboardingSessions}
     >
       <div
         className={`relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6 lg:max-w-3xl lg:px-10 ${

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { OnboardingView } from "@/components/onboarding/onboarding-view";
 import { fetchCurrentAppUser, fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { Sport } from "@/lib/types";
 
 export default async function OnboardingPage() {
@@ -14,6 +15,7 @@ export default async function OnboardingPage() {
   }
 
   const token = await getAuthBearerToken();
+  const onboardingSessions = await loadShellOnboardingSessions(token);
 
   let isAdmin = false;
   let sports: Sport[] = [];
@@ -44,6 +46,7 @@ export default async function OnboardingPage() {
       isAdmin={isAdmin}
       sports={sports}
       loadError={loadError}
+      onboardingSessions={onboardingSessions}
     />
   );
 }

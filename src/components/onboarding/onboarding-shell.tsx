@@ -1,14 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
+import type { OnboardingSessionSummary } from "@/lib/types";
 
 type OnboardingShellProps = {
   userEmail: string;
   isAdmin?: boolean;
+  onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
 
@@ -28,14 +29,12 @@ function CloseIcon() {
   );
 }
 
-function navLinkClass(active: boolean): string {
-  return `block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-    active ? "bg-white/5 text-white" : "text-zinc-300 hover:bg-white/5 hover:text-white"
-  }`;
-}
-
-export function OnboardingShell({ userEmail, isAdmin = false, children }: OnboardingShellProps) {
-  const pathname = usePathname();
+export function OnboardingShell({
+  userEmail,
+  isAdmin = false,
+  onboardingSessions,
+  children,
+}: OnboardingShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = useCallback(() => {
@@ -96,27 +95,11 @@ export function OnboardingShell({ userEmail, isAdmin = false, children }: Onboar
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <nav className="space-y-1">
-            <Link
-              href="/dashboard"
-              onClick={closeMobile}
-              className={navLinkClass(pathname.startsWith("/dashboard"))}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/onboarding"
-              onClick={closeMobile}
-              className={navLinkClass(pathname.startsWith("/onboarding"))}
-            >
-              Onboarding
-            </Link>
-            {isAdmin ? (
-              <Link href="/admin" onClick={closeMobile} className={navLinkClass(false)}>
-                Admin
-              </Link>
-            ) : null}
-          </nav>
+          <AppShellNav
+            isAdmin={isAdmin}
+            onboardingSessions={onboardingSessions}
+            onNavigate={closeMobile}
+          />
         </div>
 
         <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">

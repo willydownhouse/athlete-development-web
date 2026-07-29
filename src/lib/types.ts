@@ -147,6 +147,13 @@ export type OnboardingSession = {
   answers?: OnboardingAnswer[];
 };
 
+export type OnboardingSessionSummary = Omit<OnboardingSession, "answers"> & {
+  athlete: {
+    id: string;
+    name: string;
+  };
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",

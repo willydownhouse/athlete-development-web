@@ -1,6 +1,6 @@
 import { OnboardingShell } from "./onboarding-shell";
 import { SportSelect } from "./sport-select";
-import type { Sport } from "@/lib/types";
+import type { Sport, OnboardingSessionSummary } from "@/lib/types";
 
 type OnboardingViewProps = {
   userEmail: string;
@@ -8,6 +8,7 @@ type OnboardingViewProps = {
   isAdmin?: boolean;
   sports: Sport[];
   loadError?: string | null;
+  onboardingSessions: OnboardingSessionSummary[];
 };
 
 export function OnboardingView({
@@ -16,11 +17,16 @@ export function OnboardingView({
   isAdmin = false,
   sports,
   loadError,
+  onboardingSessions,
 }: OnboardingViewProps) {
   const greetingName = userName?.trim().split(/\s+/)[0];
 
   return (
-    <OnboardingShell userEmail={userEmail} isAdmin={isAdmin}>
+    <OnboardingShell
+      userEmail={userEmail}
+      isAdmin={isAdmin}
+      onboardingSessions={onboardingSessions}
+    >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <section className="space-y-8 lg:space-y-10">
           <div>

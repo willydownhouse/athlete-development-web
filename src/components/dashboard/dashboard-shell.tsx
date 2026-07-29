@@ -1,19 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
-import type { Athlete } from "@/lib/types";
-
-import { athleteInitials } from "./athlete-meta";
+import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
 type DashboardShellProps = {
   userEmail: string;
   isAdmin?: boolean;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
+  onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
 
@@ -33,22 +31,15 @@ function CloseIcon() {
   );
 }
 
-function navLinkClass(active: boolean): string {
-  return `block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-    active ? "bg-white/5 text-white" : "text-zinc-300 hover:bg-white/5 hover:text-white"
-  }`;
-}
-
 export function DashboardShell({
   userEmail,
   isAdmin = false,
   athletes,
   selectedAthlete,
+  onboardingSessions,
   children,
 }: DashboardShellProps) {
-  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const canSwitchAthletes = athletes.length > 1;
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -106,56 +97,13 @@ export function DashboardShell({
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <nav className="space-y-1">
-            <Link
-              href="/dashboard"
-              onClick={closeMobile}
-              className={navLinkClass(pathname.startsWith("/dashboard"))}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/onboarding"
-              onClick={closeMobile}
-              className={navLinkClass(pathname.startsWith("/onboarding"))}
-            >
-              Onboarding
-            </Link>
-            {isAdmin ? (
-              <Link href="/admin" onClick={closeMobile} className={navLinkClass(false)}>
-                Admin
-              </Link>
-            ) : null}
-          </nav>
-
-          {canSwitchAthletes ? (
-            <div className="mt-6">
-              <p className="px-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                Athletes
-              </p>
-              <div className="mt-2 space-y-1">
-                {athletes.map((athlete) => {
-                  const selected = athlete.id === selectedAthlete?.id;
-
-                  return (
-                    <Link
-                      key={athlete.id}
-                      href={`/dashboard?athleteId=${athlete.id}`}
-                      onClick={closeMobile}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-white/5 ${
-                        selected ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
-                      }`}
-                    >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
-                        {athleteInitials(athlete.name)}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
+          <AppShellNav
+            isAdmin={isAdmin}
+            onboardingSessions={onboardingSessions}
+            athletes={athletes}
+            selectedAthlete={selectedAthlete}
+            onNavigate={closeMobile}
+          />
         </div>
 
         <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
