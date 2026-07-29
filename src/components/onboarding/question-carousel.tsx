@@ -16,6 +16,33 @@ type QuestionCarouselProps = {
   initialAnswers: Record<string, { rawAnswer: string; structuredValue?: unknown }>;
 };
 
+function sortQuestions(questions: OnboardingQuestion[]): OnboardingQuestion[] {
+  return [...questions].sort((a, b) => a.sortOrder - b.sortOrder || a.key.localeCompare(b.key));
+}
+
+function isQuestionAnswered(
+  questionId: string,
+  answers: Record<string, { rawAnswer: string; structuredValue?: unknown }>,
+): boolean {
+  const answer = answers[questionId];
+  return answer !== undefined && answer.rawAnswer.trim() !== "";
+}
+
+function findResumeQuestionIndex(
+  sortedQuestions: OnboardingQuestion[],
+  answers: Record<string, { rawAnswer: string; structuredValue?: unknown }>,
+): number {
+  if (sortedQuestions.length === 0) {
+    return 0;
+  }
+
+  const firstUnanswered = sortedQuestions.findIndex(
+    (question) => !isQuestionAnswered(question.id, answers),
+  );
+
+  return firstUnanswered === -1 ? sortedQuestions.length - 1 : firstUnanswered;
+}
+
 function optionsAsStrings(options: unknown): string[] {
   if (!Array.isArray(options)) {
     return [];
@@ -30,12 +57,11 @@ export function QuestionCarousel({
   questions,
   initialAnswers,
 }: QuestionCarouselProps) {
-  const sortedQuestions = useMemo(
-    () => [...questions].sort((a, b) => a.sortOrder - b.sortOrder || a.key.localeCompare(b.key)),
-    [questions],
-  );
+  const sortedQuestions = useMemo(() => sortQuestions(questions), [questions]);
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    findResumeQuestionIndex(sortQuestions(questions), initialAnswers),
+  );
   const [answers, setAnswers] = useState(initialAnswers);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
