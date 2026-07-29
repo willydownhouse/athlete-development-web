@@ -21,8 +21,8 @@ export function OnboardingView({
 
   return (
     <OnboardingShell userEmail={userEmail} isAdmin={isAdmin}>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-5xl lg:px-10 lg:py-16">
-        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)] lg:items-start lg:gap-16">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
+        <section className="space-y-8 lg:space-y-10">
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">
               Welcome{greetingName ? `, ${greetingName}` : ""}
@@ -46,7 +46,7 @@ export function OnboardingView({
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-10">
+          <div>
             {loadError ? (
               <p className="rounded-xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">{loadError}</p>
             ) : (
