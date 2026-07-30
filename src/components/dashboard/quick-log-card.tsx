@@ -18,8 +18,8 @@ const SCOPES: { id: QuickLogScope; label: string }[] = [
 ];
 
 function isHockeyEventType(eventType: EventType): boolean {
-  const slug = eventType.sport?.slug?.toLowerCase();
-  const name = eventType.sport?.name?.toLowerCase();
+  const slug = eventType.sport?.slug.toLowerCase();
+  const name = eventType.sport?.name.toLowerCase();
   return slug === "hockey" || name === "hockey";
 }
 

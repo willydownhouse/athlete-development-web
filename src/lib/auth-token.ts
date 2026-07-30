@@ -2,7 +2,7 @@ import { getToken } from "@auth/core/jwt";
 import { cookies } from "next/headers";
 
 export async function getAuthBearerToken(): Promise<string | null> {
-  const secret = process.env.AUTH_SECRET;
+  const secret = process.env["AUTH_SECRET"];
 
   if (!secret) {
     return null;
@@ -16,7 +16,7 @@ export async function getAuthBearerToken(): Promise<string | null> {
       },
     },
     secret,
-    salt: process.env.AUTH_TOKEN_SALT ?? "authjs.session-token",
+    salt: process.env["AUTH_TOKEN_SALT"] ?? "authjs.session-token",
     raw: true,
   });
 

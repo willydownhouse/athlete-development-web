@@ -75,7 +75,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
             </p>
           </div>
 
-          <AthleteBasicsForm sportId={sportId} sportName={sportName ?? "this sport"} />
+          <AthleteBasicsForm sportId={sportId} sportName={sportName} />
         </section>
       </div>
     </OnboardingShell>

@@ -7,11 +7,19 @@ export function athleteInitials(name: string): string {
     return "?";
   }
 
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
+  const firstPart = parts[0];
+
+  if (!firstPart) {
+    return "?";
   }
 
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  if (parts.length === 1) {
+    return firstPart.slice(0, 2).toUpperCase();
+  }
+
+  const lastPart = parts.at(-1) ?? firstPart;
+
+  return `${firstPart[0] ?? ""}${lastPart[0] ?? ""}`.toUpperCase();
 }
 
 function ageFromDateOfBirth(dateOfBirth: string | null): number | null {
@@ -61,7 +69,7 @@ function positionFromProfile(athlete: Athlete): string | null {
     return null;
   }
 
-  const position = (data as Record<string, unknown>).position;
+  const position = (data as Record<string, unknown>)["position"];
 
   return typeof position === "string" && position.trim() ? position.trim() : null;
 }

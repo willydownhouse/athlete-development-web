@@ -32,7 +32,7 @@ export class ApiError extends Error {
 }
 
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+  return process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
 }
 
 async function parseApiError(response: Response): Promise<ApiError> {

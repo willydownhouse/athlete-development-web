@@ -27,7 +27,14 @@ function parseTimeValue(value: string | undefined): TimeParts | undefined {
     return undefined;
   }
 
-  const [hours, minutes] = value.split(":").map(Number);
+  const [hoursText, minutesText] = value.split(":");
+
+  if (hoursText === undefined || minutesText === undefined) {
+    return undefined;
+  }
+
+  const hours = Number.parseInt(hoursText, 10);
+  const minutes = Number.parseInt(minutesText, 10);
 
   if (
     Number.isNaN(hours) ||

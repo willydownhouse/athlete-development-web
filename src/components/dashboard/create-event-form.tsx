@@ -17,7 +17,11 @@ import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
-import { EVENT_DESCRIPTION_MAX_LENGTH, EVENT_TITLE_MAX_LENGTH, getEventFormTextErrorFromFormData } from "@/lib/event-form-schema";
+import {
+  EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_TITLE_MAX_LENGTH,
+  getEventFormTextErrorFromFormData,
+} from "@/lib/event-form-schema";
 import type { Event, EventType } from "@/lib/types";
 
 const initialState: DashboardActionState = {};
@@ -140,9 +144,7 @@ export function EventForm({
         action={formAction}
         className="space-y-4"
         onSubmit={(submitEvent) => {
-          const error = getEventFormTextErrorFromFormData(
-            new FormData(submitEvent.currentTarget),
-          );
+          const error = getEventFormTextErrorFromFormData(new FormData(submitEvent.currentTarget));
 
           if (error) {
             submitEvent.preventDefault();
@@ -244,7 +246,9 @@ export function EventForm({
             placeholder="Edge work, small-area games, felt pretty hard."
             className={`${inputClassName} resize-y`}
           />
-          <span className="text-xs text-zinc-500">Max {EVENT_DESCRIPTION_MAX_LENGTH} characters</span>
+          <span className="text-xs text-zinc-500">
+            Max {EVENT_DESCRIPTION_MAX_LENGTH} characters
+          </span>
         </label>
 
         <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-end">
