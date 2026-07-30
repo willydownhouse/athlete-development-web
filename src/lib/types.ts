@@ -79,6 +79,37 @@ export type EventType = {
   sport: Sport | null;
 };
 
+export type EventIntensity = "light" | "moderate" | "hard";
+
+export type Event = {
+  id: string;
+  athleteId: string;
+  eventTypeId: string;
+  sportId: string | null;
+  category: EventCategory;
+  title: string | null;
+  description: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  intensity: EventIntensity | null;
+  source: "chat" | "form" | "voice" | "manual";
+  originalInput: string | null;
+  structuredData: unknown | null;
+  createdAt: string;
+  updatedAt: string;
+  eventType: EventType;
+};
+
+export type EventListResponse = {
+  items: Event[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
 export type MetricDefinition = {
   id: string;
   sportId: string | null;

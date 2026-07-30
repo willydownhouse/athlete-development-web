@@ -2,12 +2,11 @@ import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
 
 import { AiInsightCard } from "./ai-insight-card";
 import { DashboardBottomNav } from "./bottom-nav";
+import { DashboardEventLogging } from "./dashboard-event-logging";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
-import { QuickLogCard } from "./quick-log-card";
 import { ThisWeekCard } from "./this-week-card";
-import { TodaysEventsCard } from "./todays-events-card";
 
 type DashboardViewProps = {
   userEmail: string;
@@ -55,8 +54,12 @@ export function DashboardView({
             ) : null}
             <div className="mt-6 flex flex-col gap-3.5">
               <AiInsightCard />
-              <TodaysEventsCard />
-              <QuickLogCard eventTypes={eventTypes} loadError={eventTypesError} />
+              <DashboardEventLogging
+                key={selectedAthlete.id}
+                athleteId={selectedAthlete.id}
+                eventTypes={eventTypes}
+                eventTypesError={eventTypesError}
+              />
               <ThisWeekCard />
             </div>
           </>

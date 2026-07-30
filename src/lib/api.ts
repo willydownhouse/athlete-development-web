@@ -1,6 +1,9 @@
 import type {
   Athlete,
   AthleteListResponse,
+  Event,
+  EventIntensity,
+  EventListResponse,
   EventType,
   OnboardingAnswer,
   OnboardingQuestion,
@@ -110,6 +113,100 @@ export async function fetchSports(): Promise<Sport[]> {
 
   const result = (await response.json()) as { items: Sport[] };
   return result.items;
+}
+
+export async function createEvent(
+  token: string,
+  athleteId: string,
+  body: {
+    eventTypeId: string;
+    startedAt: string;
+    source: "chat" | "form" | "voice" | "manual";
+    title?: string;
+    description?: string;
+    endedAt?: string;
+    durationSeconds?: number;
+    intensity?: EventIntensity;
+    originalInput?: string;
+    structuredData?: Record<string, unknown>;
+  },
+): Promise<Event> {
+  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function fetchEvents(
+  token: string,
+  athleteId: string,
+  query: {
+    limit?: number;
+    offset?: number;
+    startedAtFrom?: string;
+    startedAtTo?: string;
+  } = {},
+): Promise<EventListResponse> {
+  const params = new URLSearchParams();
+
+  if (query.limit !== undefined) {
+    params.set("limit", String(query.limit));
+  }
+
+  if (query.offset !== undefined) {
+    params.set("offset", String(query.offset));
+  }
+
+  if (query.startedAtFrom) {
+    params.set("startedAtFrom", query.startedAtFrom);
+  }
+
+  if (query.startedAtTo) {
+    params.set("startedAtTo", query.startedAtTo);
+  }
+
+  const search = params.toString();
+
+  return apiFetch<EventListResponse>(
+    token,
+    `/api/athletes/${athleteId}/events${search ? `?${search}` : ""}`,
+    {
+      next: {
+        tags: [`events-${athleteId}`],
+      },
+    },
+  );
+}
+
+export async function updateEvent(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  body: {
+    eventTypeId?: string;
+    startedAt?: string;
+    title?: string;
+    description?: string;
+    endedAt?: string;
+    durationSeconds?: number;
+    intensity?: EventIntensity;
+    structuredData?: Record<string, unknown>;
+  },
+): Promise<Event> {
+  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteEvent(
+  token: string,
+  athleteId: string,
+  eventId: string,
+): Promise<void> {
+  return apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
+    method: "DELETE",
+  });
 }
 
 export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {

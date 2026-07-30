@@ -1,11 +1,12 @@
+import { EVENT_TONE_BG_CLASS } from "@/lib/event-tone";
 import { MOCK_WEEK_DAYS, MOCK_WEEK_LOAD_LABEL, type MockWeekDay } from "./mock-data";
 
 const toneClass: Record<MockWeekDay["tone"], string> = {
-  ice: "bg-[#5f7388]",
-  recovery: "bg-[#6f8f6a]",
-  gym: "bg-[#9a7f5f]",
-  game: "bg-[#9a7f5f]",
-  rest: "bg-[#6f8f6a]",
+  ice: EVENT_TONE_BG_CLASS.ice,
+  recovery: EVENT_TONE_BG_CLASS.recovery,
+  gym: EVENT_TONE_BG_CLASS.gym,
+  game: EVENT_TONE_BG_CLASS.game,
+  rest: EVENT_TONE_BG_CLASS.rest,
 };
 
 type ThisWeekCardProps = {

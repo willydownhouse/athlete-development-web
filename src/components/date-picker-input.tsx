@@ -1,8 +1,11 @@
 "use client";
 
 import { format, isValid, parseISO } from "date-fns";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { DayPicker, type Matcher } from "react-day-picker";
+
+import { PortalSelect, isPickerOverlayTarget } from "@/components/picker-menu";
 
 const dayPickerClassNames = {
   root: "p-1",
@@ -69,8 +72,48 @@ export function DatePickerInput({
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>(() => parseDateValue(defaultValue));
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) {
+      return;
+    }
+
+    function updatePosition() {
+      const trigger = triggerRef.current;
+      if (!trigger) {
+        return;
+      }
+
+      const rect = trigger.getBoundingClientRect();
+      const panelWidth = Math.min(window.innerWidth - 24, 320);
+      const panelHeight = 360;
+      const spaceBelow = window.innerHeight - rect.bottom - 12;
+      const spaceAbove = rect.top - 12;
+      const openUp = spaceBelow < panelHeight && spaceAbove > spaceBelow;
+
+      setPanelStyle({
+        position: "fixed",
+        left: Math.max(12, Math.min(rect.left, window.innerWidth - panelWidth - 12)),
+        width: panelWidth,
+        top: openUp ? rect.top - panelHeight - 8 : rect.bottom + 8,
+        zIndex: 60,
+      });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -80,35 +123,77 @@ export function DatePickerInput({
     function handlePointerDown(event: MouseEvent | TouchEvent) {
       const target = event.target;
 
-      if (!(target instanceof Node) || !containerRef.current?.contains(target)) {
-        setOpen(false);
+      if (!(target instanceof Node)) {
+        return;
       }
+
+      if (
+        triggerRef.current?.contains(target) ||
+        panelRef.current?.contains(target) ||
+        isPickerOverlayTarget(target)
+      ) {
+        return;
+      }
+
+      setOpen(false);
     }
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        event.stopPropagation();
         setOpen(false);
       }
     }
 
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("touchstart", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleEscape, true);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleEscape, true);
     };
   }, [open]);
 
   const formattedValue = selected ? format(selected, "yyyy-MM-dd") : "";
   const displayValue = selected ? format(selected, "MMM d, yyyy") : placeholder;
 
+  const panel =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label="Choose date"
+            style={panelStyle}
+            className="rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+          >
+            <DayPicker
+              mode="single"
+              selected={selected}
+              onSelect={(date) => {
+                setSelected(date);
+                setOpen(false);
+              }}
+              defaultMonth={selected}
+              captionLayout="dropdown"
+              startMonth={new Date(fromYear, 0)}
+              endMonth={new Date(toYear, 11)}
+              disabled={disabledDates}
+              classNames={dayPickerClassNames}
+              components={{ Select: PortalSelect }}
+            />
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div ref={containerRef} className="relative">
       <input type="hidden" name={name} value={formattedValue} />
       <button
+        ref={triggerRef}
         id={inputId}
         type="button"
         aria-haspopup="dialog"
@@ -119,29 +204,7 @@ export function DatePickerInput({
         <span className={selected ? "text-white" : "text-zinc-500"}>{displayValue}</span>
         <CalendarIcon />
       </button>
-
-      {open ? (
-        <div
-          role="dialog"
-          aria-label="Choose date"
-          className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,20rem)] rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
-        >
-          <DayPicker
-            mode="single"
-            selected={selected}
-            onSelect={(date) => {
-              setSelected(date);
-              setOpen(false);
-            }}
-            defaultMonth={selected}
-            captionLayout="dropdown"
-            startMonth={new Date(fromYear, 0)}
-            endMonth={new Date(toYear, 11)}
-            disabled={disabledDates}
-            classNames={dayPickerClassNames}
-          />
-        </div>
-      ) : null}
+      {panel}
     </div>
   );
 }

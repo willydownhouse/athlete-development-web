@@ -9,6 +9,7 @@ type QuickLogScope = "general" | "hockey";
 type QuickLogCardProps = {
   eventTypes: EventType[];
   loadError?: string | null;
+  onEventTypeClick?: (eventTypeId: string) => void;
 };
 
 const SCOPES: { id: QuickLogScope; label: string }[] = [
@@ -26,13 +27,15 @@ function isGeneralEventType(eventType: EventType): boolean {
   return eventType.sportId === null;
 }
 
-export function QuickLogCard({ eventTypes, loadError }: QuickLogCardProps) {
+export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickLogCardProps) {
   const [scope, setScope] = useState<QuickLogScope>("hockey");
 
   const visibleEventTypes = useMemo(() => {
-    return eventTypes.filter((eventType) =>
-      scope === "hockey" ? isHockeyEventType(eventType) : isGeneralEventType(eventType),
-    );
+    return eventTypes
+      .filter((eventType) =>
+        scope === "hockey" ? isHockeyEventType(eventType) : isGeneralEventType(eventType),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [eventTypes, scope]);
 
   return (
@@ -73,6 +76,7 @@ export function QuickLogCard({ eventTypes, loadError }: QuickLogCardProps) {
             <button
               key={eventType.id}
               type="button"
+              onClick={() => onEventTypeClick?.(eventType.id)}
               className="rounded-full border border-white/5 bg-[#1c222c] px-4 py-2 text-sm font-medium text-zinc-100 transition hover:bg-[#2a303a]"
             >
               {eventType.name}
