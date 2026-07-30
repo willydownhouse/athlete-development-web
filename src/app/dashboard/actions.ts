@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 
 import { ApiError, createEvent, deleteEvent, fetchEvents, updateEvent } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getEventFormTextErrorFromFormData } from "@/lib/event-form-schema";
 import type { Event, EventIntensity } from "@/lib/types";
 
 export type DashboardActionState = {
@@ -86,6 +87,16 @@ function readEventFormFields(formData: FormData) {
   };
 }
 
+function validateEventTextFields(formData: FormData): DashboardActionState | null {
+  const error = getEventFormTextErrorFromFormData(formData);
+
+  if (error) {
+    return { error };
+  }
+
+  return null;
+}
+
 export async function createEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
@@ -108,6 +119,11 @@ export async function createEventAction(
 
   if (!fields.eventDate || !fields.startedAt) {
     return { error: "Date is required" };
+  }
+
+  const textError = validateEventTextFields(formData);
+  if (textError) {
+    return textError;
   }
 
   try {
@@ -155,6 +171,11 @@ export async function updateEventAction(
 
   if (!fields.eventDate || !fields.startedAt) {
     return { error: "Date is required" };
+  }
+
+  const textError = validateEventTextFields(formData);
+  if (textError) {
+    return textError;
   }
 
   try {

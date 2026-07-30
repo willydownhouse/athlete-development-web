@@ -2,6 +2,8 @@ import { format } from "date-fns";
 
 import type { Event, EventIntensity } from "@/lib/types";
 
+const EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH = 200;
+
 function formatIntensity(intensity: EventIntensity): string {
   return intensity.charAt(0).toUpperCase() + intensity.slice(1);
 }
@@ -32,6 +34,16 @@ export function eventTitle(event: Event): string {
   return event.title ?? event.eventType.name;
 }
 
+const EVENT_LIST_NOTE_MAX_LENGTH = EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH;
+
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength).trimEnd()}…`;
+}
+
 export function eventDetail(event: Event): string {
   const parts: string[] = [formatTime(event.startedAt)];
 
@@ -44,7 +56,7 @@ export function eventDetail(event: Event): string {
   }
 
   if (event.description) {
-    parts.push(event.description);
+    parts.push(truncateText(event.description, EVENT_LIST_NOTE_MAX_LENGTH));
   }
 
   return parts.join(" · ");

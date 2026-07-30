@@ -17,6 +17,7 @@ import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
+import { EVENT_DESCRIPTION_MAX_LENGTH, EVENT_TITLE_MAX_LENGTH, getEventFormTextErrorFromFormData } from "@/lib/event-form-schema";
 import type { Event, EventType } from "@/lib/types";
 
 const initialState: DashboardActionState = {};
@@ -98,6 +99,7 @@ export function EventForm({
 }: EventFormProps) {
   const isEdit = event !== undefined;
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
   const [state, formAction] = useActionState(
     isEdit ? updateEventAction : createEventAction,
     initialState,
@@ -134,10 +136,29 @@ export function EventForm({
 
   return (
     <>
-      <form action={formAction} className="space-y-4">
+      <form
+        action={formAction}
+        className="space-y-4"
+        onSubmit={(submitEvent) => {
+          const error = getEventFormTextErrorFromFormData(
+            new FormData(submitEvent.currentTarget),
+          );
+
+          if (error) {
+            submitEvent.preventDefault();
+            setClientError(error);
+            return;
+          }
+
+          setClientError(null);
+        }}
+      >
         <input type="hidden" name="athleteId" value={athleteId} />
         {isEdit ? <input type="hidden" name="eventId" value={event.id} /> : null}
-        <FormMessage error={state.error ?? deleteState.error} success={state.success} />
+        <FormMessage
+          error={clientError ?? state.error ?? deleteState.error}
+          success={state.success}
+        />
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">Event type</span>
@@ -211,6 +232,7 @@ export function EventForm({
             placeholder="Morning ice practice"
             className={inputClassName}
           />
+          <span className="text-xs text-zinc-500">Max {EVENT_TITLE_MAX_LENGTH} characters</span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
@@ -222,6 +244,7 @@ export function EventForm({
             placeholder="Edge work, small-area games, felt pretty hard."
             className={`${inputClassName} resize-y`}
           />
+          <span className="text-xs text-zinc-500">Max {EVENT_DESCRIPTION_MAX_LENGTH} characters</span>
         </label>
 
         <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-end">
