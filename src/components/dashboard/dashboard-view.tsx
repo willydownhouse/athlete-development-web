@@ -1,12 +1,9 @@
 import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
 
-import { AiInsightCard } from "./ai-insight-card";
+import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./bottom-nav";
-import { DashboardEventLogging } from "./dashboard-event-logging";
-import { DashboardHeader } from "./dashboard-header";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
-import { ThisWeekCard } from "./this-week-card";
 
 type DashboardViewProps = {
   userEmail: string;
@@ -46,22 +43,16 @@ export function DashboardView({
       >
         {hasAthlete ? (
           <>
-            <DashboardHeader selectedAthlete={selectedAthlete} />
             {loadError ? (
-              <p className="mt-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
+              <p className="mb-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
                 {loadError}
               </p>
             ) : null}
-            <div className="mt-6 flex flex-col gap-3.5">
-              <AiInsightCard />
-              <DashboardEventLogging
-                key={selectedAthlete.id}
-                athleteId={selectedAthlete.id}
-                eventTypes={eventTypes}
-                eventTypesError={eventTypesError}
-              />
-              <ThisWeekCard />
-            </div>
+            <DashboardAthleteContent
+              selectedAthlete={selectedAthlete}
+              eventTypes={eventTypes}
+              eventTypesError={eventTypesError}
+            />
           </>
         ) : (
           <>

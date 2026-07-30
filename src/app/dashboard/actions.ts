@@ -227,7 +227,7 @@ export async function deleteEventAction(
   }
 }
 
-export async function fetchTodaysEventsAction(
+export async function fetchEventsInRangeAction(
   athleteId: string,
   startedAtFrom: string,
   startedAtTo: string,
@@ -255,6 +255,6 @@ export async function fetchTodaysEventsAction(
       return { events: [], error: error.message };
     }
 
-    return { events: [], error: "Unable to load today's events" };
+    return { events: [], error: "Unable to load events" };
   }
 }

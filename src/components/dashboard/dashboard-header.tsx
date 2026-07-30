@@ -1,13 +1,13 @@
 import type { Athlete } from "@/lib/types";
 
 import { athleteSubtitle } from "./athlete-meta";
-import { MOCK_EVENTS_THIS_WEEK } from "./mock-data";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
+  eventsThisWeek?: number;
 };
 
-export function DashboardHeader({ selectedAthlete }: DashboardHeaderProps) {
+export function DashboardHeader({ selectedAthlete, eventsThisWeek = 0 }: DashboardHeaderProps) {
   return (
     <header>
       <p className="text-sm text-zinc-400">Today</p>
@@ -18,7 +18,7 @@ export function DashboardHeader({ selectedAthlete }: DashboardHeaderProps) {
           </h1>
           <p className="mt-1 font-mono text-xs text-zinc-500">{selectedAthlete.id}</p>
           <p className="mt-1 text-sm text-zinc-400">
-            {athleteSubtitle(selectedAthlete, MOCK_EVENTS_THIS_WEEK)}
+            {athleteSubtitle(selectedAthlete, eventsThisWeek)}
           </p>
         </>
       ) : (

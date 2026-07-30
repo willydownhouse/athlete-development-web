@@ -1,39 +1,50 @@
 import { EVENT_TONE_BG_CLASS } from "@/lib/event-tone";
-import { MOCK_WEEK_DAYS, MOCK_WEEK_LOAD_LABEL, type MockWeekDay } from "./mock-data";
+import { getLocalWeekRange } from "@/lib/date-range";
+import type { Event } from "@/lib/types";
+import { buildWeekDays, getWeekLoadLabel } from "@/lib/week-summary";
 
-const toneClass: Record<MockWeekDay["tone"], string> = {
-  ice: EVENT_TONE_BG_CLASS.ice,
-  recovery: EVENT_TONE_BG_CLASS.recovery,
-  gym: EVENT_TONE_BG_CLASS.gym,
-  game: EVENT_TONE_BG_CLASS.game,
-  rest: EVENT_TONE_BG_CLASS.rest,
-};
+const toneClass = EVENT_TONE_BG_CLASS;
+const WEEK_CHART_HEIGHT = 88;
 
 type ThisWeekCardProps = {
-  empty?: boolean;
+  events: Event[];
+  loading?: boolean;
+  loadError?: string | null;
 };
 
-export function ThisWeekCard({ empty = false }: ThisWeekCardProps) {
-  const days = empty ? [] : MOCK_WEEK_DAYS;
+export function ThisWeekCard({ events, loading = false, loadError }: ThisWeekCardProps) {
+  const { days: weekDays } = getLocalWeekRange();
+  const weekDayBars = buildWeekDays(events, weekDays);
+  const loadLabel = getWeekLoadLabel(events);
+  const isEmpty = !loading && !loadError && events.length === 0;
 
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-white">This week</h2>
         <span className="text-sm text-zinc-400">
-          {empty ? "No load yet" : MOCK_WEEK_LOAD_LABEL}
+          {loading ? "Loading…" : loadError ? "Unable to load" : loadLabel}
         </span>
       </div>
 
-      {days.length > 0 ? (
-        <div className="mt-5 flex items-end justify-between gap-1.5">
-          {days.map((day) => (
+      {loadError ? (
+        <p className="mt-4 text-sm text-red-300">{loadError}</p>
+      ) : loading ? (
+        <p className="mt-4 text-sm text-zinc-500">Loading this week&apos;s events…</p>
+      ) : isEmpty ? (
+        <p className="mt-4 text-sm text-zinc-500">
+          Weekly load will appear once events are logged.
+        </p>
+      ) : (
+        <div className="mt-5 flex justify-between gap-1.5">
+          {weekDayBars.map((day) => (
             <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-              <div
-                className={`flex w-full items-end justify-center rounded-xl ${toneClass[day.tone]}`}
-                style={{ height: `${day.height}px` }}
-              >
-                <span className="pb-2 text-[10px] font-semibold tracking-wide text-white/90">
+              <div className="relative w-full" style={{ height: `${WEEK_CHART_HEIGHT}px` }}>
+                <div
+                  className={`absolute inset-x-0 bottom-0 rounded-xl ${toneClass[day.tone]}`}
+                  style={{ height: `${day.height}px` }}
+                />
+                <span className="absolute inset-x-0 bottom-2 text-center text-[10px] font-semibold tracking-wide text-white/90">
                   {day.label}
                 </span>
               </div>
@@ -41,10 +52,6 @@ export function ThisWeekCard({ empty = false }: ThisWeekCardProps) {
             </div>
           ))}
         </div>
-      ) : (
-        <p className="mt-4 text-sm text-zinc-500">
-          Weekly load will appear once events are logged.
-        </p>
       )}
     </section>
   );

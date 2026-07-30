@@ -2,18 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { fetchTodaysEventsAction } from "@/app/dashboard/actions";
+import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { EventForm } from "@/components/dashboard/create-event-form";
 import { QuickLogCard } from "@/components/dashboard/quick-log-card";
 import { TodaysEventsCard } from "@/components/dashboard/todays-events-card";
 import { Modal } from "@/components/ui/modal";
-import { getLocalDayRange } from "@/lib/date-range";
+import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
 import type { Event, EventType } from "@/lib/types";
 
 type DashboardEventLoggingProps = {
   athleteId: string;
   eventTypes: EventType[];
   eventTypesError?: string | null;
+  onWeekEventsChange?: (state: {
+    events: Event[];
+    loading: boolean;
+    loadError: string | null;
+  }) => void;
 };
 
 type EventModalState =
@@ -21,13 +26,19 @@ type EventModalState =
 
 async function loadTodaysEventsForAthlete(athleteId: string) {
   const { startedAtFrom, startedAtTo } = getLocalDayRange();
-  return fetchTodaysEventsAction(athleteId, startedAtFrom, startedAtTo);
+  return fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo);
+}
+
+async function loadWeekEventsForAthlete(athleteId: string) {
+  const { startedAtFrom, startedAtTo } = getLocalWeekRange();
+  return fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo);
 }
 
 export function DashboardEventLogging({
   athleteId,
   eventTypes,
   eventTypesError,
+  onWeekEventsChange,
 }: DashboardEventLoggingProps) {
   const [modalState, setModalState] = useState<EventModalState>(null);
   const [formKey, setFormKey] = useState(0);
@@ -35,34 +46,62 @@ export function DashboardEventLogging({
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
 
-  const refreshTodaysEvents = useCallback(async () => {
-    const result = await loadTodaysEventsForAthlete(athleteId);
+  const notifyWeekEvents = useCallback(
+    (events: Event[], loading: boolean, loadError: string | null) => {
+      onWeekEventsChange?.({ events, loading, loadError });
+    },
+    [onWeekEventsChange],
+  );
 
-    if (result.error) {
+  const refreshEvents = useCallback(async () => {
+    setEventsLoading(true);
+    notifyWeekEvents([], true, null);
+
+    const [todayResult, weekResult] = await Promise.all([
+      loadTodaysEventsForAthlete(athleteId),
+      loadWeekEventsForAthlete(athleteId),
+    ]);
+
+    if (todayResult.error) {
       setTodaysEvents([]);
-      setEventsError(result.error);
+      setEventsError(todayResult.error);
     } else {
-      setTodaysEvents(result.events);
+      setTodaysEvents(todayResult.events);
       setEventsError(null);
     }
 
+    if (weekResult.error) {
+      notifyWeekEvents([], false, weekResult.error);
+    } else {
+      notifyWeekEvents(weekResult.events, false, null);
+    }
+
     setEventsLoading(false);
-  }, [athleteId]);
+  }, [athleteId, notifyWeekEvents]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void loadTodaysEventsForAthlete(athleteId).then((result) => {
+    void Promise.all([
+      loadTodaysEventsForAthlete(athleteId),
+      loadWeekEventsForAthlete(athleteId),
+    ]).then(([todayResult, weekResult]) => {
       if (cancelled) {
         return;
       }
 
-      if (result.error) {
+      if (todayResult.error) {
         setTodaysEvents([]);
-        setEventsError(result.error);
+        setEventsError(todayResult.error);
       } else {
-        setTodaysEvents(result.events);
+        setTodaysEvents(todayResult.events);
         setEventsError(null);
+      }
+
+      if (weekResult.error) {
+        notifyWeekEvents([], false, weekResult.error);
+      } else {
+        notifyWeekEvents(weekResult.events, false, null);
       }
 
       setEventsLoading(false);
@@ -71,10 +110,10 @@ export function DashboardEventLogging({
     return () => {
       cancelled = true;
     };
-  }, [athleteId]);
+  }, [athleteId, notifyWeekEvents]);
 
   function openCreateModal(defaultEventTypeId?: string) {
-    setModalState({ mode: "create", defaultEventTypeId });
+    setModalState(defaultEventTypeId ? { mode: "create", defaultEventTypeId } : { mode: "create" });
     setFormKey((current) => current + 1);
   }
 
@@ -89,8 +128,7 @@ export function DashboardEventLogging({
 
   async function handleFormSuccess() {
     closeModal();
-    setEventsLoading(true);
-    await refreshTodaysEvents();
+    await refreshEvents();
   }
 
   const modalOpen = modalState !== null;

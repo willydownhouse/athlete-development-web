@@ -187,7 +187,6 @@ export function EventForm({
               defaultValue={values.eventDate}
               placeholder="Select date"
               className={inputClassName}
-              disabledDates={{ after: new Date() }}
             />
           </label>
 
