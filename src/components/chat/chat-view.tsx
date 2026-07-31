@@ -1,31 +1,28 @@
-import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
-import { DashboardAthleteContent } from "./dashboard-athlete-content";
-import { DashboardBottomNav } from "./bottom-nav";
-import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
-import { DashboardShell } from "./dashboard-shell";
+import { DashboardBottomNav } from "@/components/dashboard/bottom-nav";
+import { DashboardOnboardingPrompt } from "@/components/dashboard/dashboard-onboarding-prompt";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
-type DashboardViewProps = {
+import { ChatContent } from "./chat-content";
+
+type ChatViewProps = {
   userEmail: string;
   isAdmin?: boolean;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
-  eventTypes: EventType[];
-  eventTypesError?: string | null;
   loadError?: string | null;
   onboardingSessions: OnboardingSessionSummary[];
 };
 
-export function DashboardView({
+export function ChatView({
   userEmail,
   isAdmin = false,
   athletes,
   selectedAthlete,
-  eventTypes,
-  eventTypesError,
   loadError,
   onboardingSessions,
-}: DashboardViewProps) {
+}: ChatViewProps) {
   const hasAthlete = selectedAthlete !== null;
 
   return (
@@ -38,21 +35,17 @@ export function DashboardView({
     >
       <div
         className={`relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6 lg:max-w-3xl lg:px-10 ${
-          hasAthlete ? "pb-28 pt-6" : "justify-center py-10 pb-28 lg:py-16"
+          hasAthlete ? "min-h-0 pb-28 pt-6" : "justify-center py-10 pb-28 lg:py-16"
         }`}
       >
         {hasAthlete ? (
           <>
             {loadError ? (
-              <p className="mb-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
+              <p className="mb-6 shrink-0 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
                 {loadError}
               </p>
             ) : null}
-            <DashboardAthleteContent
-              selectedAthlete={selectedAthlete}
-              eventTypes={eventTypes}
-              eventTypesError={eventTypesError}
-            />
+            <ChatContent selectedAthlete={selectedAthlete} />
           </>
         ) : (
           <>
