@@ -3,21 +3,21 @@ import type { Event, EventCategory } from "@/lib/types";
 export type EventTone = "ice" | "recovery" | "gym" | "game" | "rest" | "neutral";
 
 export const EVENT_TONE_BG_CLASS: Record<EventTone, string> = {
-  ice: "bg-[#5f7388]",
-  recovery: "bg-[#6f8f6a]",
-  gym: "bg-[#9a7f5f]",
-  game: "bg-[#9a7f5f]",
-  rest: "bg-[#6f8f6a]",
-  neutral: "bg-[#2a303a]",
+  ice: "bg-[#0ea5e9]",
+  recovery: "bg-[#10b981]",
+  gym: "bg-[#f59e0b]",
+  game: "bg-[#f97316]",
+  rest: "bg-[#a78bfa]",
+  neutral: "bg-[#64748b]",
 };
 
 const EVENT_TONE_TEXT_CLASS: Record<EventTone, string> = {
-  ice: "text-white/90",
-  recovery: "text-white/90",
-  gym: "text-white/90",
-  game: "text-white/90",
-  rest: "text-white/90",
-  neutral: "text-zinc-200",
+  ice: "text-white",
+  recovery: "text-white",
+  gym: "text-[#1a1207]",
+  game: "text-white",
+  rest: "text-white",
+  neutral: "text-white",
 };
 
 const EVENT_TYPE_SLUG_TONE: Record<string, EventTone> = {
