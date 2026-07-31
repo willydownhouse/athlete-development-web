@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import {
@@ -30,8 +31,11 @@ function EventMetricFields({
   loadError,
   resetKey,
 }: EventMetricFieldsProps) {
+  const t = useTranslations("events.metrics");
+  const tCommon = useTranslations("common");
+
   if (loading) {
-    return <p className="text-sm text-zinc-500">Loading metric fields…</p>;
+    return <p className="text-sm text-zinc-500">{t("loading")}</p>;
   }
 
   if (loadError) {
@@ -47,10 +51,8 @@ function EventMetricFields({
   return (
     <div key={resetKey} className="space-y-4 rounded-xl border border-white/10 bg-[#171b22] p-4">
       <div>
-        <h3 className="text-sm font-medium text-white">Metrics</h3>
-        <p className="mt-1 text-xs text-zinc-500">
-          Optional details configured for this event type.
-        </p>
+        <h3 className="text-sm font-medium text-white">{tCommon("metrics")}</h3>
+        <p className="mt-1 text-xs text-zinc-500">{t("optionalHint")}</p>
       </div>
 
       <div className="space-y-4">
@@ -99,37 +101,37 @@ function EventMetricFields({
                 <span className="font-medium text-zinc-300">{label}</span>
                 <div className="grid grid-cols-3 gap-3">
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Hours</span>
+                    <span className="text-xs text-zinc-500">{t("hours")}</span>
                     <input
                       name={metricDurationFieldName(mapping.metricDefinitionId, "hours")}
                       type="number"
                       min={0}
                       defaultValue={hours}
-                      placeholder="0"
+                      placeholder={t("zeroPlaceholder")}
                       className={inputClassName}
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Minutes</span>
+                    <span className="text-xs text-zinc-500">{t("minutes")}</span>
                     <input
                       name={metricDurationFieldName(mapping.metricDefinitionId, "minutes")}
                       type="number"
                       min={0}
                       max={59}
                       defaultValue={minutes}
-                      placeholder="0"
+                      placeholder={t("zeroPlaceholder")}
                       className={inputClassName}
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Seconds</span>
+                    <span className="text-xs text-zinc-500">{t("seconds")}</span>
                     <input
                       name={metricDurationFieldName(mapping.metricDefinitionId, "seconds")}
                       type="number"
                       min={0}
                       max={59}
                       defaultValue={seconds}
-                      placeholder="0"
+                      placeholder={t("zeroPlaceholder")}
                       className={inputClassName}
                     />
                   </label>
@@ -154,7 +156,10 @@ function EventMetricFields({
               />
               {mapping.metricDefinition.description || unit ? (
                 <span className="text-xs text-zinc-500">
-                  {[mapping.metricDefinition.description, unit ? `Unit: ${unit}` : null]
+                  {[
+                    mapping.metricDefinition.description,
+                    unit ? tCommon("unitLabel", { unit }) : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
@@ -180,6 +185,7 @@ export function EventTypeMetricsSection({
   fieldsResetKey,
   onMappingsChange,
 }: EventTypeMetricsSectionProps) {
+  const tLoadErrors = useTranslations("dashboard.loadErrors");
   const [mappings, setMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -203,7 +209,7 @@ export function EventTypeMetricsSection({
 
         setMappings([]);
         onMappingsChange([]);
-        setLoadError(error instanceof Error ? error.message : "Unable to load metrics");
+        setLoadError(error instanceof Error ? error.message : tLoadErrors("metrics"));
       })
       .finally(() => {
         if (!cancelled) {
@@ -214,7 +220,7 @@ export function EventTypeMetricsSection({
     return () => {
       cancelled = true;
     };
-  }, [eventTypeId, onMappingsChange]);
+  }, [eventTypeId, onMappingsChange, tLoadErrors]);
 
   return (
     <EventMetricFields

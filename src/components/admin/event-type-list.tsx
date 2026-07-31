@@ -1,13 +1,19 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { StatusBadge } from "@/components/admin/status-badge";
-import { formatCategoryLabel, type EventType } from "@/lib/types";
+import { createCategoryLabel } from "@/lib/i18n-labels";
+import type { EventType } from "@/lib/types";
 
 type EventTypeListProps = {
   eventTypes: EventType[];
 };
 
-export function EventTypeList({ eventTypes }: EventTypeListProps) {
+export async function EventTypeList({ eventTypes }: EventTypeListProps) {
+  const tCommon = await getTranslations("common");
+  const tAdmin = await getTranslations("admin");
+  const categoryLabel = createCategoryLabel(tAdmin);
+
   return (
     <>
       <ul className="divide-y divide-white/10 md:hidden">
@@ -25,19 +31,17 @@ export function EventTypeList({ eventTypes }: EventTypeListProps) {
                 href={`/admin/event-types/${eventType.id}`}
                 className="shrink-0 text-sm font-medium text-[#9ec9e8] hover:text-[#b7d7ec]"
               >
-                Manage
+                {tCommon("manage")}
               </Link>
             </div>
             <dl className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <dt className="text-zinc-500">Category</dt>
-                <dd className="capitalize text-zinc-300">
-                  {formatCategoryLabel(eventType.category)}
-                </dd>
+                <dt className="text-zinc-500">{tCommon("category")}</dt>
+                <dd className="capitalize text-zinc-300">{categoryLabel(eventType.category)}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500">Sport</dt>
-                <dd className="text-zinc-300">{eventType.sport?.name ?? "General"}</dd>
+                <dt className="text-zinc-500">{tCommon("sport")}</dt>
+                <dd className="text-zinc-300">{eventType.sport?.name ?? tCommon("general")}</dd>
               </div>
             </dl>
           </li>
@@ -48,11 +52,11 @@ export function EventTypeList({ eventTypes }: EventTypeListProps) {
         <table className="min-w-full text-left text-sm">
           <thead className="bg-[#12161d] text-xs uppercase tracking-wide text-zinc-500">
             <tr>
-              <th className="px-6 py-3 font-medium">Name</th>
-              <th className="px-6 py-3 font-medium">Slug</th>
-              <th className="px-6 py-3 font-medium">Category</th>
-              <th className="px-6 py-3 font-medium">Sport</th>
-              <th className="px-6 py-3 font-medium">Status</th>
+              <th className="px-6 py-3 font-medium">{tCommon("name")}</th>
+              <th className="px-6 py-3 font-medium">{tCommon("slug")}</th>
+              <th className="px-6 py-3 font-medium">{tCommon("category")}</th>
+              <th className="px-6 py-3 font-medium">{tCommon("sport")}</th>
+              <th className="px-6 py-3 font-medium">{tCommon("status")}</th>
               <th className="px-6 py-3 font-medium" />
             </tr>
           </thead>
@@ -62,9 +66,11 @@ export function EventTypeList({ eventTypes }: EventTypeListProps) {
                 <td className="px-6 py-4 font-medium text-white">{eventType.name}</td>
                 <td className="px-6 py-4 font-mono text-zinc-400">{eventType.slug}</td>
                 <td className="px-6 py-4 capitalize text-zinc-400">
-                  {formatCategoryLabel(eventType.category)}
+                  {categoryLabel(eventType.category)}
                 </td>
-                <td className="px-6 py-4 text-zinc-400">{eventType.sport?.name ?? "General"}</td>
+                <td className="px-6 py-4 text-zinc-400">
+                  {eventType.sport?.name ?? tCommon("general")}
+                </td>
                 <td className="px-6 py-4">
                   <StatusBadge active={eventType.active} />
                 </td>
@@ -73,7 +79,7 @@ export function EventTypeList({ eventTypes }: EventTypeListProps) {
                     href={`/admin/event-types/${eventType.id}`}
                     className="font-medium text-[#9ec9e8] hover:text-[#b7d7ec]"
                   >
-                    Manage
+                    {tCommon("manage")}
                   </Link>
                 </td>
               </tr>

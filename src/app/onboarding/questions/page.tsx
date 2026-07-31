@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -25,6 +26,7 @@ type OnboardingQuestionsPageProps = {
 export default async function OnboardingQuestionsPage({
   searchParams,
 }: OnboardingQuestionsPageProps) {
+  const t = await getTranslations("onboarding.questions");
   const session = await auth();
 
   if (!session?.user) {
@@ -104,7 +106,7 @@ export default async function OnboardingQuestionsPage({
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <div className="mb-5 lg:mb-7">
           <p className="text-sm text-zinc-400 lg:text-base">
-            {onboardingSession.sport.name} onboarding
+            {t("sportOnboarding", { sportName: onboardingSession.sport.name })}
           </p>
         </div>
 

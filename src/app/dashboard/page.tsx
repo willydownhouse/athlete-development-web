@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
@@ -19,6 +20,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     redirect("/");
   }
 
+  const tErrors = await getTranslations("errors");
+  const tLoadErrors = await getTranslations("dashboard.loadErrors");
   const { athleteId } = await searchParams;
   const token = await getAuthBearerToken();
   const onboardingSessions = await loadShellOnboardingSessions(token);
@@ -39,14 +42,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       loadError =
         athletesResult.reason instanceof Error
           ? athletesResult.reason.message
-          : "Unable to load athletes";
+          : tLoadErrors("athletes");
     }
 
     if (appUserResult.status === "fulfilled") {
       isAdmin = appUserResult.value.role === "admin";
     }
   } else {
-    loadError = "Missing Auth.js session token";
+    loadError = tErrors("missingSessionToken");
   }
 
   if (athletes.length > 0) {
@@ -70,10 +73,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   let eventTypesError: string | null = null;
 
   try {
-    // Fetch the full active catalog so Quick Log can split General vs Hockey.
     eventTypes = await fetchEventTypes();
   } catch (error) {
-    eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
+    eventTypesError = error instanceof Error ? error.message : tLoadErrors("eventTypes");
   }
 
   return (

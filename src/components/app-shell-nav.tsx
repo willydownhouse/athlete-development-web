@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { dashboardHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
@@ -10,6 +11,7 @@ import {
   onboardingSessionAvatarClass,
   onboardingSessionHref,
   onboardingSessionStatusLabel,
+  type OnboardingSessionStatusLabels,
 } from "@/components/onboarding/onboarding-session-nav";
 import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
@@ -76,9 +78,11 @@ function AthleteNavLink({
 function OnboardingSessionNavList({
   sessions,
   onNavigate,
+  statusLabels,
 }: {
   sessions: OnboardingSessionSummary[];
   onNavigate?: () => void;
+  statusLabels: OnboardingSessionStatusLabels;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -92,6 +96,7 @@ function OnboardingSessionNavList({
       session={session}
       onNavigate={onNavigate}
       active={activeSessionId === session.id}
+      statusLabels={statusLabels}
     />
   ));
 }
@@ -100,16 +105,18 @@ function OnboardingSessionNavLink({
   session,
   onNavigate,
   active,
+  statusLabels,
 }: {
   session: OnboardingSessionSummary;
   onNavigate?: () => void;
   active: boolean;
+  statusLabels: OnboardingSessionStatusLabels;
 }) {
   return (
     <Link
       href={onboardingSessionHref(session)}
       onClick={onNavigate}
-      title={onboardingSessionStatusLabel(session.status)}
+      title={onboardingSessionStatusLabel(session.status, statusLabels)}
       className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-white/5 ${
         active ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
       }`}
@@ -160,7 +167,13 @@ export function AppShellNav({
   selectedAthlete = null,
   onNavigate,
 }: AppShellNavProps) {
+  const t = useTranslations("nav");
   const pathname = usePathname();
+  const statusLabels: OnboardingSessionStatusLabels = {
+    in_progress: t("sessionStatus.inProgress"),
+    completed: t("sessionStatus.completed"),
+    abandoned: t("sessionStatus.abandoned"),
+  };
   const dashboardLink =
     selectedAthlete !== null ? dashboardHref(selectedAthlete.id) : defaultDashboardHref(athletes);
 
@@ -172,7 +185,7 @@ export function AppShellNav({
           onClick={onNavigate}
           className={navLinkClass(pathname.startsWith("/dashboard"))}
         >
-          Dashboard
+          {t("dashboard")}
         </Link>
 
         {athletes.length > 1 ? (
@@ -199,7 +212,7 @@ export function AppShellNav({
           onClick={onNavigate}
           className={navLinkClass(pathname.startsWith("/onboarding"))}
         >
-          Onboarding
+          {t("onboarding")}
         </Link>
 
         {onboardingSessions.length > 0 ? (
@@ -211,10 +224,15 @@ export function AppShellNav({
                   session={session}
                   onNavigate={onNavigate}
                   active={false}
+                  statusLabels={statusLabels}
                 />
               ))}
             >
-              <OnboardingSessionNavList sessions={onboardingSessions} onNavigate={onNavigate} />
+              <OnboardingSessionNavList
+                sessions={onboardingSessions}
+                onNavigate={onNavigate}
+                statusLabels={statusLabels}
+              />
             </Suspense>
           </div>
         ) : null}
@@ -226,7 +244,7 @@ export function AppShellNav({
           onClick={onNavigate}
           className={navLinkClass(pathname.startsWith("/admin"))}
         >
-          Admin
+          {t("admin")}
         </Link>
       ) : null}
     </nav>

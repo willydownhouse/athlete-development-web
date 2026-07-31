@@ -4,6 +4,7 @@ import { format, isValid, parseISO } from "date-fns";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { DayPicker, type Matcher } from "react-day-picker";
+import { useTranslations } from "next-intl";
 
 import { dayPickerClassNames } from "@/components/day-picker-styles";
 import { PortalSelect, isPickerOverlayTarget } from "@/components/picker-menu";
@@ -48,12 +49,15 @@ export function DatePickerInput({
   name,
   id,
   defaultValue,
-  placeholder = "Select date",
+  placeholder,
   className,
   disabledDates,
   fromYear = 1920,
   toYear = new Date().getFullYear(),
 }: DatePickerInputProps) {
+  const tForm = useTranslations("form");
+  const tAria = useTranslations("aria");
+  const resolvedPlaceholder = placeholder ?? tForm("selectDate");
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -142,7 +146,7 @@ export function DatePickerInput({
   }, [open]);
 
   const formattedValue = selected ? format(selected, "yyyy-MM-dd") : "";
-  const displayValue = selected ? format(selected, "MMM d, yyyy") : placeholder;
+  const displayValue = selected ? format(selected, "MMM d, yyyy") : resolvedPlaceholder;
 
   const panel =
     open && typeof document !== "undefined"
@@ -150,7 +154,7 @@ export function DatePickerInput({
           <div
             ref={panelRef}
             role="dialog"
-            aria-label="Choose date"
+            aria-label={tAria("chooseDate")}
             style={panelStyle}
             className="rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >

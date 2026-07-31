@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   ApiError,
@@ -14,13 +15,16 @@ import { getAuthBearerToken } from "@/lib/auth-token";
 import { getEventFormValidationError } from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
 import type { Event, EventIntensity } from "@/lib/types";
+import { createValidationMessages } from "@/lib/validation-messages";
 
 export type DashboardActionState = {
   error?: string;
   success?: string;
 };
 
-function actionError(error: unknown): DashboardActionState {
+async function actionError(error: unknown): Promise<DashboardActionState> {
+  const t = await getTranslations("errors");
+
   if (error instanceof ApiError) {
     return { error: error.apiError ?? error.message };
   }
@@ -29,7 +33,7 @@ function actionError(error: unknown): DashboardActionState {
     return { error: error.message };
   }
 
-  return { error: "Something went wrong" };
+  return { error: t("generic") };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -95,11 +99,12 @@ function readEventFormFields(formData: FormData) {
   };
 }
 
-function validateEventTextFields(
+async function validateEventTextFields(
   formData: FormData,
   metricMappings: Awaited<ReturnType<typeof fetchEventTypeMetricDefinitions>> = [],
-): DashboardActionState | null {
-  const error = getEventFormValidationError(formData, metricMappings);
+): Promise<DashboardActionState | null> {
+  const validationMessages = createValidationMessages(await getTranslations("validation"));
+  const error = getEventFormValidationError(formData, metricMappings, validationMessages);
 
   if (error) {
     return { error };
@@ -124,28 +129,31 @@ export async function createEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
 ): Promise<DashboardActionState> {
+  const tErrors = await getTranslations("errors");
+  const tValidation = await getTranslations("dashboard.events.validation");
+  const tSuccess = await getTranslations("dashboard.events.success");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   const fields = readEventFormFields(formData);
 
   if (!fields.athleteId) {
-    return { error: "Athlete is required" };
+    return { error: tValidation("athleteRequired") };
   }
 
   if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
+    return { error: tValidation("eventTypeRequired") };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
-    return { error: "Date is required" };
+    return { error: tValidation("dateRequired") };
   }
 
   const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
+  const textError = await validateEventTextFields(formData, metricMappings);
   if (textError) {
     return textError;
   }
@@ -165,7 +173,7 @@ export async function createEventAction(
     });
     revalidateTag(`events-${fields.athleteId}`, "max");
 
-    return { success: "Event added" };
+    return { success: tSuccess("added") };
   } catch (error) {
     return actionError(error);
   }
@@ -175,33 +183,36 @@ export async function updateEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
 ): Promise<DashboardActionState> {
+  const tErrors = await getTranslations("errors");
+  const tValidation = await getTranslations("dashboard.events.validation");
+  const tSuccess = await getTranslations("dashboard.events.success");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   const eventId = readString(formData, "eventId");
   const fields = readEventFormFields(formData);
 
   if (!fields.athleteId) {
-    return { error: "Athlete is required" };
+    return { error: tValidation("athleteRequired") };
   }
 
   if (!eventId) {
-    return { error: "Event is required" };
+    return { error: tValidation("eventRequired") };
   }
 
   if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
+    return { error: tValidation("eventTypeRequired") };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
-    return { error: "Date is required" };
+    return { error: tValidation("dateRequired") };
   }
 
   const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
+  const textError = await validateEventTextFields(formData, metricMappings);
   if (textError) {
     return textError;
   }
@@ -221,7 +232,7 @@ export async function updateEventAction(
 
     revalidateTag(`events-${fields.athleteId}`, "max");
 
-    return { success: "Event updated" };
+    return { success: tSuccess("updated") };
   } catch (error) {
     return actionError(error);
   }
@@ -231,28 +242,31 @@ export async function deleteEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
 ): Promise<DashboardActionState> {
+  const tErrors = await getTranslations("errors");
+  const tValidation = await getTranslations("dashboard.events.validation");
+  const tSuccess = await getTranslations("dashboard.events.success");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   const athleteId = readString(formData, "athleteId");
   const eventId = readString(formData, "eventId");
 
   if (!athleteId) {
-    return { error: "Athlete is required" };
+    return { error: tValidation("athleteRequired") };
   }
 
   if (!eventId) {
-    return { error: "Event is required" };
+    return { error: tValidation("eventRequired") };
   }
 
   try {
     await deleteEvent(token, athleteId, eventId);
     revalidateTag(`events-${athleteId}`, "max");
 
-    return { success: "Event deleted" };
+    return { success: tSuccess("deleted") };
   } catch (error) {
     return actionError(error);
   }
@@ -263,10 +277,12 @@ export async function fetchEventsInRangeAction(
   startedAtFrom: string,
   startedAtTo: string,
 ): Promise<{ events: Event[]; error?: undefined } | { events: []; error: string }> {
+  const tErrors = await getTranslations("errors");
+  const tLoadErrors = await getTranslations("dashboard.loadErrors");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { events: [], error: "You need to sign in again" };
+    return { events: [], error: tErrors("signInRequired") };
   }
 
   try {
@@ -287,6 +303,6 @@ export async function fetchEventsInRangeAction(
       return { events: [], error: error.message };
     }
 
-    return { events: [], error: "Unable to load events" };
+    return { events: [], error: tLoadErrors("events") };
   }
 }

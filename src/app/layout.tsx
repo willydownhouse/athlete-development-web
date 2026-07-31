@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
@@ -13,19 +14,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Athlete Development Center",
-  description: "AI-assisted athlete development for parents, coaches, and young athletes.",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("meta");
 
-export default function RootLayout({
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full bg-slate-50 text-slate-900">{children}</body>
+    <html
+      lang={locale}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-slate-50 text-slate-900">
+        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      </body>
     </html>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createEventTypeAction, type ActionState } from "@/app/admin/actions";
-import { EVENT_CATEGORIES, formatCategoryLabel, type Sport } from "@/lib/types";
+import { createCategoryLabel } from "@/lib/i18n-labels";
+import { EVENT_CATEGORIES, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -18,6 +20,10 @@ type CreateEventTypeFormProps = {
 };
 
 export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
+  const t = useTranslations("admin.eventTypes");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const categoryLabel = createCategoryLabel(tAdmin);
   const [state, formAction] = useActionState(createEventTypeAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
@@ -33,33 +39,38 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Slug</span>
+          <span className="font-medium text-zinc-300">{tCommon("slug")}</span>
           <input
             name="slug"
             required
             pattern="[a-z0-9_]+"
-            placeholder="ice_practice"
+            placeholder={t("slugPlaceholder")}
             className={inputClassName}
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
-          <input name="name" required placeholder="Ice practice" className={inputClassName} />
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
+          <input
+            name="name"
+            required
+            placeholder={t("namePlaceholder")}
+            className={inputClassName}
+          />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Category</span>
+          <span className="font-medium text-zinc-300">{tCommon("category")}</span>
           <select name="category" required className={inputClassName}>
             {EVENT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
-                {formatCategoryLabel(category)}
+                {categoryLabel(category)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select name="sportId" defaultValue="" className={inputClassName}>
-            <option value="general">General (all sports)</option>
+            <option value="general">{tCommon("generalAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -76,10 +87,10 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
           defaultChecked
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton>Create event type</SubmitButton>
+      <SubmitButton>{t("createEventType")}</SubmitButton>
     </form>
   );
 }

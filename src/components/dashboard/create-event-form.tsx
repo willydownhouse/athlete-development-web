@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import {
   createEventAction,
@@ -24,18 +25,12 @@ import {
   getEventFormValidationError,
 } from "@/lib/event-form-schema";
 import type { Event, EventType, EventTypeMetricDefinition } from "@/lib/types";
+import { createValidationMessages } from "@/lib/validation-messages";
 
 const initialState: DashboardActionState = {};
 
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
-
-const INTENSITY_OPTIONS = [
-  { value: "", label: "Not set" },
-  { value: "light", label: "Light" },
-  { value: "moderate", label: "Moderate" },
-  { value: "hard", label: "Hard" },
-] as const;
 
 type EventFormProps = {
   athleteId: string;
@@ -51,7 +46,11 @@ type EventTypeGroup = {
   items: EventType[];
 };
 
-function groupEventTypes(eventTypes: EventType[]): EventTypeGroup[] {
+function groupEventTypes(
+  eventTypes: EventType[],
+  hockeyLabel: string,
+  generalLabel: string,
+): EventTypeGroup[] {
   const general = eventTypes
     .filter((eventType) => eventType.sportId === null)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -62,17 +61,27 @@ function groupEventTypes(eventTypes: EventType[]): EventTypeGroup[] {
   const groups: EventTypeGroup[] = [];
 
   if (hockey.length > 0) {
-    groups.push({ label: "Hockey", items: hockey });
+    groups.push({ label: hockeyLabel, items: hockey });
   }
 
   if (general.length > 0) {
-    groups.push({ label: "General", items: general });
+    groups.push({ label: generalLabel, items: general });
   }
 
   return groups;
 }
 
-function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
+function DeleteConfirmActions({
+  onCancel,
+  deletingLabel,
+  deleteLabel,
+  cancelLabel,
+}: {
+  onCancel: () => void;
+  deletingLabel: string;
+  deleteLabel: string;
+  cancelLabel: string;
+}) {
   const { pending } = useFormStatus();
 
   return (
@@ -82,7 +91,7 @@ function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
         disabled={pending}
         className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
       >
-        {pending ? "Deleting…" : "Delete event"}
+        {pending ? deletingLabel : deleteLabel}
       </button>
       <button
         type="button"
@@ -90,7 +99,7 @@ function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
         onClick={onCancel}
         className="inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
       >
-        Cancel
+        {cancelLabel}
       </button>
     </div>
   );
@@ -104,6 +113,12 @@ export function EventForm({
   defaultEventDate,
   onSuccess,
 }: EventFormProps) {
+  const t = useTranslations("events.form");
+  const tForm = useTranslations("form");
+  const tCommon = useTranslations("common");
+  const tValidation = useTranslations("validation");
+  const validationMessages = useMemo(() => createValidationMessages(tValidation), [tValidation]);
+
   const isEdit = event !== undefined;
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -112,7 +127,19 @@ export function EventForm({
     initialState,
   );
   const [deleteState, deleteFormAction] = useActionState(deleteEventAction, initialState);
-  const groups = useMemo(() => groupEventTypes(eventTypes), [eventTypes]);
+  const groups = useMemo(
+    () => groupEventTypes(eventTypes, t("groups.hockey"), t("groups.general")),
+    [eventTypes, t],
+  );
+  const intensityOptions = useMemo(
+    () => [
+      { value: "", label: t("intensity.notSet") },
+      { value: "light", label: t("intensity.light") },
+      { value: "moderate", label: t("intensity.moderate") },
+      { value: "hard", label: t("intensity.hard") },
+    ],
+    [t],
+  );
   const values = useMemo(
     () =>
       event
@@ -149,11 +176,7 @@ export function EventForm({
   }, [deleteState.success, onSuccess]);
 
   if (eventTypes.length === 0) {
-    return (
-      <p className="text-sm text-zinc-400">
-        No event types are available yet. Ask an admin to configure event types first.
-      </p>
-    );
+    return <p className="text-sm text-zinc-400">{t("noEventTypes")}</p>;
   }
 
   return (
@@ -165,6 +188,7 @@ export function EventForm({
           const error = getEventFormValidationError(
             new FormData(submitEvent.currentTarget),
             metricMappings,
+            validationMessages,
           );
 
           if (error) {
@@ -184,10 +208,10 @@ export function EventForm({
         />
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Event type</span>
+          <span className="font-medium text-zinc-300">{t("eventType")}</span>
           <FormSelect
             name="eventTypeId"
-            placeholder="Select event type"
+            placeholder={t("selectEventType")}
             className={inputClassName}
             defaultValue={values.eventTypeId}
             onValueChange={handleEventTypeChange}
@@ -203,45 +227,45 @@ export function EventForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Date</span>
+            <span className="font-medium text-zinc-300">{t("date")}</span>
             <DatePickerInput
               name="eventDate"
               defaultValue={values.eventDate}
-              placeholder="Select date"
+              placeholder={tForm("selectDate")}
               className={inputClassName}
             />
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Start time</span>
+            <span className="font-medium text-zinc-300">{t("startTime")}</span>
             <TimePickerInput
               name="eventTime"
               defaultValue={values.eventTime}
-              placeholder="Select time"
+              placeholder={tForm("selectTime")}
               className={inputClassName}
             />
-            <span className="text-xs text-zinc-500">Leave empty to default to noon.</span>
+            <span className="text-xs text-zinc-500">{t("startTimeHint")}</span>
           </label>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Duration (minutes)</span>
+            <span className="font-medium text-zinc-300">{t("durationMinutes")}</span>
             <input
               name="durationMinutes"
               type="number"
               min={1}
               defaultValue={values.durationMinutes}
-              placeholder="75"
+              placeholder={t("durationPlaceholder")}
               className={inputClassName}
             />
           </label>
 
           <div className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-zinc-300">Intensity</span>
+            <span className="font-medium text-zinc-300">{t("intensityLabel")}</span>
             <OptionPills
               name="intensity"
-              options={[...INTENSITY_OPTIONS]}
+              options={intensityOptions}
               defaultValue={values.intensity}
             />
           </div>
@@ -260,32 +284,34 @@ export function EventForm({
         ) : null}
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Title</span>
+          <span className="font-medium text-zinc-300">{t("title")}</span>
           <input
             name="title"
             defaultValue={values.title}
-            placeholder="Morning ice practice"
+            placeholder={t("titlePlaceholder")}
             className={inputClassName}
           />
-          <span className="text-xs text-zinc-500">Max {EVENT_TITLE_MAX_LENGTH} characters</span>
+          <span className="text-xs text-zinc-500">
+            {tCommon("maxCharacters", { max: EVENT_TITLE_MAX_LENGTH })}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Notes</span>
+          <span className="font-medium text-zinc-300">{t("notes")}</span>
           <textarea
             name="description"
             rows={3}
             defaultValue={values.description}
-            placeholder="Edge work, small-area games, felt pretty hard."
+            placeholder={t("notesPlaceholder")}
             className={`${inputClassName} resize-y`}
           />
           <span className="text-xs text-zinc-500">
-            Max {EVENT_DESCRIPTION_MAX_LENGTH} characters
+            {tCommon("maxCharacters", { max: EVENT_DESCRIPTION_MAX_LENGTH })}
           </span>
         </label>
 
         <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-end">
-          <SubmitButton>{isEdit ? "Save changes" : "Add event"}</SubmitButton>
+          <SubmitButton>{isEdit ? tCommon("saveChanges") : t("addButton")}</SubmitButton>
         </div>
       </form>
 
@@ -296,10 +322,13 @@ export function EventForm({
 
           {deleteConfirmOpen ? (
             <div className="space-y-3">
-              <p className="text-sm text-zinc-400">
-                Delete this event permanently? This cannot be undone.
-              </p>
-              <DeleteConfirmActions onCancel={() => setDeleteConfirmOpen(false)} />
+              <p className="text-sm text-zinc-400">{t("deleteConfirm")}</p>
+              <DeleteConfirmActions
+                onCancel={() => setDeleteConfirmOpen(false)}
+                deletingLabel={tCommon("deleting")}
+                deleteLabel={t("deleteButton")}
+                cancelLabel={tCommon("cancel")}
+              />
             </div>
           ) : (
             <button
@@ -307,7 +336,7 @@ export function EventForm({
               onClick={() => setDeleteConfirmOpen(true)}
               className="text-sm font-medium text-red-300 transition hover:text-red-200"
             >
-              Delete event
+              {t("deleteButton")}
             </button>
           )}
         </form>

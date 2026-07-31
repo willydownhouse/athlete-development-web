@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
+import { createValueTypeLabel } from "@/lib/i18n-labels";
 import { METRIC_VALUE_TYPES, type MetricDefinition, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
@@ -18,6 +20,10 @@ type UpdateMetricDefinitionFormProps = {
 };
 
 export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefinitionFormProps) {
+  const t = useTranslations("admin.metricDefinitions");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const valueTypeLabel = createValueTypeLabel(tAdmin);
   const [state, formAction] = useActionState(updateMetricDefinitionAction, initialState);
 
   return (
@@ -27,7 +33,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Key</span>
+          <span className="font-medium text-zinc-300">{tCommon("key")}</span>
           <input
             name="key"
             required
@@ -37,21 +43,21 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
           <input name="name" required defaultValue={metric.name} className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Value type</span>
+          <span className="font-medium text-zinc-300">{t("valueType")}</span>
           <select name="valueType" defaultValue={metric.valueType} className={inputClassName}>
             {METRIC_VALUE_TYPES.map((valueType) => (
               <option key={valueType} value={valueType}>
-                {valueType}
+                {valueTypeLabel(valueType)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Canonical unit</span>
+          <span className="font-medium text-zinc-300">{t("canonicalUnit")}</span>
           <input
             name="canonicalUnit"
             defaultValue={metric.canonicalUnit ?? ""}
@@ -59,13 +65,13 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select
             name="sportId"
             defaultValue={metric.sportId ?? "general"}
             className={inputClassName}
           >
-            <option value="general">General (all sports)</option>
+            <option value="general">{tCommon("generalAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -76,7 +82,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Description</span>
+        <span className="font-medium text-zinc-300">{tCommon("description")}</span>
         <textarea
           name="description"
           rows={2}
@@ -94,10 +100,10 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           defaultChecked={metric.active}
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton variant="secondary">Save changes</SubmitButton>
+      <SubmitButton variant="secondary">{tCommon("saveChanges")}</SubmitButton>
     </form>
   );
 }

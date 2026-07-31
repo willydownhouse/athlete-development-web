@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
 export type FormSelectOption = {
   value: string;
@@ -39,10 +40,13 @@ export function FormSelect({
   options,
   groups,
   defaultValue = "",
-  placeholder = "Select",
+  placeholder,
   className = "",
   onValueChange,
 }: FormSelectProps) {
+  const tForm = useTranslations("form");
+  const tCommon = useTranslations("common");
+  const resolvedPlaceholder = placeholder ?? tForm("select");
   const listboxId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -52,7 +56,7 @@ export function FormSelect({
 
   const allOptions = flattenOptions(options, groups);
   const selectedOption = allOptions.find((option) => option.value === value);
-  const displayLabel = selectedOption?.label ?? placeholder;
+  const displayLabel = selectedOption?.label ?? resolvedPlaceholder;
 
   useEffect(() => {
     if (!open || !triggerRef.current) {
@@ -145,7 +149,7 @@ export function FormSelect({
         }`}
       >
         <span>{option.label}</span>
-        {selected ? <span className="text-xs text-[#9ec9e8]">Selected</span> : null}
+        {selected ? <span className="text-xs text-[#9ec9e8]">{tCommon("selected")}</span> : null}
       </button>
     );
   }

@@ -1,16 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateOnboardingQuestionAction, type ActionState } from "@/app/admin/actions";
-import {
-  ONBOARDING_ANSWER_TYPES,
-  formatAnswerTypeLabel,
-  type OnboardingQuestion,
-  type Sport,
-} from "@/lib/types";
+import { createAnswerTypeLabel } from "@/lib/i18n-labels";
+import { ONBOARDING_ANSWER_TYPES, type OnboardingQuestion, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -34,6 +31,10 @@ export function UpdateOnboardingQuestionForm({
   question,
   sports,
 }: UpdateOnboardingQuestionFormProps) {
+  const t = useTranslations("admin.onboardingQuestions");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const answerTypeLabel = createAnswerTypeLabel(tAdmin);
   const [state, formAction] = useActionState(updateOnboardingQuestionAction, initialState);
 
   return (
@@ -43,7 +44,7 @@ export function UpdateOnboardingQuestionForm({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Key</span>
+          <span className="font-medium text-zinc-300">{tCommon("key")}</span>
           <input
             name="key"
             required
@@ -53,23 +54,23 @@ export function UpdateOnboardingQuestionForm({
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Answer type</span>
+          <span className="font-medium text-zinc-300">{t("answerType")}</span>
           <select name="answerType" defaultValue={question.answerType} className={inputClassName}>
             {ONBOARDING_ANSWER_TYPES.map((answerType) => (
               <option key={answerType} value={answerType}>
-                {formatAnswerTypeLabel(answerType)}
+                {answerTypeLabel(answerType)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select
             name="sportId"
             defaultValue={question.sportId ?? "general"}
             className={inputClassName}
           >
-            <option value="general">Common (all sports)</option>
+            <option value="general">{tCommon("commonAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -78,7 +79,7 @@ export function UpdateOnboardingQuestionForm({
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sort order</span>
+          <span className="font-medium text-zinc-300">{t("sortOrder")}</span>
           <input
             name="sortOrder"
             type="number"
@@ -87,7 +88,7 @@ export function UpdateOnboardingQuestionForm({
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Maps to field</span>
+          <span className="font-medium text-zinc-300">{t("mapsToField")}</span>
           <input
             name="mapsToField"
             defaultValue={question.mapsToField ?? ""}
@@ -97,7 +98,7 @@ export function UpdateOnboardingQuestionForm({
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Prompt</span>
+        <span className="font-medium text-zinc-300">{tCommon("prompt")}</span>
         <textarea
           name="prompt"
           required
@@ -108,7 +109,7 @@ export function UpdateOnboardingQuestionForm({
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Help text</span>
+        <span className="font-medium text-zinc-300">{t("helpText")}</span>
         <textarea
           name="helpText"
           rows={2}
@@ -118,7 +119,7 @@ export function UpdateOnboardingQuestionForm({
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Options (JSON)</span>
+        <span className="font-medium text-zinc-300">{t("optionsJson")}</span>
         <textarea
           name="options"
           rows={3}
@@ -137,7 +138,7 @@ export function UpdateOnboardingQuestionForm({
             defaultChecked={question.required}
             className="rounded border-white/20 bg-[#1c222c]"
           />
-          Required
+          {tCommon("required")}
         </label>
         <input type="hidden" name="active" value="false" />
         <label className="flex items-center gap-2 text-sm text-zinc-300">
@@ -148,11 +149,11 @@ export function UpdateOnboardingQuestionForm({
             defaultChecked={question.active}
             className="rounded border-white/20 bg-[#1c222c]"
           />
-          Active
+          {tCommon("active")}
         </label>
       </div>
 
-      <SubmitButton variant="secondary">Save changes</SubmitButton>
+      <SubmitButton variant="secondary">{tCommon("saveChanges")}</SubmitButton>
     </form>
   );
 }

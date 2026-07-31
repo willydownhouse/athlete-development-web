@@ -20,13 +20,11 @@ export function onboardingSessionAvatarClass(status: OnboardingSessionSummary["s
   }
 }
 
-export function onboardingSessionStatusLabel(status: OnboardingSessionSummary["status"]): string {
-  switch (status) {
-    case "in_progress":
-      return "In progress";
-    case "completed":
-      return "Completed";
-    case "abandoned":
-      return "Abandoned";
-  }
+export type OnboardingSessionStatusLabels = Record<OnboardingSessionSummary["status"], string>;
+
+export function onboardingSessionStatusLabel(
+  status: OnboardingSessionSummary["status"],
+  labels: OnboardingSessionStatusLabels,
+): string {
+  return labels[status];
 }

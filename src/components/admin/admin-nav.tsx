@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const navItems = [
-  { href: "/admin", label: "Overview", exact: true },
-  { href: "/admin/sports", label: "Sports" },
-  { href: "/admin/event-types", label: "Event types" },
-  { href: "/admin/metric-definitions", label: "Metric definitions" },
-  { href: "/admin/onboarding-questions", label: "Onboarding questions" },
+  { href: "/admin", key: "overview" as const, exact: true },
+  { href: "/admin/sports", key: "sports" as const },
+  { href: "/admin/event-types", key: "eventTypes" as const },
+  { href: "/admin/metric-definitions", key: "metricDefinitions" as const },
+  { href: "/admin/onboarding-questions", key: "onboardingQuestions" as const },
 ];
 
 type AdminNavProps = {
@@ -17,6 +18,7 @@ type AdminNavProps = {
 
 export function AdminNav({ onNavigate }: AdminNavProps) {
   const pathname = usePathname();
+  const t = useTranslations("admin");
 
   return (
     <nav className="space-y-1">
@@ -34,7 +36,7 @@ export function AdminNav({ onNavigate }: AdminNavProps) {
               isActive ? "bg-white/5 text-white" : "text-zinc-300 hover:bg-white/5 hover:text-white"
             }`}
           >
-            {item.label}
+            {t(`nav.${item.key}`)}
           </Link>
         );
       })}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { EventForm } from "@/components/dashboard/create-event-form";
 import { Modal } from "@/components/ui/modal";
 import type { Event, EventType } from "@/lib/types";
@@ -28,8 +30,9 @@ export function EventFormModal({
   onClose,
   onSuccess,
 }: EventFormModalProps) {
+  const t = useTranslations("events.modal");
   const modalOpen = modalState !== null;
-  const modalTitle = modalState?.mode === "edit" ? "Edit event" : "Add event";
+  const modalTitle = modalState?.mode === "edit" ? t("edit") : t("add");
 
   return (
     <Modal open={modalOpen} onClose={onClose} title={modalTitle} align="content">

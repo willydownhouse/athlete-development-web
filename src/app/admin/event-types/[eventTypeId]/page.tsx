@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { EventTypeMetricsSection } from "@/components/admin/event-type-metrics-section";
@@ -12,7 +13,7 @@ import {
   listAdminSports,
 } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
-import { formatCategoryLabel } from "@/lib/types";
+import { createCategoryLabel } from "@/lib/i18n-labels";
 
 type AdminEventTypeDetailPageProps = {
   params: Promise<{ eventTypeId: string }>;
@@ -32,6 +33,9 @@ function isMetricCompatibleWithEventType(
 export default async function AdminEventTypeDetailPage({ params }: AdminEventTypeDetailPageProps) {
   const { eventTypeId } = await params;
   const { token } = await requireAdmin();
+  const tAdmin = await getTranslations("admin");
+  const tCommon = await getTranslations("common");
+  const categoryLabel = createCategoryLabel(tAdmin);
 
   let eventType;
 
@@ -63,25 +67,25 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
           href="/admin/event-types"
           className="inline-flex text-sm font-medium text-zinc-400 hover:text-white"
         >
-          ← Back to event types
+          {tAdmin("eventTypes.backToList")}
         </Link>
         <PageHeader
           title={eventType.name}
-          description={`Manage event type settings and allowed metrics for ${eventType.slug}.`}
+          description={tAdmin("eventTypes.detailDescription", { slug: eventType.slug })}
         />
         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
           <StatusBadge active={eventType.active} />
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-zinc-300 capitalize">
-            {formatCategoryLabel(eventType.category)}
+            {categoryLabel(eventType.category)}
           </span>
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-zinc-300">
-            {eventType.sport?.name ?? "General"}
+            {eventType.sport?.name ?? tCommon("general")}
           </span>
         </div>
       </div>
 
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
-        <h2 className="text-lg font-medium text-white">Event type settings</h2>
+        <h2 className="text-lg font-medium text-white">{tAdmin("eventTypes.settingsTitle")}</h2>
         <div className="mt-4">
           <UpdateEventTypeForm eventType={eventType} sports={sports} />
         </div>

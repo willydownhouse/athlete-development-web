@@ -1,4 +1,8 @@
+import type { useTranslations } from "next-intl";
+
 import type { Athlete } from "@/lib/types";
+
+type AthleteSubtitleTranslator = ReturnType<typeof useTranslations<"dashboard.athleteSubtitle">>;
 
 export function athleteInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -74,11 +78,15 @@ function positionFromProfile(athlete: Athlete): string | null {
   return typeof position === "string" && position.trim() ? position.trim() : null;
 }
 
-export function athleteSubtitle(athlete: Athlete, eventsThisWeek: number): string {
+export function athleteSubtitle(
+  athlete: Athlete,
+  eventsThisWeek: number,
+  t: AthleteSubtitleTranslator,
+): string {
   const level = athlete.profile?.level?.trim() || ageGroupFromDateOfBirth(athlete.dateOfBirth);
   const position = positionFromProfile(athlete);
   const identity = [level, position].filter(Boolean).join(" ");
-  const eventsLabel = `${eventsThisWeek} event${eventsThisWeek === 1 ? "" : "s"} this week`;
+  const eventsLabel = t("eventsThisWeek", { count: eventsThisWeek });
 
-  return identity ? `${identity} · ${eventsLabel}` : eventsLabel;
+  return identity ? `${identity}${t("separator")}${eventsLabel}` : eventsLabel;
 }

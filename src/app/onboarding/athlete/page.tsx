@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -12,6 +13,7 @@ type OnboardingAthletePageProps = {
 };
 
 export default async function OnboardingAthletePage({ searchParams }: OnboardingAthletePageProps) {
+  const t = await getTranslations("onboarding.athleteDetails");
   const session = await auth();
 
   if (!session?.user) {
@@ -67,11 +69,10 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">{sportName}</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
-              Athlete details
+              {t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:text-base lg:leading-7">
-              Start with a few basics. Next we&apos;ll ask a few guided questions to build the full
-              profile.
+              {t("description")}
             </p>
           </div>
 

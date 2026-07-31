@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -35,6 +36,9 @@ export function OnboardingShell({
   onboardingSessions,
   children,
 }: OnboardingShellProps) {
+  const tNav = useTranslations("nav");
+  const tCommon = useTranslations("common");
+  const tAria = useTranslations("aria");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = useCallback(() => {
@@ -67,7 +71,7 @@ export function OnboardingShell({
         <button
           type="button"
           className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          aria-label="Close menu"
+          aria-label={tAria("closeMenu")}
           onClick={closeMobile}
         />
       ) : null}
@@ -80,14 +84,14 @@ export function OnboardingShell({
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Onboarding
+              {tNav("onboarding")}
             </p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
+            <p className="mt-1 text-lg font-semibold text-white">{tCommon("appName")}</p>
           </div>
           <button
             type="button"
             className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-            aria-label="Close menu"
+            aria-label={tAria("closeMenu")}
             onClick={closeMobile}
           >
             <CloseIcon />
@@ -113,15 +117,15 @@ export function OnboardingShell({
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
-            aria-label="Open menu"
+            aria-label={tAria("openMenu")}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Athlete Development Center</p>
-            <p className="truncate text-xs text-zinc-500">Onboarding</p>
+            <p className="truncate text-sm font-semibold text-white">{tCommon("appName")}</p>
+            <p className="truncate text-xs text-zinc-500">{tNav("onboarding")}</p>
           </div>
         </header>
 

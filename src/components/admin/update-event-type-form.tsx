@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateEventTypeAction, type ActionState } from "@/app/admin/actions";
-import { EVENT_CATEGORIES, formatCategoryLabel, type EventType, type Sport } from "@/lib/types";
+import { createCategoryLabel } from "@/lib/i18n-labels";
+import { EVENT_CATEGORIES, type EventType, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -18,6 +20,10 @@ type UpdateEventTypeFormProps = {
 };
 
 export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormProps) {
+  const t = useTranslations("admin.eventTypes");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const categoryLabel = createCategoryLabel(tAdmin);
   const [state, formAction] = useActionState(updateEventTypeAction, initialState);
 
   return (
@@ -27,7 +33,7 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Slug</span>
+          <span className="font-medium text-zinc-300">{tCommon("slug")}</span>
           <input
             name="slug"
             required
@@ -37,27 +43,27 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
           <input name="name" required defaultValue={eventType.name} className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Category</span>
+          <span className="font-medium text-zinc-300">{tCommon("category")}</span>
           <select name="category" defaultValue={eventType.category} className={inputClassName}>
             {EVENT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
-                {formatCategoryLabel(category)}
+                {categoryLabel(category)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select
             name="sportId"
             defaultValue={eventType.sportId ?? "general"}
             className={inputClassName}
           >
-            <option value="general">General (all sports)</option>
+            <option value="general">{tCommon("generalAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -76,10 +82,10 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
           defaultChecked={eventType.active}
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton>Save event type</SubmitButton>
+      <SubmitButton>{t("saveButton")}</SubmitButton>
     </form>
   );
 }

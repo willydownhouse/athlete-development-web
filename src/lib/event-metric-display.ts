@@ -1,7 +1,11 @@
 import { formatMetricUnit, isSecondsMetric } from "./event-metric-form";
 import type { EventMetric } from "@/lib/types";
+import { getDefaultDisplayMessages, type DisplayMessages } from "./display-messages";
 
-export function formatDurationSeconds(seconds: number): string {
+export function formatDurationSeconds(
+  seconds: number,
+  messages: DisplayMessages = getDefaultDisplayMessages(),
+): string {
   const normalized = Math.max(0, Math.round(seconds));
 
   if (normalized >= 3600) {
@@ -9,10 +13,10 @@ export function formatDurationSeconds(seconds: number): string {
     const minutes = Math.floor((normalized % 3600) / 60);
 
     if (minutes > 0) {
-      return `${hours}h ${minutes}m`;
+      return messages.durationHoursMinutes(hours, minutes);
     }
 
-    return `${hours}h`;
+    return messages.durationHours(hours);
   }
 
   if (normalized >= 60) {
@@ -20,38 +24,41 @@ export function formatDurationSeconds(seconds: number): string {
     const remainingSeconds = normalized % 60;
 
     if (remainingSeconds > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
+      return messages.durationMinutesSeconds(minutes, remainingSeconds);
     }
 
-    return `${minutes} min`;
+    return messages.durationMinutes(minutes);
   }
 
-  return `${normalized}s`;
+  return messages.durationSeconds(normalized);
 }
 
-export function formatEventMetricValue(metric: EventMetric): string {
+export function formatEventMetricValue(
+  metric: EventMetric,
+  messages: DisplayMessages = getDefaultDisplayMessages(),
+): string {
   const { metricDefinition } = metric;
 
   if (metricDefinition.valueType === "boolean") {
     if (metric.booleanValue === null) {
-      return "Not set";
+      return messages.notSet;
     }
 
-    return metric.booleanValue ? "Yes" : "No";
+    return metric.booleanValue ? messages.yes : messages.no;
   }
 
   if (metricDefinition.valueType === "text") {
-    return metric.textValue?.trim() || "Not set";
+    return metric.textValue?.trim() || messages.notSet;
   }
 
   if (metric.numericValue === null) {
-    return "Not set";
+    return messages.notSet;
   }
 
   const numericValue = Number(metric.numericValue);
 
   if (isSecondsMetric(metricDefinition.canonicalUnit)) {
-    return formatDurationSeconds(numericValue);
+    return formatDurationSeconds(numericValue, messages);
   }
 
   const unit = metric.unit ?? metricDefinition.canonicalUnit;

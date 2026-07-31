@@ -1,3 +1,4 @@
+import messages from "../../messages/en.json";
 import { getEventTone, type EventTone } from "@/lib/event-tone";
 import { eventsForLocalDate } from "@/lib/event-grouping";
 import type { Event, EventIntensity } from "@/lib/types";
@@ -10,15 +11,45 @@ export type WeekDayDisplay = {
   date: Date;
 };
 
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-
-const TONE_BAR_LABEL: Record<Exclude<EventTone, "neutral">, string> = {
-  ice: "Ice",
-  recovery: "Rec",
-  gym: "Gym",
-  game: "Game",
-  rest: "Rest",
+export type WeekSummaryLabels = {
+  weekdays: readonly string[];
+  toneLabels: Record<Exclude<EventTone, "neutral">, string>;
+  loadLabels: {
+    none: string;
+    light: string;
+    moderate: string;
+    hard: string;
+  };
 };
+
+function getDefaultWeekSummaryLabels(): WeekSummaryLabels {
+  const source = messages.dashboard.thisWeek;
+
+  return {
+    weekdays: [
+      source.weekdays.mon,
+      source.weekdays.tue,
+      source.weekdays.wed,
+      source.weekdays.thu,
+      source.weekdays.fri,
+      source.weekdays.sat,
+      source.weekdays.sun,
+    ],
+    toneLabels: {
+      ice: source.toneLabels.ice,
+      recovery: source.toneLabels.recovery,
+      gym: source.toneLabels.gym,
+      game: source.toneLabels.game,
+      rest: source.toneLabels.rest,
+    },
+    loadLabels: {
+      none: source.loadNone,
+      light: source.loadLight,
+      moderate: source.loadModerate,
+      hard: source.loadHard,
+    },
+  };
+}
 
 function intensityScore(intensity: EventIntensity | null): number {
   if (intensity === "hard") {
@@ -96,13 +127,17 @@ function dominantToneForDay(events: Event[]): Exclude<EventTone, "neutral"> {
   return displayTone(getEventTone(topEvent));
 }
 
-export function buildWeekDays(events: Event[], weekDays: Date[]): WeekDayDisplay[] {
+export function buildWeekDays(
+  events: Event[],
+  weekDays: Date[],
+  labels: WeekSummaryLabels = getDefaultWeekSummaryLabels(),
+): WeekDayDisplay[] {
   return weekDays.map((day, index) => {
     const dayEvents = eventsForLocalDate(events, day);
     const tone = dominantToneForDay(dayEvents);
     return {
-      day: WEEKDAY_LABELS[index] ?? "Day",
-      label: dayEvents.length > 0 ? TONE_BAR_LABEL[tone] : "Rest",
+      day: labels.weekdays[index] ?? "Day",
+      label: dayEvents.length > 0 ? labels.toneLabels[tone] : labels.toneLabels.rest,
       tone,
       height: barHeightForDay(dayEvents),
       date: day,
@@ -110,20 +145,23 @@ export function buildWeekDays(events: Event[], weekDays: Date[]): WeekDayDisplay
   });
 }
 
-export function getWeekLoadLabel(events: Event[]): string {
+export function getWeekLoadLabel(
+  events: Event[],
+  labels: WeekSummaryLabels = getDefaultWeekSummaryLabels(),
+): string {
   if (events.length === 0) {
-    return "No load yet";
+    return labels.loadLabels.none;
   }
 
   const score = totalLoadScore(events);
 
   if (score <= 4) {
-    return "Light load";
+    return labels.loadLabels.light;
   }
 
   if (score <= 10) {
-    return "Moderate load";
+    return labels.loadLabels.moderate;
   }
 
-  return "Hard load";
+  return labels.loadLabels.hard;
 }

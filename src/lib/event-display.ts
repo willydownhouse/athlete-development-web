@@ -1,16 +1,35 @@
 import { format } from "date-fns";
 
+import messages from "../../messages/en.json";
+import { getDefaultDisplayMessages, type DisplayMessages } from "@/lib/display-messages";
 import type { Event, EventIntensity } from "@/lib/types";
 
 const EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH = 200;
 
-function formatIntensity(intensity: EventIntensity): string {
-  return intensity.charAt(0).toUpperCase() + intensity.slice(1);
+export type EventDisplayLabels = {
+  intensity: Record<EventIntensity, string>;
+  display: DisplayMessages;
+};
+
+function getDefaultEventDisplayLabels(): EventDisplayLabels {
+  const intensity = messages.events.form.intensity;
+
+  return {
+    intensity: {
+      light: intensity.light,
+      moderate: intensity.moderate,
+      hard: intensity.hard,
+    },
+    display: getDefaultDisplayMessages(),
+  };
 }
 
-function formatDuration(durationSeconds: number): string {
+function formatDuration(
+  durationSeconds: number,
+  display: DisplayMessages = getDefaultDisplayMessages(),
+): string {
   const minutes = Math.round(durationSeconds / 60);
-  return `${minutes} min`;
+  return display.durationMinutesShort(minutes);
 }
 
 function formatTime(startedAt: string): string {
@@ -44,15 +63,18 @@ function truncateText(text: string, maxLength: number): string {
   return `${text.slice(0, maxLength).trimEnd()}…`;
 }
 
-export function eventDetail(event: Event): string {
+export function eventDetail(
+  event: Event,
+  labels: EventDisplayLabels = getDefaultEventDisplayLabels(),
+): string {
   const parts: string[] = [formatTime(event.startedAt)];
 
   if (event.durationSeconds) {
-    parts.push(formatDuration(event.durationSeconds));
+    parts.push(formatDuration(event.durationSeconds, labels.display));
   }
 
   if (event.intensity) {
-    parts.push(formatIntensity(event.intensity));
+    parts.push(labels.intensity[event.intensity]);
   }
 
   if (event.description) {

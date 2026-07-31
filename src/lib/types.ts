@@ -224,11 +224,3 @@ export const ONBOARDING_ANSWER_TYPES: OnboardingAnswerType[] = [
   "date",
   "json",
 ];
-
-export function formatCategoryLabel(category: EventCategory): string {
-  return category.replace(/_/g, " ");
-}
-
-export function formatAnswerTypeLabel(answerType: OnboardingAnswerType): string {
-  return answerType.replace(/_/g, " ");
-}

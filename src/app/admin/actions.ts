@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   AdminApiError,
@@ -23,7 +24,9 @@ export type ActionState = {
   success?: string;
 };
 
-function actionError(error: unknown): ActionState {
+async function actionError(error: unknown): Promise<ActionState> {
+  const t = await getTranslations("errors");
+
   if (error instanceof AdminApiError) {
     return { error: error.apiError ?? error.message };
   }
@@ -32,7 +35,7 @@ function actionError(error: unknown): ActionState {
     return { error: error.message };
   }
 
-  return { error: "Something went wrong" };
+  return { error: t("generic") };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -77,6 +80,7 @@ function readSportId(formData: FormData): string | null | undefined {
 function parseOptionalJson(
   formData: FormData,
   key: string,
+  invalidJsonMessage: string,
 ): { ok: true; value: unknown | undefined } | { ok: false; error: string } {
   const raw = readString(formData, key);
 
@@ -87,13 +91,14 @@ function parseOptionalJson(
   try {
     return { ok: true, value: JSON.parse(raw) as unknown };
   } catch {
-    return { ok: false, error: `${key} must be valid JSON` };
+    return { ok: false, error: invalidJsonMessage };
   }
 }
 
 function parseNullableJson(
   formData: FormData,
   key: string,
+  invalidJsonMessage: string,
 ): { ok: true; value: unknown | null | undefined } | { ok: false; error: string } {
   if (!formData.has(key)) {
     return { ok: true, value: undefined };
@@ -108,11 +113,9 @@ function parseNullableJson(
   try {
     return { ok: true, value: JSON.parse(raw) as unknown };
   } catch {
-    return { ok: false, error: `${key} must be valid JSON` };
+    return { ok: false, error: invalidJsonMessage };
   }
 }
-
-// Sports
 
 export async function createSportAction(
   _prevState: ActionState,
@@ -120,6 +123,7 @@ export async function createSportAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.sports");
 
     await createAdminSport(token, {
       slug: readString(formData, "slug"),
@@ -129,7 +133,7 @@ export async function createSportAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/sports");
-    return { success: "Sport created" };
+    return { success: tSuccess("successCreated") };
   } catch (error) {
     return actionError(error);
   }
@@ -141,6 +145,7 @@ export async function updateSportAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.sports");
     const sportId = readString(formData, "sportId");
 
     await updateAdminSport(token, sportId, {
@@ -151,13 +156,11 @@ export async function updateSportAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/sports");
-    return { success: "Sport updated" };
+    return { success: tSuccess("successUpdated") };
   } catch (error) {
     return actionError(error);
   }
 }
-
-// Event types
 
 export async function createEventTypeAction(
   _prevState: ActionState,
@@ -165,6 +168,7 @@ export async function createEventTypeAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.eventTypes");
     const sportId = readSportId(formData);
 
     await createAdminEventType(token, {
@@ -177,7 +181,7 @@ export async function createEventTypeAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/event-types");
-    return { success: "Event type created" };
+    return { success: tSuccess("successCreated") };
   } catch (error) {
     return actionError(error);
   }
@@ -189,6 +193,7 @@ export async function updateEventTypeAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.eventTypes");
     const eventTypeId = readString(formData, "eventTypeId");
     const sportId = readSportId(formData);
 
@@ -203,13 +208,11 @@ export async function updateEventTypeAction(
     revalidatePath("/admin");
     revalidatePath("/admin/event-types");
     revalidatePath(`/admin/event-types/${eventTypeId}`);
-    return { success: "Event type updated" };
+    return { success: tSuccess("successUpdated") };
   } catch (error) {
     return actionError(error);
   }
 }
-
-// Metric definitions
 
 export async function createMetricDefinitionAction(
   _prevState: ActionState,
@@ -217,6 +220,7 @@ export async function createMetricDefinitionAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.metricDefinitions");
     const sportId = readSportId(formData);
     const description = readOptionalString(formData, "description");
     const canonicalUnit = readOptionalString(formData, "canonicalUnit");
@@ -233,7 +237,7 @@ export async function createMetricDefinitionAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/metric-definitions");
-    return { success: "Metric definition created" };
+    return { success: tSuccess("successCreated") };
   } catch (error) {
     return actionError(error);
   }
@@ -245,6 +249,7 @@ export async function updateMetricDefinitionAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.metricDefinitions");
     const metricDefinitionId = readString(formData, "metricDefinitionId");
     const sportId = readSportId(formData);
     const description = formData.has("description")
@@ -266,13 +271,11 @@ export async function updateMetricDefinitionAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/metric-definitions");
-    return { success: "Metric definition updated" };
+    return { success: tSuccess("successUpdated") };
   } catch (error) {
     return actionError(error);
   }
 }
-
-// Event type metric mappings
 
 export async function createEventTypeMetricAction(
   _prevState: ActionState,
@@ -280,6 +283,7 @@ export async function createEventTypeMetricAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.eventTypes");
     const eventTypeId = readString(formData, "eventTypeId");
 
     await createAdminEventTypeMetricDefinition(token, eventTypeId, {
@@ -289,7 +293,7 @@ export async function createEventTypeMetricAction(
     });
 
     revalidatePath(`/admin/event-types/${eventTypeId}`);
-    return { success: "Metric allowed for event type" };
+    return { success: tSuccess("successMetricAllowed") };
   } catch (error) {
     return actionError(error);
   }
@@ -301,6 +305,7 @@ export async function updateEventTypeMetricAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tSuccess = await getTranslations("admin.eventTypes");
     const eventTypeId = readString(formData, "eventTypeId");
     const mappingId = readString(formData, "eventTypeMetricDefinitionId");
     const sortOrder = readOptionalInt(formData, "sortOrder");
@@ -311,7 +316,7 @@ export async function updateEventTypeMetricAction(
     });
 
     revalidatePath(`/admin/event-types/${eventTypeId}`);
-    return { success: "Metric mapping updated" };
+    return { success: tSuccess("successMetricMappingUpdated") };
   } catch (error) {
     return actionError(error);
   }
@@ -326,16 +331,20 @@ export async function deleteEventTypeMetricAction(formData: FormData): Promise<v
   revalidatePath(`/admin/event-types/${eventTypeId}`);
 }
 
-// Onboarding questions
-
 export async function createOnboardingQuestionAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tErrors = await getTranslations("errors");
+    const tSuccess = await getTranslations("admin.onboardingQuestions");
     const sportId = readSportId(formData);
-    const optionsResult = parseOptionalJson(formData, "options");
+    const optionsResult = parseOptionalJson(
+      formData,
+      "options",
+      tErrors("invalidJson", { field: "options" }),
+    );
 
     if (!optionsResult.ok) {
       return { error: optionsResult.error };
@@ -356,7 +365,7 @@ export async function createOnboardingQuestionAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/onboarding-questions");
-    return { success: "Onboarding question created" };
+    return { success: tSuccess("successCreated") };
   } catch (error) {
     return actionError(error);
   }
@@ -368,6 +377,8 @@ export async function updateOnboardingQuestionAction(
 ): Promise<ActionState> {
   try {
     const { token } = await requireAdmin();
+    const tErrors = await getTranslations("errors");
+    const tSuccess = await getTranslations("admin.onboardingQuestions");
     const onboardingQuestionId = readString(formData, "onboardingQuestionId");
     const sportId = readSportId(formData);
     const helpText = formData.has("helpText")
@@ -376,7 +387,11 @@ export async function updateOnboardingQuestionAction(
     const mapsToField = formData.has("mapsToField")
       ? readString(formData, "mapsToField") || null
       : undefined;
-    const optionsResult = parseNullableJson(formData, "options");
+    const optionsResult = parseNullableJson(
+      formData,
+      "options",
+      tErrors("invalidJson", { field: "options" }),
+    );
 
     if (!optionsResult.ok) {
       return { error: optionsResult.error };
@@ -398,7 +413,7 @@ export async function updateOnboardingQuestionAction(
     revalidatePath("/admin");
     revalidatePath("/admin/onboarding-questions");
     revalidatePath(`/admin/onboarding-questions/${onboardingQuestionId}`);
-    return { success: "Onboarding question updated" };
+    return { success: tSuccess("successUpdated") };
   } catch (error) {
     return actionError(error);
   }

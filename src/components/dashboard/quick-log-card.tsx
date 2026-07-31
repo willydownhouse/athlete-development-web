@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { EventType } from "@/lib/types";
 
@@ -11,11 +12,6 @@ type QuickLogCardProps = {
   loadError?: string | null;
   onEventTypeClick?: (eventTypeId: string) => void;
 };
-
-const SCOPES: { id: QuickLogScope; label: string }[] = [
-  { id: "hockey", label: "Hockey" },
-  { id: "general", label: "General" },
-];
 
 function isHockeyEventType(eventType: EventType): boolean {
   const slug = eventType.sport?.slug.toLowerCase();
@@ -28,7 +24,13 @@ function isGeneralEventType(eventType: EventType): boolean {
 }
 
 export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickLogCardProps) {
+  const t = useTranslations("dashboard.quickLog");
   const [scope, setScope] = useState<QuickLogScope>("hockey");
+
+  const scopes: { id: QuickLogScope; label: string }[] = [
+    { id: "hockey", label: t("hockey") },
+    { id: "general", label: t("general") },
+  ];
 
   const visibleEventTypes = useMemo(() => {
     return eventTypes
@@ -41,11 +43,11 @@ export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickL
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Quick log</h2>
+        <h2 className="text-base font-semibold text-white">{t("title")}</h2>
 
         {!loadError ? (
           <div className="flex flex-wrap justify-end gap-2">
-            {SCOPES.map((item) => {
+            {scopes.map((item) => {
               const active = scope === item.id;
 
               return (
@@ -85,7 +87,7 @@ export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickL
         </div>
       ) : (
         <p className="mt-4 text-sm text-zinc-500">
-          No {scope === "hockey" ? "hockey" : "general"} event types available yet.
+          {scope === "hockey" ? t("noHockeyEventTypes") : t("noGeneralEventTypes")}
         </p>
       )}
     </section>

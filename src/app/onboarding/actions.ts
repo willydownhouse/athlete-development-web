@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
@@ -27,7 +28,9 @@ function isNextRedirect(error: unknown): boolean {
   );
 }
 
-function actionError(error: unknown): OnboardingActionState {
+async function actionError(error: unknown): Promise<OnboardingActionState> {
+  const t = await getTranslations("errors");
+
   if (error instanceof ApiError) {
     return { error: error.apiError ?? error.message };
   }
@@ -36,7 +39,7 @@ function actionError(error: unknown): OnboardingActionState {
     return { error: error.message };
   }
 
-  return { error: "Something went wrong" };
+  return { error: t("generic") };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -63,21 +66,23 @@ export async function createAthleteBasicsAction(
   _prevState: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
+  const tErrors = await getTranslations("errors");
+  const tValidation = await getTranslations("onboarding.validation");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   const focusSportId = readString(formData, "focusSportId");
   const name = readString(formData, "name");
 
   if (!focusSportId) {
-    return { error: "Focus sport is required" };
+    return { error: tValidation("focusSportRequired") };
   }
 
   if (!name) {
-    return { error: "Athlete name is required" };
+    return { error: tValidation("athleteNameRequired") };
   }
 
   try {
@@ -111,16 +116,18 @@ export async function saveOnboardingAnswerAction(input: {
   structuredValue?: unknown;
   required: boolean;
 }): Promise<OnboardingActionState> {
+  const tErrors = await getTranslations("errors");
+  const tValidation = await getTranslations("onboarding.validation");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   const rawAnswer = input.rawAnswer.trim();
 
   if (input.required && rawAnswer === "") {
-    return { error: "Please answer this question to continue" };
+    return { error: tValidation("answerRequired") };
   }
 
   try {
@@ -142,10 +149,11 @@ export async function completeOnboardingAction(input: {
   athleteId: string;
   sessionId: string;
 }): Promise<OnboardingActionState> {
+  const tErrors = await getTranslations("errors");
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: tErrors("signInRequired") };
   }
 
   try {

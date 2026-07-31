@@ -1,5 +1,6 @@
 import type { EventMetricInput } from "@/lib/api";
 import type { EventMetric, EventTypeMetricDefinition } from "@/lib/types";
+import { getDefaultValidationMessages, type ValidationMessages } from "@/lib/validation-messages";
 
 const METRIC_FIELD_PREFIX = "metric.";
 
@@ -173,6 +174,7 @@ export function parseMetricsFromFormData(
 export function validateMetricForm(
   formData: FormData,
   mappings: EventTypeMetricDefinition[],
+  messages: ValidationMessages = getDefaultValidationMessages(),
 ): string | null {
   for (const mapping of mappings) {
     if (!mapping.required) {
@@ -180,11 +182,12 @@ export function validateMetricForm(
     }
 
     const fieldName = metricFieldName(mapping.metricDefinitionId);
+    const { name } = mapping.metricDefinition;
 
     if (mapping.metricDefinition.valueType === "boolean") {
       const raw = formData.get(fieldName);
       if (raw !== "on") {
-        return `${mapping.metricDefinition.name} is required`;
+        return messages.fieldRequired(name);
       }
 
       continue;
@@ -195,13 +198,13 @@ export function validateMetricForm(
       isSecondsMetric(mapping.metricDefinition.canonicalUnit)
     ) {
       if (!hasDurationInput(formData, mapping.metricDefinitionId)) {
-        return `${mapping.metricDefinition.name} is required`;
+        return messages.fieldRequired(name);
       }
 
       for (const part of ["hours", "minutes", "seconds"] as const) {
         const raw = formData.get(metricDurationFieldName(mapping.metricDefinitionId, part));
         if (typeof raw === "string" && raw.trim() !== "" && Number.isNaN(Number(raw))) {
-          return `${mapping.metricDefinition.name} must use whole numbers`;
+          return messages.wholeNumbers(name);
         }
       }
 
@@ -211,11 +214,11 @@ export function validateMetricForm(
     const raw = formData.get(fieldName);
     const value = typeof raw === "string" ? raw.trim() : "";
     if (value === "") {
-      return `${mapping.metricDefinition.name} is required`;
+      return messages.fieldRequired(name);
     }
 
     if (mapping.metricDefinition.valueType === "number" && Number.isNaN(Number(value))) {
-      return `${mapping.metricDefinition.name} must be a number`;
+      return messages.mustBeNumber(name);
     }
   }
 

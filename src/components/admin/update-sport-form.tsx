@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
@@ -17,6 +18,7 @@ type UpdateSportFormProps = {
 };
 
 export function UpdateSportForm({ sport }: UpdateSportFormProps) {
+  const tCommon = useTranslations("common");
   const [state, formAction] = useActionState(updateSportAction, initialState);
 
   return (
@@ -26,7 +28,7 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Slug</span>
+          <span className="font-medium text-zinc-300">{tCommon("slug")}</span>
           <input
             name="slug"
             required
@@ -36,7 +38,7 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
           <input name="name" required defaultValue={sport.name} className={inputClassName} />
         </label>
       </div>
@@ -50,10 +52,10 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
           defaultChecked={sport.active}
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton variant="secondary">Save changes</SubmitButton>
+      <SubmitButton variant="secondary">{tCommon("saveChanges")}</SubmitButton>
     </form>
   );
 }
