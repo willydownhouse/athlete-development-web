@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { QuestionCarousel } from "@/components/onboarding/question-carousel";
 import {
@@ -65,7 +66,7 @@ export default async function OnboardingQuestionsPage({
   const onboardingSession = onboardingSessionResult.value;
 
   if (onboardingSession.status === "completed") {
-    redirect("/dashboard");
+    redirect(dashboardHref(athleteId));
   }
 
   if (athletesResult.status === "fulfilled") {

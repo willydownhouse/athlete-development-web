@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
+import { dashboardHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   onboardingSessionAvatarClass,
   onboardingSessionHref,
@@ -25,6 +26,52 @@ type AppShellNavProps = {
   selectedAthlete?: Athlete | null;
   onNavigate?: () => void;
 };
+
+function AthleteNavList({
+  athletes,
+  onNavigate,
+}: {
+  athletes: Athlete[];
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeAthleteId = pathname.startsWith("/dashboard") ? searchParams.get("athleteId") : null;
+
+  return athletes.map((athlete) => (
+    <AthleteNavLink
+      key={athlete.id}
+      athlete={athlete}
+      onNavigate={onNavigate}
+      active={activeAthleteId === athlete.id}
+    />
+  ));
+}
+
+function AthleteNavLink({
+  athlete,
+  onNavigate,
+  active,
+}: {
+  athlete: Athlete;
+  onNavigate?: () => void;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={dashboardHref(athlete.id)}
+      onClick={onNavigate}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-white/5 ${
+        active ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
+      }`}
+    >
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
+        {athleteInitials(athlete.name)}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
+    </Link>
+  );
+}
 
 function OnboardingSessionNavList({
   sessions,
@@ -114,81 +161,74 @@ export function AppShellNav({
   onNavigate,
 }: AppShellNavProps) {
   const pathname = usePathname();
-  const canSwitchAthletes = athletes.length > 1;
+  const dashboardLink =
+    selectedAthlete !== null ? dashboardHref(selectedAthlete.id) : defaultDashboardHref(athletes);
 
   return (
-    <>
-      <nav className="space-y-1">
+    <nav className="space-y-1">
+      <div>
         <Link
-          href="/dashboard"
+          href={dashboardLink}
           onClick={onNavigate}
           className={navLinkClass(pathname.startsWith("/dashboard"))}
         >
           Dashboard
         </Link>
 
-        <div>
-          <Link
-            href="/onboarding"
-            onClick={onNavigate}
-            className={navLinkClass(pathname.startsWith("/onboarding"))}
-          >
-            Onboarding
-          </Link>
-
-          {onboardingSessions.length > 0 ? (
-            <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
-              <Suspense
-                fallback={onboardingSessions.map((session) => (
-                  <OnboardingSessionNavLink
-                    key={session.id}
-                    session={session}
-                    onNavigate={onNavigate}
-                    active={false}
-                  />
-                ))}
-              >
-                <OnboardingSessionNavList sessions={onboardingSessions} onNavigate={onNavigate} />
-              </Suspense>
-            </div>
-          ) : null}
-        </div>
-
-        {isAdmin ? (
-          <Link href="/admin" onClick={onNavigate} className={navLinkClass(false)}>
-            Admin
-          </Link>
-        ) : null}
-      </nav>
-
-      {canSwitchAthletes ? (
-        <div className="mt-6">
-          <p className="px-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-            Athletes
-          </p>
-          <div className="mt-2 space-y-1">
-            {athletes.map((athlete) => {
-              const selected = athlete.id === selectedAthlete?.id;
-
-              return (
-                <Link
+        {athletes.length > 1 ? (
+          <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
+            <Suspense
+              fallback={athletes.map((athlete) => (
+                <AthleteNavLink
                   key={athlete.id}
-                  href={`/dashboard?athleteId=${athlete.id}`}
-                  onClick={onNavigate}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-white/5 ${
-                    selected ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
-                  }`}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
-                    {athleteInitials(athlete.name)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
-                </Link>
-              );
-            })}
+                  athlete={athlete}
+                  onNavigate={onNavigate}
+                  active={false}
+                />
+              ))}
+            >
+              <AthleteNavList athletes={athletes} onNavigate={onNavigate} />
+            </Suspense>
           </div>
-        </div>
+        ) : null}
+      </div>
+
+      <div>
+        <Link
+          href="/onboarding"
+          onClick={onNavigate}
+          className={navLinkClass(pathname.startsWith("/onboarding"))}
+        >
+          Onboarding
+        </Link>
+
+        {onboardingSessions.length > 0 ? (
+          <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
+            <Suspense
+              fallback={onboardingSessions.map((session) => (
+                <OnboardingSessionNavLink
+                  key={session.id}
+                  session={session}
+                  onNavigate={onNavigate}
+                  active={false}
+                />
+              ))}
+            >
+              <OnboardingSessionNavList sessions={onboardingSessions} onNavigate={onNavigate} />
+            </Suspense>
+          </div>
+        ) : null}
+      </div>
+
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          onClick={onNavigate}
+          className={navLinkClass(pathname.startsWith("/admin"))}
+        >
+          Admin
+        </Link>
       ) : null}
-    </>
+    </nav>
   );
 }

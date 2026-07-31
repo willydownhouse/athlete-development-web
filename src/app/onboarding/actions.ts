@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   ApiError,
   completeOnboardingSession,
@@ -149,7 +150,7 @@ export async function completeOnboardingAction(input: {
 
   try {
     await completeOnboardingSession(token, input.athleteId, input.sessionId);
-    redirect("/dashboard");
+    redirect(dashboardHref(input.athleteId));
   } catch (error) {
     if (isNextRedirect(error)) {
       throw error;

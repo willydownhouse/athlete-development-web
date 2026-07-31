@@ -1,3 +1,4 @@
+import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import type { OnboardingSessionSummary } from "@/lib/types";
 
 export function onboardingSessionHref(session: OnboardingSessionSummary): string {
@@ -5,7 +6,7 @@ export function onboardingSessionHref(session: OnboardingSessionSummary): string
     return `/onboarding/questions?athleteId=${encodeURIComponent(session.athleteId)}&sessionId=${encodeURIComponent(session.id)}&sportId=${encodeURIComponent(session.sportId)}`;
   }
 
-  return `/dashboard?athleteId=${encodeURIComponent(session.athleteId)}`;
+  return dashboardHref(session.athleteId);
 }
 
 export function onboardingSessionAvatarClass(status: OnboardingSessionSummary["status"]): string {
