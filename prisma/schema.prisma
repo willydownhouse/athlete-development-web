@@ -1,4 +1,4 @@
-// This file is generated from ../hockey-app-service/prisma/schema.prisma.
+// This file is generated from ../athlete-development-service/prisma/schema.prisma.
 // Run `yarn db:sync-schema` to update it.
 // It intentionally contains only the Auth.js models needed by the web app.
 

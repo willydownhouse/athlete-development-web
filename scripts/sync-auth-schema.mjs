@@ -8,7 +8,10 @@ const AUTH_MODELS = ["User", "Account", "Session", "VerificationToken"];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
-const serviceSchemaPath = path.resolve(webRoot, "../hockey-app-service/prisma/schema.prisma");
+const serviceSchemaPath = path.resolve(
+  webRoot,
+  "../athlete-development-service/prisma/schema.prisma",
+);
 const targetSchemaPath = path.resolve(webRoot, "prisma/schema.prisma");
 const checkMode = process.argv.includes("--check");
 
@@ -59,7 +62,7 @@ function buildAuthSchema(serviceSchema) {
   );
 
   return [
-    "// This file is generated from ../hockey-app-service/prisma/schema.prisma.",
+    "// This file is generated from ../athlete-development-service/prisma/schema.prisma.",
     "// Run `yarn db:sync-schema` to update it.",
     "// It intentionally contains only the Auth.js models needed by the web app.",
     "",
@@ -82,8 +85,8 @@ if (checkMode) {
   const currentSchema = existsSync(targetSchemaPath) ? readFileSync(targetSchemaPath, "utf8") : "";
 
   if (currentSchema !== nextSchema) {
-    console.error("Web Prisma schema is out of sync with hockey-app-service.");
-    console.error("Run `yarn db:sync-schema` from hockey-app-web.");
+    console.error("Web Prisma schema is out of sync with athlete-development-service.");
+    console.error("Run `yarn db:sync-schema` from athlete-development-web.");
     process.exit(1);
   }
 
