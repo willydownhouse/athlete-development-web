@@ -14,6 +14,10 @@ function resolveLocaleFromHeader(acceptLanguage: string): Locale {
     return "fi";
   }
 
+  if (normalized.includes("nb") || normalized.includes("no") || normalized.includes("nn")) {
+    return "nb";
+  }
+
   return defaultLocale;
 }
 

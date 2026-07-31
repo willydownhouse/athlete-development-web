@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "title": "Utviklingssenter for utøvere",
+    "description": "AI-assistert utøverutvikling for foreldre, trenere og unge utøvere."
+  },
+  "common": {
+    "appName": "Utviklingssenter for utøvere",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "all": "Alle",
+    "allSports": "Alle idretter",
+    "general": "Generell",
+    "common": "Felles",
+    "commonAllSports": "Felles (alle idretter)",
+    "generalAllSports": "Generell (alle idretter)",
+    "yes": "Ja",
+    "no": "Nei",
+    "notSet": "Ikke angitt",
+    "required": "Påkrevd",
+    "optional": "Valgfritt",
+    "selected": "Valgt",
+    "close": "Lukk",
+    "cancel": "Avbryt",
+    "back": "Tilbake",
+    "continue": "Fortsett",
+    "finish": "Fullfør",
+    "add": "Legg til",
+    "edit": "Rediger",
+    "update": "Oppdater",
+    "remove": "Fjern",
+    "manage": "Administrer",
+    "applyFilters": "Bruk filtre",
+    "clear": "Tøm",
+    "saveChanges": "Lagre endringer",
+    "saving": "Lagrer…",
+    "loading": "Laster…",
+    "deleting": "Sletter…",
+    "unableToLoad": "Kunne ikke laste",
+    "now": "Nå",
+    "today": "I dag",
+    "welcome": "Velkommen",
+    "welcomeWithName": "Velkommen, {name}",
+    "getStarted": "Kom i gang",
+    "status": "Status",
+    "sort": "Sortering",
+    "type": "Type",
+    "sport": "Idrett",
+    "name": "Navn",
+    "slug": "Slug",
+    "key": "Nøkkel",
+    "category": "Kategori",
+    "description": "Beskrivelse",
+    "metrics": "Målinger",
+    "prompt": "Spørsmål",
+    "comingSoon": "Kommer snart",
+    "countOfTotal": "{current} av {total}",
+    "activeCount": "{count} aktive",
+    "unitLabel": "Enhet: {unit}",
+    "maxCharacters": "Maks {max} tegn",
+    "duration": {
+      "hoursMinutes": "{hours} t {minutes} min",
+      "hours": "{hours} t",
+      "minutesSeconds": "{minutes} min {seconds} s",
+      "minutes": "{minutes} min",
+      "seconds": "{seconds} s",
+      "minutesShort": "{minutes} min"
+    }
+  },
+  "errors": {
+    "generic": "Noe gikk galt",
+    "signInRequired": "Du må logge inn på nytt",
+    "missingSessionToken": "Auth.js-økttoken mangler",
+    "invalidJson": "{field} må være gyldig JSON"
+  },
+  "validation": {
+    "titleMaxLength": "Tittelen kan være maks {max} tegn",
+    "notesMaxLength": "Notater kan være maks {max} tegn",
+    "fieldRequired": "{name} er påkrevd",
+    "wholeNumbers": "{name} må bruke hele tall",
+    "mustBeNumber": "{name} må være et tall"
+  },
+  "aria": {
+    "closeMenu": "Lukk meny",
+    "openMenu": "Åpne meny",
+    "closeDialog": "Lukk dialog",
+    "chooseDate": "Velg dato",
+    "chooseTime": "Velg tid",
+    "hour": "Time",
+    "minute": "Minutt",
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Neste måned",
+    "primaryNav": "Primær"
+  },
+  "auth": {
+    "continueWithGoogle": "Fortsett med Google",
+    "signOut": "Logg ut"
+  },
+  "landing": {
+    "titleLine1": "Utviklings",
+    "titleLine2": "senter for",
+    "titleLine3": "utøvere",
+    "tagline": "Bare hvis du tar treningen din på alvor."
+  },
+  "nav": {
+    "dashboard": "Dashbord",
+    "onboarding": "Oppstart",
+    "admin": "Admin",
+    "backToApp": "Tilbake til appen",
+    "sessionStatus": {
+      "inProgress": "Pågår",
+      "completed": "Fullført",
+      "abandoned": "Avbrutt"
+    }
+  },
+  "admin": {
+    "nav": {
+      "overview": "Oversikt",
+      "sports": "Idretter",
+      "eventTypes": "Hendelsestyper",
+      "metricDefinitions": "Målingsdefinisjoner",
+      "onboardingQuestions": "Oppstartsspørsmål"
+    },
+    "overview": {
+      "title": "Admin-oversikt",
+      "description": "Administrer idretter, hendelsestyper, målingsdefinisjoner og oppstartsspørsmål."
+    },
+    "sports": {
+      "title": "Idretter",
+      "description": "Opprett og administrer idretter som er tilgjengelige på plattformen.",
+      "createSport": "Opprett idrett",
+      "allSports": "Alle idretter ({count})",
+      "empty": "Ingen idretter ennå.",
+      "slugPlaceholder": "hockey",
+      "namePlaceholder": "Hockey",
+      "successCreated": "Idrett opprettet",
+      "successUpdated": "Idrett oppdatert"
+    },
+    "eventTypes": {
+      "title": "Hendelsestyper",
+      "description": "Konfigurer hendelsestyper og administrer tillatte målinger per type.",
+      "createEventType": "Opprett hendelsestype",
+      "listTitle": "Hendelsestyper ({count})",
+      "empty": "Ingen hendelsestyper samsvarer med filtrene.",
+      "backToList": "← Tilbake til hendelsestyper",
+      "detailDescription": "Administrer innstillinger og tillatte målinger for {slug}.",
+      "settingsTitle": "Innstillinger for hendelsestype",
+      "slugPlaceholder": "is_trening",
+      "namePlaceholder": "Istrening",
+      "saveButton": "Lagre hendelsestype",
+      "metricsTitle": "Tillatte målinger ({count})",
+      "metricsDescription": "Målinger som er tilgjengelige når denne hendelsestypen logges.",
+      "allowMetric": "Tillat måling",
+      "selectMetric": "Velg en måling",
+      "requiredMetric": "Påkrevd måling",
+      "allMetricsAllowed": "Alle kompatible målinger er allerede tillatt for denne hendelsestypen.",
+      "noneAllowed": "Ingen målinger er tillatt ennå.",
+      "successCreated": "Hendelsestype opprettet",
+      "successUpdated": "Hendelsestype oppdatert",
+      "successMetricAllowed": "Måling tillatt for hendelsestype",
+      "successMetricMappingUpdated": "Målingstilknytning oppdatert"
+    },
+    "metricDefinitions": {
+      "title": "Målingsdefinisjoner",
+      "description": "Definer søkbare målinger som brukes på hendelser og knyttes til hendelsestyper.",
+      "createTitle": "Opprett målingsdefinisjon",
+      "createButton": "Opprett måling",
+      "listTitle": "Målingsdefinisjoner ({count})",
+      "empty": "Ingen målingsdefinisjoner samsvarer med filtrene.",
+      "mapToEventTypes": "Knytt til hendelsestyper →",
+      "valueType": "Verditype",
+      "canonicalUnit": "Standardenhet",
+      "keyPlaceholder": "skudd_antall",
+      "namePlaceholder": "Antall skudd",
+      "unitPlaceholder": "skudd",
+      "descriptionPlaceholder": "Valgfri beskrivelse for skjemaer og AI-verktøy.",
+      "successCreated": "Målingsdefinisjon opprettet",
+      "successUpdated": "Målingsdefinisjon oppdatert"
+    },
+    "onboardingQuestions": {
+      "title": "Oppstartsspørsmål",
+      "description": "Konfigurer felles og idrettsspesifikke spørsmål for veiledet oppstart av utøvere.",
+      "createTitle": "Opprett oppstartsspørsmål",
+      "createButton": "Opprett spørsmål",
+      "listTitle": "Oppstartsspørsmål ({count})",
+      "empty": "Ingen oppstartsspørsmål samsvarer med filtrene.",
+      "backToList": "← Tilbake til oppstartsspørsmål",
+      "detailDescription": "Rediger oppstartsspørsmål {key}.",
+      "settingsTitle": "Spørsmålsinnstillinger",
+      "answerType": "Svartype",
+      "sortOrder": "Sorteringsrekkefølge",
+      "mapsToField": "Knyttes til felt",
+      "helpText": "Hjelpetekst",
+      "optionsJson": "Alternativer (JSON)",
+      "keyPlaceholder": "treningsrytme",
+      "mapsToFieldPlaceholder": "profile.trainingEnvironment",
+      "promptPlaceholder": "Hvordan ser en typisk treningsuke ut for utøveren?",
+      "helpTextPlaceholder": "Valgfri hjelpetekst som vises sammen med spørsmålet.",
+      "optionsPlaceholder": "For valgtyper, f.eks. [\"Alternativ A\",\"Alternativ B\"]",
+      "createOnboardingQuestion": "Opprett oppstartsspørsmål",
+      "successCreated": "Oppstartsspørsmål opprettet",
+      "successUpdated": "Oppstartsspørsmål oppdatert"
+    },
+    "fields": {
+      "metric": "Måling"
+    },
+    "enums": {
+      "eventCategory": {
+        "training": "trening",
+        "competition": "konkurranse",
+        "recovery": "restitusjon",
+        "health": "helse",
+        "nutrition": "ernæring",
+        "mood": "humør",
+        "measurement": "måling",
+        "note": "notat",
+        "travel": "reise",
+        "equipment": "utstyr",
+        "other": "annet"
+      },
+      "answerType": {
+        "text": "tekst",
+        "number": "tall",
+        "boolean": "boolsk",
+        "single_select": "enkeltvalg",
+        "multi_select": "flervalg",
+        "date": "dato",
+        "json": "json"
+      },
+      "valueType": {
+        "number": "tall",
+        "text": "tekst",
+        "boolean": "boolsk"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashbord",
+    "header": {
+      "getStartedDescription": "Legg til din første utøver gjennom oppstart for å låse opp dashbordet."
+    },
+    "empty": {
+      "title": "Dashbordet er fortsatt tomt",
+      "description": "Dashbordet fylles ut når du har en utøverprofil. Gå til oppstart for å legge til din første utøver og komme i gang.",
+      "goToOnboarding": "Gå til oppstart"
+    },
+    "loadErrors": {
+      "athletes": "Kunne ikke laste utøvere",
+      "eventTypes": "Kunne ikke laste hendelsestyper",
+      "events": "Kunne ikke laste hendelser",
+      "metrics": "Kunne ikke laste målinger"
+    },
+    "aiInsight": {
+      "title": "AI-innsikt",
+      "mockText": "Etter to harde istreninger ser det ut til at i dag passer bedre som en lett restitusjonsdag. Korte puckberøringer eller mobilitet ville passe godt."
+    },
+    "todaysEvents": {
+      "title": "Dagens hendelser",
+      "loading": "Laster dagens hendelser…",
+      "empty": "Ingen hendelser logget for i dag."
+    },
+    "quickLog": {
+      "title": "Hurtiglogg",
+      "hockey": "Hockey",
+      "general": "Generell",
+      "noHockeyEventTypes": "Ingen hockey-hendelsestyper er tilgjengelige ennå.",
+      "noGeneralEventTypes": "Ingen generelle hendelsestyper er tilgjengelige ennå."
+    },
+    "thisWeek": {
+      "title": "Denne uken",
+      "loading": "Laster denne ukens hendelser…",
+      "empty": "Ukentlig belastning vises når hendelser er logget.",
+      "loadNone": "Ingen belastning ennå",
+      "loadLight": "Lett belastning",
+      "loadModerate": "Moderat belastning",
+      "loadHard": "Hard belastning",
+      "weekdays": {
+        "mon": "Man",
+        "tue": "Tir",
+        "wed": "Ons",
+        "thu": "Tor",
+        "fri": "Fre",
+        "sat": "Lør",
+        "sun": "Søn"
+      },
+      "toneLabels": {
+        "ice": "Is",
+        "recovery": "Rest",
+        "gym": "Gym",
+        "game": "Kamp",
+        "rest": "Hvile"
+      }
+    },
+    "calendar": {
+      "title": "Kalender",
+      "loadingEvents": "Laster hendelser…",
+      "noEventsForDay": "Ingen hendelser logget for denne dagen."
+    },
+    "bottomNav": {
+      "chat": "Chat"
+    },
+    "athleteSubtitle": {
+      "eventsThisWeek": "{count, plural, one {# hendelse denne uken} other {# hendelser denne uken}}",
+      "separator": " · "
+    },
+    "events": {
+      "validation": {
+        "athleteRequired": "Utøver er påkrevd",
+        "eventTypeRequired": "Hendelsestype er påkrevd",
+        "dateRequired": "Dato er påkrevd",
+        "eventRequired": "Hendelse er påkrevd"
+      },
+      "success": {
+        "added": "Hendelse lagt til",
+        "updated": "Hendelse oppdatert",
+        "deleted": "Hendelse slettet"
+      }
+    }
+  },
+  "events": {
+    "modal": {
+      "add": "Legg til hendelse",
+      "edit": "Rediger hendelse"
+    },
+    "form": {
+      "eventType": "Hendelsestype",
+      "selectEventType": "Velg hendelsestype",
+      "date": "Dato",
+      "startTime": "Starttid",
+      "startTimeHint": "La stå tom for standard kl. 12.",
+      "durationMinutes": "Varighet (minutter)",
+      "durationPlaceholder": "75",
+      "intensityLabel": "Intensitet",
+      "title": "Tittel",
+      "titlePlaceholder": "Morgen istrening",
+      "notes": "Notater",
+      "notesPlaceholder": "Kantarbeid, småspill, føltes ganske hardt.",
+      "addButton": "Legg til hendelse",
+      "noEventTypes": "Ingen hendelsestyper er tilgjengelige ennå. Be en administrator om å konfigurere hendelsestyper først.",
+      "deleteButton": "Slett hendelse",
+      "deleteConfirm": "Slette denne hendelsen permanent? Dette kan ikke angres.",
+      "groups": {
+        "hockey": "Hockey",
+        "general": "Generell"
+      },
+      "intensity": {
+        "notSet": "Ikke angitt",
+        "light": "Lett",
+        "moderate": "Moderat",
+        "hard": "Hard"
+      }
+    },
+    "metrics": {
+      "loading": "Laster målingsfelt…",
+      "optionalHint": "Valgfrie detaljer konfigurert for denne hendelsestypen.",
+      "hours": "Timer",
+      "minutes": "Minutter",
+      "seconds": "Sekunder",
+      "zeroPlaceholder": "0"
+    },
+    "detail": {
+      "time": "Tid",
+      "duration": "Varighet",
+      "intensity": "Intensitet",
+      "category": "Kategori",
+      "description": "Beskrivelse",
+      "metrics": "Målinger",
+      "originalInput": "Opprinnelig inndata"
+    }
+  },
+  "onboarding": {
+    "title": "Oppstart",
+    "intro": {
+      "heading": "La oss sette opp utøverprofilen din",
+      "paragraph1": "Denne oppstarten skaper utgangspunktet for utøverprofilen din og langsiktig utviklingsminne.",
+      "paragraph2": "Jo mer nyttig kontekst du deler med oss — trening, restitusjon og daglige observasjoner — desto bedre kan vi støtte utøverens reise.",
+      "paragraph3": "Dette hjelper fremtidig veiledning å forbli personlig, praktisk og forankret i utøverens faktiske situasjon og mål."
+    },
+    "sportSelect": {
+      "title": "Velg idretten din",
+      "noSports": "Ingen idretter er tilgjengelige akkurat nå. Prøv igjen senere."
+    },
+    "athleteDetails": {
+      "title": "Utøverdetaljer",
+      "description": "Start med noen grunnleggende opplysninger. Deretter stiller vi noen veiledede spørsmål for å bygge hele profilen.",
+      "athleteName": "Utøvernavn",
+      "namePlaceholder": "Leo",
+      "dateOfBirth": "Fødselsdato",
+      "heightCm": "Høyde (cm)",
+      "heightPlaceholder": "140",
+      "weightKg": "Vekt (kg)",
+      "weightPlaceholder": "35",
+      "optionalDetails": "Valgfrie detaljer hjelper med å tilpasse veiledning for {sportName}. Du kan fylle inn mer i de neste spørsmålene."
+    },
+    "questions": {
+      "sportOnboarding": "{sportName}-oppstart",
+      "noneConfigured": "Ingen oppstartsspørsmål er konfigurert ennå.",
+      "continueToDashboard": "Fortsett til dashbord",
+      "jsonPlaceholder": "{\"nokkel\":\"verdi\"}"
+    },
+    "loadErrors": {
+      "sports": "Kunne ikke laste idretter"
+    },
+    "validation": {
+      "focusSportRequired": "Hovedidrett er påkrevd",
+      "athleteNameRequired": "Utøvernavn er påkrevd",
+      "answerRequired": "Svar på dette spørsmålet for å fortsette"
+    }
+  },
+  "form": {
+    "select": "Velg",
+    "selectDate": "Velg dato",
+    "selectTime": "Velg tid"
+  }
+}
