@@ -1,8 +1,8 @@
-# Hockey App Web
+# Athlete Development Web
 
-Next.js frontend for the hockey player development app.
+Next.js frontend for the athlete development service.
 
-This repo is the mobile-first web client. It handles Google sign-in with Auth.js and talks to the separate Fastify API in `hockey-app-service`.
+This repo is the mobile-first web client. It handles Google sign-in with Auth.js and talks to the separate Fastify API in `athlete-development-service`.
 
 ## Tech Stack
 
@@ -29,7 +29,7 @@ cp .env.example .env
 
 Required values:
 
-- `DATABASE_URL` — same Postgres database as `hockey-app-service`
+- `DATABASE_URL` — same Postgres database as `athlete-development-service`
 - `AUTH_SECRET` — must match the backend service
 - `AUTH_URL` — frontend URL, e.g. `http://localhost:3000`
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth web client
@@ -41,7 +41,7 @@ Generate the Prisma client:
 yarn db:generate
 ```
 
-This generates the Prisma client from the committed web schema and is safe to run in CI, where only the web repo is checked out. Database migrations are owned by `hockey-app-service`. Run migrations there, not in this repo.
+This generates the Prisma client from the committed web schema and is safe to run in CI, where only the web repo is checked out. Database migrations are owned by `athlete-development-service`. Run migrations there, not in this repo.
 
 ### Web Prisma schema
 
@@ -52,7 +52,7 @@ The web Prisma schema is intentionally not a full copy of the backend schema. It
 - `Session`
 - `VerificationToken`
 
-The sync script copies those models from `hockey-app-service/prisma/schema.prisma` and removes backend-only relations from the generated web schema. For example, the backend `User` model has an `appUser AppUser?` relation so the service can link Auth.js identities to product users, but the web app does not need the `AppUser` model to run Auth.js.
+The sync script copies those models from `athlete-development-service/prisma/schema.prisma` and removes backend-only relations from the generated web schema. For example, the backend `User` model has an `appUser AppUser?` relation so the service can link Auth.js identities to product users, but the web app does not need the `AppUser` model to run Auth.js.
 
 Keep Auth.js Prisma field names such as `userId` intact for adapter compatibility. Database column names can still use project naming through Prisma `@map(...)`, for example `userId @map("auth_user_id")`.
 
@@ -70,7 +70,7 @@ Start the frontend:
 yarn dev
 ```
 
-Start the API separately from `hockey-app-service`:
+Start the API separately from `athlete-development-service`:
 
 ```bash
 yarn dev
@@ -106,7 +106,7 @@ yarn knip          # Check for unused files/dependencies
 yarn test          # Run tests once
 yarn test:watch    # Run tests in watch mode
 yarn verify        # Run typecheck, lint, format check, knip, and tests
-yarn db:sync-schema   # Sync auth-only Prisma schema from hockey-app-service
+yarn db:sync-schema   # Sync auth-only Prisma schema from athlete-development-service
 yarn db:check-schema  # Check that the synced Prisma schema is up to date
 yarn db:generate      # Generate Prisma client from the committed web schema
 yarn db:generate:synced  # Sync schema and generate Prisma client locally
