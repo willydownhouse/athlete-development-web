@@ -5,6 +5,7 @@ import type {
   EventIntensity,
   EventListResponse,
   EventType,
+  EventTypeMetricDefinition,
   OnboardingAnswer,
   OnboardingQuestion,
   OnboardingSession,
@@ -129,6 +130,7 @@ export async function createEvent(
     intensity?: EventIntensity;
     originalInput?: string;
     structuredData?: Record<string, unknown>;
+    metrics?: EventMetricInput[];
   },
 ): Promise<Event> {
   return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
@@ -136,6 +138,14 @@ export async function createEvent(
     body: JSON.stringify(body),
   });
 }
+
+export type EventMetricInput = {
+  metricDefinitionId: string;
+  numericValue?: number;
+  textValue?: string;
+  booleanValue?: boolean;
+  unit?: string;
+};
 
 export async function fetchEvents(
   token: string,
@@ -145,6 +155,7 @@ export async function fetchEvents(
     offset?: number;
     startedAtFrom?: string;
     startedAtTo?: string;
+    include?: "metrics";
   } = {},
 ): Promise<EventListResponse> {
   const params = new URLSearchParams();
@@ -163,6 +174,10 @@ export async function fetchEvents(
 
   if (query.startedAtTo) {
     params.set("startedAtTo", query.startedAtTo);
+  }
+
+  if (query.include) {
+    params.set("include", query.include);
   }
 
   const search = params.toString();
@@ -191,6 +206,7 @@ export async function updateEvent(
     durationSeconds?: number;
     intensity?: EventIntensity;
     structuredData?: Record<string, unknown>;
+    metrics?: EventMetricInput[];
   },
 ): Promise<Event> {
   return apiFetch<Event>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
@@ -220,6 +236,24 @@ export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
   }
 
   const result = (await response.json()) as { items: EventType[] };
+  return result.items;
+}
+
+export async function fetchEventTypeMetricDefinitions(
+  eventTypeId: string,
+): Promise<EventTypeMetricDefinition[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/metric-definitions`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
   return result.items;
 }
 

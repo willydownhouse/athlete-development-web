@@ -12,6 +12,7 @@ import {
 } from "@/app/dashboard/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { EventTypeMetricsSection } from "@/components/dashboard/event-metric-fields";
 import { DatePickerInput } from "@/components/date-picker-input";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
@@ -20,9 +21,9 @@ import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-val
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_TITLE_MAX_LENGTH,
-  getEventFormTextErrorFromFormData,
+  getEventFormValidationError,
 } from "@/lib/event-form-schema";
-import type { Event, EventType } from "@/lib/types";
+import type { Event, EventType, EventTypeMetricDefinition } from "@/lib/types";
 
 const initialState: DashboardActionState = {};
 
@@ -117,6 +118,18 @@ export function EventForm({
         : defaultCreateFormValues(defaultEventTypeId, format(new Date(), "yyyy-MM-dd")),
     [event, defaultEventTypeId],
   );
+  const [selectedEventTypeId, setSelectedEventTypeId] = useState(values.eventTypeId);
+  const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);
+  const [metricFieldsResetKey, setMetricFieldsResetKey] = useState(values.eventTypeId || "initial");
+
+  function handleEventTypeChange(nextEventTypeId: string) {
+    setSelectedEventTypeId(nextEventTypeId);
+    setMetricFieldsResetKey(nextEventTypeId || "initial");
+
+    if (!nextEventTypeId) {
+      setMetricMappings([]);
+    }
+  }
 
   useEffect(() => {
     if (state.success) {
@@ -144,7 +157,10 @@ export function EventForm({
         action={formAction}
         className="space-y-4"
         onSubmit={(submitEvent) => {
-          const error = getEventFormTextErrorFromFormData(new FormData(submitEvent.currentTarget));
+          const error = getEventFormValidationError(
+            new FormData(submitEvent.currentTarget),
+            metricMappings,
+          );
 
           if (error) {
             submitEvent.preventDefault();
@@ -169,6 +185,7 @@ export function EventForm({
             placeholder="Select event type"
             className={inputClassName}
             defaultValue={values.eventTypeId}
+            onValueChange={handleEventTypeChange}
             groups={groups.map((group) => ({
               label: group.label,
               options: group.items.map((eventType) => ({
@@ -224,6 +241,18 @@ export function EventForm({
             />
           </div>
         </div>
+
+        {selectedEventTypeId ? (
+          <EventTypeMetricsSection
+            key={selectedEventTypeId}
+            eventTypeId={selectedEventTypeId}
+            savedMetrics={
+              isEdit && selectedEventTypeId === event.eventTypeId ? event.metrics : undefined
+            }
+            fieldsResetKey={`${metricFieldsResetKey}-${isEdit ? event.id : "create"}`}
+            onMappingsChange={setMetricMappings}
+          />
+        ) : null}
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">Title</span>

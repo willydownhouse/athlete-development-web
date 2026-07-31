@@ -20,6 +20,7 @@ type FormSelectProps = {
   defaultValue?: string;
   placeholder?: string;
   className?: string;
+  onValueChange?: (value: string) => void;
 };
 
 function flattenOptions(
@@ -40,6 +41,7 @@ export function FormSelect({
   defaultValue = "",
   placeholder = "Select",
   className = "",
+  onValueChange,
 }: FormSelectProps) {
   const listboxId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -135,6 +137,7 @@ export function FormSelect({
         aria-selected={selected}
         onClick={() => {
           setValue(option.value);
+          onValueChange?.(option.value);
           setOpen(false);
         }}
         className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 ${

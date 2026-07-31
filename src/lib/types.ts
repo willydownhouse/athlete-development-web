@@ -81,6 +81,19 @@ export type EventType = {
 
 export type EventIntensity = "light" | "moderate" | "hard";
 
+export type EventMetric = {
+  id: string;
+  eventId: string;
+  metricDefinitionId: string;
+  numericValue: string | null;
+  textValue: string | null;
+  booleanValue: boolean | null;
+  unit: string | null;
+  createdAt: string;
+  updatedAt: string;
+  metricDefinition: MetricDefinition;
+};
+
 export type Event = {
   id: string;
   athleteId: string;
@@ -99,6 +112,7 @@ export type Event = {
   createdAt: string;
   updatedAt: string;
   eventType: EventType;
+  metrics?: EventMetric[];
 };
 
 export type EventListResponse = {

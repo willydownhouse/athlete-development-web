@@ -2,9 +2,17 @@
 
 import { revalidateTag } from "next/cache";
 
-import { ApiError, createEvent, deleteEvent, fetchEvents, updateEvent } from "@/lib/api";
+import {
+  ApiError,
+  createEvent,
+  deleteEvent,
+  fetchEvents,
+  fetchEventTypeMetricDefinitions,
+  updateEvent,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { getEventFormTextErrorFromFormData } from "@/lib/event-form-schema";
+import { getEventFormValidationError } from "@/lib/event-form-schema";
+import { parseMetricsFromFormData } from "@/lib/event-metric-form";
 import type { Event, EventIntensity } from "@/lib/types";
 
 export type DashboardActionState = {
@@ -87,14 +95,29 @@ function readEventFormFields(formData: FormData) {
   };
 }
 
-function validateEventTextFields(formData: FormData): DashboardActionState | null {
-  const error = getEventFormTextErrorFromFormData(formData);
+function validateEventTextFields(
+  formData: FormData,
+  metricMappings: Awaited<ReturnType<typeof fetchEventTypeMetricDefinitions>> = [],
+): DashboardActionState | null {
+  const error = getEventFormValidationError(formData, metricMappings);
 
   if (error) {
     return { error };
   }
 
   return null;
+}
+
+async function loadMetricMappingsForEventType(eventTypeId: string) {
+  if (!eventTypeId) {
+    return [];
+  }
+
+  try {
+    return await fetchEventTypeMetricDefinitions(eventTypeId);
+  } catch {
+    return [];
+  }
 }
 
 export async function createEventAction(
@@ -121,10 +144,13 @@ export async function createEventAction(
     return { error: "Date is required" };
   }
 
-  const textError = validateEventTextFields(formData);
+  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
+  const textError = validateEventTextFields(formData, metricMappings);
   if (textError) {
     return textError;
   }
+
+  const metrics = parseMetricsFromFormData(formData, metricMappings);
 
   try {
     await createEvent(token, fields.athleteId, {
@@ -135,6 +161,7 @@ export async function createEventAction(
       description: fields.description,
       durationSeconds: fields.durationSeconds,
       intensity: fields.intensity,
+      ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
     });
     revalidateTag(`events-${fields.athleteId}`, "max");
 
@@ -173,10 +200,13 @@ export async function updateEventAction(
     return { error: "Date is required" };
   }
 
-  const textError = validateEventTextFields(formData);
+  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
+  const textError = validateEventTextFields(formData, metricMappings);
   if (textError) {
     return textError;
   }
+
+  const metrics = parseMetricsFromFormData(formData, metricMappings);
 
   try {
     await updateEvent(token, fields.athleteId, eventId, {
@@ -186,6 +216,7 @@ export async function updateEventAction(
       description: fields.description,
       durationSeconds: fields.durationSeconds,
       intensity: fields.intensity,
+      metrics,
     });
 
     revalidateTag(`events-${fields.athleteId}`, "max");
@@ -243,6 +274,7 @@ export async function fetchEventsInRangeAction(
       startedAtFrom,
       startedAtTo,
       limit: 100,
+      include: "metrics",
     });
 
     return { events: result.items };

@@ -1,3 +1,6 @@
+import { validateMetricForm } from "./event-metric-form";
+import type { EventTypeMetricDefinition } from "./types";
+
 export const EVENT_TITLE_MAX_LENGTH = 100;
 export const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
 
@@ -17,9 +20,21 @@ export function getEventFormTextError(title: string, description: string): strin
   return null;
 }
 
-export function getEventFormTextErrorFromFormData(formData: FormData): string | null {
+function getEventFormTextErrorFromFormData(formData: FormData): string | null {
   return getEventFormTextError(
     readField(formData.get("title")),
     readField(formData.get("description")),
   );
+}
+
+export function getEventFormValidationError(
+  formData: FormData,
+  metricMappings: EventTypeMetricDefinition[] = [],
+): string | null {
+  const textError = getEventFormTextErrorFromFormData(formData);
+  if (textError) {
+    return textError;
+  }
+
+  return validateMetricForm(formData, metricMappings);
 }
