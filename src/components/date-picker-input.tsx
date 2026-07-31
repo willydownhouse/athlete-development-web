@@ -10,10 +10,17 @@ import { PortalSelect, isPickerOverlayTarget } from "@/components/picker-menu";
 
 const datePickerClassNames = {
   ...dayPickerClassNames,
+  root: `${dayPickerClassNames.root} w-full`,
+  month_caption: "relative mb-2 w-full",
   caption_label: "hidden",
-  weekday: "w-9 text-center text-xs font-medium text-zinc-500",
+  nav: "hidden",
+  dropdowns: "flex w-full items-center gap-2",
+  dropdown_root: "relative min-w-0 flex-1",
+  dropdown:
+    "w-full rounded-lg border border-white/10 bg-[#252b36] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20",
+  weekday: "flex-1 text-center text-xs font-medium text-zinc-500",
   week: "mt-1 flex w-full",
-  day: "relative h-9 w-9 p-0 text-center text-sm",
+  day: "relative flex-1 p-0 text-center text-sm",
 };
 
 type DatePickerInputProps = {
@@ -156,6 +163,8 @@ export function DatePickerInput({
               }}
               defaultMonth={selected}
               captionLayout="dropdown"
+              hideNavigation
+              reverseYears
               startMonth={new Date(fromYear, 0)}
               endMonth={new Date(toYear, 11)}
               disabled={disabledDates}

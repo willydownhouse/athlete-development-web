@@ -167,12 +167,11 @@ export function PickerMenu({
                     onChange(option.value);
                     setOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 ${
+                  className={`flex w-full px-3 py-2.5 text-left text-sm transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected ? "bg-white/5 text-white" : "text-zinc-300"
                   }`}
                 >
                   <span>{option.label}</span>
-                  {selected ? <span className="text-xs text-[#9ec9e8]">Selected</span> : null}
                 </button>
               );
             })}
