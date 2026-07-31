@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "title": "Athlete Development Center",
+    "description": "AI-assisted athlete development for parents, coaches, and young athletes."
+  },
+  "common": {
+    "appName": "Athlete Development Center",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All",
+    "allSports": "All sports",
+    "general": "General",
+    "common": "Common",
+    "commonAllSports": "Common (all sports)",
+    "generalAllSports": "General (all sports)",
+    "yes": "Yes",
+    "no": "No",
+    "notSet": "Not set",
+    "required": "Required",
+    "optional": "Optional",
+    "selected": "Selected",
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "finish": "Finish",
+    "add": "Add",
+    "edit": "Edit",
+    "update": "Update",
+    "remove": "Remove",
+    "manage": "Manage",
+    "applyFilters": "Apply filters",
+    "clear": "Clear",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "deleting": "Deleting…",
+    "unableToLoad": "Unable to load",
+    "now": "Now",
+    "today": "Today",
+    "welcome": "Welcome",
+    "welcomeWithName": "Welcome, {name}",
+    "getStarted": "Get started",
+    "status": "Status",
+    "sort": "Sort",
+    "type": "Type",
+    "sport": "Sport",
+    "name": "Name",
+    "slug": "Slug",
+    "key": "Key",
+    "category": "Category",
+    "description": "Description",
+    "metrics": "Metrics",
+    "prompt": "Prompt",
+    "comingSoon": "Coming soon",
+    "countOfTotal": "{current} of {total}",
+    "activeCount": "{count} active",
+    "unitLabel": "Unit: {unit}",
+    "maxCharacters": "Max {max} characters",
+    "duration": {
+      "hoursMinutes": "{hours}h {minutes}m",
+      "hours": "{hours}h",
+      "minutesSeconds": "{minutes}m {seconds}s",
+      "minutes": "{minutes} min",
+      "seconds": "{seconds}s",
+      "minutesShort": "{minutes} min"
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "signInRequired": "You need to sign in again",
+    "missingSessionToken": "Missing Auth.js session token",
+    "invalidJson": "{field} must be valid JSON"
+  },
+  "validation": {
+    "titleMaxLength": "Title must be {max} characters or less",
+    "notesMaxLength": "Notes must be {max} characters or less",
+    "fieldRequired": "{name} is required",
+    "wholeNumbers": "{name} must use whole numbers",
+    "mustBeNumber": "{name} must be a number"
+  },
+  "aria": {
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "closeDialog": "Close dialog",
+    "chooseDate": "Choose date",
+    "chooseTime": "Choose time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "primaryNav": "Primary"
+  },
+  "auth": {
+    "continueWithGoogle": "Continue with Google",
+    "signOut": "Sign out"
+  },
+  "landing": {
+    "titleLine1": "Athlete",
+    "titleLine2": "Development",
+    "titleLine3": "Center",
+    "tagline": "Only if you take your training seriously."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "onboarding": "Onboarding",
+    "admin": "Admin",
+    "backToApp": "Back to app",
+    "sessionStatus": {
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "abandoned": "Abandoned"
+    }
+  },
+  "admin": {
+    "nav": {
+      "overview": "Overview",
+      "sports": "Sports",
+      "eventTypes": "Event types",
+      "metricDefinitions": "Metric definitions",
+      "onboardingQuestions": "Onboarding questions"
+    },
+    "overview": {
+      "title": "Admin overview",
+      "description": "Manage sports, event types, metric definitions, and onboarding questions."
+    },
+    "sports": {
+      "title": "Sports",
+      "description": "Create and manage sports available in the platform.",
+      "createSport": "Create sport",
+      "allSports": "All sports ({count})",
+      "empty": "No sports yet.",
+      "slugPlaceholder": "hockey",
+      "namePlaceholder": "Hockey",
+      "successCreated": "Sport created",
+      "successUpdated": "Sport updated"
+    },
+    "eventTypes": {
+      "title": "Event types",
+      "description": "Configure event types and manage allowed metrics per type.",
+      "createEventType": "Create event type",
+      "listTitle": "Event types ({count})",
+      "empty": "No event types match the filters.",
+      "backToList": "← Back to event types",
+      "detailDescription": "Manage event type settings and allowed metrics for {slug}.",
+      "settingsTitle": "Event type settings",
+      "slugPlaceholder": "ice_practice",
+      "namePlaceholder": "Ice practice",
+      "saveButton": "Save event type",
+      "metricsTitle": "Allowed metrics ({count})",
+      "metricsDescription": "Metrics available when logging this event type.",
+      "allowMetric": "Allow metric",
+      "selectMetric": "Select a metric",
+      "requiredMetric": "Required metric",
+      "allMetricsAllowed": "All compatible metrics are already allowed for this event type.",
+      "noneAllowed": "No metrics allowed yet.",
+      "successCreated": "Event type created",
+      "successUpdated": "Event type updated",
+      "successMetricAllowed": "Metric allowed for event type",
+      "successMetricMappingUpdated": "Metric mapping updated"
+    },
+    "metricDefinitions": {
+      "title": "Metric definitions",
+      "description": "Define queryable metrics used on events and mapped to event types.",
+      "createTitle": "Create metric definition",
+      "createButton": "Create metric",
+      "listTitle": "Metric definitions ({count})",
+      "empty": "No metric definitions match the filters.",
+      "mapToEventTypes": "Map to event types →",
+      "valueType": "Value type",
+      "canonicalUnit": "Canonical unit",
+      "keyPlaceholder": "shot_count",
+      "namePlaceholder": "Shot count",
+      "unitPlaceholder": "shots",
+      "descriptionPlaceholder": "Optional description for forms and AI tooling.",
+      "successCreated": "Metric definition created",
+      "successUpdated": "Metric definition updated"
+    },
+    "onboardingQuestions": {
+      "title": "Onboarding questions",
+      "description": "Configure common and sport-specific questions used in guided athlete onboarding.",
+      "createTitle": "Create onboarding question",
+      "createButton": "Create question",
+      "listTitle": "Onboarding questions ({count})",
+      "empty": "No onboarding questions match the filters.",
+      "backToList": "← Back to onboarding questions",
+      "detailDescription": "Edit onboarding question {key}.",
+      "settingsTitle": "Question settings",
+      "answerType": "Answer type",
+      "sortOrder": "Sort order",
+      "mapsToField": "Maps to field",
+      "helpText": "Help text",
+      "optionsJson": "Options (JSON)",
+      "keyPlaceholder": "training_rhythm",
+      "mapsToFieldPlaceholder": "profile.trainingEnvironment",
+      "promptPlaceholder": "How does a typical training week look for the athlete?",
+      "helpTextPlaceholder": "Optional helper text shown with the question.",
+      "optionsPlaceholder": "For select types, e.g. [\"Option A\",\"Option B\"]",
+      "createOnboardingQuestion": "Create onboarding question",
+      "successCreated": "Onboarding question created",
+      "successUpdated": "Onboarding question updated"
+    },
+    "fields": {
+      "metric": "Metric"
+    },
+    "enums": {
+      "eventCategory": {
+        "training": "training",
+        "competition": "competition",
+        "recovery": "recovery",
+        "health": "health",
+        "nutrition": "nutrition",
+        "mood": "mood",
+        "measurement": "measurement",
+        "note": "note",
+        "travel": "travel",
+        "equipment": "equipment",
+        "other": "other"
+      },
+      "answerType": {
+        "text": "text",
+        "number": "number",
+        "boolean": "boolean",
+        "single_select": "single select",
+        "multi_select": "multi select",
+        "date": "date",
+        "json": "json"
+      },
+      "valueType": {
+        "number": "number",
+        "text": "text",
+        "boolean": "boolean"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "header": {
+      "getStartedDescription": "Add your first athlete through onboarding to unlock the dashboard."
+    },
+    "empty": {
+      "title": "Dashboard is still empty",
+      "description": "This dashboard fills in once you have an athlete profile. Head to onboarding to add your first athlete and get started.",
+      "goToOnboarding": "Go to onboarding"
+    },
+    "loadErrors": {
+      "athletes": "Unable to load athletes",
+      "eventTypes": "Unable to load event types",
+      "events": "Unable to load events",
+      "metrics": "Unable to load metrics"
+    },
+    "aiInsight": {
+      "title": "AI insight",
+      "mockText": "After two hard ice sessions, today looks better as a light recovery day. Short puck touches or mobility would fit well."
+    },
+    "todaysEvents": {
+      "title": "Today's events",
+      "loading": "Loading today's events…",
+      "empty": "No events logged for today."
+    },
+    "quickLog": {
+      "title": "Quick log",
+      "hockey": "Hockey",
+      "general": "General",
+      "noHockeyEventTypes": "No hockey event types available yet.",
+      "noGeneralEventTypes": "No general event types available yet."
+    },
+    "thisWeek": {
+      "title": "This week",
+      "loading": "Loading this week's events…",
+      "empty": "Weekly load will appear once events are logged.",
+      "loadNone": "No load yet",
+      "loadLight": "Light load",
+      "loadModerate": "Moderate load",
+      "loadHard": "Hard load",
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "toneLabels": {
+        "ice": "Ice",
+        "recovery": "Rec",
+        "gym": "Gym",
+        "game": "Game",
+        "rest": "Rest"
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "loadingEvents": "Loading events…",
+      "noEventsForDay": "No events logged for this day."
+    },
+    "bottomNav": {
+      "chat": "Chat"
+    },
+    "athleteSubtitle": {
+      "eventsThisWeek": "{count, plural, one {# event this week} other {# events this week}}",
+      "separator": " · "
+    },
+    "events": {
+      "validation": {
+        "athleteRequired": "Athlete is required",
+        "eventTypeRequired": "Event type is required",
+        "dateRequired": "Date is required",
+        "eventRequired": "Event is required"
+      },
+      "success": {
+        "added": "Event added",
+        "updated": "Event updated",
+        "deleted": "Event deleted"
+      }
+    }
+  },
+  "events": {
+    "modal": {
+      "add": "Add event",
+      "edit": "Edit event"
+    },
+    "form": {
+      "eventType": "Event type",
+      "selectEventType": "Select event type",
+      "date": "Date",
+      "startTime": "Start time",
+      "startTimeHint": "Leave empty to default to noon.",
+      "durationMinutes": "Duration (minutes)",
+      "durationPlaceholder": "75",
+      "intensityLabel": "Intensity",
+      "title": "Title",
+      "titlePlaceholder": "Morning ice practice",
+      "notes": "Notes",
+      "notesPlaceholder": "Edge work, small-area games, felt pretty hard.",
+      "addButton": "Add event",
+      "noEventTypes": "No event types are available yet. Ask an admin to configure event types first.",
+      "deleteButton": "Delete event",
+      "deleteConfirm": "Delete this event permanently? This cannot be undone.",
+      "groups": {
+        "hockey": "Hockey",
+        "general": "General"
+      },
+      "intensity": {
+        "notSet": "Not set",
+        "light": "Light",
+        "moderate": "Moderate",
+        "hard": "Hard"
+      }
+    },
+    "metrics": {
+      "loading": "Loading metric fields…",
+      "optionalHint": "Optional details configured for this event type.",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "zeroPlaceholder": "0"
+    },
+    "detail": {
+      "time": "Time",
+      "duration": "Duration",
+      "intensity": "Intensity",
+      "category": "Category",
+      "description": "Description",
+      "metrics": "Metrics",
+      "originalInput": "Original input"
+    }
+  },
+  "onboarding": {
+    "title": "Onboarding",
+    "intro": {
+      "heading": "Let's set up your athlete profile",
+      "paragraph1": "This setup creates the starting point for your athlete profile and long-term development memory.",
+      "paragraph2": "The more useful context you share with us — training, recovery, and everyday observations — the better we can support your athlete's journey.",
+      "paragraph3": "This helps future guidance stay personal, practical, and grounded in your athlete's real situation and goals."
+    },
+    "sportSelect": {
+      "title": "Select your sport",
+      "noSports": "No sports are available right now. Please try again later."
+    },
+    "athleteDetails": {
+      "title": "Athlete details",
+      "description": "Start with a few basics. Next we'll ask a few guided questions to build the full profile.",
+      "athleteName": "Athlete name",
+      "namePlaceholder": "Leo",
+      "dateOfBirth": "Date of birth",
+      "heightCm": "Height (cm)",
+      "heightPlaceholder": "140",
+      "weightKg": "Weight (kg)",
+      "weightPlaceholder": "35",
+      "optionalDetails": "Optional details help personalize guidance for {sportName}. You can fill more in the next questions."
+    },
+    "questions": {
+      "sportOnboarding": "{sportName} onboarding",
+      "noneConfigured": "No onboarding questions are configured yet.",
+      "continueToDashboard": "Continue to dashboard",
+      "jsonPlaceholder": "{\"key\":\"value\"}"
+    },
+    "loadErrors": {
+      "sports": "Unable to load sports"
+    },
+    "validation": {
+      "focusSportRequired": "Focus sport is required",
+      "athleteNameRequired": "Athlete name is required",
+      "answerRequired": "Please answer this question to continue"
+    }
+  },
+  "form": {
+    "select": "Select",
+    "selectDate": "Select date",
+    "selectTime": "Select time"
+  }
+}

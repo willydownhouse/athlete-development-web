@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "title": "Urheilijan kehityskeskus",
+    "description": "Tekoälyavusteinen urheilijan kehitys vanhemmille, valmentajille ja nuorille urheilijoille."
+  },
+  "common": {
+    "appName": "Urheilijan kehityskeskus",
+    "active": "Aktiivinen",
+    "inactive": "Ei aktiivinen",
+    "all": "Kaikki",
+    "allSports": "Kaikki lajit",
+    "general": "Yleinen",
+    "common": "Yhteinen",
+    "commonAllSports": "Yhteinen (kaikki lajit)",
+    "generalAllSports": "Yleinen (kaikki lajit)",
+    "yes": "Kyllä",
+    "no": "Ei",
+    "notSet": "Ei asetettu",
+    "required": "Pakollinen",
+    "optional": "Valinnainen",
+    "selected": "Valittu",
+    "close": "Sulje",
+    "cancel": "Peruuta",
+    "back": "Takaisin",
+    "continue": "Jatka",
+    "finish": "Valmis",
+    "add": "Lisää",
+    "edit": "Muokkaa",
+    "update": "Päivitä",
+    "remove": "Poista",
+    "manage": "Hallitse",
+    "applyFilters": "Käytä suodattimia",
+    "clear": "Tyhjennä",
+    "saveChanges": "Tallenna muutokset",
+    "saving": "Tallennetaan…",
+    "loading": "Ladataan…",
+    "deleting": "Poistetaan…",
+    "unableToLoad": "Lataus epäonnistui",
+    "now": "Nyt",
+    "today": "Tänään",
+    "welcome": "Tervetuloa",
+    "welcomeWithName": "Tervetuloa, {name}",
+    "getStarted": "Aloita",
+    "status": "Tila",
+    "sort": "Järjestys",
+    "type": "Tyyppi",
+    "sport": "Laji",
+    "name": "Nimi",
+    "slug": "Tunniste",
+    "key": "Avain",
+    "category": "Kategoria",
+    "description": "Kuvaus",
+    "metrics": "Mittarit",
+    "prompt": "Kysymys",
+    "comingSoon": "Tulossa pian",
+    "countOfTotal": "{current} / {total}",
+    "activeCount": "{count} aktiivista",
+    "unitLabel": "Yksikkö: {unit}",
+    "maxCharacters": "Enintään {max} merkkiä",
+    "duration": {
+      "hoursMinutes": "{hours} t {minutes} min",
+      "hours": "{hours} t",
+      "minutesSeconds": "{minutes} min {seconds} s",
+      "minutes": "{minutes} min",
+      "seconds": "{seconds} s",
+      "minutesShort": "{minutes} min"
+    }
+  },
+  "errors": {
+    "generic": "Jokin meni pieleen",
+    "signInRequired": "Sinun täytyy kirjautua uudelleen sisään",
+    "missingSessionToken": "Auth.js-istuntotunnus puuttuu",
+    "invalidJson": "Kentän {field} täytyy olla kelvollista JSONia"
+  },
+  "validation": {
+    "titleMaxLength": "Otsikon pituus saa olla enintään {max} merkkiä",
+    "notesMaxLength": "Muistiinpanojen pituus saa olla enintään {max} merkkiä",
+    "fieldRequired": "{name} on pakollinen",
+    "wholeNumbers": "Kentän {name} arvon täytyy olla kokonaisluku",
+    "mustBeNumber": "Kentän {name} arvon täytyy olla numero"
+  },
+  "aria": {
+    "closeMenu": "Sulje valikko",
+    "openMenu": "Avaa valikko",
+    "closeDialog": "Sulje valintaikkuna",
+    "chooseDate": "Valitse päivämäärä",
+    "chooseTime": "Valitse kellonaika",
+    "hour": "Tunti",
+    "minute": "Minuutti",
+    "previousMonth": "Edellinen kuukausi",
+    "nextMonth": "Seuraava kuukausi",
+    "primaryNav": "Päänavigaatio"
+  },
+  "auth": {
+    "continueWithGoogle": "Jatka Google-tilillä",
+    "signOut": "Kirjaudu ulos"
+  },
+  "landing": {
+    "titleLine1": "Urheilijan",
+    "titleLine2": "kehitys",
+    "titleLine3": "keskus",
+    "tagline": "Vain jos suhtaudut harjoitteluun vakavasti."
+  },
+  "nav": {
+    "dashboard": "Kojelauta",
+    "onboarding": "Aloitus",
+    "admin": "Ylläpito",
+    "backToApp": "Takaisin sovellukseen",
+    "sessionStatus": {
+      "inProgress": "Kesken",
+      "completed": "Valmis",
+      "abandoned": "Keskeytetty"
+    }
+  },
+  "admin": {
+    "nav": {
+      "overview": "Yleiskatsaus",
+      "sports": "Lajit",
+      "eventTypes": "Tapahtumatyypit",
+      "metricDefinitions": "Mittarimääritykset",
+      "onboardingQuestions": "Aloituskysymykset"
+    },
+    "overview": {
+      "title": "Ylläpidon yleiskatsaus",
+      "description": "Hallitse lajeja, tapahtumatyyppejä, mittarimäärityksiä ja aloituskysymyksiä."
+    },
+    "sports": {
+      "title": "Lajit",
+      "description": "Luo ja hallitse alustalla käytettäviä lajeja.",
+      "createSport": "Luo laji",
+      "allSports": "Kaikki lajit ({count})",
+      "empty": "Lajeja ei vielä ole.",
+      "slugPlaceholder": "jääkiekko",
+      "namePlaceholder": "Jääkiekko",
+      "successCreated": "Laji luotu",
+      "successUpdated": "Laji päivitetty"
+    },
+    "eventTypes": {
+      "title": "Tapahtumatyypit",
+      "description": "Määritä tapahtumatyypit ja hallitse sallittuja mittareita kullekin tyypille.",
+      "createEventType": "Luo tapahtumatyyppi",
+      "listTitle": "Tapahtumatyypit ({count})",
+      "empty": "Yksikään tapahtumatyyppi ei vastaa suodattimia.",
+      "backToList": "← Takaisin tapahtumatyyppeihin",
+      "detailDescription": "Hallitse tapahtumatyypin {slug} asetuksia ja sallittuja mittareita.",
+      "settingsTitle": "Tapahtumatyypin asetukset",
+      "slugPlaceholder": "jääharjoitus",
+      "namePlaceholder": "Jääharjoitus",
+      "saveButton": "Tallenna tapahtumatyyppi",
+      "metricsTitle": "Sallitut mittarit ({count})",
+      "metricsDescription": "Mittarit, jotka ovat käytettävissä tämän tapahtumatyypin kirjauksessa.",
+      "allowMetric": "Salli mittari",
+      "selectMetric": "Valitse mittari",
+      "requiredMetric": "Pakollinen mittari",
+      "allMetricsAllowed": "Kaikki yhteensopivat mittarit on jo sallittu tälle tapahtumatyypille.",
+      "noneAllowed": "Mittareita ei ole vielä sallittu.",
+      "successCreated": "Tapahtumatyyppi luotu",
+      "successUpdated": "Tapahtumatyyppi päivitetty",
+      "successMetricAllowed": "Mittari sallittu tapahtumatyypille",
+      "successMetricMappingUpdated": "Mittarikartoitus päivitetty"
+    },
+    "metricDefinitions": {
+      "title": "Mittarimääritykset",
+      "description": "Määritä tapahtumissa käytettävät ja tapahtumatyyppeihin liitettävät mittarit.",
+      "createTitle": "Luo mittarimääritys",
+      "createButton": "Luo mittari",
+      "listTitle": "Mittarimääritykset ({count})",
+      "empty": "Yksikään mittarimääritys ei vastaa suodattimia.",
+      "mapToEventTypes": "Liitä tapahtumatyyppeihin →",
+      "valueType": "Arvotyyppi",
+      "canonicalUnit": "Vakioyksikkö",
+      "keyPlaceholder": "laukausmaara",
+      "namePlaceholder": "Laukausmäärä",
+      "unitPlaceholder": "laukausta",
+      "descriptionPlaceholder": "Valinnainen kuvaus lomakkeille ja tekoälytyökaluille.",
+      "successCreated": "Mittarimääritys luotu",
+      "successUpdated": "Mittarimääritys päivitetty"
+    },
+    "onboardingQuestions": {
+      "title": "Aloituskysymykset",
+      "description": "Määritä yhteiset ja lajikohtaiset kysymykset ohjatulle urheilijan aloitukselle.",
+      "createTitle": "Luo aloituskysymys",
+      "createButton": "Luo kysymys",
+      "listTitle": "Aloituskysymykset ({count})",
+      "empty": "Yksikään aloituskysymys ei vastaa suodattimia.",
+      "backToList": "← Takaisin aloituskysymyksiin",
+      "detailDescription": "Muokkaa aloituskysymystä {key}.",
+      "settingsTitle": "Kysymyksen asetukset",
+      "answerType": "Vastaustyyppi",
+      "sortOrder": "Järjestys",
+      "mapsToField": "Kohdistuu kenttään",
+      "helpText": "Ohjeteksti",
+      "optionsJson": "Vaihtoehdot (JSON)",
+      "keyPlaceholder": "harjoitusrytmi",
+      "mapsToFieldPlaceholder": "profile.trainingEnvironment",
+      "promptPlaceholder": "Miltä urheilijan tyypillinen harjoitusviikko näyttää?",
+      "helpTextPlaceholder": "Valinnainen ohjeteksti, joka näytetään kysymyksen yhteydessä.",
+      "optionsPlaceholder": "Valintatyypeille, esim. [\"Vaihtoehto A\",\"Vaihtoehto B\"]",
+      "createOnboardingQuestion": "Luo aloituskysymys",
+      "successCreated": "Aloituskysymys luotu",
+      "successUpdated": "Aloituskysymys päivitetty"
+    },
+    "fields": {
+      "metric": "Mittari"
+    },
+    "enums": {
+      "eventCategory": {
+        "training": "harjoitus",
+        "competition": "kilpailu",
+        "recovery": "palautuminen",
+        "health": "terveys",
+        "nutrition": "ravinto",
+        "mood": "mieliala",
+        "measurement": "mittaus",
+        "note": "muistiinpano",
+        "travel": "matka",
+        "equipment": "varusteet",
+        "other": "muu"
+      },
+      "answerType": {
+        "text": "teksti",
+        "number": "numero",
+        "boolean": "totuusarvo",
+        "single_select": "yksi valinta",
+        "multi_select": "useita valintoja",
+        "date": "päivämäärä",
+        "json": "json"
+      },
+      "valueType": {
+        "number": "numero",
+        "text": "teksti",
+        "boolean": "totuusarvo"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Kojelauta",
+    "header": {
+      "getStartedDescription": "Lisää ensimmäinen urheilijasi aloituksen kautta avataksesi kojelaudan."
+    },
+    "empty": {
+      "title": "Kojelauta on vielä tyhjä",
+      "description": "Kojelauta täyttyy, kun sinulla on urheilijaprofiili. Siirry aloitukseen lisätäksesi ensimmäisen urheilijasi.",
+      "goToOnboarding": "Siirry aloitukseen"
+    },
+    "loadErrors": {
+      "athletes": "Urheilijoiden lataus epäonnistui",
+      "eventTypes": "Tapahtumatyyppien lataus epäonnistui",
+      "events": "Tapahtumien lataus epäonnistui",
+      "metrics": "Mittareiden lataus epäonnistui"
+    },
+    "aiInsight": {
+      "title": "Tekoälyhavainto",
+      "mockText": "Kahden rankan jääharjoituksen jälkeen tänään sopii kevyt palautumispäivä. Lyhyet kiekko-ottelut tai liikkuvuusharjoitus sopisivat hyvin."
+    },
+    "todaysEvents": {
+      "title": "Tämän päivän tapahtumat",
+      "loading": "Ladataan tämän päivän tapahtumia…",
+      "empty": "Tälle päivälle ei ole kirjattu tapahtumia."
+    },
+    "quickLog": {
+      "title": "Pikakirjaus",
+      "hockey": "Jääkiekko",
+      "general": "Yleinen",
+      "noHockeyEventTypes": "Jääkiekon tapahtumatyyppejä ei ole vielä saatavilla.",
+      "noGeneralEventTypes": "Yleisiä tapahtumatyyppejä ei ole vielä saatavilla."
+    },
+    "thisWeek": {
+      "title": "Tämä viikko",
+      "loading": "Ladataan tämän viikon tapahtumia…",
+      "empty": "Viikoittainen kuormitus näkyy, kun tapahtumia on kirjattu.",
+      "loadNone": "Ei kuormitusta vielä",
+      "loadLight": "Kevyt kuormitus",
+      "loadModerate": "Kohtalainen kuormitus",
+      "loadHard": "Raskas kuormitus",
+      "weekdays": {
+        "mon": "Ma",
+        "tue": "Ti",
+        "wed": "Ke",
+        "thu": "To",
+        "fri": "Pe",
+        "sat": "La",
+        "sun": "Su"
+      },
+      "toneLabels": {
+        "ice": "Jää",
+        "recovery": "Pal",
+        "gym": "Sal",
+        "game": "Ott",
+        "rest": "Lepo"
+      }
+    },
+    "calendar": {
+      "title": "Kalenteri",
+      "loadingEvents": "Ladataan tapahtumia…",
+      "noEventsForDay": "Tälle päivälle ei ole kirjattu tapahtumia."
+    },
+    "bottomNav": {
+      "chat": "Chat"
+    },
+    "athleteSubtitle": {
+      "eventsThisWeek": "{count, plural, one {# tapahtuma tällä viikolla} other {# tapahtumaa tällä viikolla}}",
+      "separator": " · "
+    },
+    "events": {
+      "validation": {
+        "athleteRequired": "Urheilija on pakollinen",
+        "eventTypeRequired": "Tapahtumatyyppi on pakollinen",
+        "dateRequired": "Päivämäärä on pakollinen",
+        "eventRequired": "Tapahtuma on pakollinen"
+      },
+      "success": {
+        "added": "Tapahtuma lisätty",
+        "updated": "Tapahtuma päivitetty",
+        "deleted": "Tapahtuma poistettu"
+      }
+    }
+  },
+  "events": {
+    "modal": {
+      "add": "Lisää tapahtuma",
+      "edit": "Muokkaa tapahtumaa"
+    },
+    "form": {
+      "eventType": "Tapahtumatyyppi",
+      "selectEventType": "Valitse tapahtumatyyppi",
+      "date": "Päivämäärä",
+      "startTime": "Alkamisaika",
+      "startTimeHint": "Jätä tyhjäksi oletukseksi klo 12.",
+      "durationMinutes": "Kesto (minuuttia)",
+      "durationPlaceholder": "75",
+      "intensityLabel": "Intensiteetti",
+      "title": "Otsikko",
+      "titlePlaceholder": "Aamuinen jääharjoitus",
+      "notes": "Muistiinpanot",
+      "notesPlaceholder": "Reunatyö, pienaluepelit, tuntui melko rankalta.",
+      "addButton": "Lisää tapahtuma",
+      "noEventTypes": "Tapahtumatyyppejä ei ole vielä saatavilla. Pyydä ylläpitäjää määrittämään tapahtumatyypit ensin.",
+      "deleteButton": "Poista tapahtuma",
+      "deleteConfirm": "Poistetaanko tämä tapahtuma pysyvästi? Tätä toimintoa ei voi perua.",
+      "groups": {
+        "hockey": "Jääkiekko",
+        "general": "Yleinen"
+      },
+      "intensity": {
+        "notSet": "Ei asetettu",
+        "light": "Kevyt",
+        "moderate": "Kohtalainen",
+        "hard": "Raskas"
+      }
+    },
+    "metrics": {
+      "loading": "Ladataan mittarikenttiä…",
+      "optionalHint": "Valinnaiset tiedot, jotka on määritetty tälle tapahtumatyypille.",
+      "hours": "Tunnit",
+      "minutes": "Minuutit",
+      "seconds": "Sekunnit",
+      "zeroPlaceholder": "0"
+    },
+    "detail": {
+      "time": "Aika",
+      "duration": "Kesto",
+      "intensity": "Intensiteetti",
+      "category": "Kategoria",
+      "description": "Kuvaus",
+      "metrics": "Mittarit",
+      "originalInput": "Alkuperäinen syöte"
+    }
+  },
+  "onboarding": {
+    "title": "Aloitus",
+    "intro": {
+      "heading": "Luodaan urheilijaprofiilisi",
+      "paragraph1": "Tämä aloitus luo lähtökohdan urheilijaprofiilillesi ja pitkäaikaiselle kehitysmuistille.",
+      "paragraph2": "Mitä enemmän hyödyllistä taustatietoa jaat — harjoittelusta, palautumisesta ja arjen havainnoista — sitä paremmin voimme tukea urheilijasi matkaa.",
+      "paragraph3": "Näin tuleva ohjaus pysyy henkilökohtaisena, käytännöllisenä ja sidottuna urheilijasi todelliseen tilanteeseen ja tavoitteisiin."
+    },
+    "sportSelect": {
+      "title": "Valitse lajisi",
+      "noSports": "Lajeja ei ole tällä hetkellä saatavilla. Yritä myöhemmin uudelleen."
+    },
+    "athleteDetails": {
+      "title": "Urheilijan tiedot",
+      "description": "Aloitetaan muutamalla perustiedolla. Seuraavaksi kysymme muutaman ohjatun kysymyksen täyden profiilin rakentamiseksi.",
+      "athleteName": "Urheilijan nimi",
+      "namePlaceholder": "Leo",
+      "dateOfBirth": "Syntymäaika",
+      "heightCm": "Pituus (cm)",
+      "heightPlaceholder": "140",
+      "weightKg": "Paino (kg)",
+      "weightPlaceholder": "35",
+      "optionalDetails": "Valinnaiset tiedot auttavat personoimaan ohjausta lajille {sportName}. Voit täydentää lisää seuraavissa kysymyksissä."
+    },
+    "questions": {
+      "sportOnboarding": "{sportName}-aloitus",
+      "noneConfigured": "Aloituskysymyksiä ei ole vielä määritetty.",
+      "continueToDashboard": "Jatka kojelaudalle",
+      "jsonPlaceholder": "{\"avain\":\"arvo\"}"
+    },
+    "loadErrors": {
+      "sports": "Lajien lataus epäonnistui"
+    },
+    "validation": {
+      "focusSportRequired": "Päälaji on pakollinen",
+      "athleteNameRequired": "Urheilijan nimi on pakollinen",
+      "answerRequired": "Vastaa tähän kysymykseen jatkaaksesi"
+    }
+  },
+  "form": {
+    "select": "Valitse",
+    "selectDate": "Valitse päivämäärä",
+    "selectTime": "Valitse kellonaika"
+  }
+}

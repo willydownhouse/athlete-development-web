@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
+import { createValueTypeLabel } from "@/lib/i18n-labels";
 import { METRIC_VALUE_TYPES, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
@@ -18,6 +20,10 @@ type CreateMetricDefinitionFormProps = {
 };
 
 export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFormProps) {
+  const t = useTranslations("admin.metricDefinitions");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const valueTypeLabel = createValueTypeLabel(tAdmin);
   const [state, formAction] = useActionState(createMetricDefinitionAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
@@ -33,37 +39,46 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Key</span>
+          <span className="font-medium text-zinc-300">{tCommon("key")}</span>
           <input
             name="key"
             required
             pattern="[a-z0-9_]+"
-            placeholder="shot_count"
+            placeholder={t("keyPlaceholder")}
             className={inputClassName}
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
-          <input name="name" required placeholder="Shot count" className={inputClassName} />
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
+          <input
+            name="name"
+            required
+            placeholder={t("namePlaceholder")}
+            className={inputClassName}
+          />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Value type</span>
+          <span className="font-medium text-zinc-300">{t("valueType")}</span>
           <select name="valueType" required className={inputClassName}>
             {METRIC_VALUE_TYPES.map((valueType) => (
               <option key={valueType} value={valueType}>
-                {valueType}
+                {valueTypeLabel(valueType)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Canonical unit</span>
-          <input name="canonicalUnit" placeholder="shots" className={inputClassName} />
+          <span className="font-medium text-zinc-300">{t("canonicalUnit")}</span>
+          <input
+            name="canonicalUnit"
+            placeholder={t("unitPlaceholder")}
+            className={inputClassName}
+          />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select name="sportId" defaultValue="" className={inputClassName}>
-            <option value="general">General (all sports)</option>
+            <option value="general">{tCommon("generalAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -74,11 +89,11 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Description</span>
+        <span className="font-medium text-zinc-300">{tCommon("description")}</span>
         <textarea
           name="description"
           rows={2}
-          placeholder="Optional description for forms and AI tooling."
+          placeholder={t("descriptionPlaceholder")}
           className={inputClassName}
         />
       </label>
@@ -90,10 +105,10 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
           defaultChecked
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton>Create metric definition</SubmitButton>
+      <SubmitButton>{t("createButton")}</SubmitButton>
     </form>
   );
 }

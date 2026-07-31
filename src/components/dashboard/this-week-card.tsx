@@ -1,7 +1,12 @@
+"use client";
+
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+
 import { EVENT_TONE_BG_CLASS } from "@/lib/event-tone";
 import { getLocalWeekRange } from "@/lib/date-range";
 import type { Event } from "@/lib/types";
-import { buildWeekDays, getWeekLoadLabel } from "@/lib/week-summary";
+import { buildWeekDays, getWeekLoadLabel, type WeekSummaryLabels } from "@/lib/week-summary";
 
 const toneClass = EVENT_TONE_BG_CLASS;
 const WEEK_CHART_HEIGHT = 88;
@@ -19,28 +24,57 @@ export function ThisWeekCard({
   loadError,
   onDayClick,
 }: ThisWeekCardProps) {
+  const t = useTranslations("dashboard.thisWeek");
+  const tCommon = useTranslations("common");
+
+  const labels: WeekSummaryLabels = useMemo(
+    () => ({
+      weekdays: [
+        t("weekdays.mon"),
+        t("weekdays.tue"),
+        t("weekdays.wed"),
+        t("weekdays.thu"),
+        t("weekdays.fri"),
+        t("weekdays.sat"),
+        t("weekdays.sun"),
+      ],
+      toneLabels: {
+        ice: t("toneLabels.ice"),
+        recovery: t("toneLabels.recovery"),
+        gym: t("toneLabels.gym"),
+        game: t("toneLabels.game"),
+        rest: t("toneLabels.rest"),
+      },
+      loadLabels: {
+        none: t("loadNone"),
+        light: t("loadLight"),
+        moderate: t("loadModerate"),
+        hard: t("loadHard"),
+      },
+    }),
+    [t],
+  );
+
   const { days: weekDays } = getLocalWeekRange();
-  const weekDayBars = buildWeekDays(events, weekDays);
-  const loadLabel = getWeekLoadLabel(events);
+  const weekDayBars = buildWeekDays(events, weekDays, labels);
+  const loadLabel = getWeekLoadLabel(events, labels);
   const isEmpty = !loading && !loadError && events.length === 0;
 
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">This week</h2>
+        <h2 className="text-base font-semibold text-white">{t("title")}</h2>
         <span className="text-sm text-zinc-400">
-          {loading ? "Loading…" : loadError ? "Unable to load" : loadLabel}
+          {loading ? tCommon("loading") : loadError ? tCommon("unableToLoad") : loadLabel}
         </span>
       </div>
 
       {loadError ? (
         <p className="mt-4 text-sm text-red-300">{loadError}</p>
       ) : loading ? (
-        <p className="mt-4 text-sm text-zinc-500">Loading this week&apos;s events…</p>
+        <p className="mt-4 text-sm text-zinc-500">{t("loading")}</p>
       ) : isEmpty ? (
-        <p className="mt-4 text-sm text-zinc-500">
-          Weekly load will appear once events are logged.
-        </p>
+        <p className="mt-4 text-sm text-zinc-500">{t("empty")}</p>
       ) : (
         <div className="mt-5 flex justify-between gap-1.5">
           {weekDayBars.map((day) => (

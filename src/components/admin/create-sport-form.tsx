@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
@@ -13,6 +14,8 @@ const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
 export function CreateSportForm() {
+  const t = useTranslations("admin.sports");
+  const tCommon = useTranslations("common");
   const [state, formAction] = useActionState(createSportAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
@@ -28,18 +31,23 @@ export function CreateSportForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Slug</span>
+          <span className="font-medium text-zinc-300">{tCommon("slug")}</span>
           <input
             name="slug"
             required
             pattern="[a-z0-9_]+"
-            placeholder="hockey"
+            placeholder={t("slugPlaceholder")}
             className={inputClassName}
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Name</span>
-          <input name="name" required placeholder="Hockey" className={inputClassName} />
+          <span className="font-medium text-zinc-300">{tCommon("name")}</span>
+          <input
+            name="name"
+            required
+            placeholder={t("namePlaceholder")}
+            className={inputClassName}
+          />
         </label>
       </div>
 
@@ -50,10 +58,10 @@ export function CreateSportForm() {
           defaultChecked
           className="rounded border-white/20 bg-[#1c222c]"
         />
-        Active
+        {tCommon("active")}
       </label>
 
-      <SubmitButton>Create sport</SubmitButton>
+      <SubmitButton>{t("createSport")}</SubmitButton>
     </form>
   );
 }

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -8,6 +9,7 @@ import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { Sport } from "@/lib/types";
 
 export default async function OnboardingPage() {
+  const tLoadErrors = await getTranslations("onboarding.loadErrors");
   const session = await auth();
 
   if (!session?.user) {
@@ -37,7 +39,7 @@ export default async function OnboardingPage() {
     }
   }
 
-  const loadError = !sportsLoaded ? "Unable to load sports" : null;
+  const loadError = !sportsLoaded ? tLoadErrors("sports") : null;
 
   return (
     <OnboardingView

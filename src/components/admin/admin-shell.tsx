@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
@@ -30,6 +31,9 @@ function CloseIcon() {
 
 export function AdminShell({ userEmail, children }: AdminShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const tNav = useTranslations("nav");
+  const tCommon = useTranslations("common");
+  const tAria = useTranslations("aria");
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -61,7 +65,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
         <button
           type="button"
           className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          aria-label="Close menu"
+          aria-label={tAria("closeMenu")}
           onClick={closeMobile}
         />
       ) : null}
@@ -73,13 +77,15 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Admin</p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              {tNav("admin")}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-white">{tCommon("appName")}</p>
           </div>
           <button
             type="button"
             className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-            aria-label="Close menu"
+            aria-label={tAria("closeMenu")}
             onClick={closeMobile}
           >
             <CloseIcon />
@@ -97,7 +103,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
             className="block text-sm text-zinc-300 transition hover:text-white"
             onClick={closeMobile}
           >
-            Back to app
+            {tNav("backToApp")}
           </Link>
           <SignOutButton className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]" />
         </div>
@@ -108,15 +114,15 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
-            aria-label="Open menu"
+            aria-label={tAria("openMenu")}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Admin</p>
-            <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
+            <p className="truncate text-sm font-semibold text-white">{tNav("admin")}</p>
+            <p className="truncate text-xs text-zinc-500">{tCommon("appName")}</p>
           </div>
         </header>
 

@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { OnboardingShell } from "./onboarding-shell";
 import { SportSelect } from "./sport-select";
 import type { Sport, OnboardingSessionSummary } from "@/lib/types";
@@ -11,7 +13,7 @@ type OnboardingViewProps = {
   onboardingSessions: OnboardingSessionSummary[];
 };
 
-export function OnboardingView({
+export async function OnboardingView({
   userEmail,
   userName,
   isAdmin = false,
@@ -19,6 +21,8 @@ export function OnboardingView({
   loadError,
   onboardingSessions,
 }: OnboardingViewProps) {
+  const tIntro = await getTranslations("onboarding.intro");
+  const tCommon = await getTranslations("common");
   const greetingName = userName?.trim().split(/\s+/)[0];
 
   return (
@@ -31,24 +35,17 @@ export function OnboardingView({
         <section className="space-y-8 lg:space-y-10">
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">
-              Welcome{greetingName ? `, ${greetingName}` : ""}
+              {greetingName
+                ? tCommon("welcomeWithName", { name: greetingName })
+                : tCommon("welcome")}
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
-              Let&apos;s set up your athlete profile
+              {tIntro("heading")}
             </h1>
             <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:space-y-4 lg:text-base lg:leading-7">
-              <p>
-                This setup creates the starting point for your athlete profile and long-term
-                development memory.
-              </p>
-              <p>
-                The more useful context you share with us — training, recovery, and everyday
-                observations — the better we can support your athlete&apos;s journey.
-              </p>
-              <p>
-                This helps future guidance stay personal, practical, and grounded in your
-                athlete&apos;s real situation and goals.
-              </p>
+              <p>{tIntro("paragraph1")}</p>
+              <p>{tIntro("paragraph2")}</p>
+              <p>{tIntro("paragraph3")}</p>
             </div>
           </div>
 

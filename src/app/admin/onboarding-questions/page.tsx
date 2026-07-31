@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateOnboardingQuestionForm } from "@/components/admin/create-onboarding-question-form";
 import { OnboardingQuestionFilters } from "@/components/admin/onboarding-question-filters";
@@ -15,6 +17,7 @@ export default async function AdminOnboardingQuestionsPage({
 }: AdminOnboardingQuestionsPageProps) {
   const { token } = await requireAdmin();
   const params = await searchParams;
+  const t = await getTranslations("admin");
 
   const activeFilter =
     params.active === "true" ? true : params.active === "false" ? false : undefined;
@@ -35,10 +38,13 @@ export default async function AdminOnboardingQuestionsPage({
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
-          title="Onboarding questions"
-          description="Configure common and sport-specific questions used in guided athlete onboarding."
+          title={t("onboardingQuestions.title")}
+          description={t("onboardingQuestions.description")}
         />
-        <AdminCreateModal title="Create onboarding question" buttonLabel="Create question">
+        <AdminCreateModal
+          title={t("onboardingQuestions.createTitle")}
+          buttonLabel={t("onboardingQuestions.createButton")}
+        >
           <CreateOnboardingQuestionForm sports={sports} />
         </AdminCreateModal>
       </div>
@@ -48,13 +54,13 @@ export default async function AdminOnboardingQuestionsPage({
       <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">
-            Onboarding questions ({sortedQuestions.length})
+            {t("onboardingQuestions.listTitle", { count: sortedQuestions.length })}
           </h2>
         </div>
 
         {sortedQuestions.length === 0 ? (
           <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">
-            No onboarding questions match the filters.
+            {t("onboardingQuestions.empty")}
           </p>
         ) : (
           <OnboardingQuestionList questions={sortedQuestions} />

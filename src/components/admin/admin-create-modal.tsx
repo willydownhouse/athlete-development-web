@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 
 const AdminCreateModalCloseContext = createContext<(() => void) | null>(null);
 
@@ -24,6 +25,8 @@ type AdminCreateModalProps = {
 };
 
 export function AdminCreateModal({ title, buttonLabel, children }: AdminCreateModalProps) {
+  const tAria = useTranslations("aria");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -67,7 +70,7 @@ export function AdminCreateModal({ title, buttonLabel, children }: AdminCreateMo
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button
             type="button"
-            aria-label="Close dialog"
+            aria-label={tAria("closeDialog")}
             className="absolute inset-0 bg-black/60"
             onClick={close}
           />
@@ -88,7 +91,7 @@ export function AdminCreateModal({ title, buttonLabel, children }: AdminCreateMo
                 onClick={close}
                 className="shrink-0 rounded-lg px-2 py-1 text-sm text-zinc-400 transition hover:bg-white/5 hover:text-white"
               >
-                Close
+                {tCommon("close")}
               </button>
             </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateMetricDefinitionForm } from "@/components/admin/create-metric-definition-form";
@@ -18,6 +19,8 @@ export default async function AdminMetricDefinitionsPage({
 }: AdminMetricDefinitionsPageProps) {
   const { token } = await requireAdmin();
   const params = await searchParams;
+  const t = await getTranslations("admin");
+  const tCommon = await getTranslations("common");
 
   const activeFilter =
     params.active === "true" ? true : params.active === "false" ? false : undefined;
@@ -34,10 +37,13 @@ export default async function AdminMetricDefinitionsPage({
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
-          title="Metric definitions"
-          description="Define queryable metrics used on events and mapped to event types."
+          title={t("metricDefinitions.title")}
+          description={t("metricDefinitions.description")}
         />
-        <AdminCreateModal title="Create metric definition" buttonLabel="Create metric">
+        <AdminCreateModal
+          title={t("metricDefinitions.createTitle")}
+          buttonLabel={t("metricDefinitions.createButton")}
+        >
           <CreateMetricDefinitionForm sports={sports} />
         </AdminCreateModal>
       </div>
@@ -47,14 +53,12 @@ export default async function AdminMetricDefinitionsPage({
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">
-            Metric definitions ({metricDefinitions.length})
+            {t("metricDefinitions.listTitle", { count: metricDefinitions.length })}
           </h2>
         </div>
 
         {metricDefinitions.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">
-            No metric definitions match the filters.
-          </p>
+          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">{t("metricDefinitions.empty")}</p>
         ) : (
           <ul className="divide-y divide-white/10">
             {metricDefinitions.map((metric) => (
@@ -70,7 +74,7 @@ export default async function AdminMetricDefinitionsPage({
                       {metric.valueType}
                       {metric.canonicalUnit ? ` · ${metric.canonicalUnit}` : ""}
                       {" · "}
-                      {metric.sport?.name ?? "General"}
+                      {metric.sport?.name ?? tCommon("general")}
                     </p>
                     {metric.description ? (
                       <p className="mt-2 text-sm text-zinc-400">{metric.description}</p>
@@ -80,7 +84,7 @@ export default async function AdminMetricDefinitionsPage({
                     href={`/admin/event-types?active=true`}
                     className="shrink-0 text-sm font-medium text-[#9ec9e8] hover:text-[#b7d7ec]"
                   >
-                    Map to event types →
+                    {t("metricDefinitions.mapToEventTypes")}
                   </Link>
                 </div>
                 <div className="mt-4">

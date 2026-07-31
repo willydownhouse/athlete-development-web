@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import { PickerMenu, isPickerOverlayTarget } from "@/components/picker-menu";
 
@@ -72,9 +73,12 @@ export function TimePickerInput({
   name,
   id,
   defaultValue,
-  placeholder = "Select time",
+  placeholder,
   className,
 }: TimePickerInputProps) {
+  const tForm = useTranslations("form");
+  const tAria = useTranslations("aria");
+  const resolvedPlaceholder = placeholder ?? tForm("selectTime");
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const panelId = `${inputId}-panel`;
@@ -164,7 +168,7 @@ export function TimePickerInput({
   }, [open]);
 
   const formattedValue = selected ? formatTimeValue(selected) : "";
-  const displayValue = selected ? displayTime(selected) : placeholder;
+  const displayValue = selected ? displayTime(selected) : resolvedPlaceholder;
 
   function updateHours(nextHours: number) {
     setSelected((current) => ({
@@ -187,15 +191,15 @@ export function TimePickerInput({
             ref={panelRef}
             id={panelId}
             role="dialog"
-            aria-label="Choose time"
+            aria-label={tAria("chooseTime")}
             style={panelStyle}
             className="rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-xs font-medium text-zinc-500">Hour</span>
+                <span className="text-xs font-medium text-zinc-500">{tAria("hour")}</span>
                 <PickerMenu
-                  aria-label="Hour"
+                  aria-label={tAria("hour")}
                   className={menuTriggerClassName}
                   value={String(selected?.hours ?? 12)}
                   options={HOUR_OPTIONS}
@@ -204,9 +208,9 @@ export function TimePickerInput({
               </label>
 
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-xs font-medium text-zinc-500">Minute</span>
+                <span className="text-xs font-medium text-zinc-500">{tAria("minute")}</span>
                 <PickerMenu
-                  aria-label="Minute"
+                  aria-label={tAria("minute")}
                   className={menuTriggerClassName}
                   value={String(selected?.minutes ?? 0)}
                   options={MINUTE_OPTIONS}

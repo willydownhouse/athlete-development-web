@@ -1,3 +1,8 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
+import { createDisplayMessages } from "@/lib/display-messages";
 import type { Event } from "@/lib/types";
 import { eventDetail, eventShortLabel, eventTitle } from "@/lib/event-display";
 import { eventIconClassName } from "@/lib/event-tone";
@@ -8,8 +13,18 @@ type EventListRowProps = {
 };
 
 export function EventListRow({ event, onClick }: EventListRowProps) {
+  const tIntensity = useTranslations("events.form.intensity");
+  const tCommon = useTranslations("common");
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
+  const detail = eventDetail(event, {
+    intensity: {
+      light: tIntensity("light"),
+      moderate: tIntensity("moderate"),
+      hard: tIntensity("hard"),
+    },
+    display: createDisplayMessages(tCommon),
+  });
 
   return (
     <button
@@ -24,7 +39,7 @@ export function EventListRow({ event, onClick }: EventListRowProps) {
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="truncate text-[15px] font-semibold text-white">{title}</p>
-        <p className="mt-0.5 truncate text-sm text-zinc-400">{eventDetail(event)}</p>
+        <p className="mt-0.5 truncate text-sm text-zinc-400">{detail}</p>
       </div>
     </button>
   );

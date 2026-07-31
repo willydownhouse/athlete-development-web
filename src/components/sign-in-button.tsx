@@ -1,12 +1,16 @@
+import { getTranslations } from "next-intl/server";
+
 import { signIn } from "@/auth";
 
 type SignInButtonProps = {
   className?: string;
 };
 
-export function SignInButton({
+export async function SignInButton({
   className = "rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-slate-700",
 }: SignInButtonProps) {
+  const t = await getTranslations("auth");
+
   return (
     <form
       action={async () => {
@@ -15,7 +19,7 @@ export function SignInButton({
       }}
     >
       <button type="submit" className={className}>
-        Continue with Google
+        {t("continueWithGoogle")}
       </button>
     </form>
   );

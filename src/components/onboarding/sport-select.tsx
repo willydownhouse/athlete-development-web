@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { Sport } from "@/lib/types";
 
@@ -23,6 +24,8 @@ function initialSportId(sports: Sport[]): string | null {
 }
 
 export function SportSelect({ sports }: SportSelectProps) {
+  const t = useTranslations("onboarding.sportSelect");
+  const tCommon = useTranslations("common");
   const [selectedSportId, setSelectedSportId] = useState<string | null>(() =>
     initialSportId(sports),
   );
@@ -32,20 +35,18 @@ export function SportSelect({ sports }: SportSelectProps) {
 
   if (sports.length === 0) {
     return (
-      <p className="rounded-xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">
-        No sports are available right now. Please try again later.
-      </p>
+      <p className="rounded-xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">{t("noSports")}</p>
     );
   }
 
   return (
     <div className="flex flex-col gap-4 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-5 lg:p-6">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-zinc-300 lg:text-base">Select your sport</p>
+        <p className="text-sm font-medium text-zinc-300 lg:text-base">{t("title")}</p>
 
         {singleSport && selectedSport ? (
           <div className="rounded-xl border border-[#9ec9e8]/35 bg-[#1c222c] px-4 py-3 lg:px-5 lg:py-4">
-            <p className="text-sm text-[#9ec9e8]">Selected</p>
+            <p className="text-sm text-[#9ec9e8]">{tCommon("selected")}</p>
             <p className="mt-1 text-lg font-medium text-white lg:text-xl">{selectedSport.name}</p>
           </div>
         ) : (
@@ -65,7 +66,9 @@ export function SportSelect({ sports }: SportSelectProps) {
                     }`}
                   >
                     <span className="font-medium">{sport.name}</span>
-                    {selected ? <span className="text-sm text-[#9ec9e8]">Selected</span> : null}
+                    {selected ? (
+                      <span className="text-sm text-[#9ec9e8]">{tCommon("selected")}</span>
+                    ) : null}
                   </button>
                 </li>
               );
@@ -79,7 +82,7 @@ export function SportSelect({ sports }: SportSelectProps) {
           href={`/onboarding/athlete?sportId=${encodeURIComponent(selectedSportId)}`}
           className="inline-flex w-full items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] lg:py-3.5 lg:text-base"
         >
-          Continue
+          {tCommon("continue")}
         </Link>
       ) : (
         <button
@@ -87,7 +90,7 @@ export function SportSelect({ sports }: SportSelectProps) {
           disabled
           className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-[#b7d7ec]/40 px-4 py-3 text-sm font-medium text-[#1a2430]/60 lg:py-3.5 lg:text-base"
         >
-          Continue
+          {tCommon("continue")}
         </button>
       )}
     </div>

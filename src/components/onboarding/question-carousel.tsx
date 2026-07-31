@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { completeOnboardingAction, saveOnboardingAnswerAction } from "@/app/onboarding/actions";
 import { FormMessage } from "@/components/admin/form-message";
@@ -57,6 +58,8 @@ export function QuestionCarousel({
   questions,
   initialAnswers,
 }: QuestionCarouselProps) {
+  const t = useTranslations("onboarding.questions");
+  const tCommon = useTranslations("common");
   const sortedQuestions = useMemo(() => sortQuestions(questions), [questions]);
 
   const [index, setIndex] = useState(() =>
@@ -120,7 +123,7 @@ export function QuestionCarousel({
   if (!question) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-zinc-400">No onboarding questions are configured yet.</p>
+        <p className="text-sm text-zinc-400">{t("noneConfigured")}</p>
         <button
           type="button"
           disabled={pending}
@@ -134,7 +137,7 @@ export function QuestionCarousel({
           }}
           className="inline-flex w-full items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] disabled:opacity-50 sm:w-auto"
         >
-          Continue to dashboard
+          {t("continueToDashboard")}
         </button>
         <FormMessage error={error} />
       </div>
@@ -144,10 +147,8 @@ export function QuestionCarousel({
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
       <div className="flex items-center justify-between gap-3 text-sm text-zinc-500">
-        <p>
-          {index + 1} of {total}
-        </p>
-        <p>{question.required ? "Required" : "Optional"}</p>
+        <p>{tCommon("countOfTotal", { current: index + 1, total })}</p>
+        <p>{question.required ? tCommon("required") : tCommon("optional")}</p>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -177,7 +178,7 @@ export function QuestionCarousel({
           }}
           className="inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-3 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto lg:text-base"
         >
-          Back
+          {tCommon("back")}
         </button>
         <button
           type="button"
@@ -185,7 +186,7 @@ export function QuestionCarousel({
           onClick={handleContinue}
           className="inline-flex w-full items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto lg:text-base"
         >
-          {pending ? "Saving…" : isLast ? "Finish" : "Continue"}
+          {pending ? tCommon("saving") : isLast ? tCommon("finish") : tCommon("continue")}
         </button>
       </div>
     </div>
@@ -199,6 +200,8 @@ type QuestionInputProps = {
 };
 
 function QuestionInput({ question, rawAnswer, onChange }: QuestionInputProps) {
+  const t = useTranslations("onboarding.questions");
+  const tCommon = useTranslations("common");
   const options = optionsAsStrings(question.options);
 
   switch (question.answerType) {
@@ -206,8 +209,8 @@ function QuestionInput({ question, rawAnswer, onChange }: QuestionInputProps) {
       return (
         <div className="flex gap-3">
           {[
-            { label: "Yes", value: "true", structured: true },
-            { label: "No", value: "false", structured: false },
+            { label: tCommon("yes"), value: "true", structured: true },
+            { label: tCommon("no"), value: "false", structured: false },
           ].map((option) => {
             const selected = rawAnswer === option.value;
 
@@ -271,7 +274,7 @@ function QuestionInput({ question, rawAnswer, onChange }: QuestionInputProps) {
                 }`}
               >
                 <span>{option}</span>
-                {selected ? <span className="text-[#9ec9e8]">Selected</span> : null}
+                {selected ? <span className="text-[#9ec9e8]">{tCommon("selected")}</span> : null}
               </button>
             );
           })}
@@ -308,7 +311,7 @@ function QuestionInput({ question, rawAnswer, onChange }: QuestionInputProps) {
                 }`}
               >
                 <span>{option}</span>
-                {selected ? <span className="text-[#9ec9e8]">Selected</span> : null}
+                {selected ? <span className="text-[#9ec9e8]">{tCommon("selected")}</span> : null}
               </button>
             );
           })}
@@ -322,7 +325,7 @@ function QuestionInput({ question, rawAnswer, onChange }: QuestionInputProps) {
           rows={5}
           value={rawAnswer}
           onChange={(event) => onChange(event.target.value)}
-          placeholder='{"key":"value"}'
+          placeholder={t("jsonPlaceholder")}
           className={`${inputClassName} font-mono`}
         />
       );

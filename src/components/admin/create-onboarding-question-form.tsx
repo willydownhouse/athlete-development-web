@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createOnboardingQuestionAction, type ActionState } from "@/app/admin/actions";
-import { ONBOARDING_ANSWER_TYPES, formatAnswerTypeLabel, type Sport } from "@/lib/types";
+import { createAnswerTypeLabel } from "@/lib/i18n-labels";
+import { ONBOARDING_ANSWER_TYPES, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -18,6 +20,10 @@ type CreateOnboardingQuestionFormProps = {
 };
 
 export function CreateOnboardingQuestionForm({ sports }: CreateOnboardingQuestionFormProps) {
+  const t = useTranslations("admin.onboardingQuestions");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const answerTypeLabel = createAnswerTypeLabel(tAdmin);
   const [state, formAction] = useActionState(createOnboardingQuestionAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
@@ -33,29 +39,29 @@ export function CreateOnboardingQuestionForm({ sports }: CreateOnboardingQuestio
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Key</span>
+          <span className="font-medium text-zinc-300">{tCommon("key")}</span>
           <input
             name="key"
             required
             pattern="[a-z0-9_]+"
-            placeholder="training_rhythm"
+            placeholder={t("keyPlaceholder")}
             className={inputClassName}
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Answer type</span>
+          <span className="font-medium text-zinc-300">{t("answerType")}</span>
           <select name="answerType" required defaultValue="text" className={inputClassName}>
             {ONBOARDING_ANSWER_TYPES.map((answerType) => (
               <option key={answerType} value={answerType}>
-                {formatAnswerTypeLabel(answerType)}
+                {answerTypeLabel(answerType)}
               </option>
             ))}
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sport</span>
+          <span className="font-medium text-zinc-300">{tCommon("sport")}</span>
           <select name="sportId" defaultValue="general" className={inputClassName}>
-            <option value="general">Common (all sports)</option>
+            <option value="general">{tCommon("commonAllSports")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -64,46 +70,46 @@ export function CreateOnboardingQuestionForm({ sports }: CreateOnboardingQuestio
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sort order</span>
+          <span className="font-medium text-zinc-300">{t("sortOrder")}</span>
           <input name="sortOrder" type="number" defaultValue={0} className={inputClassName} />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Maps to field</span>
+          <span className="font-medium text-zinc-300">{t("mapsToField")}</span>
           <input
             name="mapsToField"
-            placeholder="profile.trainingEnvironment"
+            placeholder={t("mapsToFieldPlaceholder")}
             className={inputClassName}
           />
         </label>
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Prompt</span>
+        <span className="font-medium text-zinc-300">{tCommon("prompt")}</span>
         <textarea
           name="prompt"
           required
           rows={2}
-          placeholder="How does a typical training week look for the athlete?"
+          placeholder={t("promptPlaceholder")}
           className={inputClassName}
         />
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Help text</span>
+        <span className="font-medium text-zinc-300">{t("helpText")}</span>
         <textarea
           name="helpText"
           rows={2}
-          placeholder="Optional helper text shown with the question."
+          placeholder={t("helpTextPlaceholder")}
           className={inputClassName}
         />
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-zinc-300">Options (JSON)</span>
+        <span className="font-medium text-zinc-300">{t("optionsJson")}</span>
         <textarea
           name="options"
           rows={3}
-          placeholder='For select types, e.g. ["Option A","Option B"]'
+          placeholder={t("optionsPlaceholder")}
           className={`${inputClassName} font-mono`}
         />
       </label>
@@ -116,7 +122,7 @@ export function CreateOnboardingQuestionForm({ sports }: CreateOnboardingQuestio
             defaultChecked
             className="rounded border-white/20 bg-[#1c222c]"
           />
-          Required
+          {tCommon("required")}
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-300">
           <input
@@ -125,11 +131,11 @@ export function CreateOnboardingQuestionForm({ sports }: CreateOnboardingQuestio
             defaultChecked
             className="rounded border-white/20 bg-[#1c222c]"
           />
-          Active
+          {tCommon("active")}
         </label>
       </div>
 
-      <SubmitButton>Create onboarding question</SubmitButton>
+      <SubmitButton>{t("createOnboardingQuestion")}</SubmitButton>
     </form>
   );
 }

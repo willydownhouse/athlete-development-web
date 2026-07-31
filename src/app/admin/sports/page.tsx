@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateSportForm } from "@/components/admin/create-sport-form";
 import { PageHeader } from "@/components/admin/page-header";
@@ -8,27 +10,27 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 export default async function AdminSportsPage() {
   const { token } = await requireAdmin();
+  const t = await getTranslations("admin");
   const sports = await listAdminSports(token);
 
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader
-          title="Sports"
-          description="Create and manage sports available in the platform."
-        />
-        <AdminCreateModal title="Create sport" buttonLabel="Create sport">
+        <PageHeader title={t("sports.title")} description={t("sports.description")} />
+        <AdminCreateModal title={t("sports.createSport")} buttonLabel={t("sports.createSport")}>
           <CreateSportForm />
         </AdminCreateModal>
       </div>
 
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
-          <h2 className="text-lg font-medium text-white">All sports ({sports.length})</h2>
+          <h2 className="text-lg font-medium text-white">
+            {t("sports.allSports", { count: sports.length })}
+          </h2>
         </div>
 
         {sports.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">No sports yet.</p>
+          <p className="px-4 py-8 text-sm text-zinc-400 sm:px-6">{t("sports.empty")}</p>
         ) : (
           <ul className="divide-y divide-white/10">
             {sports.map((sport) => (

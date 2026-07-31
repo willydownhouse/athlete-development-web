@@ -1,32 +1,18 @@
+"use client";
+
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
+import { createDisplayMessages } from "@/lib/display-messages";
 import {
   formatDurationSeconds,
   formatEventMetricValue,
   sortEventMetrics,
 } from "@/lib/event-metric-display";
+import { createCategoryLabel } from "@/lib/i18n-labels";
 import { eventIconClassName } from "@/lib/event-tone";
 import type { Event, EventIntensity } from "@/lib/types";
-
-function formatIntensity(intensity: EventIntensity): string {
-  return intensity.charAt(0).toUpperCase() + intensity.slice(1);
-}
-
-function formatTimeRange(event: Event): string {
-  const start = format(new Date(event.startedAt), "HH:mm");
-
-  if (event.endedAt) {
-    const end = format(new Date(event.endedAt), "HH:mm");
-    return `${start} – ${end}`;
-  }
-
-  return start;
-}
-
-function formatCategory(category: Event["category"]): string {
-  return category.replace(/_/g, " ");
-}
 
 type DetailFieldProps = {
   label: string;
@@ -42,15 +28,37 @@ function DetailField({ label, value }: DetailFieldProps) {
   );
 }
 
+function formatTimeRange(event: Event): string {
+  const start = format(new Date(event.startedAt), "HH:mm");
+
+  if (event.endedAt) {
+    const end = format(new Date(event.endedAt), "HH:mm");
+    return `${start} – ${end}`;
+  }
+
+  return start;
+}
+
 type EventDetailCardProps = {
   event: Event;
   onEditClick?: () => void;
 };
 
 export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
+  const t = useTranslations("events.detail");
+  const tIntensity = useTranslations("events.form.intensity");
+  const tAdmin = useTranslations("admin");
+  const tCommon = useTranslations("common");
+  const categoryLabel = createCategoryLabel(tAdmin);
+  const display = createDisplayMessages(tCommon);
+
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = sortEventMetrics(event.metrics ?? []);
+
+  function formatIntensity(intensity: EventIntensity): string {
+    return tIntensity(intensity);
+  }
 
   return (
     <article className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
@@ -73,7 +81,7 @@ export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
                 onClick={onEditClick}
                 className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
               >
-                Edit
+                {tCommon("edit")}
               </button>
             ) : null}
           </div>
@@ -81,20 +89,23 @@ export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
-        <DetailField label="Time" value={formatTimeRange(event)} />
+        <DetailField label={t("time")} value={formatTimeRange(event)} />
         {event.durationSeconds ? (
-          <DetailField label="Duration" value={formatDurationSeconds(event.durationSeconds)} />
+          <DetailField
+            label={t("duration")}
+            value={formatDurationSeconds(event.durationSeconds, display)}
+          />
         ) : null}
         {event.intensity ? (
-          <DetailField label="Intensity" value={formatIntensity(event.intensity)} />
+          <DetailField label={t("intensity")} value={formatIntensity(event.intensity)} />
         ) : null}
-        <DetailField label="Category" value={formatCategory(event.category)} />
+        <DetailField label={t("category")} value={categoryLabel(event.category)} />
       </dl>
 
       {event.description ? (
         <div className="mt-4 border-t border-white/5 pt-4">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Description
+            {t("description")}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-200">
             {event.description}
@@ -104,7 +115,9 @@ export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
 
       {metrics.length > 0 ? (
         <div className="mt-4 border-t border-white/5 pt-4">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Metrics</p>
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
+            {t("metrics")}
+          </p>
           <dl className="mt-3 space-y-3">
             {metrics.map((metric) => (
               <div
@@ -113,7 +126,7 @@ export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
               >
                 <dt className="min-w-0 text-sm text-zinc-400">{metric.metricDefinition.name}</dt>
                 <dd className="shrink-0 text-sm font-medium text-white">
-                  {formatEventMetricValue(metric)}
+                  {formatEventMetricValue(metric, display)}
                 </dd>
               </div>
             ))}
@@ -124,7 +137,7 @@ export function EventDetailCard({ event, onEditClick }: EventDetailCardProps) {
       {event.originalInput ? (
         <div className="mt-4 border-t border-white/5 pt-4">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Original input
+            {t("originalInput")}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
             {event.originalInput}

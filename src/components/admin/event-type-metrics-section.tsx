@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { AdminCreateModal, useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { FormMessage } from "@/components/admin/form-message";
@@ -11,6 +12,7 @@ import {
   updateEventTypeMetricAction,
   type ActionState,
 } from "@/app/admin/actions";
+import { createValueTypeLabel } from "@/lib/i18n-labels";
 import type { EventTypeMetricDefinition, MetricDefinition } from "@/lib/types";
 
 const initialState: ActionState = {};
@@ -24,6 +26,9 @@ type AddEventTypeMetricFormProps = {
 };
 
 function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeMetricFormProps) {
+  const t = useTranslations("admin.eventTypes");
+  const tFields = useTranslations("admin.fields");
+  const tOnboarding = useTranslations("admin.onboardingQuestions");
   const [state, formAction] = useActionState(createEventTypeMetricAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
@@ -40,9 +45,9 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-medium text-zinc-300">Metric</span>
+          <span className="font-medium text-zinc-300">{tFields("metric")}</span>
           <select name="metricDefinitionId" required className={inputClassName}>
-            <option value="">Select a metric</option>
+            <option value="">{t("selectMetric")}</option>
             {availableMetrics.map((metric) => (
               <option key={metric.id} value={metric.id}>
                 {metric.name} ({metric.key})
@@ -51,17 +56,17 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-zinc-300">Sort order</span>
+          <span className="font-medium text-zinc-300">{tOnboarding("sortOrder")}</span>
           <input name="sortOrder" type="number" defaultValue={0} className={inputClassName} />
         </label>
       </div>
 
       <label className="flex items-center gap-2 text-sm text-zinc-300">
         <input name="required" type="checkbox" className="rounded border-white/20 bg-[#1c222c]" />
-        Required metric
+        {t("requiredMetric")}
       </label>
 
-      <SubmitButton>Allow metric</SubmitButton>
+      <SubmitButton>{t("allowMetric")}</SubmitButton>
     </form>
   );
 }
@@ -72,6 +77,10 @@ type EventTypeMetricRowProps = {
 };
 
 function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
+  const tOnboarding = useTranslations("admin.onboardingQuestions");
+  const tCommon = useTranslations("common");
+  const tAdmin = useTranslations("admin");
+  const valueTypeLabel = createValueTypeLabel(tAdmin);
   const [state, formAction] = useActionState(updateEventTypeMetricAction, initialState);
 
   return (
@@ -81,7 +90,7 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
           <p className="font-medium text-white">{mapping.metricDefinition.name}</p>
           <p className="font-mono text-sm text-zinc-500">{mapping.metricDefinition.key}</p>
           <p className="mt-1 text-sm text-zinc-400">
-            {mapping.metricDefinition.valueType}
+            {valueTypeLabel(mapping.metricDefinition.valueType)}
             {mapping.metricDefinition.canonicalUnit
               ? ` · ${mapping.metricDefinition.canonicalUnit}`
               : ""}
@@ -96,7 +105,7 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-zinc-300">Sort order</span>
+            <span className="font-medium text-zinc-300">{tOnboarding("sortOrder")}</span>
             <input
               name="sortOrder"
               type="number"
@@ -111,16 +120,16 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
               defaultChecked={mapping.required}
               className="rounded border-white/20 bg-[#1c222c]"
             />
-            Required
+            {tCommon("required")}
           </label>
-          <SubmitButton variant="secondary">Update</SubmitButton>
+          <SubmitButton variant="secondary">{tCommon("update")}</SubmitButton>
         </div>
       </form>
 
       <form action={deleteEventTypeMetricAction} className="mt-3">
         <input type="hidden" name="eventTypeId" value={eventTypeId} />
         <input type="hidden" name="eventTypeMetricDefinitionId" value={mapping.id} />
-        <SubmitButton variant="danger">Remove</SubmitButton>
+        <SubmitButton variant="danger">{tCommon("remove")}</SubmitButton>
       </form>
     </li>
   );
@@ -137,18 +146,20 @@ export function EventTypeMetricsSection({
   mappings,
   availableMetrics,
 }: EventTypeMetricsSectionProps) {
+  const t = useTranslations("admin.eventTypes");
+
   return (
     <div className="space-y-6">
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-lg font-medium text-white">Allowed metrics ({mappings.length})</h2>
-            <p className="mt-1 text-sm text-zinc-400">
-              Metrics available when logging this event type.
-            </p>
+            <h2 className="text-lg font-medium text-white">
+              {t("metricsTitle", { count: mappings.length })}
+            </h2>
+            <p className="mt-1 text-sm text-zinc-400">{t("metricsDescription")}</p>
           </div>
           {availableMetrics.length > 0 ? (
-            <AdminCreateModal title="Allow metric" buttonLabel="Allow metric">
+            <AdminCreateModal title={t("allowMetric")} buttonLabel={t("allowMetric")}>
               <AddEventTypeMetricForm
                 eventTypeId={eventTypeId}
                 availableMetrics={availableMetrics}
@@ -158,13 +169,11 @@ export function EventTypeMetricsSection({
         </div>
 
         {availableMetrics.length === 0 && mappings.length > 0 ? (
-          <p className="mt-4 text-sm text-zinc-400">
-            All compatible metrics are already allowed for this event type.
-          </p>
+          <p className="mt-4 text-sm text-zinc-400">{t("allMetricsAllowed")}</p>
         ) : null}
 
         {mappings.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-400">No metrics allowed yet.</p>
+          <p className="mt-4 text-sm text-zinc-400">{t("noneAllowed")}</p>
         ) : (
           <ul className="mt-4 space-y-4">
             {mappings.map((mapping) => (

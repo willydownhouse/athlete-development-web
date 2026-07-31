@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Oswald } from "next/font/google";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { SignInButton } from "@/components/sign-in-button";
@@ -10,6 +11,7 @@ const oswald = Oswald({
 });
 
 export default async function HomePage() {
+  const t = await getTranslations("landing");
   const session = await auth();
 
   if (session?.user) {
@@ -30,12 +32,12 @@ export default async function HomePage() {
           <h1
             className={`${oswald.className} text-[2.75rem] font-semibold uppercase leading-[1.05] tracking-[0.02em] text-white sm:text-6xl md:text-7xl`}
           >
-            <span className="block">Athlete</span>
-            <span className="block">Development</span>
-            <span className="block">Center</span>
+            <span className="block">{t("titleLine1")}</span>
+            <span className="block">{t("titleLine2")}</span>
+            <span className="block">{t("titleLine3")}</span>
           </h1>
           <p className="landing-fade-up-delayed max-w-md text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            Only if you take your training seriously.
+            {t("tagline")}
           </p>
         </div>
 

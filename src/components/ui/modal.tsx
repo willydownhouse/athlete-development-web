@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 type ModalProps = {
   open: boolean;
@@ -12,6 +13,8 @@ type ModalProps = {
 };
 
 export function Modal({ open, onClose, title, children, align = "viewport" }: ModalProps) {
+  const tAria = useTranslations("aria");
+  const tCommon = useTranslations("common");
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -51,7 +54,7 @@ export function Modal({ open, onClose, title, children, align = "viewport" }: Mo
     <div className={overlayClassName}>
       <button
         type="button"
-        aria-label="Close dialog"
+        aria-label={tAria("closeDialog")}
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
       />
@@ -72,7 +75,7 @@ export function Modal({ open, onClose, title, children, align = "viewport" }: Mo
             onClick={onClose}
             className="shrink-0 rounded-lg px-2 py-1 text-sm text-zinc-400 transition hover:bg-white/5 hover:text-white"
           >
-            Close
+            {tCommon("close")}
           </button>
         </div>
 
