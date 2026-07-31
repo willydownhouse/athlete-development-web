@@ -23,9 +23,7 @@ function ChatMessageBubble({ message }: { message: ChatMessage }) {
         }`}
       >
         <p className="text-[15px] leading-relaxed">{message.content}</p>
-        <p
-          className={`mt-2 text-xs ${isUser ? "text-[#1a2430]/70" : "text-zinc-500"}`}
-        >
+        <p className={`mt-2 text-xs ${isUser ? "text-[#1a2430]/70" : "text-zinc-500"}`}>
           {formatMessageTime(message.createdAt)}
         </p>
       </div>
