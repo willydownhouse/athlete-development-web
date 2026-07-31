@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
-import { EventForm } from "@/components/dashboard/create-event-form";
 import { QuickLogCard } from "@/components/dashboard/quick-log-card";
 import { TodaysEventsCard } from "@/components/dashboard/todays-events-card";
-import { Modal } from "@/components/ui/modal";
 import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
 import type { Event, EventType } from "@/lib/types";
 
@@ -14,15 +12,15 @@ type DashboardEventLoggingProps = {
   athleteId: string;
   eventTypes: EventType[];
   eventTypesError?: string | null;
+  refreshKey: number;
   onWeekEventsChange?: (state: {
     events: Event[];
     loading: boolean;
     loadError: string | null;
   }) => void;
+  onAddClick?: (options?: { defaultEventTypeId?: string }) => void;
+  onEventClick?: (event: Event) => void;
 };
-
-type EventModalState =
-  { mode: "create"; defaultEventTypeId?: string } | { mode: "edit"; event: Event } | null;
 
 async function loadTodaysEventsForAthlete(athleteId: string) {
   const { startedAtFrom, startedAtTo } = getLocalDayRange();
@@ -38,10 +36,11 @@ export function DashboardEventLogging({
   athleteId,
   eventTypes,
   eventTypesError,
+  refreshKey,
   onWeekEventsChange,
+  onAddClick,
+  onEventClick,
 }: DashboardEventLoggingProps) {
-  const [modalState, setModalState] = useState<EventModalState>(null);
-  const [formKey, setFormKey] = useState(0);
   const [todaysEvents, setTodaysEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
@@ -52,32 +51,6 @@ export function DashboardEventLogging({
     },
     [onWeekEventsChange],
   );
-
-  const refreshEvents = useCallback(async () => {
-    setEventsLoading(true);
-    notifyWeekEvents([], true, null);
-
-    const [todayResult, weekResult] = await Promise.all([
-      loadTodaysEventsForAthlete(athleteId),
-      loadWeekEventsForAthlete(athleteId),
-    ]);
-
-    if (todayResult.error) {
-      setTodaysEvents([]);
-      setEventsError(todayResult.error);
-    } else {
-      setTodaysEvents(todayResult.events);
-      setEventsError(null);
-    }
-
-    if (weekResult.error) {
-      notifyWeekEvents([], false, weekResult.error);
-    } else {
-      notifyWeekEvents(weekResult.events, false, null);
-    }
-
-    setEventsLoading(false);
-  }, [athleteId, notifyWeekEvents]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,29 +83,7 @@ export function DashboardEventLogging({
     return () => {
       cancelled = true;
     };
-  }, [athleteId, notifyWeekEvents]);
-
-  function openCreateModal(defaultEventTypeId?: string) {
-    setModalState(defaultEventTypeId ? { mode: "create", defaultEventTypeId } : { mode: "create" });
-    setFormKey((current) => current + 1);
-  }
-
-  function openEditModal(event: Event) {
-    setModalState({ mode: "edit", event });
-    setFormKey((current) => current + 1);
-  }
-
-  function closeModal() {
-    setModalState(null);
-  }
-
-  async function handleFormSuccess() {
-    closeModal();
-    await refreshEvents();
-  }
-
-  const modalOpen = modalState !== null;
-  const modalTitle = modalState?.mode === "edit" ? "Edit event" : "Add event";
+  }, [athleteId, notifyWeekEvents, refreshKey]);
 
   return (
     <>
@@ -140,33 +91,14 @@ export function DashboardEventLogging({
         events={todaysEvents}
         loading={eventsLoading}
         loadError={eventsError}
-        onAddClick={() => openCreateModal()}
-        onEventClick={openEditModal}
+        onAddClick={() => onAddClick?.()}
+        onEventClick={onEventClick}
       />
       <QuickLogCard
         eventTypes={eventTypes}
         loadError={eventTypesError}
-        onEventTypeClick={openCreateModal}
+        onEventTypeClick={(defaultEventTypeId) => onAddClick?.({ defaultEventTypeId })}
       />
-
-      <Modal open={modalOpen} onClose={closeModal} title={modalTitle} align="content">
-        {eventTypesError ? (
-          <p className="text-sm text-red-300">{eventTypesError}</p>
-        ) : (
-          <EventForm
-            key={formKey}
-            athleteId={athleteId}
-            eventTypes={eventTypes}
-            event={modalState?.mode === "edit" ? modalState.event : undefined}
-            defaultEventTypeId={
-              modalState?.mode === "create" ? modalState.defaultEventTypeId : undefined
-            }
-            onSuccess={() => {
-              void handleFormSuccess();
-            }}
-          />
-        )}
-      </Modal>
     </>
   );
 }

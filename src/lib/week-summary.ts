@@ -1,4 +1,5 @@
 import { getEventTone, type EventTone } from "@/lib/event-tone";
+import { eventsForLocalDate } from "@/lib/event-grouping";
 import type { Event, EventIntensity } from "@/lib/types";
 
 export type WeekDayDisplay = {
@@ -6,6 +7,7 @@ export type WeekDayDisplay = {
   label: string;
   tone: Exclude<EventTone, "neutral">;
   height: number;
+  date: Date;
 };
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -17,13 +19,6 @@ const TONE_BAR_LABEL: Record<Exclude<EventTone, "neutral">, string> = {
   game: "Game",
   rest: "Rest",
 };
-
-function localDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function intensityScore(intensity: EventIntensity | null): number {
   if (intensity === "hard") {
@@ -101,20 +96,16 @@ function dominantToneForDay(events: Event[]): Exclude<EventTone, "neutral"> {
   return displayTone(getEventTone(topEvent));
 }
 
-function eventsForDay(events: Event[], day: Date): Event[] {
-  const key = localDateKey(day);
-  return events.filter((event) => localDateKey(new Date(event.startedAt)) === key);
-}
-
 export function buildWeekDays(events: Event[], weekDays: Date[]): WeekDayDisplay[] {
   return weekDays.map((day, index) => {
-    const dayEvents = eventsForDay(events, day);
+    const dayEvents = eventsForLocalDate(events, day);
     const tone = dominantToneForDay(dayEvents);
     return {
       day: WEEKDAY_LABELS[index] ?? "Day",
       label: dayEvents.length > 0 ? TONE_BAR_LABEL[tone] : "Rest",
       tone,
       height: barHeightForDay(dayEvents),
+      date: day,
     };
   });
 }

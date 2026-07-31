@@ -42,6 +42,7 @@ type EventFormProps = {
   eventTypes: EventType[];
   event?: Event;
   defaultEventTypeId?: string;
+  defaultEventDate?: string;
   onSuccess?: () => void;
 };
 
@@ -100,6 +101,7 @@ export function EventForm({
   eventTypes,
   event,
   defaultEventTypeId,
+  defaultEventDate,
   onSuccess,
 }: EventFormProps) {
   const isEdit = event !== undefined;
@@ -115,8 +117,11 @@ export function EventForm({
     () =>
       event
         ? eventToFormValues(event)
-        : defaultCreateFormValues(defaultEventTypeId, format(new Date(), "yyyy-MM-dd")),
-    [event, defaultEventTypeId],
+        : defaultCreateFormValues(
+            defaultEventTypeId,
+            defaultEventDate ?? format(new Date(), "yyyy-MM-dd"),
+          ),
+    [event, defaultEventTypeId, defaultEventDate],
   );
   const [selectedEventTypeId, setSelectedEventTypeId] = useState(values.eventTypeId);
   const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);

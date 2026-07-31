@@ -10,9 +10,15 @@ type ThisWeekCardProps = {
   events: Event[];
   loading?: boolean;
   loadError?: string | null;
+  onDayClick?: (date: Date) => void;
 };
 
-export function ThisWeekCard({ events, loading = false, loadError }: ThisWeekCardProps) {
+export function ThisWeekCard({
+  events,
+  loading = false,
+  loadError,
+  onDayClick,
+}: ThisWeekCardProps) {
   const { days: weekDays } = getLocalWeekRange();
   const weekDayBars = buildWeekDays(events, weekDays);
   const loadLabel = getWeekLoadLabel(events);
@@ -38,7 +44,12 @@ export function ThisWeekCard({ events, loading = false, loadError }: ThisWeekCar
       ) : (
         <div className="mt-5 flex justify-between gap-1.5">
           {weekDayBars.map((day) => (
-            <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+            <button
+              key={day.day}
+              type="button"
+              onClick={() => onDayClick?.(day.date)}
+              className="flex min-w-0 flex-1 flex-col items-center gap-2 rounded-xl transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ec9e8]/40"
+            >
               <div className="relative w-full" style={{ height: `${WEEK_CHART_HEIGHT}px` }}>
                 <div
                   className={`absolute inset-x-0 bottom-0 rounded-xl ${toneClass[day.tone]}`}
@@ -49,7 +60,7 @@ export function ThisWeekCard({ events, loading = false, loadError }: ThisWeekCar
                 </span>
               </div>
               <span className="text-xs text-zinc-400">{day.day}</span>
-            </div>
+            </button>
           ))}
         </div>
       )}

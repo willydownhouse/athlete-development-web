@@ -1,10 +1,10 @@
-"use client";
+import { format } from "date-fns";
 
+import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import type { Event } from "@/lib/types";
 
-import { EventListRow } from "./event-list-row";
-
-type TodaysEventsCardProps = {
+type CalendarDayEventsProps = {
+  selectedDate: Date;
   events: Event[];
   loading?: boolean;
   loadError?: string | null;
@@ -12,17 +12,20 @@ type TodaysEventsCardProps = {
   onEventClick?: (event: Event) => void;
 };
 
-export function TodaysEventsCard({
+export function CalendarDayEvents({
+  selectedDate,
   events,
   loading = false,
   loadError,
   onAddClick,
   onEventClick,
-}: TodaysEventsCardProps) {
+}: CalendarDayEventsProps) {
+  const dayLabel = format(selectedDate, "EEE d MMM");
+
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+    <div className="border-t border-white/5 pt-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Today&apos;s events</h2>
+        <h3 className="text-sm font-semibold text-white">{dayLabel}</h3>
         <button
           type="button"
           onClick={onAddClick}
@@ -35,16 +38,20 @@ export function TodaysEventsCard({
       {loadError ? (
         <p className="mt-4 text-sm text-red-300">{loadError}</p>
       ) : loading ? (
-        <p className="mt-4 text-sm text-zinc-500">Loading today&apos;s events…</p>
+        <p className="mt-4 text-sm text-zinc-500">Loading events…</p>
       ) : events.length > 0 ? (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-3">
           {events.map((event) => (
-            <EventListRow key={event.id} event={event} onClick={() => onEventClick?.(event)} />
+            <EventDetailCard
+              key={event.id}
+              event={event}
+              onEditClick={() => onEventClick?.(event)}
+            />
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">No events logged for today.</p>
+        <p className="mt-4 text-sm text-zinc-500">No events logged for this day.</p>
       )}
-    </section>
+    </div>
   );
 }
