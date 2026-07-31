@@ -7,6 +7,66 @@ export function metricFieldName(metricDefinitionId: string): string {
   return `${METRIC_FIELD_PREFIX}${metricDefinitionId}`;
 }
 
+export function metricDurationFieldName(
+  metricDefinitionId: string,
+  part: "hours" | "minutes" | "seconds",
+): string {
+  return `${metricFieldName(metricDefinitionId)}.${part}`;
+}
+
+export function isSecondsMetric(canonicalUnit: string | null): boolean {
+  return canonicalUnit === "s";
+}
+
+function secondsToDurationParts(totalSeconds: number): {
+  hours: string;
+  minutes: string;
+  seconds: string;
+} {
+  const normalized = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(normalized / 3600);
+  const minutes = Math.floor((normalized % 3600) / 60);
+  const seconds = normalized % 60;
+
+  return {
+    hours: hours > 0 ? String(hours) : "",
+    minutes: minutes > 0 ? String(minutes) : "",
+    seconds: seconds > 0 ? String(seconds) : "",
+  };
+}
+
+export function durationPartsToSeconds(hours: number, minutes: number, seconds: number): number {
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+function readOptionalInt(formData: FormData, key: string): number | undefined {
+  const value = formData.get(key);
+  if (typeof value !== "string" || value.trim() === "") {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function readDurationSecondsFromFormData(formData: FormData, metricDefinitionId: string): number {
+  const hours =
+    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "hours")) ?? 0;
+  const minutes =
+    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "minutes")) ?? 0;
+  const seconds =
+    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "seconds")) ?? 0;
+
+  return durationPartsToSeconds(hours, minutes, seconds);
+}
+
+function hasDurationInput(formData: FormData, metricDefinitionId: string): boolean {
+  return (["hours", "minutes", "seconds"] as const).some((part) => {
+    const value = formData.get(metricDurationFieldName(metricDefinitionId, part));
+    return typeof value === "string" && value.trim() !== "";
+  });
+}
+
 export type MetricFormValues = Record<string, string>;
 
 export function eventMetricsToFormValues(
@@ -27,7 +87,14 @@ export function eventMetricsToFormValues(
     const { valueType } = mapping.metricDefinition;
 
     if (valueType === "number" && saved.numericValue !== null) {
-      values[mapping.metricDefinitionId] = saved.numericValue;
+      if (isSecondsMetric(mapping.metricDefinition.canonicalUnit)) {
+        const parts = secondsToDurationParts(Number(saved.numericValue));
+        values[metricDurationFieldName(mapping.metricDefinitionId, "hours")] = parts.hours;
+        values[metricDurationFieldName(mapping.metricDefinitionId, "minutes")] = parts.minutes;
+        values[metricDurationFieldName(mapping.metricDefinitionId, "seconds")] = parts.seconds;
+      } else {
+        values[mapping.metricDefinitionId] = saved.numericValue;
+      }
     } else if (valueType === "text" && saved.textValue !== null) {
       values[mapping.metricDefinitionId] = saved.textValue;
     } else if (valueType === "boolean" && saved.booleanValue !== null) {
@@ -46,9 +113,9 @@ export function parseMetricsFromFormData(
 
   for (const mapping of mappings) {
     const fieldName = metricFieldName(mapping.metricDefinitionId);
-    const raw = formData.get(fieldName);
 
     if (mapping.metricDefinition.valueType === "boolean") {
+      const raw = formData.get(fieldName);
       if (raw === "on") {
         metrics.push({
           metricDefinitionId: mapping.metricDefinitionId,
@@ -59,6 +126,24 @@ export function parseMetricsFromFormData(
       continue;
     }
 
+    if (
+      mapping.metricDefinition.valueType === "number" &&
+      isSecondsMetric(mapping.metricDefinition.canonicalUnit)
+    ) {
+      if (!hasDurationInput(formData, mapping.metricDefinitionId)) {
+        continue;
+      }
+
+      const totalSeconds = readDurationSecondsFromFormData(formData, mapping.metricDefinitionId);
+      metrics.push({
+        metricDefinitionId: mapping.metricDefinitionId,
+        numericValue: totalSeconds,
+      });
+
+      continue;
+    }
+
+    const raw = formData.get(fieldName);
     const value = typeof raw === "string" ? raw.trim() : "";
     if (value === "") {
       continue;
@@ -95,9 +180,9 @@ export function validateMetricForm(
     }
 
     const fieldName = metricFieldName(mapping.metricDefinitionId);
-    const raw = formData.get(fieldName);
 
     if (mapping.metricDefinition.valueType === "boolean") {
+      const raw = formData.get(fieldName);
       if (raw !== "on") {
         return `${mapping.metricDefinition.name} is required`;
       }
@@ -105,6 +190,25 @@ export function validateMetricForm(
       continue;
     }
 
+    if (
+      mapping.metricDefinition.valueType === "number" &&
+      isSecondsMetric(mapping.metricDefinition.canonicalUnit)
+    ) {
+      if (!hasDurationInput(formData, mapping.metricDefinitionId)) {
+        return `${mapping.metricDefinition.name} is required`;
+      }
+
+      for (const part of ["hours", "minutes", "seconds"] as const) {
+        const raw = formData.get(metricDurationFieldName(mapping.metricDefinitionId, part));
+        if (typeof raw === "string" && raw.trim() !== "" && Number.isNaN(Number(raw))) {
+          return `${mapping.metricDefinition.name} must use whole numbers`;
+        }
+      }
+
+      continue;
+    }
+
+    const raw = formData.get(fieldName);
     const value = typeof raw === "string" ? raw.trim() : "";
     if (value === "") {
       return `${mapping.metricDefinition.name} is required`;

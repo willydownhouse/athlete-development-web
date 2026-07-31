@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  durationPartsToSeconds,
   eventMetricsToFormValues,
+  metricDurationFieldName,
   metricFieldName,
   parseMetricsFromFormData,
   validateMetricForm,
@@ -135,6 +137,77 @@ describe("parseMetricsFromFormData", () => {
     const formData = new FormData();
 
     expect(parseMetricsFromFormData(formData, [mapping])).toEqual([]);
+  });
+});
+
+describe("seconds metrics", () => {
+  it("splits saved seconds into hours, minutes, and seconds fields", () => {
+    const mapping = buildMapping(
+      { metricDefinitionId: "seconds-metric" },
+      {
+        id: "seconds-metric",
+        key: "playing_time_seconds",
+        name: "Playing time",
+        valueType: "number",
+        canonicalUnit: "s",
+      },
+    );
+
+    const values = eventMetricsToFormValues(
+      [mapping],
+      [
+        buildSavedMetric(mapping, {
+          metricDefinitionId: "seconds-metric",
+          numericValue: "3661",
+        }),
+      ],
+    );
+
+    expect(values).toEqual({
+      "metric.seconds-metric.hours": "1",
+      "metric.seconds-metric.minutes": "1",
+      "metric.seconds-metric.seconds": "1",
+    });
+  });
+
+  it("converts duration fields to total seconds for the API", () => {
+    const mapping = buildMapping(
+      { metricDefinitionId: "seconds-metric" },
+      {
+        id: "seconds-metric",
+        key: "playing_time_seconds",
+        name: "Playing time",
+        valueType: "number",
+        canonicalUnit: "s",
+      },
+    );
+    const formData = new FormData();
+    formData.set(metricDurationFieldName("seconds-metric", "hours"), "1");
+    formData.set(metricDurationFieldName("seconds-metric", "minutes"), "2");
+    formData.set(metricDurationFieldName("seconds-metric", "seconds"), "3");
+
+    expect(parseMetricsFromFormData(formData, [mapping])).toEqual([
+      {
+        metricDefinitionId: "seconds-metric",
+        numericValue: durationPartsToSeconds(1, 2, 3),
+      },
+    ]);
+  });
+
+  it("validates required seconds metrics", () => {
+    const mapping = buildMapping(
+      { required: true, metricDefinitionId: "seconds-metric" },
+      {
+        id: "seconds-metric",
+        key: "playing_time_seconds",
+        name: "Playing time",
+        valueType: "number",
+        canonicalUnit: "s",
+      },
+    );
+    const formData = new FormData();
+
+    expect(validateMetricForm(formData, [mapping])).toBe("Playing time is required");
   });
 });
 
