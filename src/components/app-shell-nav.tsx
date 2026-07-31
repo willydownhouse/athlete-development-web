@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
+import { chatHref } from "@/components/chat/chat-nav";
 import { dashboardHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   onboardingSessionAvatarClass,
@@ -36,12 +37,17 @@ function AthleteNavList({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeAthleteId = pathname.startsWith("/dashboard") ? searchParams.get("athleteId") : null;
+  const activeAthleteId =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/chat")
+      ? searchParams.get("athleteId")
+      : null;
+  const athleteHref = pathname.startsWith("/chat") ? chatHref : dashboardHref;
 
   return athletes.map((athlete) => (
     <AthleteNavLink
       key={athlete.id}
       athlete={athlete}
+      href={athleteHref(athlete.id)}
       onNavigate={onNavigate}
       active={activeAthleteId === athlete.id}
     />
@@ -50,16 +56,18 @@ function AthleteNavList({
 
 function AthleteNavLink({
   athlete,
+  href,
   onNavigate,
   active,
 }: {
   athlete: Athlete;
+  href: string;
   onNavigate?: () => void;
   active: boolean;
 }) {
   return (
     <Link
-      href={dashboardHref(athlete.id)}
+      href={href}
       onClick={onNavigate}
       className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-white/5 ${
         active ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
@@ -182,6 +190,7 @@ export function AppShellNav({
                 <AthleteNavLink
                   key={athlete.id}
                   athlete={athlete}
+                  href={dashboardHref(athlete.id)}
                   onNavigate={onNavigate}
                   active={false}
                 />
