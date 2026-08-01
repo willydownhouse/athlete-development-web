@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
@@ -10,36 +10,51 @@ import { getLocalMonthRange, startOfLocalDay, addLocalMonths } from "@/lib/date-
 import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
 import type { Event } from "@/lib/types";
 
+import { useDashboardInteractions } from "./dashboard-interactions";
+
 type CalendarSectionProps = {
   athleteId: string;
-  refreshKey: number;
-  selectedDate: Date;
-  visibleMonth: Date;
-  onSelectedDateChange: (date: Date) => void;
-  onVisibleMonthChange: (month: Date) => void;
-  onAddClick: (date: Date) => void;
-  onEventClick: (event: Event) => void;
+  initialEvents: Event[];
+  initialLoadError?: string | null;
 };
 
 export function CalendarSection({
   athleteId,
-  refreshKey,
-  selectedDate,
-  visibleMonth,
-  onSelectedDateChange,
-  onVisibleMonthChange,
-  onAddClick,
-  onEventClick,
+  initialEvents,
+  initialLoadError,
 }: CalendarSectionProps) {
-  const [monthEvents, setMonthEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const {
+    selectedCalendarDate,
+    visibleCalendarMonth,
+    refreshKey,
+    setSelectedCalendarDate,
+    setVisibleCalendarMonth,
+    openCreateModal,
+    openEditModal,
+  } = useDashboardInteractions();
+  const [monthEvents, setMonthEvents] = useState<Event[]>(initialEvents);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(initialLoadError ?? null);
+  const hasHydratedInitialEvents = useRef(false);
+
+  useEffect(() => {
+    setMonthEvents(initialEvents);
+    setLoadError(initialLoadError ?? null);
+  }, [initialEvents, initialLoadError]);
 
   useEffect(() => {
     let cancelled = false;
 
-    const { startedAtFrom, startedAtTo } = getLocalMonthRange(visibleMonth);
+    if (!hasHydratedInitialEvents.current) {
+      hasHydratedInitialEvents.current = true;
+      return () => {
+        cancelled = true;
+      };
+    }
 
+    const { startedAtFrom, startedAtTo } = getLocalMonthRange(visibleCalendarMonth);
+
+    setLoading(true);
     void fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo).then((result) => {
       if (cancelled) {
         return;
@@ -59,29 +74,29 @@ export function CalendarSection({
     return () => {
       cancelled = true;
     };
-  }, [athleteId, visibleMonth, refreshKey]);
+  }, [athleteId, visibleCalendarMonth, refreshKey]);
 
   const daysWithEvents = useMemo(() => datesWithEvents(monthEvents), [monthEvents]);
   const selectedDayEvents = useMemo(
-    () => eventsForLocalDate(monthEvents, selectedDate),
-    [monthEvents, selectedDate],
+    () => eventsForLocalDate(monthEvents, selectedCalendarDate),
+    [monthEvents, selectedCalendarDate],
   );
 
   function handleMonthChange(nextMonth: Date) {
     setLoading(true);
-    onVisibleMonthChange(startOfLocalDay(nextMonth));
+    setVisibleCalendarMonth(startOfLocalDay(nextMonth));
   }
 
   function handlePreviousMonth() {
-    handleMonthChange(addLocalMonths(visibleMonth, -1));
+    handleMonthChange(addLocalMonths(visibleCalendarMonth, -1));
   }
 
   function handleNextMonth() {
-    handleMonthChange(addLocalMonths(visibleMonth, 1));
+    handleMonthChange(addLocalMonths(visibleCalendarMonth, 1));
   }
 
   function handleSelect(date: Date) {
-    onSelectedDateChange(startOfLocalDay(date));
+    setSelectedCalendarDate(startOfLocalDay(date));
   }
 
   return (
@@ -98,7 +113,7 @@ export function CalendarSection({
             ‹
           </button>
           <span className="min-w-[7.5rem] text-center text-sm capitalize text-zinc-200">
-            {format(visibleMonth, "MMMM yyyy")}
+            {format(visibleCalendarMonth, "MMMM yyyy")}
           </span>
           <button
             type="button"
@@ -113,20 +128,22 @@ export function CalendarSection({
 
       <div className="mt-4">
         <CalendarMonthGrid
-          month={visibleMonth}
-          selected={selectedDate}
+          month={visibleCalendarMonth}
+          selected={selectedCalendarDate}
           onSelect={handleSelect}
           daysWithEvents={daysWithEvents}
         />
       </div>
 
       <CalendarDayEvents
-        selectedDate={selectedDate}
+        selectedDate={selectedCalendarDate}
         events={selectedDayEvents}
         loading={loading}
         loadError={loadError}
-        onAddClick={() => onAddClick(selectedDate)}
-        onEventClick={onEventClick}
+        onAddClick={() =>
+          openCreateModal({ defaultEventDate: format(selectedCalendarDate, "yyyy-MM-dd") })
+        }
+        onEventClick={openEditModal}
       />
     </section>
   );
