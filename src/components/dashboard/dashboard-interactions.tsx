@@ -1,14 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
 import { startOfLocalDay } from "@/lib/date-range";
@@ -64,18 +57,15 @@ export function DashboardInteractionsProvider({
     setVisibleCalendarMonthState(startOfLocalDay(month));
   }, []);
 
-  const focusCalendarDate = useCallback(
-    (date: Date) => {
-      const nextDate = startOfLocalDay(date);
-      setSelectedCalendarDateState(nextDate);
-      setVisibleCalendarMonthState(nextDate);
-      document.getElementById("calendar-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    },
-    [],
-  );
+  const focusCalendarDate = useCallback((date: Date) => {
+    const nextDate = startOfLocalDay(date);
+    setSelectedCalendarDateState(nextDate);
+    setVisibleCalendarMonthState(nextDate);
+    document.getElementById("calendar-section")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, []);
 
   const openCreateModal = useCallback((options?: CreateEventOptions) => {
     setModalState({

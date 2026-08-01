@@ -3,8 +3,7 @@ import { getAuthBearerToken } from "@/lib/auth-token";
 import type { Event } from "@/lib/types";
 
 export type DashboardEventsResult =
-  | { events: Event[]; error?: undefined }
-  | { events: []; error: string };
+  { events: Event[]; error?: undefined } | { events: []; error: string };
 
 export async function fetchDashboardEventsInRange(
   athleteId: string,

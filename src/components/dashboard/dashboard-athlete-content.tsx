@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 
-import { fetchDashboardEventsInRange, type DashboardEventsResult } from "@/lib/dashboard-event-data";
+import {
+  fetchDashboardEventsInRange,
+  type DashboardEventsResult,
+} from "@/lib/dashboard-event-data";
 import { getLocalDayRange, getLocalMonthRange, getLocalWeekRange } from "@/lib/date-range";
 import type { Athlete, EventType } from "@/lib/types";
 
@@ -91,7 +94,9 @@ async function CalendarInitialSection({
   const monthResult = await monthEventsPromise;
   const { events, loadError } = eventsFromResult(monthResult);
 
-  return <CalendarSection athleteId={athleteId} initialEvents={events} initialLoadError={loadError} />;
+  return (
+    <CalendarSection athleteId={athleteId} initialEvents={events} initialLoadError={loadError} />
+  );
 }
 
 export function DashboardAthleteContent({
