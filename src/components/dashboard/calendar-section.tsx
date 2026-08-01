@@ -38,11 +38,6 @@ export function CalendarSection({
   const hasHydratedInitialEvents = useRef(false);
 
   useEffect(() => {
-    setMonthEvents(initialEvents);
-    setLoadError(initialLoadError ?? null);
-  }, [initialEvents, initialLoadError]);
-
-  useEffect(() => {
     let cancelled = false;
 
     if (!hasHydratedInitialEvents.current) {
