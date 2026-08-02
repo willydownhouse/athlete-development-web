@@ -13,3 +13,9 @@ for interactivity, browser APIs, local UI state, or high-frequency UX interactio
 For dashboard-style pages, split independent data sections into async Server Components and wrap
 them in `Suspense` boundaries. Keep focused client islands for interactions such as modals,
 forms, quick actions, and calendar navigation.
+
+When a simple independent component is the only consumer of some data, colocate that fetch with
+the component instead of lifting it into the parent page. For example, an admin-only sidebar link
+should fetch/check the current user's role inside an `AdminNavLink` server component rather than
+making dashboard or onboarding pages fetch admin status for the whole view. Prefer this pattern
+throughout the app when it does not compromise UX.
