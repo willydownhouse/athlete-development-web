@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { fetchAthletes, fetchCurrentAppUser, fetchEventTypes } from "@/lib/api";
+import { fetchAthletes, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { EventType } from "@/lib/types";
@@ -24,26 +24,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const onboardingSessions = await loadShellOnboardingSessions(token);
 
   let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
-  let isAdmin = false;
   let loadError: string | null = null;
 
   if (token) {
-    const [athletesResult, appUserResult] = await Promise.allSettled([
-      fetchAthletes(token),
-      fetchCurrentAppUser(token),
-    ]);
-
-    if (athletesResult.status === "fulfilled") {
-      athletes = athletesResult.value;
-    } else {
-      loadError =
-        athletesResult.reason instanceof Error
-          ? athletesResult.reason.message
-          : "Unable to load athletes";
-    }
-
-    if (appUserResult.status === "fulfilled") {
-      isAdmin = appUserResult.value.role === "admin";
+    try {
+      athletes = await fetchAthletes(token);
+    } catch (error) {
+      loadError = error instanceof Error ? error.message : "Unable to load athletes";
     }
   } else {
     loadError = "Missing Auth.js session token";
@@ -79,7 +66,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   return (
     <DashboardView
       userEmail={session.user.email ?? ""}
-      isAdmin={isAdmin}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
       eventTypes={eventTypes}

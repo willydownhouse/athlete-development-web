@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { OnboardingView } from "@/components/onboarding/onboarding-view";
-import { fetchCurrentAppUser, fetchSports } from "@/lib/api";
+import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { Sport } from "@/lib/types";
@@ -17,7 +17,6 @@ export default async function OnboardingPage() {
   const token = await getAuthBearerToken();
   const onboardingSessions = await loadShellOnboardingSessions(token);
 
-  let isAdmin = false;
   let sports: Sport[] = [];
   let sportsLoaded = false;
 
@@ -28,22 +27,12 @@ export default async function OnboardingPage() {
     sportsLoaded = false;
   }
 
-  if (token) {
-    try {
-      const appUser = await fetchCurrentAppUser(token);
-      isAdmin = appUser.role === "admin";
-    } catch {
-      isAdmin = false;
-    }
-  }
-
   const loadError = !sportsLoaded ? "Unable to load sports" : null;
 
   return (
     <OnboardingView
       userEmail={session.user.email ?? ""}
       userName={session.user.name}
-      isAdmin={isAdmin}
       sports={sports}
       loadError={loadError}
       onboardingSessions={onboardingSessions}

@@ -1,5 +1,6 @@
 import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
 
+import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./bottom-nav";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
@@ -7,7 +8,6 @@ import { DashboardShell } from "./dashboard-shell";
 
 type DashboardViewProps = {
   userEmail: string;
-  isAdmin?: boolean;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
   eventTypes: EventType[];
@@ -18,7 +18,6 @@ type DashboardViewProps = {
 
 export function DashboardView({
   userEmail,
-  isAdmin = false,
   athletes,
   selectedAthlete,
   eventTypes,
@@ -31,7 +30,7 @@ export function DashboardView({
   return (
     <DashboardShell
       userEmail={userEmail}
-      isAdmin={isAdmin}
+      adminNavLink={<AppShellAdminNavLink />}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
       onboardingSessions={onboardingSessions}
