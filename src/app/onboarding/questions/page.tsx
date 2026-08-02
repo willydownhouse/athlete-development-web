@@ -5,11 +5,7 @@ import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { QuestionCarousel } from "@/components/onboarding/question-carousel";
-import {
-  fetchAthletes,
-  fetchOnboardingQuestions,
-  getOnboardingSession,
-} from "@/lib/api";
+import { fetchAthletes, fetchOnboardingQuestions, getOnboardingSession } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { OnboardingQuestion } from "@/lib/types";
