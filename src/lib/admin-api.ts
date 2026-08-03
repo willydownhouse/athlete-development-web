@@ -133,7 +133,6 @@ export async function createAdminEventType(
     active?: boolean;
   },
 ): Promise<EventType> {
-  console.log("createAdminEventType", body);
   return adminFetch<EventType>(token, "/api/admin/event-types", {
     method: "POST",
     body: JSON.stringify(body),

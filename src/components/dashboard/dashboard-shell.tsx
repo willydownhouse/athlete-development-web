@@ -8,7 +8,7 @@ import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
 type DashboardShellProps = {
   userEmail: string;
-  isAdmin?: boolean;
+  adminNavLink?: React.ReactNode;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
   onboardingSessions: OnboardingSessionSummary[];
@@ -33,7 +33,7 @@ function CloseIcon() {
 
 export function DashboardShell({
   userEmail,
-  isAdmin = false,
+  adminNavLink,
   athletes,
   selectedAthlete,
   onboardingSessions,
@@ -100,7 +100,7 @@ export function DashboardShell({
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
-            isAdmin={isAdmin}
+            adminNavLink={adminNavLink}
             onboardingSessions={onboardingSessions}
             athletes={athletes}
             selectedAthlete={selectedAthlete}

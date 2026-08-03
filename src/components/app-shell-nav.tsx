@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
+import { navLinkClass } from "@/components/app-shell-nav-styles";
 import { dashboardHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   onboardingSessionAvatarClass,
@@ -13,14 +14,8 @@ import {
 } from "@/components/onboarding/onboarding-session-nav";
 import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
-function navLinkClass(active: boolean): string {
-  return `block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-    active ? "bg-white/5 text-white" : "text-zinc-300 hover:bg-white/5 hover:text-white"
-  }`;
-}
-
 type AppShellNavProps = {
-  isAdmin?: boolean;
+  adminNavLink?: ReactNode;
   onboardingSessions: OnboardingSessionSummary[];
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
@@ -154,7 +149,7 @@ function SessionStatusIcon({ status }: { status: OnboardingSessionSummary["statu
 }
 
 export function AppShellNav({
-  isAdmin = false,
+  adminNavLink,
   onboardingSessions,
   athletes = [],
   selectedAthlete = null,
@@ -220,15 +215,7 @@ export function AppShellNav({
         ) : null}
       </div>
 
-      {isAdmin ? (
-        <Link
-          href="/admin"
-          onClick={onNavigate}
-          className={navLinkClass(pathname.startsWith("/admin"))}
-        >
-          Admin
-        </Link>
-      ) : null}
+      {adminNavLink}
     </nav>
   );
 }

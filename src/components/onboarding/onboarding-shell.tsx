@@ -8,7 +8,7 @@ import type { OnboardingSessionSummary } from "@/lib/types";
 
 type OnboardingShellProps = {
   userEmail: string;
-  isAdmin?: boolean;
+  adminNavLink?: React.ReactNode;
   onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
@@ -31,7 +31,7 @@ function CloseIcon() {
 
 export function OnboardingShell({
   userEmail,
-  isAdmin = false,
+  adminNavLink,
   onboardingSessions,
   children,
 }: OnboardingShellProps) {
@@ -96,7 +96,7 @@ export function OnboardingShell({
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
-            isAdmin={isAdmin}
+            adminNavLink={adminNavLink}
             onboardingSessions={onboardingSessions}
             onNavigate={closeMobile}
           />

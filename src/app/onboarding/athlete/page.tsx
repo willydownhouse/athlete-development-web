@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { AthleteBasicsForm } from "@/components/onboarding/athlete-basics-form";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { fetchCurrentAppUser, fetchSports } from "@/lib/api";
+import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 
@@ -32,15 +33,6 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
     redirect("/");
   }
 
-  let isAdmin = false;
-
-  try {
-    const appUser = await fetchCurrentAppUser(token);
-    isAdmin = appUser.role === "admin";
-  } catch {
-    isAdmin = false;
-  }
-
   let sportName: string | null = null;
 
   try {
@@ -59,7 +51,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
   return (
     <OnboardingShell
       userEmail={session.user.email ?? ""}
-      isAdmin={isAdmin}
+      adminNavLink={<AppShellAdminNavLink />}
       onboardingSessions={onboardingSessions}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">

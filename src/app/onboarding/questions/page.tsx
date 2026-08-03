@@ -1,15 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { QuestionCarousel } from "@/components/onboarding/question-carousel";
-import {
-  fetchAthletes,
-  fetchCurrentAppUser,
-  fetchOnboardingQuestions,
-  getOnboardingSession,
-} from "@/lib/api";
+import { fetchAthletes, fetchOnboardingQuestions, getOnboardingSession } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { OnboardingQuestion } from "@/lib/types";
@@ -47,17 +43,10 @@ export default async function OnboardingQuestionsPage({
     redirect("/");
   }
 
-  let isAdmin = false;
-
-  const [athletesResult, appUserResult, onboardingSessionResult] = await Promise.allSettled([
+  const [athletesResult, onboardingSessionResult] = await Promise.allSettled([
     fetchAthletes(token),
-    fetchCurrentAppUser(token),
     getOnboardingSession(token, athleteId, sessionId),
   ]);
-
-  if (appUserResult.status === "fulfilled") {
-    isAdmin = appUserResult.value.role === "admin";
-  }
 
   if (onboardingSessionResult.status === "rejected") {
     redirect("/onboarding");
@@ -98,7 +87,7 @@ export default async function OnboardingQuestionsPage({
   return (
     <OnboardingShell
       userEmail={session.user.email ?? ""}
-      isAdmin={isAdmin}
+      adminNavLink={<AppShellAdminNavLink />}
       onboardingSessions={onboardingSessions}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">

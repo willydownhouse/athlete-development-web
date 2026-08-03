@@ -1,15 +1,15 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import {
   ApiError,
   createEvent,
   deleteEvent,
-  fetchEvents,
   fetchEventTypeMetricDefinitions,
   updateEvent,
 } from "@/lib/api";
+import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getEventFormValidationError } from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
@@ -163,7 +163,8 @@ export async function createEventAction(
       intensity: fields.intensity,
       ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
     });
-    revalidateTag(`events-${fields.athleteId}`, "max");
+
+    updateTag(`events-${fields.athleteId}`);
 
     return { success: "Event added" };
   } catch (error) {
@@ -219,7 +220,7 @@ export async function updateEventAction(
       metrics,
     });
 
-    revalidateTag(`events-${fields.athleteId}`, "max");
+    updateTag(`events-${fields.athleteId}`);
 
     return { success: "Event updated" };
   } catch (error) {
@@ -250,8 +251,7 @@ export async function deleteEventAction(
 
   try {
     await deleteEvent(token, athleteId, eventId);
-    revalidateTag(`events-${athleteId}`, "max");
-
+    updateTag(`events-${athleteId}`);
     return { success: "Event deleted" };
   } catch (error) {
     return actionError(error);
@@ -263,30 +263,5 @@ export async function fetchEventsInRangeAction(
   startedAtFrom: string,
   startedAtTo: string,
 ): Promise<{ events: Event[]; error?: undefined } | { events: []; error: string }> {
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    return { events: [], error: "You need to sign in again" };
-  }
-
-  try {
-    const result = await fetchEvents(token, athleteId, {
-      startedAtFrom,
-      startedAtTo,
-      limit: 100,
-      include: "metrics",
-    });
-
-    return { events: result.items };
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return { events: [], error: error.apiError ?? error.message };
-    }
-
-    if (error instanceof Error) {
-      return { events: [], error: error.message };
-    }
-
-    return { events: [], error: "Unable to load events" };
-  }
+  return fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
 }
