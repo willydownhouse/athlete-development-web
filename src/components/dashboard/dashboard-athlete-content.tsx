@@ -12,7 +12,11 @@ import { CalendarSection } from "./calendar-section";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardEventLogging } from "./dashboard-event-logging";
 import { DashboardHeader } from "./dashboard-header";
-import { ThisWeekCard } from "./this-week-card";
+import {
+  DashboardEventLoggingSkeleton,
+  DashboardHeaderSkeleton,
+  ThisWeekCardSkeleton,
+} from "./dashboard-skeletons";
 import { ThisWeekCardClient } from "./this-week-card-client";
 
 type DashboardAthleteContentProps = {
@@ -26,18 +30,6 @@ function eventsFromResult(result: DashboardEventsResult) {
     events: result.events,
     loadError: result.error ?? null,
   };
-}
-
-function DashboardSectionFallback({ title }: { title: string }) {
-  return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        <span className="text-sm text-zinc-500">Loading…</span>
-      </div>
-      <p className="mt-4 text-sm text-zinc-500">Loading {title.toLowerCase()}…</p>
-    </section>
-  );
 }
 
 async function DashboardHeaderSection({
@@ -115,7 +107,7 @@ export function DashboardAthleteContent({
       eventTypes={eventTypes}
       eventTypesError={eventTypesError}
     >
-      <Suspense fallback={<DashboardHeader selectedAthlete={selectedAthlete} />}>
+      <Suspense fallback={<DashboardHeaderSkeleton selectedAthlete={selectedAthlete} />}>
         <DashboardHeaderSection
           selectedAthlete={selectedAthlete}
           startedAtFrom={weekRange.startedAtFrom}
@@ -124,7 +116,7 @@ export function DashboardAthleteContent({
       </Suspense>
       <div className="mt-6 flex flex-col gap-3.5">
         <AiInsightCard />
-        <Suspense fallback={<DashboardSectionFallback title="Today's events" />}>
+        <Suspense fallback={<DashboardEventLoggingSkeleton />}>
           <DashboardEventLoggingSection
             athleteId={selectedAthlete.id}
             startedAtFrom={todayRange.startedAtFrom}
@@ -133,7 +125,7 @@ export function DashboardAthleteContent({
             eventTypesError={eventTypesError}
           />
         </Suspense>
-        <Suspense fallback={<ThisWeekCard events={[]} loading />}>
+        <Suspense fallback={<ThisWeekCardSkeleton />}>
           <ThisWeekSection
             athleteId={selectedAthlete.id}
             startedAtFrom={weekRange.startedAtFrom}

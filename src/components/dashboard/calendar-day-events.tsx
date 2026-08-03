@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 
+import { CalendarDayEventsSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import type { Event } from "@/lib/types";
 
@@ -38,7 +39,7 @@ export function CalendarDayEvents({
       {loadError ? (
         <p className="mt-4 text-sm text-red-300">{loadError}</p>
       ) : loading ? (
-        <p className="mt-4 text-sm text-zinc-500">Loading events…</p>
+        <CalendarDayEventsSkeleton />
       ) : events.length > 0 ? (
         <div className="mt-4 space-y-3">
           {events.map((event) => (
