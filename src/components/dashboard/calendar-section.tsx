@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
@@ -14,15 +14,9 @@ import { useDashboardInteractions } from "./dashboard-interactions";
 
 type CalendarSectionProps = {
   athleteId: string;
-  initialEvents: Event[];
-  initialLoadError?: string | null;
 };
 
-export function CalendarSection({
-  athleteId,
-  initialEvents,
-  initialLoadError,
-}: CalendarSectionProps) {
+export function CalendarSection({ athleteId }: CalendarSectionProps) {
   const {
     selectedCalendarDate,
     visibleCalendarMonth,
@@ -32,24 +26,16 @@ export function CalendarSection({
     openCreateModal,
     openEditModal,
   } = useDashboardInteractions();
-  const [monthEvents, setMonthEvents] = useState<Event[]>(initialEvents);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(initialLoadError ?? null);
-  const hasHydratedInitialEvents = useRef(false);
+
+  const [monthEvents, setMonthEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!hasHydratedInitialEvents.current) {
-      hasHydratedInitialEvents.current = true;
-      return () => {
-        cancelled = true;
-      };
-    }
-
     const { startedAtFrom, startedAtTo } = getLocalMonthRange(visibleCalendarMonth);
 
-    setLoading(true);
     void fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo).then((result) => {
       if (cancelled) {
         return;

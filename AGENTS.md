@@ -19,3 +19,7 @@ the component instead of lifting it into the parent page. For example, an admin-
 should fetch/check the current user's role inside an `AdminNavLink` server component rather than
 making dashboard or onboarding pages fetch admin status for the whole view. Prefer this pattern
 throughout the app when it does not compromise UX.
+
+Identical GET `fetch` requests in a React component tree are memoized by default. Prefer letting
+async Server Components fetch the data they need directly instead of lifting promises into a
+parent solely to deduplicate requests.

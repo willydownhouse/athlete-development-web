@@ -4,7 +4,7 @@ import {
   fetchDashboardEventsInRange,
   type DashboardEventsResult,
 } from "@/lib/dashboard-event-data";
-import { getLocalDayRange, getLocalMonthRange, getLocalWeekRange } from "@/lib/date-range";
+import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { AiInsightCard } from "./ai-insight-card";
@@ -20,8 +20,6 @@ type DashboardAthleteContentProps = {
   eventTypes: EventType[];
   eventTypesError?: string | null;
 };
-
-type EventsPromise = Promise<DashboardEventsResult>;
 
 function eventsFromResult(result: DashboardEventsResult) {
   return {
@@ -44,27 +42,37 @@ function DashboardSectionFallback({ title }: { title: string }) {
 
 async function DashboardHeaderSection({
   selectedAthlete,
-  weekEventsPromise,
+  startedAtFrom,
+  startedAtTo,
 }: {
   selectedAthlete: Athlete;
-  weekEventsPromise: EventsPromise;
+  startedAtFrom: string;
+  startedAtTo: string;
 }) {
-  const weekResult = await weekEventsPromise;
+  const weekResult = await fetchDashboardEventsInRange(
+    selectedAthlete.id,
+    startedAtFrom,
+    startedAtTo,
+  );
   const { events } = eventsFromResult(weekResult);
 
   return <DashboardHeader selectedAthlete={selectedAthlete} eventsThisWeek={events.length} />;
 }
 
 async function DashboardEventLoggingSection({
-  todayEventsPromise,
+  athleteId,
+  startedAtFrom,
+  startedAtTo,
   eventTypes,
   eventTypesError,
 }: {
-  todayEventsPromise: EventsPromise;
+  athleteId: string;
+  startedAtFrom: string;
+  startedAtTo: string;
   eventTypes: EventType[];
   eventTypesError?: string | null;
 }) {
-  const todayResult = await todayEventsPromise;
+  const todayResult = await fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
   const { events, loadError } = eventsFromResult(todayResult);
 
   return (
@@ -77,26 +85,19 @@ async function DashboardEventLoggingSection({
   );
 }
 
-async function ThisWeekSection({ weekEventsPromise }: { weekEventsPromise: EventsPromise }) {
-  const weekResult = await weekEventsPromise;
+async function ThisWeekSection({
+  athleteId,
+  startedAtFrom,
+  startedAtTo,
+}: {
+  athleteId: string;
+  startedAtFrom: string;
+  startedAtTo: string;
+}) {
+  const weekResult = await fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
   const { events, loadError } = eventsFromResult(weekResult);
 
   return <ThisWeekCardClient events={events} loadError={loadError} />;
-}
-
-async function CalendarInitialSection({
-  athleteId,
-  monthEventsPromise,
-}: {
-  athleteId: string;
-  monthEventsPromise: EventsPromise;
-}) {
-  const monthResult = await monthEventsPromise;
-  const { events, loadError } = eventsFromResult(monthResult);
-
-  return (
-    <CalendarSection athleteId={athleteId} initialEvents={events} initialLoadError={loadError} />
-  );
 }
 
 export function DashboardAthleteContent({
@@ -106,22 +107,6 @@ export function DashboardAthleteContent({
 }: DashboardAthleteContentProps) {
   const todayRange = getLocalDayRange();
   const weekRange = getLocalWeekRange();
-  const monthRange = getLocalMonthRange();
-  const todayEventsPromise = fetchDashboardEventsInRange(
-    selectedAthlete.id,
-    todayRange.startedAtFrom,
-    todayRange.startedAtTo,
-  );
-  const weekEventsPromise = fetchDashboardEventsInRange(
-    selectedAthlete.id,
-    weekRange.startedAtFrom,
-    weekRange.startedAtTo,
-  );
-  const monthEventsPromise = fetchDashboardEventsInRange(
-    selectedAthlete.id,
-    monthRange.startedAtFrom,
-    monthRange.startedAtTo,
-  );
 
   return (
     <DashboardInteractionsProvider
@@ -133,27 +118,29 @@ export function DashboardAthleteContent({
       <Suspense fallback={<DashboardHeader selectedAthlete={selectedAthlete} />}>
         <DashboardHeaderSection
           selectedAthlete={selectedAthlete}
-          weekEventsPromise={weekEventsPromise}
+          startedAtFrom={weekRange.startedAtFrom}
+          startedAtTo={weekRange.startedAtTo}
         />
       </Suspense>
       <div className="mt-6 flex flex-col gap-3.5">
         <AiInsightCard />
         <Suspense fallback={<DashboardSectionFallback title="Today's events" />}>
           <DashboardEventLoggingSection
-            todayEventsPromise={todayEventsPromise}
+            athleteId={selectedAthlete.id}
+            startedAtFrom={todayRange.startedAtFrom}
+            startedAtTo={todayRange.startedAtTo}
             eventTypes={eventTypes}
             eventTypesError={eventTypesError}
           />
         </Suspense>
         <Suspense fallback={<ThisWeekCard events={[]} loading />}>
-          <ThisWeekSection weekEventsPromise={weekEventsPromise} />
-        </Suspense>
-        <Suspense fallback={<DashboardSectionFallback title="Calendar" />}>
-          <CalendarInitialSection
+          <ThisWeekSection
             athleteId={selectedAthlete.id}
-            monthEventsPromise={monthEventsPromise}
+            startedAtFrom={weekRange.startedAtFrom}
+            startedAtTo={weekRange.startedAtTo}
           />
         </Suspense>
+        <CalendarSection athleteId={selectedAthlete.id} />
       </div>
     </DashboardInteractionsProvider>
   );

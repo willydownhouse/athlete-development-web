@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
@@ -38,7 +37,6 @@ export function DashboardInteractionsProvider({
   eventTypesError,
   children,
 }: DashboardInteractionsProviderProps) {
-  const router = useRouter();
   const [selectedCalendarDate, setSelectedCalendarDateState] = useState(() =>
     startOfLocalDay(new Date()),
   );
@@ -88,8 +86,7 @@ export function DashboardInteractionsProvider({
   const handleFormSuccess = useCallback(() => {
     closeModal();
     setRefreshKey((current) => current + 1);
-    router.refresh();
-  }, [closeModal, router]);
+  }, [closeModal]);
 
   const value = useMemo(
     () => ({

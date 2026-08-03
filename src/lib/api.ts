@@ -182,15 +182,25 @@ export async function fetchEvents(
 
   const search = params.toString();
 
-  return apiFetch<EventListResponse>(
-    token,
-    `/api/athletes/${athleteId}/events${search ? `?${search}` : ""}`,
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/events${search ? `?${search}` : ""}`,
     {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
       next: {
         tags: [`events-${athleteId}`],
       },
     },
   );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as EventListResponse;
+  return result;
 }
 
 export async function updateEvent(
