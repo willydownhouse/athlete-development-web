@@ -79,13 +79,6 @@ export default async function OnboardingQuestionsPage({
 
   const initialAnswers: Record<string, { rawAnswer: string; structuredValue?: unknown }> = {};
 
-  for (const answer of onboardingSession.answers ?? []) {
-    initialAnswers[answer.questionId] = {
-      rawAnswer: answer.rawAnswer,
-      structuredValue: answer.structuredValue ?? undefined,
-    };
-  }
-
   return (
     <OnboardingShell
       userEmail={session.user.email ?? ""}

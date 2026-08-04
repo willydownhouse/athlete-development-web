@@ -287,11 +287,15 @@ export async function fetchOnboardingSessions(token: string): Promise<Onboarding
   return result.items;
 }
 
-export async function getOnboardingSessionById(
+export async function getOnboardingSession(
   token: string,
+  athleteId: string,
   sessionId: string,
 ): Promise<OnboardingSessionDetail> {
-  return apiFetch<OnboardingSessionDetail>(token, `/api/onboarding/sessions/${sessionId}`);
+  return apiFetch<OnboardingSessionDetail>(
+    token,
+    `/api/athletes/${athleteId}/onboarding-sessions/${sessionId}`,
+  );
 }
 
 export async function startOnboardingSession(
@@ -301,17 +305,6 @@ export async function startOnboardingSession(
   return apiFetch<OnboardingSession>(token, `/api/athletes/${athleteId}/onboarding-sessions`, {
     method: "POST",
   });
-}
-
-export async function getOnboardingSession(
-  token: string,
-  athleteId: string,
-  sessionId: string,
-): Promise<OnboardingSession> {
-  return apiFetch<OnboardingSession>(
-    token,
-    `/api/athletes/${athleteId}/onboarding-sessions/${sessionId}`,
-  );
 }
 
 export async function upsertOnboardingAnswer(

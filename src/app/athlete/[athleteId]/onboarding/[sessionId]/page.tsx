@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { getOnboardingSessionById } from "@/lib/api";
+import { getOnboardingSession } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellAthletes, loadShellOnboardingSessions } from "@/lib/shell-data";
 
@@ -42,12 +42,8 @@ export default async function AthleteOnboardingSessionPage({
   let onboardingSession;
 
   try {
-    onboardingSession = await getOnboardingSessionById(token, normalizedSessionId);
+    onboardingSession = await getOnboardingSession(token, normalizedAthleteId, normalizedSessionId);
   } catch {
-    redirect("/onboarding");
-  }
-
-  if (onboardingSession.athleteId !== normalizedAthleteId) {
     redirect("/onboarding");
   }
 
