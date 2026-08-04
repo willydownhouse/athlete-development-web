@@ -18,9 +18,9 @@ export function DashboardHeaderSkeleton({ selectedAthlete }: { selectedAthlete: 
 
 function EventListRowSkeleton() {
   return (
-    <div className="flex items-start gap-3 px-1 py-1">
-      <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
-      <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+    <div className="flex items-start gap-3 px-1 py-1.5">
+      <Skeleton className="h-14 w-14 shrink-0 rounded-xl" />
+      <div className="min-w-0 flex-1 space-y-2.5 pt-1">
         <Skeleton className="h-4 w-[68%]" />
         <Skeleton className="h-3.5 w-[44%]" />
       </div>
@@ -32,7 +32,8 @@ function TodaysEventsCardSkeleton() {
   return (
     <section className={CARD_CLASS}>
       <Skeleton className="h-5 w-32" />
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 space-y-3">
+        <EventListRowSkeleton />
         <EventListRowSkeleton />
         <EventListRowSkeleton />
       </div>
@@ -59,10 +60,10 @@ export function HockeyStatsSkeleton() {
 export function HockeyStatsGridSkeleton() {
   return (
     <div className="mt-4 grid grid-cols-2 gap-3">
-      <Skeleton className="h-[4.5rem] rounded-xl" />
-      <Skeleton className="h-[4.5rem] rounded-xl" />
-      <Skeleton className="h-[4.5rem] rounded-xl" />
-      <Skeleton className="h-[4.5rem] rounded-xl" />
+      <Skeleton className="h-[5.75rem] rounded-xl" />
+      <Skeleton className="h-[5.75rem] rounded-xl" />
+      <Skeleton className="h-[5.75rem] rounded-xl" />
+      <Skeleton className="h-[5.75rem] rounded-xl" />
     </div>
   );
 }
