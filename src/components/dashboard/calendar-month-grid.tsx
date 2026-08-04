@@ -5,7 +5,7 @@ import { DayPicker } from "react-day-picker";
 import { dayPickerClassNames } from "@/components/day-picker-styles";
 
 const calendarHasEventsClass =
-  "[&:not([data-selected=true])>button]:bg-[#3d5266] [&:not([data-selected=true])>button]:font-medium [&:not([data-selected=true])>button]:text-zinc-100 [&:not([data-selected=true])>button]:hover:bg-[#4a6278]";
+  "[&>button]:relative [&>button]:pb-1 [&>button]:after:absolute [&>button]:after:bottom-0.5 [&>button]:after:left-1/2 [&>button]:after:h-1.5 [&>button]:after:w-5 [&>button]:after:-translate-x-1/2 [&>button]:after:rounded-full [&>button]:after:bg-[#9ec9e8] [&>button]:after:content-[''] [&[data-selected=true]>button]:after:bg-[#111827]";
 
 type CalendarMonthGridProps = {
   month: Date;
