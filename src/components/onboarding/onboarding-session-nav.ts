@@ -1,12 +1,26 @@
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import type { OnboardingSessionSummary } from "@/lib/types";
 
+export function onboardingSessionPageHref(sessionId: string): string {
+  return `/onboarding/session/${encodeURIComponent(sessionId)}`;
+}
+
 export function onboardingSessionHref(session: OnboardingSessionSummary): string {
   if (session.status === "in_progress") {
-    return `/onboarding/questions?athleteId=${encodeURIComponent(session.athleteId)}&sessionId=${encodeURIComponent(session.id)}&sportId=${encodeURIComponent(session.sportId)}`;
+    return onboardingSessionPageHref(session.id);
   }
 
   return dashboardHref(session.athleteId);
+}
+
+export function activeOnboardingSessionId(pathname: string): string | null {
+  const prefix = "/onboarding/session/";
+  if (!pathname.startsWith(prefix)) {
+    return null;
+  }
+
+  const sessionId = pathname.slice(prefix.length).split("/")[0];
+  return sessionId ? decodeURIComponent(sessionId) : null;
 }
 
 export function onboardingSessionAvatarClass(status: OnboardingSessionSummary["status"]): string {

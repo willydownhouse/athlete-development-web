@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
+import { onboardingSessionPageHref } from "@/components/onboarding/onboarding-session-nav";
 import {
   ApiError,
   completeOnboardingSession,
@@ -44,16 +45,6 @@ function readString(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readOptionalInt(formData: FormData, key: string): number | undefined {
-  const value = readString(formData, key);
-  if (value === "") {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
 function readOptionalDate(formData: FormData, key: string): string | undefined {
   const value = readString(formData, key);
   return value === "" ? undefined : value;
@@ -85,15 +76,11 @@ export async function createAthleteBasicsAction(
       focusSportId,
       name,
       dateOfBirth: readOptionalDate(formData, "dateOfBirth"),
-      heightCm: readOptionalInt(formData, "heightCm"),
-      weightKg: readOptionalInt(formData, "weightKg"),
     });
 
     const session = await startOnboardingSession(token, athlete.id);
 
-    redirect(
-      `/onboarding/questions?athleteId=${encodeURIComponent(athlete.id)}&sessionId=${encodeURIComponent(session.id)}&sportId=${encodeURIComponent(focusSportId)}`,
-    );
+    redirect(onboardingSessionPageHref(session.id));
   } catch (error) {
     if (isNextRedirect(error)) {
       throw error;

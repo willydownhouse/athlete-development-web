@@ -9,6 +9,7 @@ import type {
   OnboardingAnswer,
   OnboardingQuestion,
   OnboardingSession,
+  OnboardingSessionDetail,
   OnboardingSessionSummary,
   Sport,
   UserRole,
@@ -284,6 +285,13 @@ export async function fetchOnboardingSessions(token: string): Promise<Onboarding
     "/api/onboarding/sessions",
   );
   return result.items;
+}
+
+export async function getOnboardingSessionById(
+  token: string,
+  sessionId: string,
+): Promise<OnboardingSessionDetail> {
+  return apiFetch<OnboardingSessionDetail>(token, `/api/onboarding/sessions/${sessionId}`);
 }
 
 export async function startOnboardingSession(

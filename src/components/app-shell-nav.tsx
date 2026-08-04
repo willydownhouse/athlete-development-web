@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
-import { dashboardHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
+  activeDashboardAthleteId,
+  dashboardHref,
+  defaultDashboardHref,
+} from "@/components/dashboard/dashboard-nav";
+import {
+  activeOnboardingSessionId,
   onboardingSessionAvatarClass,
   onboardingSessionHref,
   onboardingSessionStatusLabel,
@@ -19,6 +24,7 @@ type AppShellNavProps = {
   onboardingSessions: OnboardingSessionSummary[];
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
+  dashboardAthleteId?: string | null;
   onNavigate?: () => void;
 };
 
@@ -30,8 +36,7 @@ function AthleteNavList({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeAthleteId = pathname.startsWith("/dashboard") ? searchParams.get("athleteId") : null;
+  const activeAthleteId = activeDashboardAthleteId(pathname);
 
   return athletes.map((athlete) => (
     <AthleteNavLink
@@ -76,10 +81,7 @@ function OnboardingSessionNavList({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeSessionId = pathname.startsWith("/onboarding/questions")
-    ? searchParams.get("sessionId")
-    : null;
+  const activeSessionId = activeOnboardingSessionId(pathname);
 
   return sessions.map((session) => (
     <OnboardingSessionNavLink
@@ -153,11 +155,15 @@ export function AppShellNav({
   onboardingSessions,
   athletes = [],
   selectedAthlete = null,
+  dashboardAthleteId = null,
   onNavigate,
 }: AppShellNavProps) {
   const pathname = usePathname();
-  const dashboardLink =
-    selectedAthlete !== null ? dashboardHref(selectedAthlete.id) : defaultDashboardHref(athletes);
+  const dashboardLink = dashboardAthleteId
+    ? dashboardHref(dashboardAthleteId)
+    : selectedAthlete !== null
+      ? dashboardHref(selectedAthlete.id)
+      : defaultDashboardHref(athletes);
 
   return (
     <nav className="space-y-1">
@@ -172,18 +178,7 @@ export function AppShellNav({
 
         {athletes.length > 1 ? (
           <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
-            <Suspense
-              fallback={athletes.map((athlete) => (
-                <AthleteNavLink
-                  key={athlete.id}
-                  athlete={athlete}
-                  onNavigate={onNavigate}
-                  active={false}
-                />
-              ))}
-            >
-              <AthleteNavList athletes={athletes} onNavigate={onNavigate} />
-            </Suspense>
+            <AthleteNavList athletes={athletes} onNavigate={onNavigate} />
           </div>
         ) : null}
       </div>

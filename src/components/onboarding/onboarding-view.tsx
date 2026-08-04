@@ -1,6 +1,6 @@
 import { OnboardingShell } from "./onboarding-shell";
 import { SportSelect } from "./sport-select";
-import type { Sport, OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete, Sport, OnboardingSessionSummary } from "@/lib/types";
 import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 
 type OnboardingViewProps = {
@@ -8,6 +8,7 @@ type OnboardingViewProps = {
   userName?: string | null;
   sports: Sport[];
   loadError?: string | null;
+  athletes: Athlete[];
   onboardingSessions: OnboardingSessionSummary[];
 };
 
@@ -16,6 +17,7 @@ export function OnboardingView({
   userName,
   sports,
   loadError,
+  athletes,
   onboardingSessions,
 }: OnboardingViewProps) {
   const greetingName = userName?.trim().split(/\s+/)[0];
@@ -24,6 +26,7 @@ export function OnboardingView({
     <OnboardingShell
       userEmail={userEmail}
       adminNavLink={<AppShellAdminNavLink />}
+      athletes={athletes}
       onboardingSessions={onboardingSessions}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">

@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
-import type { OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
 
 type OnboardingShellProps = {
   userEmail: string;
   adminNavLink?: React.ReactNode;
+  athletes?: Athlete[];
+  dashboardAthleteId?: string | null;
   onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
@@ -32,6 +34,8 @@ function CloseIcon() {
 export function OnboardingShell({
   userEmail,
   adminNavLink,
+  athletes = [],
+  dashboardAthleteId = null,
   onboardingSessions,
   children,
 }: OnboardingShellProps) {
@@ -97,6 +101,8 @@ export function OnboardingShell({
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
             adminNavLink={adminNavLink}
+            athletes={athletes}
+            dashboardAthleteId={dashboardAthleteId}
             onboardingSessions={onboardingSessions}
             onNavigate={closeMobile}
           />

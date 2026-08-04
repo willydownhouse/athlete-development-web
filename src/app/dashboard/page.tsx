@@ -3,23 +3,17 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { fetchAthletes, fetchEventTypes } from "@/lib/api";
+import { fetchAthletes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
-import type { EventType } from "@/lib/types";
 
-type DashboardPageProps = {
-  searchParams: Promise<{ athleteId?: string }>;
-};
-
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+export default async function DashboardPage() {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/");
   }
 
-  const { athleteId } = await searchParams;
   const token = await getAuthBearerToken();
   const onboardingSessions = await loadShellOnboardingSessions(token);
 
@@ -36,40 +30,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     loadError = "Missing Auth.js session token";
   }
 
-  if (athletes.length > 0) {
-    const normalizedAthleteId = athleteId?.trim() ?? "";
-    const selectedFromUrl = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
-
-    if (!normalizedAthleteId || !selectedFromUrl) {
-      const firstAthlete = athletes[0];
-      if (firstAthlete) {
-        redirect(dashboardHref(firstAthlete.id));
-      }
-    }
-  }
-
-  const selectedAthlete =
-    athleteId && athletes.length > 0
-      ? (athletes.find((athlete) => athlete.id === athleteId) ?? null)
-      : null;
-
-  let eventTypes: EventType[] = [];
-  let eventTypesError: string | null = null;
-
-  try {
-    // Fetch the full active catalog so Quick Log can split General vs Hockey.
-    eventTypes = await fetchEventTypes();
-  } catch (error) {
-    eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
+  const firstAthlete = athletes[0];
+  if (firstAthlete) {
+    redirect(dashboardHref(firstAthlete.id));
   }
 
   return (
     <DashboardView
       userEmail={session.user.email ?? ""}
       athletes={athletes}
-      selectedAthlete={selectedAthlete}
-      eventTypes={eventTypes}
-      eventTypesError={eventTypesError}
+      selectedAthlete={null}
+      eventTypes={[]}
       loadError={loadError}
       onboardingSessions={onboardingSessions}
     />

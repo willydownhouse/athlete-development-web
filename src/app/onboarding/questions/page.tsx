@@ -65,6 +65,8 @@ export default async function OnboardingQuestionsPage({
     }
   }
 
+  const athletes = athletesResult.status === "fulfilled" ? athletesResult.value : [];
+
   const focusSportId = sportId || onboardingSession.sportId;
 
   let questions: OnboardingQuestion[] = [];
@@ -88,6 +90,8 @@ export default async function OnboardingQuestionsPage({
     <OnboardingShell
       userEmail={session.user.email ?? ""}
       adminNavLink={<AppShellAdminNavLink />}
+      athletes={athletes}
+      dashboardAthleteId={athleteId}
       onboardingSessions={onboardingSessions}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">

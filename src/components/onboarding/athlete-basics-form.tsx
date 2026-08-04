@@ -15,10 +15,9 @@ const inputClassName =
 
 type AthleteBasicsFormProps = {
   sportId: string;
-  sportName: string;
 };
 
-export function AthleteBasicsForm({ sportId, sportName }: AthleteBasicsFormProps) {
+export function AthleteBasicsForm({ sportId }: AthleteBasicsFormProps) {
   const [state, formAction] = useActionState(createAthleteBasicsAction, initialState);
 
   return (
@@ -37,45 +36,18 @@ export function AthleteBasicsForm({ sportId, sportName }: AthleteBasicsFormProps
         />
       </label>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm lg:text-base">
-          <span className="font-medium text-zinc-300">Date of birth</span>
-          <DatePickerInput
-            name="dateOfBirth"
-            placeholder="Select date"
-            className={inputClassName}
-            disabledDates={{ after: new Date() }}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm lg:text-base">
-          <span className="font-medium text-zinc-300">Height (cm)</span>
-          <input
-            name="heightCm"
-            type="number"
-            min={1}
-            placeholder="140"
-            className={inputClassName}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm lg:text-base">
-          <span className="font-medium text-zinc-300">Weight (kg)</span>
-          <input
-            name="weightKg"
-            type="number"
-            min={1}
-            placeholder="35"
-            className={inputClassName}
-          />
-        </label>
-      </div>
-
-      <p className="text-sm text-zinc-500">
-        Optional details help personalize guidance for {sportName}. You can fill more in the next
-        questions.
-      </p>
+      <label className="flex flex-col gap-1 text-sm lg:text-base">
+        <span className="font-medium text-zinc-300">Date of birth</span>
+        <DatePickerInput
+          name="dateOfBirth"
+          placeholder="Select date"
+          className={inputClassName}
+          disabledDates={{ after: new Date() }}
+        />
+      </label>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SubmitButton className="lg:px-5 lg:py-3 lg:text-base">Continue</SubmitButton>
+        <SubmitButton className="lg:px-5 lg:py-3 lg:text-base">Create athlete profile</SubmitButton>
         <Link
           href="/onboarding"
           className="inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] sm:w-auto lg:px-5 lg:py-3 lg:text-base"

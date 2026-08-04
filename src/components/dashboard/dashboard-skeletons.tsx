@@ -3,7 +3,6 @@ import type { Athlete } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CARD_CLASS = "rounded-[1.35rem] bg-[#171b22] px-4 py-4";
-const INSIGHT_CARD_CLASS = "rounded-[1.35rem] bg-[#1c2430] px-4 py-4";
 const WEEK_CHART_HEIGHT = 88;
 const WEEK_BAR_HEIGHTS = [32, 56, 44, 72, 28, 64, 40];
 
@@ -34,19 +33,6 @@ export function DashboardHeaderSkeleton({ selectedAthlete }: { selectedAthlete: 
   );
 }
 
-export function AiInsightCardSkeleton() {
-  return (
-    <section className={INSIGHT_CARD_CLASS}>
-      <CardHeaderSkeleton titleWidth="w-24" trailingWidth="w-10" />
-      <div className="mt-3 space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-[92%]" />
-        <Skeleton className="h-4 w-[78%]" />
-      </div>
-    </section>
-  );
-}
-
 function EventListRowSkeleton() {
   return (
     <div className="flex items-start gap-3 px-1 py-1">
@@ -59,7 +45,7 @@ function EventListRowSkeleton() {
   );
 }
 
-export function TodaysEventsCardSkeleton() {
+function TodaysEventsCardSkeleton() {
   return (
     <section className={CARD_CLASS}>
       <div className="flex items-center justify-between gap-3">
@@ -74,7 +60,7 @@ export function TodaysEventsCardSkeleton() {
   );
 }
 
-export function QuickLogCardSkeleton() {
+function QuickLogCardSkeleton() {
   return (
     <section className={CARD_CLASS}>
       <div className="flex items-center justify-between gap-3">

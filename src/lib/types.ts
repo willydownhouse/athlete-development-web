@@ -192,11 +192,18 @@ export type OnboardingSession = {
   answers?: OnboardingAnswer[];
 };
 
+type OnboardingSessionAthlete = {
+  id: string;
+  name: string;
+};
+
+export type OnboardingSessionDetail = OnboardingSession & {
+  athlete: OnboardingSessionAthlete;
+  answers: OnboardingAnswer[];
+};
+
 export type OnboardingSessionSummary = Omit<OnboardingSession, "answers"> & {
-  athlete: {
-    id: string;
-    name: string;
-  };
+  athlete: OnboardingSessionAthlete;
 };
 
 export const EVENT_CATEGORIES: EventCategory[] = [
