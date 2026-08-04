@@ -19,10 +19,8 @@ import {
   DashboardHeaderSkeleton,
   HockeyStatsGridSkeleton,
   HockeyStatsSkeleton,
-  ThisWeekCardSkeleton,
   TodaysEventsSkeleton,
 } from "./dashboard-skeletons";
-import { ThisWeekCardClient } from "./this-week-card-client";
 import { TodaysEvents } from "./todays-events";
 
 type DashboardAthleteContentProps = {
@@ -56,21 +54,6 @@ async function DashboardHeaderSection({
   const { events } = eventsFromResult(weekResult);
 
   return <DashboardHeader selectedAthlete={selectedAthlete} eventsThisWeek={events.length} />;
-}
-
-async function ThisWeekSection({
-  athleteId,
-  startedAtFrom,
-  startedAtTo,
-}: {
-  athleteId: string;
-  startedAtFrom: string;
-  startedAtTo: string;
-}) {
-  const weekResult = await fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
-  const { events, loadError } = eventsFromResult(weekResult);
-
-  return <ThisWeekCardClient events={events} loadError={loadError} />;
 }
 
 export function DashboardAthleteContent({
@@ -118,13 +101,6 @@ export function DashboardAthleteContent({
             </HockeyStatsSection>
           </Suspense>
         ) : null}
-        <Suspense fallback={<ThisWeekCardSkeleton />}>
-          <ThisWeekSection
-            athleteId={selectedAthlete.id}
-            startedAtFrom={weekRange.startedAtFrom}
-            startedAtTo={weekRange.startedAtTo}
-          />
-        </Suspense>
 
         <CalendarSection athleteId={selectedAthlete.id} />
       </div>

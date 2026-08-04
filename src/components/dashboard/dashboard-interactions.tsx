@@ -17,7 +17,6 @@ type DashboardInteractionsContextValue = {
   refreshKey: number;
   setSelectedCalendarDate: (date: Date) => void;
   setVisibleCalendarMonth: (month: Date) => void;
-  focusCalendarDate: (date: Date) => void;
   openCreateModal: (options?: CreateEventOptions) => void;
 };
 
@@ -54,16 +53,6 @@ export function DashboardInteractionsProvider({
     setVisibleCalendarMonthState(startOfLocalDay(month));
   }, []);
 
-  const focusCalendarDate = useCallback((date: Date) => {
-    const nextDate = startOfLocalDay(date);
-    setSelectedCalendarDateState(nextDate);
-    setVisibleCalendarMonthState(nextDate);
-    document.getElementById("calendar-section")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }, []);
-
   const openCreateModal = useCallback((options?: CreateEventOptions) => {
     setModalState({
       mode: "create",
@@ -89,7 +78,6 @@ export function DashboardInteractionsProvider({
       refreshKey,
       setSelectedCalendarDate,
       setVisibleCalendarMonth,
-      focusCalendarDate,
       openCreateModal,
     }),
     [
@@ -98,7 +86,6 @@ export function DashboardInteractionsProvider({
       refreshKey,
       setSelectedCalendarDate,
       setVisibleCalendarMonth,
-      focusCalendarDate,
       openCreateModal,
     ],
   );

@@ -1,8 +1,8 @@
 import type { Event, EventCategory } from "@/lib/types";
 
-export type EventTone = "ice" | "recovery" | "gym" | "game" | "rest" | "neutral";
+type EventTone = "ice" | "recovery" | "gym" | "game" | "rest" | "neutral";
 
-export const EVENT_TONE_BG_CLASS: Record<EventTone, string> = {
+const EVENT_TONE_BG_CLASS: Record<EventTone, string> = {
   ice: "bg-[#0ea5e9]",
   recovery: "bg-[#10b981]",
   gym: "bg-[#f59e0b]",
@@ -44,7 +44,7 @@ const CATEGORY_TONE: Partial<Record<EventCategory, EventTone>> = {
   training: "gym",
 };
 
-export function getEventTone(event: Pick<Event, "category" | "sportId" | "eventType">): EventTone {
+function getEventTone(event: Pick<Event, "category" | "sportId" | "eventType">): EventTone {
   const slugTone = EVENT_TYPE_SLUG_TONE[event.eventType.slug];
   if (slugTone) {
     return slugTone;
