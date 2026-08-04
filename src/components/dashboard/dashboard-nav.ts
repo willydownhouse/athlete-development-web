@@ -1,5 +1,9 @@
 export function dashboardHref(athleteId: string): string {
-  return `/dashboard/${encodeURIComponent(athleteId)}`;
+  return `/athlete/${encodeURIComponent(athleteId)}/dashboard`;
+}
+
+export function athleteOnboardingHref(athleteId: string, sessionId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/onboarding/${encodeURIComponent(sessionId)}`;
 }
 
 export function defaultDashboardHref(athletes: { id: string }[]): string {
@@ -8,12 +12,16 @@ export function defaultDashboardHref(athletes: { id: string }[]): string {
   return firstAthlete ? dashboardHref(firstAthlete.id) : "/dashboard";
 }
 
-export function activeDashboardAthleteId(pathname: string): string | null {
-  const prefix = "/dashboard/";
+export function activeAthleteIdFromPath(pathname: string): string | null {
+  const prefix = "/athlete/";
   if (!pathname.startsWith(prefix)) {
     return null;
   }
 
   const athleteId = pathname.slice(prefix.length).split("/")[0];
   return athleteId ? decodeURIComponent(athleteId) : null;
+}
+
+export function isAthleteDashboardPath(pathname: string): boolean {
+  return /^\/athlete\/[^/]+\/dashboard\/?$/.test(pathname);
 }

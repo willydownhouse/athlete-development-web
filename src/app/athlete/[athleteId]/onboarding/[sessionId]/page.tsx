@@ -8,21 +8,24 @@ import { getOnboardingSessionById } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellAthletes, loadShellOnboardingSessions } from "@/lib/shell-data";
 
-type OnboardingSessionPageProps = {
-  params: Promise<{ sessionId: string }>;
+type AthleteOnboardingSessionPageProps = {
+  params: Promise<{ athleteId: string; sessionId: string }>;
 };
 
-export default async function OnboardingSessionPage({ params }: OnboardingSessionPageProps) {
+export default async function AthleteOnboardingSessionPage({
+  params,
+}: AthleteOnboardingSessionPageProps) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/");
   }
 
-  const { sessionId } = await params;
+  const { athleteId, sessionId } = await params;
+  const normalizedAthleteId = athleteId.trim();
   const normalizedSessionId = sessionId.trim();
 
-  if (!normalizedSessionId) {
+  if (!normalizedAthleteId || !normalizedSessionId) {
     redirect("/onboarding");
   }
 
@@ -41,6 +44,10 @@ export default async function OnboardingSessionPage({ params }: OnboardingSessio
   try {
     onboardingSession = await getOnboardingSessionById(token, normalizedSessionId);
   } catch {
+    redirect("/onboarding");
+  }
+
+  if (onboardingSession.athleteId !== normalizedAthleteId) {
     redirect("/onboarding");
   }
 

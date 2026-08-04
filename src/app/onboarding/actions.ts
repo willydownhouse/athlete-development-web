@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { onboardingSessionPageHref } from "@/components/onboarding/onboarding-session-nav";
+import { athleteOnboardingHref, dashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   ApiError,
   completeOnboardingSession,
@@ -80,7 +79,7 @@ export async function createAthleteBasicsAction(
 
     const session = await startOnboardingSession(token, athlete.id);
 
-    redirect(onboardingSessionPageHref(session.id));
+    redirect(athleteOnboardingHref(athlete.id, session.id));
   } catch (error) {
     if (isNextRedirect(error)) {
       throw error;

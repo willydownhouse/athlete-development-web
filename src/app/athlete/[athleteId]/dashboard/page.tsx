@@ -7,11 +7,11 @@ import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import type { EventType } from "@/lib/types";
 
-type DashboardAthletePageProps = {
+type AthleteDashboardPageProps = {
   params: Promise<{ athleteId: string }>;
 };
 
-export default async function DashboardAthletePage({ params }: DashboardAthletePageProps) {
+export default async function AthleteDashboardPage({ params }: AthleteDashboardPageProps) {
   const session = await auth();
 
   if (!session?.user) {

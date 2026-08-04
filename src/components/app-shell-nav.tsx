@@ -7,9 +7,10 @@ import { usePathname } from "next/navigation";
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
-  activeDashboardAthleteId,
+  activeAthleteIdFromPath,
   dashboardHref,
   defaultDashboardHref,
+  isAthleteDashboardPath,
 } from "@/components/dashboard/dashboard-nav";
 import {
   activeOnboardingSessionId,
@@ -36,7 +37,7 @@ function AthleteNavList({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const activeAthleteId = activeDashboardAthleteId(pathname);
+  const activeAthleteId = activeAthleteIdFromPath(pathname);
 
   return athletes.map((athlete) => (
     <AthleteNavLink
@@ -171,7 +172,7 @@ export function AppShellNav({
         <Link
           href={dashboardLink}
           onClick={onNavigate}
-          className={navLinkClass(pathname.startsWith("/dashboard"))}
+          className={navLinkClass(isAthleteDashboardPath(pathname))}
         >
           Dashboard
         </Link>

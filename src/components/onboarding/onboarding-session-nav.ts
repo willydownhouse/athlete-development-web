@@ -1,25 +1,17 @@
-import { dashboardHref } from "@/components/dashboard/dashboard-nav";
+import { athleteOnboardingHref, dashboardHref } from "@/components/dashboard/dashboard-nav";
 import type { OnboardingSessionSummary } from "@/lib/types";
-
-export function onboardingSessionPageHref(sessionId: string): string {
-  return `/onboarding/session/${encodeURIComponent(sessionId)}`;
-}
 
 export function onboardingSessionHref(session: OnboardingSessionSummary): string {
   if (session.status === "in_progress") {
-    return onboardingSessionPageHref(session.id);
+    return athleteOnboardingHref(session.athleteId, session.id);
   }
 
   return dashboardHref(session.athleteId);
 }
 
 export function activeOnboardingSessionId(pathname: string): string | null {
-  const prefix = "/onboarding/session/";
-  if (!pathname.startsWith(prefix)) {
-    return null;
-  }
-
-  const sessionId = pathname.slice(prefix.length).split("/")[0];
+  const match = pathname.match(/^\/athlete\/[^/]+\/onboarding\/([^/]+)/);
+  const sessionId = match?.[1];
   return sessionId ? decodeURIComponent(sessionId) : null;
 }
 
