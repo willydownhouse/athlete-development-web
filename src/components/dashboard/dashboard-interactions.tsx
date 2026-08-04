@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
 import { startOfLocalDay } from "@/lib/date-range";
-import type { Event, EventType } from "@/lib/types";
+import type { EventType } from "@/lib/types";
 
 type CreateEventOptions = {
   defaultEventTypeId?: string;
@@ -19,7 +19,6 @@ type DashboardInteractionsContextValue = {
   setVisibleCalendarMonth: (month: Date) => void;
   focusCalendarDate: (date: Date) => void;
   openCreateModal: (options?: CreateEventOptions) => void;
-  openEditModal: (event: Event) => void;
 };
 
 const DashboardInteractionsContext = createContext<DashboardInteractionsContextValue | null>(null);
@@ -74,11 +73,6 @@ export function DashboardInteractionsProvider({
     setFormKey((current) => current + 1);
   }, []);
 
-  const openEditModal = useCallback((event: Event) => {
-    setModalState({ mode: "edit", event });
-    setFormKey((current) => current + 1);
-  }, []);
-
   const closeModal = useCallback(() => {
     setModalState(null);
   }, []);
@@ -97,7 +91,6 @@ export function DashboardInteractionsProvider({
       setVisibleCalendarMonth,
       focusCalendarDate,
       openCreateModal,
-      openEditModal,
     }),
     [
       selectedCalendarDate,
@@ -107,7 +100,6 @@ export function DashboardInteractionsProvider({
       setVisibleCalendarMonth,
       focusCalendarDate,
       openCreateModal,
-      openEditModal,
     ],
   );
 

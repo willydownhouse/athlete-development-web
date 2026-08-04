@@ -45,11 +45,10 @@ function DetailField({ label, value }: DetailFieldProps) {
 
 type EventDetailCardProps = {
   event: Event;
-  onEditClick?: () => void;
   editAction?: ReactNode;
 };
 
-export function EventDetailCard({ event, onEditClick, editAction }: EventDetailCardProps) {
+export function EventDetailCard({ event, editAction }: EventDetailCardProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = sortEventMetrics(event.metrics ?? []);
@@ -69,16 +68,7 @@ export function EventDetailCard({ event, onEditClick, editAction }: EventDetailC
               <h4 className="text-[15px] font-semibold text-white">{title}</h4>
               <p className="mt-0.5 text-sm text-zinc-400">{event.eventType.name}</p>
             </div>
-            {editAction ??
-              (onEditClick ? (
-                <button
-                  type="button"
-                  onClick={onEditClick}
-                  className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  Edit
-                </button>
-              ) : null)}
+            {editAction}
           </div>
         </div>
       </div>

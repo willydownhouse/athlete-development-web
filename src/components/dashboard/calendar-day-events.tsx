@@ -1,25 +1,27 @@
+import Link from "next/link";
 import { format } from "date-fns";
 
+import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { CalendarDayEventsSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import type { Event } from "@/lib/types";
 
 type CalendarDayEventsProps = {
+  athleteId: string;
   selectedDate: Date;
   events: Event[];
   loading?: boolean;
   loadError?: string | null;
   onAddClick?: () => void;
-  onEventClick?: (event: Event) => void;
 };
 
 export function CalendarDayEvents({
+  athleteId,
   selectedDate,
   events,
   loading = false,
   loadError,
   onAddClick,
-  onEventClick,
 }: CalendarDayEventsProps) {
   const dayLabel = format(selectedDate, "EEE d MMM");
 
@@ -30,7 +32,7 @@ export function CalendarDayEvents({
         <button
           type="button"
           onClick={onAddClick}
-          className="rounded-lg px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
+          className="rounded-lg bg-[#9ec9e8] px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec]"
         >
           Add
         </button>
@@ -43,11 +45,13 @@ export function CalendarDayEvents({
       ) : events.length > 0 ? (
         <div className="mt-4 space-y-3">
           {events.map((event) => (
-            <EventDetailCard
+            <Link
               key={event.id}
-              event={event}
-              onEditClick={() => onEventClick?.(event)}
-            />
+              href={athleteEventHref(athleteId, event.id)}
+              className="block rounded-2xl transition hover:bg-white/[0.02]"
+            >
+              <EventDetailCard event={event} />
+            </Link>
           ))}
         </div>
       ) : (

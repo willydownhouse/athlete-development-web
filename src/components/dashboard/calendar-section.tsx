@@ -24,7 +24,6 @@ export function CalendarSection({ athleteId }: CalendarSectionProps) {
     setSelectedCalendarDate,
     setVisibleCalendarMonth,
     openCreateModal,
-    openEditModal,
   } = useDashboardInteractions();
 
   const [monthEvents, setMonthEvents] = useState<Event[]>([]);
@@ -117,6 +116,7 @@ export function CalendarSection({ athleteId }: CalendarSectionProps) {
       </div>
 
       <CalendarDayEvents
+        athleteId={athleteId}
         selectedDate={selectedCalendarDate}
         events={selectedDayEvents}
         loading={loading}
@@ -124,7 +124,6 @@ export function CalendarSection({ athleteId }: CalendarSectionProps) {
         onAddClick={() =>
           openCreateModal({ defaultEventDate: format(selectedCalendarDate, "yyyy-MM-dd") })
         }
-        onEventClick={openEditModal}
       />
     </section>
   );

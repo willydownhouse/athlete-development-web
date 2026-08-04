@@ -40,7 +40,7 @@ export function EventEditControls({
       <button
         type="button"
         onClick={openEditModal}
-        className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
+        className="shrink-0 rounded-lg bg-[#9ec9e8] px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec]"
       >
         Edit
       </button>
