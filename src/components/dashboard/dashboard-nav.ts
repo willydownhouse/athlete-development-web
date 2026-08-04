@@ -2,6 +2,10 @@ export function dashboardHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/dashboard`;
 }
 
+export function athleteEventHref(athleteId: string, eventId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/event/${encodeURIComponent(eventId)}`;
+}
+
 export function athleteOnboardingHref(athleteId: string, sessionId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/onboarding/${encodeURIComponent(sessionId)}`;
 }

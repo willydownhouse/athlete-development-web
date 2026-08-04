@@ -48,10 +48,7 @@ function EventListRowSkeleton() {
 function TodaysEventsCardSkeleton() {
   return (
     <section className={CARD_CLASS}>
-      <div className="flex items-center justify-between gap-3">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-7 w-12 rounded-lg" />
-      </div>
+      <Skeleton className="h-5 w-32" />
       <div className="mt-4 space-y-2">
         <EventListRowSkeleton />
         <EventListRowSkeleton />
@@ -60,34 +57,8 @@ function TodaysEventsCardSkeleton() {
   );
 }
 
-function QuickLogCardSkeleton() {
-  return (
-    <section className={CARD_CLASS}>
-      <div className="flex items-center justify-between gap-3">
-        <Skeleton className="h-5 w-24" />
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-[4.75rem] rounded-full" />
-          <Skeleton className="h-8 w-[4.75rem] rounded-full" />
-        </div>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2.5">
-        <Skeleton className="h-9 w-24 rounded-full" />
-        <Skeleton className="h-9 w-28 rounded-full" />
-        <Skeleton className="h-9 w-20 rounded-full" />
-        <Skeleton className="h-9 w-32 rounded-full" />
-        <Skeleton className="h-9 w-24 rounded-full" />
-      </div>
-    </section>
-  );
-}
-
-export function DashboardEventLoggingSkeleton() {
-  return (
-    <>
-      <TodaysEventsCardSkeleton />
-      <QuickLogCardSkeleton />
-    </>
-  );
+export function TodaysEventsSkeleton() {
+  return <TodaysEventsCardSkeleton />;
 }
 
 export function ThisWeekCardSkeleton() {
@@ -131,5 +102,26 @@ export function CalendarDayEventsSkeleton() {
       <Skeleton className="h-20 w-full rounded-xl" />
       <Skeleton className="h-20 w-full rounded-xl" />
     </div>
+  );
+}
+
+export function EventDetailSkeleton() {
+  return (
+    <article className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
+        <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+          <Skeleton className="h-4 w-[60%]" />
+          <Skeleton className="h-3.5 w-[40%]" />
+        </div>
+        <Skeleton className="h-7 w-12 rounded-lg" />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </article>
   );
 }

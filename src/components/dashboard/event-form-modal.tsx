@@ -17,6 +17,8 @@ type EventFormModalProps = {
   formKey: number;
   onClose: () => void;
   onSuccess: () => void;
+  onDeleteSuccess?: () => void;
+  deleteRedirectTo?: string;
 };
 
 export function EventFormModal({
@@ -27,6 +29,8 @@ export function EventFormModal({
   formKey,
   onClose,
   onSuccess,
+  onDeleteSuccess,
+  deleteRedirectTo,
 }: EventFormModalProps) {
   const modalOpen = modalState !== null;
   const modalTitle = modalState?.mode === "edit" ? "Edit event" : "Add event";
@@ -46,6 +50,8 @@ export function EventFormModal({
           }
           defaultEventDate={modalState?.mode === "create" ? modalState.defaultEventDate : undefined}
           onSuccess={onSuccess}
+          onDeleteSuccess={onDeleteSuccess}
+          deleteRedirectTo={deleteRedirectTo}
         />
       )}
     </Modal>

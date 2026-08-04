@@ -1,6 +1,7 @@
 "use server";
 
 import { updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 
 import {
   ApiError,
@@ -10,6 +11,7 @@ import {
   updateEvent,
 } from "@/lib/api";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
+import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getEventFormValidationError } from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
@@ -35,6 +37,16 @@ function actionError(error: unknown): DashboardActionState {
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function readSafeRedirectTo(formData: FormData): string | null {
+  const value = readString(formData, "redirectTo");
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }
 
 function readOptionalInt(formData: FormData, key: string): number | undefined {
@@ -164,7 +176,7 @@ export async function createEventAction(
       ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
     });
 
-    updateTag(`events-${fields.athleteId}`);
+    updateTag(athleteEventsCacheTag(fields.athleteId));
 
     return { success: "Event added" };
   } catch (error) {
@@ -220,7 +232,8 @@ export async function updateEventAction(
       metrics,
     });
 
-    updateTag(`events-${fields.athleteId}`);
+    updateTag(athleteEventsCacheTag(fields.athleteId));
+    updateTag(eventCacheTag(eventId));
 
     return { success: "Event updated" };
   } catch (error) {
@@ -249,13 +262,21 @@ export async function deleteEventAction(
     return { error: "Event is required" };
   }
 
+  const redirectTo = readSafeRedirectTo(formData);
+
   try {
     await deleteEvent(token, athleteId, eventId);
-    updateTag(`events-${athleteId}`);
-    return { success: "Event deleted" };
+    updateTag(athleteEventsCacheTag(athleteId));
+    updateTag(eventCacheTag(eventId));
   } catch (error) {
     return actionError(error);
   }
+
+  if (redirectTo) {
+    redirect(redirectTo);
+  }
+
+  return { success: "Event deleted" };
 }
 
 export async function fetchEventsInRangeAction(

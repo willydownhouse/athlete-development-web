@@ -1,45 +1,28 @@
-"use client";
-
+import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
+import { EventListRow } from "@/components/dashboard/event-list-row";
 import type { Event } from "@/lib/types";
 
-import { EventListRow } from "./event-list-row";
-
 type TodaysEventsCardProps = {
+  athleteId: string;
   events: Event[];
-  loading?: boolean;
   loadError?: string | null;
-  onAddClick?: () => void;
-  onEventClick?: (event: Event) => void;
 };
 
-export function TodaysEventsCard({
-  events,
-  loading = false,
-  loadError,
-  onAddClick,
-  onEventClick,
-}: TodaysEventsCardProps) {
+export function TodaysEventsCard({ athleteId, events, loadError }: TodaysEventsCardProps) {
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Today&apos;s events</h2>
-        <button
-          type="button"
-          onClick={onAddClick}
-          className="rounded-lg px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
-        >
-          Add
-        </button>
-      </div>
+      <h2 className="text-base font-semibold text-white">Today&apos;s events</h2>
 
       {loadError ? (
         <p className="mt-4 text-sm text-red-300">{loadError}</p>
-      ) : loading ? (
-        <p className="mt-4 text-sm text-zinc-500">Loading today&apos;s events…</p>
       ) : events.length > 0 ? (
         <div className="mt-4 space-y-2">
           {events.map((event) => (
-            <EventListRow key={event.id} event={event} onClick={() => onEventClick?.(event)} />
+            <EventListRow
+              key={event.id}
+              event={event}
+              href={athleteEventHref(athleteId, event.id)}
+            />
           ))}
         </div>
       ) : (

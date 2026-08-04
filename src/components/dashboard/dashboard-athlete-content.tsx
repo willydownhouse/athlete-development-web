@@ -10,16 +10,17 @@ import type { Athlete, EventType } from "@/lib/types";
 
 import { CalendarSection } from "./calendar-section";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
-import { DashboardEventLogging } from "./dashboard-event-logging";
 import { DashboardHeader } from "./dashboard-header";
 import { HockeyStats } from "./hockey-stats";
+import { QuickLogSection } from "./quick-log-section";
 import {
-  DashboardEventLoggingSkeleton,
   DashboardHeaderSkeleton,
   HockeyStatsSkeleton,
   ThisWeekCardSkeleton,
+  TodaysEventsSkeleton,
 } from "./dashboard-skeletons";
 import { ThisWeekCardClient } from "./this-week-card-client";
+import { TodaysEvents } from "./todays-events";
 
 type DashboardAthleteContentProps = {
   selectedAthlete: Athlete;
@@ -51,32 +52,6 @@ async function DashboardHeaderSection({
   const { events } = eventsFromResult(weekResult);
 
   return <DashboardHeader selectedAthlete={selectedAthlete} eventsThisWeek={events.length} />;
-}
-
-async function DashboardEventLoggingSection({
-  athleteId,
-  startedAtFrom,
-  startedAtTo,
-  eventTypes,
-  eventTypesError,
-}: {
-  athleteId: string;
-  startedAtFrom: string;
-  startedAtTo: string;
-  eventTypes: EventType[];
-  eventTypesError?: string | null;
-}) {
-  const todayResult = await fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
-  const { events, loadError } = eventsFromResult(todayResult);
-
-  return (
-    <DashboardEventLogging
-      initialTodaysEvents={events}
-      initialEventsError={loadError}
-      eventTypes={eventTypes}
-      eventTypesError={eventTypesError}
-    />
-  );
 }
 
 async function ThisWeekSection({
@@ -117,22 +92,14 @@ export function DashboardAthleteContent({
         />
       </Suspense>
       <div className="mt-6 flex flex-col gap-3.5">
-        <Suspense fallback={<DashboardEventLoggingSkeleton />}>
-          <DashboardEventLoggingSection
+        <Suspense fallback={<TodaysEventsSkeleton />}>
+          <TodaysEvents
             athleteId={selectedAthlete.id}
             startedAtFrom={todayRange.startedAtFrom}
             startedAtTo={todayRange.startedAtTo}
-            eventTypes={eventTypes}
-            eventTypesError={eventTypesError}
           />
         </Suspense>
-        <Suspense fallback={<ThisWeekCardSkeleton />}>
-          <ThisWeekSection
-            athleteId={selectedAthlete.id}
-            startedAtFrom={weekRange.startedAtFrom}
-            startedAtTo={weekRange.startedAtTo}
-          />
-        </Suspense>
+        <QuickLogSection eventTypes={eventTypes} eventTypesError={eventTypesError} />
         {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
           <Suspense fallback={<HockeyStatsSkeleton />}>
             <HockeyStats
@@ -144,6 +111,14 @@ export function DashboardAthleteContent({
             />
           </Suspense>
         ) : null}
+        <Suspense fallback={<ThisWeekCardSkeleton />}>
+          <ThisWeekSection
+            athleteId={selectedAthlete.id}
+            startedAtFrom={weekRange.startedAtFrom}
+            startedAtTo={weekRange.startedAtTo}
+          />
+        </Suspense>
+
         <CalendarSection athleteId={selectedAthlete.id} />
       </div>
     </DashboardInteractionsProvider>

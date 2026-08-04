@@ -1,20 +1,21 @@
+import Link from "next/link";
+
 import type { Event } from "@/lib/types";
 import { eventDetail, eventShortLabel, eventTitle } from "@/lib/event-display";
 import { eventIconClassName } from "@/lib/event-tone";
 
 type EventListRowProps = {
   event: Event;
-  onClick?: () => void;
+  href: string;
 };
 
-export function EventListRow({ event, onClick }: EventListRowProps) {
+export function EventListRow({ event, href }: EventListRowProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      href={href}
       className="flex w-full min-w-0 items-start gap-3 rounded-xl px-1 py-1 text-left transition hover:bg-white/5"
     >
       <div
@@ -26,6 +27,6 @@ export function EventListRow({ event, onClick }: EventListRowProps) {
         <p className="truncate text-[15px] font-semibold text-white">{title}</p>
         <p className="mt-0.5 truncate text-sm text-zinc-400">{eventDetail(event)}</p>
       </div>
-    </button>
+    </Link>
   );
 }

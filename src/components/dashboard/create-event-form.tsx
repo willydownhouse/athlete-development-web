@@ -45,6 +45,8 @@ type EventFormProps = {
   defaultEventTypeId?: string;
   defaultEventDate?: string;
   onSuccess?: () => void;
+  onDeleteSuccess?: () => void;
+  deleteRedirectTo?: string;
 };
 
 type EventTypeGroup = {
@@ -104,6 +106,8 @@ export function EventForm({
   defaultEventTypeId,
   defaultEventDate,
   onSuccess,
+  onDeleteSuccess,
+  deleteRedirectTo,
 }: EventFormProps) {
   const isEdit = event !== undefined;
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -145,9 +149,9 @@ export function EventForm({
 
   useEffect(() => {
     if (deleteState.success) {
-      onSuccess?.();
+      (onDeleteSuccess ?? onSuccess)?.();
     }
-  }, [deleteState.success, onSuccess]);
+  }, [deleteState.success, onDeleteSuccess, onSuccess]);
 
   if (eventTypes.length === 0) {
     return (
@@ -294,6 +298,9 @@ export function EventForm({
         <form action={deleteFormAction} className="mt-5 border-t border-white/10 pt-5">
           <input type="hidden" name="athleteId" value={athleteId} />
           <input type="hidden" name="eventId" value={event.id} />
+          {deleteRedirectTo ? (
+            <input type="hidden" name="redirectTo" value={deleteRedirectTo} />
+          ) : null}
 
           {deleteConfirmOpen ? (
             <div className="space-y-3">

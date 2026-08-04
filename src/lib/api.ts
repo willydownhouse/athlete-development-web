@@ -14,6 +14,7 @@ import type {
   Sport,
   UserRole,
 } from "./types";
+import { athleteEventsCacheTag, eventCacheTag } from "./cache-tags";
 
 export type AppUser = {
   id: string;
@@ -196,7 +197,7 @@ export async function fetchEvents(
       },
       cache: "force-cache",
       next: {
-        tags: [`events-${athleteId}`],
+        tags: [athleteEventsCacheTag(athleteId)],
       },
     },
   );
@@ -207,6 +208,42 @@ export async function fetchEvents(
 
   const result = (await response.json()) as EventListResponse;
   return result;
+}
+
+export async function fetchEvent(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  query: {
+    include?: "metrics";
+  } = {},
+): Promise<Event> {
+  const params = new URLSearchParams();
+
+  if (query.include) {
+    params.set("include", query.include);
+  }
+
+  const search = params.toString();
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/events/${eventId}${search ? `?${search}` : ""}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [eventCacheTag(eventId), athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<Event>;
 }
 
 export async function updateEvent(
