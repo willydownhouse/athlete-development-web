@@ -27,6 +27,4 @@ export const dayPickerClassNames = {
   outside: "[&>button]:text-zinc-600 [&>button]:opacity-50",
   disabled: "[&>button]:cursor-not-allowed [&>button]:text-zinc-600 [&>button]:opacity-30",
   hidden: "invisible",
-  has_events:
-    "[&>button]:relative [&>button]:after:absolute [&>button]:after:bottom-0.5 [&>button]:after:left-1/2 [&>button]:after:h-1 [&>button]:after:w-1 [&>button]:after:-translate-x-1/2 [&>button]:after:rounded-full [&>button]:after:bg-[#9ec9e8] [&>button]:after:content-['']",
 };
