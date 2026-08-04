@@ -5,16 +5,18 @@ import {
   type DashboardEventsResult,
 } from "@/lib/dashboard-event-data";
 import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { Athlete, EventType } from "@/lib/types";
 
-import { AiInsightCard } from "./ai-insight-card";
 import { CalendarSection } from "./calendar-section";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardEventLogging } from "./dashboard-event-logging";
 import { DashboardHeader } from "./dashboard-header";
+import { HockeyStats } from "./hockey-stats";
 import {
   DashboardEventLoggingSkeleton,
   DashboardHeaderSkeleton,
+  HockeyStatsSkeleton,
   ThisWeekCardSkeleton,
 } from "./dashboard-skeletons";
 import { ThisWeekCardClient } from "./this-week-card-client";
@@ -115,7 +117,6 @@ export function DashboardAthleteContent({
         />
       </Suspense>
       <div className="mt-6 flex flex-col gap-3.5">
-        <AiInsightCard />
         <Suspense fallback={<DashboardEventLoggingSkeleton />}>
           <DashboardEventLoggingSection
             athleteId={selectedAthlete.id}
@@ -132,6 +133,17 @@ export function DashboardAthleteContent({
             startedAtTo={weekRange.startedAtTo}
           />
         </Suspense>
+        {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
+          <Suspense fallback={<HockeyStatsSkeleton />}>
+            <HockeyStats
+              athleteId={selectedAthlete.id}
+              sportId={selectedAthlete.focusSportId}
+              startedAtFrom={weekRange.startedAtFrom}
+              startedAtTo={weekRange.startedAtTo}
+              periodLabel="This week"
+            />
+          </Suspense>
+        ) : null}
         <CalendarSection athleteId={selectedAthlete.id} />
       </div>
     </DashboardInteractionsProvider>

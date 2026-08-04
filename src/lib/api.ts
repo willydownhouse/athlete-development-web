@@ -156,6 +156,7 @@ export async function fetchEvents(
     offset?: number;
     startedAtFrom?: string;
     startedAtTo?: string;
+    sportId?: string;
     include?: "metrics";
   } = {},
 ): Promise<EventListResponse> {
@@ -175,6 +176,10 @@ export async function fetchEvents(
 
   if (query.startedAtTo) {
     params.set("startedAtTo", query.startedAtTo);
+  }
+
+  if (query.sportId) {
+    params.set("sportId", query.sportId);
   }
 
   if (query.include) {

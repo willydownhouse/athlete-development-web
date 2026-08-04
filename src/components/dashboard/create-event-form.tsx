@@ -17,6 +17,7 @@ import { DatePickerInput } from "@/components/date-picker-input";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
@@ -56,7 +57,7 @@ function groupEventTypes(eventTypes: EventType[]): EventTypeGroup[] {
     .filter((eventType) => eventType.sportId === null)
     .sort((a, b) => a.name.localeCompare(b.name));
   const hockey = eventTypes
-    .filter((eventType) => eventType.sport?.slug === "hockey")
+    .filter((eventType) => eventType.sport?.slug === HOCKEY_SPORT_SLUG)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const groups: EventTypeGroup[] = [];

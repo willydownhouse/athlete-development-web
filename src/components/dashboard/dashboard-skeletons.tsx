@@ -111,6 +111,20 @@ export function ThisWeekCardSkeleton() {
   );
 }
 
+export function HockeyStatsSkeleton() {
+  return (
+    <section className={CARD_CLASS}>
+      <CardHeaderSkeleton titleWidth="w-28" trailingWidth="w-20" />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Skeleton className="h-[4.5rem] rounded-xl" />
+        <Skeleton className="h-[4.5rem] rounded-xl" />
+        <Skeleton className="h-[4.5rem] rounded-xl" />
+        <Skeleton className="h-[4.5rem] rounded-xl" />
+      </div>
+    </section>
+  );
+}
+
 export function CalendarDayEventsSkeleton() {
   return (
     <div className="mt-4 space-y-3">

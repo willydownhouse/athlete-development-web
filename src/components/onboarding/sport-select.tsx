@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { Sport } from "@/lib/types";
 
 type SportSelectProps = {
@@ -18,7 +19,7 @@ function initialSportId(sports: Sport[]): string | null {
     return sports[0]?.id ?? null;
   }
 
-  const hockey = sports.find((sport) => sport.slug === "hockey");
+  const hockey = sports.find((sport) => sport.slug === HOCKEY_SPORT_SLUG);
   return hockey?.id ?? null;
 }
 
