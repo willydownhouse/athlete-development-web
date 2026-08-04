@@ -18,9 +18,9 @@ export const dayPickerClassNames = {
   weekdays: "flex",
   weekday: "w-9 flex-1 text-center text-xs font-medium text-zinc-500",
   week: "mt-1 flex w-full",
-  day: "relative flex-1 p-0 text-center text-sm",
+  day: "relative flex-1 p-0 text-center text-base",
   day_button:
-    "mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg font-normal text-zinc-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ec9e8]/40 disabled:pointer-events-none disabled:opacity-40",
+    "mx-auto inline-flex h-10 w-10 items-center justify-center rounded-lg font-normal text-zinc-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ec9e8]/40 disabled:pointer-events-none disabled:opacity-40",
   selected:
     "[&>button]:bg-[#9ec9e8] [&>button]:font-medium [&>button]:text-[#111827] [&>button]:hover:bg-[#b7d7ec]",
   today: "[&>button]:border [&>button]:border-[#9ec9e8]/45",

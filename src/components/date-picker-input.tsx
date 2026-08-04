@@ -164,6 +164,7 @@ export function DatePickerInput({
               defaultMonth={selected}
               captionLayout="dropdown"
               hideNavigation
+              weekStartsOn={1}
               reverseYears
               startMonth={new Date(fromYear, 0)}
               endMonth={new Date(toYear, 11)}
