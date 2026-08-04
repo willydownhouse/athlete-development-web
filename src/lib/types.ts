@@ -124,6 +124,24 @@ export type EventListResponse = {
   };
 };
 
+type SportStatsEventTypeStats = {
+  name: string;
+  durationSeconds: number;
+  metrics?: Record<string, SportStatsMetricStats>;
+};
+
+type SportStatsMetricStats = {
+  name: string;
+  canonicalUnit: string | null;
+  total: number;
+};
+
+export type SportStats = {
+  athleteId: string;
+  sportId: string;
+  eventTypes: Record<string, SportStatsEventTypeStats>;
+};
+
 export type MetricDefinition = {
   id: string;
   sportId: string | null;

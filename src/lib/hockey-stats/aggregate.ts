@@ -62,7 +62,11 @@ export function aggregateHockeyStats(events: Event[]): HockeyStatSummary[] {
   });
 }
 
-export function formatHockeyStatTotal(stat: HockeyStatSummary): string {
+export function formatHockeyStatTotal(stat: {
+  name: string;
+  canonicalUnit: string | null;
+  total: number;
+}): string {
   if (isSecondsMetric(stat.canonicalUnit)) {
     return formatDurationSeconds(stat.total);
   }

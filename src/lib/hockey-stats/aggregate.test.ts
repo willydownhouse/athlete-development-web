@@ -232,7 +232,6 @@ describe("formatHockeyStatTotal", () => {
   it("formats duration metrics", () => {
     expect(
       formatHockeyStatTotal({
-        key: "playing_time_seconds",
         name: "Playing time",
         canonicalUnit: "s",
         total: 2100,
@@ -243,7 +242,6 @@ describe("formatHockeyStatTotal", () => {
   it("formats count metrics with units", () => {
     expect(
       formatHockeyStatTotal({
-        key: "goal_count",
         name: "Goal count",
         canonicalUnit: "goals",
         total: 3,

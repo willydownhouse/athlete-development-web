@@ -12,6 +12,7 @@ import type {
   OnboardingSessionDetail,
   OnboardingSessionSummary,
   Sport,
+  SportStats,
   UserRole,
 } from "./types";
 import { athleteEventsCacheTag, eventCacheTag } from "./cache-tags";
@@ -276,6 +277,47 @@ export async function deleteEvent(
   return apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
     method: "DELETE",
   });
+}
+
+export async function fetchSportStats(
+  token: string,
+  athleteId: string,
+  sportId: string,
+  query: {
+    startedAtFrom?: string;
+    startedAtTo?: string;
+  } = {},
+): Promise<SportStats> {
+  const params = new URLSearchParams();
+
+  if (query.startedAtFrom) {
+    params.set("startedAtFrom", query.startedAtFrom);
+  }
+
+  if (query.startedAtTo) {
+    params.set("startedAtTo", query.startedAtTo);
+  }
+
+  const search = params.toString();
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/sports/${sportId}/stats${search ? `?${search}` : ""}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as SportStats;
 }
 
 export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {

@@ -1,5 +1,5 @@
-import { aggregateHockeyStats } from "@/lib/hockey-stats/aggregate";
-import { fetchHockeyEventsInRange } from "@/lib/hockey-stats/fetch-events";
+import { buildHockeyStatTiles } from "@/lib/hockey-stats/build-hockey-stat-tiles";
+import { fetchHockeySportStats } from "@/lib/hockey-stats/fetch-sport-stats";
 
 import { HockeyStatsCard } from "./hockey-stats-card";
 
@@ -18,17 +18,17 @@ export async function HockeyStats({
   startedAtTo,
   periodLabel,
 }: HockeyStatsProps) {
-  const result = await fetchHockeyEventsInRange(athleteId, sportId, startedAtFrom, startedAtTo);
+  const result = await fetchHockeySportStats(athleteId, sportId, startedAtFrom, startedAtTo);
 
-  if (result.error) {
-    return <HockeyStatsCard stats={[]} loadError={result.error} periodLabel={periodLabel} />;
+  if (result.error || !result.sportStats) {
+    return <HockeyStatsCard tiles={[]} loadError={result.error} periodLabel={periodLabel} />;
   }
 
-  const stats = aggregateHockeyStats(result.events);
+  const tiles = buildHockeyStatTiles(result.sportStats);
 
-  if (stats.length === 0) {
+  if (tiles.length === 0) {
     return null;
   }
 
-  return <HockeyStatsCard stats={stats} periodLabel={periodLabel} />;
+  return <HockeyStatsCard tiles={tiles} periodLabel={periodLabel} />;
 }
