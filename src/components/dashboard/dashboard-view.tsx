@@ -5,6 +5,7 @@ import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./bottom-nav";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
+import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
 type DashboardViewProps = {
   userEmail: string;
@@ -14,6 +15,7 @@ type DashboardViewProps = {
   eventTypesError?: string | null;
   loadError?: string | null;
   onboardingSessions: OnboardingSessionSummary[];
+  statsPeriod: HockeyStatsPeriod;
 };
 
 export function DashboardView({
@@ -24,6 +26,7 @@ export function DashboardView({
   eventTypesError,
   loadError,
   onboardingSessions,
+  statsPeriod,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
 
@@ -51,6 +54,7 @@ export function DashboardView({
               selectedAthlete={selectedAthlete}
               eventTypes={eventTypes}
               eventTypesError={eventTypesError}
+              statsPeriod={statsPeriod}
             />
           </>
         ) : (

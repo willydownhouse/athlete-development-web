@@ -6,15 +6,18 @@ import {
 } from "@/lib/dashboard-event-data";
 import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { CalendarSection } from "./calendar-section";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
 import { HockeyStats } from "./hockey-stats";
+import { HockeyStatsSection } from "./hockey-stats-section";
 import { QuickLogSection } from "./quick-log-section";
 import {
   DashboardHeaderSkeleton,
+  HockeyStatsGridSkeleton,
   HockeyStatsSkeleton,
   ThisWeekCardSkeleton,
   TodaysEventsSkeleton,
@@ -26,6 +29,7 @@ type DashboardAthleteContentProps = {
   selectedAthlete: Athlete;
   eventTypes: EventType[];
   eventTypesError?: string | null;
+  statsPeriod: HockeyStatsPeriod;
 };
 
 function eventsFromResult(result: DashboardEventsResult) {
@@ -73,6 +77,7 @@ export function DashboardAthleteContent({
   selectedAthlete,
   eventTypes,
   eventTypesError,
+  statsPeriod,
 }: DashboardAthleteContentProps) {
   const todayRange = getLocalDayRange();
   const weekRange = getLocalWeekRange();
@@ -102,13 +107,15 @@ export function DashboardAthleteContent({
         <QuickLogSection eventTypes={eventTypes} eventTypesError={eventTypesError} />
         {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
           <Suspense fallback={<HockeyStatsSkeleton />}>
-            <HockeyStats
-              athleteId={selectedAthlete.id}
-              sportId={selectedAthlete.focusSportId}
-              startedAtFrom={weekRange.startedAtFrom}
-              startedAtTo={weekRange.startedAtTo}
-              periodLabel="This week"
-            />
+            <HockeyStatsSection period={statsPeriod}>
+              <Suspense key={statsPeriod} fallback={<HockeyStatsGridSkeleton />}>
+                <HockeyStats
+                  athleteId={selectedAthlete.id}
+                  sportId={selectedAthlete.focusSportId}
+                  period={statsPeriod}
+                />
+              </Suspense>
+            </HockeyStatsSection>
           </Suspense>
         ) : null}
         <Suspense fallback={<ThisWeekCardSkeleton />}>

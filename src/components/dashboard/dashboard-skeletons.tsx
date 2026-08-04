@@ -85,14 +85,23 @@ export function ThisWeekCardSkeleton() {
 export function HockeyStatsSkeleton() {
   return (
     <section className={CARD_CLASS}>
-      <CardHeaderSkeleton titleWidth="w-28" trailingWidth="w-20" />
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Skeleton className="h-[4.5rem] rounded-xl" />
-        <Skeleton className="h-[4.5rem] rounded-xl" />
-        <Skeleton className="h-[4.5rem] rounded-xl" />
-        <Skeleton className="h-[4.5rem] rounded-xl" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-7 w-56 max-w-full rounded-lg" />
       </div>
+      <HockeyStatsGridSkeleton />
     </section>
+  );
+}
+
+export function HockeyStatsGridSkeleton() {
+  return (
+    <div className="mt-4 grid grid-cols-2 gap-3">
+      <Skeleton className="h-[4.5rem] rounded-xl" />
+      <Skeleton className="h-[4.5rem] rounded-xl" />
+      <Skeleton className="h-[4.5rem] rounded-xl" />
+      <Skeleton className="h-[4.5rem] rounded-xl" />
+    </div>
   );
 }
 

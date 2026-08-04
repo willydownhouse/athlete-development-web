@@ -43,6 +43,7 @@ export default async function DashboardPage() {
       eventTypes={[]}
       loadError={loadError}
       onboardingSessions={onboardingSessions}
+      statsPeriod="week"
     />
   );
 }
