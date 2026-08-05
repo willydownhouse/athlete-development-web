@@ -4,7 +4,8 @@ import {
   fetchDashboardEventsInRange,
   type DashboardEventsResult,
 } from "@/lib/dashboard-event-data";
-import { getLocalDayRange, getLocalWeekRange } from "@/lib/date-range";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
+import { getZonedDayRange, getZonedWeekRange } from "@/lib/time-zone";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
@@ -56,14 +57,15 @@ async function DashboardHeaderSection({
   return <DashboardHeader selectedAthlete={selectedAthlete} eventsThisWeek={events.length} />;
 }
 
-export function DashboardAthleteContent({
+export async function DashboardAthleteContent({
   selectedAthlete,
   eventTypes,
   eventTypesError,
   statsPeriod,
 }: DashboardAthleteContentProps) {
-  const todayRange = getLocalDayRange();
-  const weekRange = getLocalWeekRange();
+  const timeZone = await getRequestTimeZone();
+  const todayRange = getZonedDayRange(timeZone);
+  const weekRange = getZonedWeekRange(timeZone);
 
   return (
     <DashboardInteractionsProvider
@@ -96,6 +98,7 @@ export function DashboardAthleteContent({
                   athleteId={selectedAthlete.id}
                   sportId={selectedAthlete.focusSportId}
                   period={statsPeriod}
+                  timeZone={timeZone}
                 />
               </Suspense>
             </HockeyStatsSection>

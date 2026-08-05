@@ -8,10 +8,11 @@ type HockeyStatsProps = {
   athleteId: string;
   sportId: string;
   period: HockeyStatsPeriod;
+  timeZone: string;
 };
 
-export async function HockeyStats({ athleteId, sportId, period }: HockeyStatsProps) {
-  const { startedAtFrom, startedAtTo } = getHockeyStatsRange(period);
+export async function HockeyStats({ athleteId, sportId, period, timeZone }: HockeyStatsProps) {
+  const { startedAtFrom, startedAtTo } = getHockeyStatsRange(period, timeZone);
   const result = await fetchHockeySportStats(athleteId, sportId, startedAtFrom, startedAtTo);
 
   if (result.error || !result.sportStats) {

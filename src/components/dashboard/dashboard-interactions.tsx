@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
+import { TimeZoneCookieSync } from "@/components/time-zone-cookie-sync";
 import { startOfLocalDay } from "@/lib/date-range";
 import type { EventType } from "@/lib/types";
 
@@ -92,6 +93,7 @@ export function DashboardInteractionsProvider({
 
   return (
     <DashboardInteractionsContext.Provider value={value}>
+      <TimeZoneCookieSync />
       {children}
       <EventFormModal
         athleteId={athleteId}

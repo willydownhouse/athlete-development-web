@@ -1,4 +1,9 @@
-import { getLocalDayRange, getLocalMonthRange, getLocalWeekRange } from "@/lib/date-range";
+import {
+  getSystemTimeZone,
+  getZonedDayRange,
+  getZonedMonthRange,
+  getZonedWeekRange,
+} from "@/lib/time-zone";
 
 const HOCKEY_STATS_PERIODS = ["day", "week", "month"] as const;
 
@@ -15,13 +20,27 @@ export function parseHockeyStatsPeriod(value: string | undefined): HockeyStatsPe
 export function getHockeyStatsRange(period: HockeyStatsPeriod): {
   startedAtFrom: string;
   startedAtTo: string;
+};
+export function getHockeyStatsRange(
+  period: HockeyStatsPeriod,
+  timeZone: string,
+): {
+  startedAtFrom: string;
+  startedAtTo: string;
+};
+export function getHockeyStatsRange(
+  period: HockeyStatsPeriod,
+  timeZone = getSystemTimeZone(),
+): {
+  startedAtFrom: string;
+  startedAtTo: string;
 } {
   switch (period) {
     case "day":
-      return getLocalDayRange();
+      return getZonedDayRange(timeZone);
     case "week":
-      return getLocalWeekRange();
+      return getZonedWeekRange(timeZone);
     case "month":
-      return getLocalMonthRange();
+      return getZonedMonthRange(timeZone);
   }
 }

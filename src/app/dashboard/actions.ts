@@ -15,6 +15,8 @@ import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getEventFormValidationError } from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
+import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
+import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 export type DashboardActionState = {
@@ -69,28 +71,13 @@ function readOptionalIntensity(formData: FormData): EventIntensity | undefined {
   return undefined;
 }
 
-function buildStartedAt(eventDate: string, eventTime: string): string | null {
-  const [year, month, day] = eventDate.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  const [hours, minutes] = eventTime ? eventTime.split(":").map(Number) : [12, 0];
-  const startedAt = new Date(year, month - 1, day, hours ?? 12, minutes ?? 0, 0, 0);
-
-  if (Number.isNaN(startedAt.getTime())) {
-    return null;
-  }
-
-  return startedAt.toISOString();
-}
-
-function readEventFormFields(formData: FormData) {
+async function readEventFormFields(formData: FormData) {
   const athleteId = readString(formData, "athleteId");
   const eventTypeId = readString(formData, "eventTypeId");
   const eventDate = readString(formData, "eventDate");
-  const startedAt = buildStartedAt(eventDate, readString(formData, "eventTime"));
+  const eventTime = readString(formData, "eventTime");
+  const timeZone = await getRequestTimeZoneCookie();
+  const startedAt = timeZone ? zonedDateTimeToUtcIso(eventDate, eventTime, timeZone) : null;
   const durationMinutes = readOptionalInt(formData, "durationMinutes");
   const durationSeconds =
     durationMinutes !== undefined && durationMinutes > 0 ? durationMinutes * 60 : undefined;
@@ -99,6 +86,7 @@ function readEventFormFields(formData: FormData) {
     athleteId,
     eventTypeId,
     eventDate,
+    timeZone,
     startedAt,
     durationSeconds,
     title: readString(formData, "title") || undefined,
@@ -142,7 +130,7 @@ export async function createEventAction(
     return { error: "You need to sign in again" };
   }
 
-  const fields = readEventFormFields(formData);
+  const fields = await readEventFormFields(formData);
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -150,6 +138,10 @@ export async function createEventAction(
 
   if (!fields.eventTypeId) {
     return { error: "Event type is required" };
+  }
+
+  if (!fields.timeZone) {
+    return { error: "Time zone is not ready. Refresh the page and try again." };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
@@ -195,7 +187,7 @@ export async function updateEventAction(
   }
 
   const eventId = readString(formData, "eventId");
-  const fields = readEventFormFields(formData);
+  const fields = await readEventFormFields(formData);
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -207,6 +199,10 @@ export async function updateEventAction(
 
   if (!fields.eventTypeId) {
     return { error: "Event type is required" };
+  }
+
+  if (!fields.timeZone) {
+    return { error: "Time zone is not ready. Refresh the page and try again." };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
