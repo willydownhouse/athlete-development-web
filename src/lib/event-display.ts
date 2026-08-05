@@ -1,16 +1,12 @@
 import { format } from "date-fns";
 
+import { formatDurationSeconds } from "@/lib/event-metric-display";
 import type { Event, EventIntensity } from "@/lib/types";
 
 const EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH = 200;
 
 function formatIntensity(intensity: EventIntensity): string {
   return intensity.charAt(0).toUpperCase() + intensity.slice(1);
-}
-
-function formatDuration(durationSeconds: number): string {
-  const minutes = Math.round(durationSeconds / 60);
-  return `${minutes} min`;
 }
 
 function formatTime(startedAt: string): string {
@@ -48,7 +44,7 @@ export function eventDetail(event: Event): string {
   const parts: string[] = [formatTime(event.startedAt)];
 
   if (event.durationSeconds) {
-    parts.push(formatDuration(event.durationSeconds));
+    parts.push(formatDurationSeconds(event.durationSeconds));
   }
 
   if (event.intensity) {
