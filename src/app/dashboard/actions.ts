@@ -13,11 +13,21 @@ import {
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { getEventFormValidationError } from "@/lib/event-form-schema";
+import {
+  getEventFormValidationError,
+  readEventDescriptionForCreate,
+  readEventDescriptionForUpdate,
+  readEventDurationSecondsForCreate,
+  readEventDurationSecondsForUpdate,
+  readEventIntensityForCreate,
+  readEventIntensityForUpdate,
+  readEventTitleForCreate,
+  readEventTitleForUpdate,
+} from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
 import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
-import type { Event, EventIntensity } from "@/lib/types";
+import type { Event } from "@/lib/types";
 
 export type DashboardActionState = {
   error?: string;
@@ -51,26 +61,6 @@ function readSafeRedirectTo(formData: FormData): string | null {
   return value;
 }
 
-function readOptionalInt(formData: FormData, key: string): number | undefined {
-  const value = readString(formData, key);
-  if (value === "") {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
-function readOptionalIntensity(formData: FormData): EventIntensity | undefined {
-  const value = readString(formData, "intensity");
-
-  if (value === "light" || value === "moderate" || value === "hard") {
-    return value;
-  }
-
-  return undefined;
-}
-
 async function readEventFormFields(formData: FormData) {
   const athleteId = readString(formData, "athleteId");
   const eventTypeId = readString(formData, "eventTypeId");
@@ -78,9 +68,6 @@ async function readEventFormFields(formData: FormData) {
   const eventTime = readString(formData, "eventTime");
   const timeZone = await getRequestTimeZoneCookie();
   const startedAt = timeZone ? zonedDateTimeToUtcIso(eventDate, eventTime, timeZone) : null;
-  const durationMinutes = readOptionalInt(formData, "durationMinutes");
-  const durationSeconds =
-    durationMinutes !== undefined && durationMinutes > 0 ? durationMinutes * 60 : undefined;
 
   return {
     athleteId,
@@ -88,10 +75,6 @@ async function readEventFormFields(formData: FormData) {
     eventDate,
     timeZone,
     startedAt,
-    durationSeconds,
-    title: readString(formData, "title") || undefined,
-    description: readString(formData, "description") || undefined,
-    intensity: readOptionalIntensity(formData),
   };
 }
 
@@ -131,6 +114,10 @@ export async function createEventAction(
   }
 
   const fields = await readEventFormFields(formData);
+  const durationSeconds = readEventDurationSecondsForCreate(formData);
+  const title = readEventTitleForCreate(formData);
+  const description = readEventDescriptionForCreate(formData);
+  const intensity = readEventIntensityForCreate(formData);
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -161,10 +148,10 @@ export async function createEventAction(
       eventTypeId: fields.eventTypeId,
       startedAt: fields.startedAt,
       source: "form",
-      title: fields.title,
-      description: fields.description,
-      durationSeconds: fields.durationSeconds,
-      intensity: fields.intensity,
+      title,
+      description,
+      durationSeconds,
+      intensity,
       ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
     });
 
@@ -188,6 +175,10 @@ export async function updateEventAction(
 
   const eventId = readString(formData, "eventId");
   const fields = await readEventFormFields(formData);
+  const durationSeconds = readEventDurationSecondsForUpdate(formData);
+  const title = readEventTitleForUpdate(formData);
+  const description = readEventDescriptionForUpdate(formData);
+  const intensity = readEventIntensityForUpdate(formData);
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -221,10 +212,10 @@ export async function updateEventAction(
     await updateEvent(token, fields.athleteId, eventId, {
       eventTypeId: fields.eventTypeId,
       startedAt: fields.startedAt,
-      title: fields.title,
-      description: fields.description,
-      durationSeconds: fields.durationSeconds,
-      intensity: fields.intensity,
+      title,
+      description,
+      durationSeconds,
+      intensity,
       metrics,
     });
 

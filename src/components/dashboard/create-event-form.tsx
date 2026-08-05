@@ -14,11 +14,13 @@ import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { EventTypeMetricsSection } from "@/components/dashboard/event-metric-fields";
 import { DatePickerInput } from "@/components/date-picker-input";
+import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
+import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_TITLE_MAX_LENGTH,
@@ -230,17 +232,16 @@ export function EventForm({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Duration (minutes)</span>
-            <input
-              name="durationMinutes"
-              type="number"
-              min={1}
-              defaultValue={values.durationMinutes}
-              placeholder="75"
-              className={inputClassName}
-            />
-          </label>
+          <DurationPartsFields
+            hoursName={EVENT_DURATION_FIELDS.hours}
+            minutesName={EVENT_DURATION_FIELDS.minutes}
+            secondsName={EVENT_DURATION_FIELDS.seconds}
+            defaultHours={values.durationHours}
+            defaultMinutes={values.durationMinutes}
+            defaultSeconds={values.durationSeconds}
+            label="Duration"
+            inputClassName={inputClassName}
+          />
 
           <div className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-zinc-300">Intensity</span>

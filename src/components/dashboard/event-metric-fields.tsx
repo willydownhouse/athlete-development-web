@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import {
   eventMetricsToFormValues,
@@ -95,51 +96,18 @@ function EventMetricFields({
               values[metricDurationFieldName(mapping.metricDefinitionId, "seconds")] ?? "";
 
             return (
-              <div key={mapping.id} className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-300">{label}</span>
-                <div className="grid grid-cols-3 gap-3">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Hours</span>
-                    <input
-                      name={metricDurationFieldName(mapping.metricDefinitionId, "hours")}
-                      type="number"
-                      min={0}
-                      defaultValue={hours}
-                      placeholder="0"
-                      className={inputClassName}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Minutes</span>
-                    <input
-                      name={metricDurationFieldName(mapping.metricDefinitionId, "minutes")}
-                      type="number"
-                      min={0}
-                      max={59}
-                      defaultValue={minutes}
-                      placeholder="0"
-                      className={inputClassName}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Seconds</span>
-                    <input
-                      name={metricDurationFieldName(mapping.metricDefinitionId, "seconds")}
-                      type="number"
-                      min={0}
-                      max={59}
-                      defaultValue={seconds}
-                      placeholder="0"
-                      className={inputClassName}
-                    />
-                  </label>
-                </div>
-                {mapping.metricDefinition.description ? (
-                  <span className="text-xs text-zinc-500">
-                    {mapping.metricDefinition.description}
-                  </span>
-                ) : null}
-              </div>
+              <DurationPartsFields
+                key={mapping.id}
+                hoursName={metricDurationFieldName(mapping.metricDefinitionId, "hours")}
+                minutesName={metricDurationFieldName(mapping.metricDefinitionId, "minutes")}
+                secondsName={metricDurationFieldName(mapping.metricDefinitionId, "seconds")}
+                defaultHours={hours}
+                defaultMinutes={minutes}
+                defaultSeconds={seconds}
+                label={label}
+                description={mapping.metricDefinition.description}
+                inputClassName={inputClassName}
+              />
             );
           }
 

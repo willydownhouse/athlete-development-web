@@ -254,11 +254,11 @@ export async function updateEvent(
   body: {
     eventTypeId?: string;
     startedAt?: string;
-    title?: string;
-    description?: string;
+    title?: string | null;
+    description?: string | null;
     endedAt?: string;
-    durationSeconds?: number;
-    intensity?: EventIntensity;
+    durationSeconds?: number | null;
+    intensity?: EventIntensity | null;
     structuredData?: Record<string, unknown>;
     metrics?: EventMetricInput[];
   },

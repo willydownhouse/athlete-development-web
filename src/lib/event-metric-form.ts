@@ -18,7 +18,19 @@ export function isSecondsMetric(canonicalUnit: string | null): boolean {
   return canonicalUnit === "s";
 }
 
-function secondsToDurationParts(totalSeconds: number): {
+export const EVENT_DURATION_FIELDS = {
+  hours: "durationHours",
+  minutes: "durationMinutes",
+  seconds: "durationSeconds",
+} as const;
+
+export type DurationFieldNames = {
+  hours: string;
+  minutes: string;
+  seconds: string;
+};
+
+export function secondsToDurationParts(totalSeconds: number): {
   hours: string;
   minutes: string;
   seconds: string;
@@ -49,21 +61,37 @@ function readOptionalInt(formData: FormData, key: string): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-function readDurationSecondsFromFormData(formData: FormData, metricDefinitionId: string): number {
-  const hours =
-    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "hours")) ?? 0;
-  const minutes =
-    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "minutes")) ?? 0;
-  const seconds =
-    readOptionalInt(formData, metricDurationFieldName(metricDefinitionId, "seconds")) ?? 0;
+export function readDurationPartsSecondsFromFormData(
+  formData: FormData,
+  fieldNames: DurationFieldNames,
+): number {
+  const hours = readOptionalInt(formData, fieldNames.hours) ?? 0;
+  const minutes = readOptionalInt(formData, fieldNames.minutes) ?? 0;
+  const seconds = readOptionalInt(formData, fieldNames.seconds) ?? 0;
 
   return durationPartsToSeconds(hours, minutes, seconds);
 }
 
-function hasDurationInput(formData: FormData, metricDefinitionId: string): boolean {
+function hasDurationPartsInput(formData: FormData, fieldNames: DurationFieldNames): boolean {
   return (["hours", "minutes", "seconds"] as const).some((part) => {
-    const value = formData.get(metricDurationFieldName(metricDefinitionId, part));
+    const value = formData.get(fieldNames[part]);
     return typeof value === "string" && value.trim() !== "";
+  });
+}
+
+function readDurationSecondsFromFormData(formData: FormData, metricDefinitionId: string): number {
+  return readDurationPartsSecondsFromFormData(formData, {
+    hours: metricDurationFieldName(metricDefinitionId, "hours"),
+    minutes: metricDurationFieldName(metricDefinitionId, "minutes"),
+    seconds: metricDurationFieldName(metricDefinitionId, "seconds"),
+  });
+}
+
+function hasDurationInput(formData: FormData, metricDefinitionId: string): boolean {
+  return hasDurationPartsInput(formData, {
+    hours: metricDurationFieldName(metricDefinitionId, "hours"),
+    minutes: metricDurationFieldName(metricDefinitionId, "minutes"),
+    seconds: metricDurationFieldName(metricDefinitionId, "seconds"),
   });
 }
 
@@ -170,6 +198,21 @@ export function parseMetricsFromFormData(
   return metrics;
 }
 
+export function validateDurationPartsForm(
+  formData: FormData,
+  fieldNames: DurationFieldNames,
+  label: string,
+): string | null {
+  for (const part of ["hours", "minutes", "seconds"] as const) {
+    const raw = formData.get(fieldNames[part]);
+    if (typeof raw === "string" && raw.trim() !== "" && Number.isNaN(Number(raw))) {
+      return `${label} must use whole numbers`;
+    }
+  }
+
+  return null;
+}
+
 export function validateMetricForm(
   formData: FormData,
   mappings: EventTypeMetricDefinition[],
@@ -198,11 +241,17 @@ export function validateMetricForm(
         return `${mapping.metricDefinition.name} is required`;
       }
 
-      for (const part of ["hours", "minutes", "seconds"] as const) {
-        const raw = formData.get(metricDurationFieldName(mapping.metricDefinitionId, part));
-        if (typeof raw === "string" && raw.trim() !== "" && Number.isNaN(Number(raw))) {
-          return `${mapping.metricDefinition.name} must use whole numbers`;
-        }
+      const durationError = validateDurationPartsForm(
+        formData,
+        {
+          hours: metricDurationFieldName(mapping.metricDefinitionId, "hours"),
+          minutes: metricDurationFieldName(mapping.metricDefinitionId, "minutes"),
+          seconds: metricDurationFieldName(mapping.metricDefinitionId, "seconds"),
+        },
+        mapping.metricDefinition.name,
+      );
+      if (durationError) {
+        return durationError;
       }
 
       continue;
