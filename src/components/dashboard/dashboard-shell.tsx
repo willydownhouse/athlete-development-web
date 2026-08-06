@@ -4,14 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
-import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete } from "@/lib/types";
 
 type DashboardShellProps = {
   userEmail: string;
   adminNavLink?: React.ReactNode;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
-  onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
 
@@ -36,7 +35,6 @@ export function DashboardShell({
   adminNavLink,
   athletes,
   selectedAthlete,
-  onboardingSessions,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -101,7 +99,6 @@ export function DashboardShell({
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
             adminNavLink={adminNavLink}
-            onboardingSessions={onboardingSessions}
             athletes={athletes}
             selectedAthlete={selectedAthlete}
             onNavigate={closeMobile}

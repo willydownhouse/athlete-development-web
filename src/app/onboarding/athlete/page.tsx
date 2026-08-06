@@ -6,7 +6,7 @@ import { AthleteBasicsForm } from "@/components/onboarding/athlete-basics-form";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { loadShellAthletes, loadShellOnboardingSessions } from "@/lib/shell-data";
+import { loadShellAthletes } from "@/lib/shell-data";
 
 type OnboardingAthletePageProps = {
   searchParams: Promise<{ sportId?: string }>;
@@ -27,10 +27,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
   }
 
   const token = await getAuthBearerToken();
-  const [onboardingSessions, athletes] = await Promise.all([
-    loadShellOnboardingSessions(token),
-    loadShellAthletes(token),
-  ]);
+  const athletes = await loadShellAthletes(token);
 
   if (!token) {
     redirect("/");
@@ -56,7 +53,6 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
       userEmail={session.user.email ?? ""}
       adminNavLink={<AppShellAdminNavLink />}
       athletes={athletes}
-      onboardingSessions={onboardingSessions}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <section className="space-y-6 lg:space-y-8">

@@ -1,11 +1,5 @@
 import { getApiBaseUrl } from "./api";
-import type {
-  EventType,
-  EventTypeMetricDefinition,
-  MetricDefinition,
-  OnboardingQuestion,
-  Sport,
-} from "./types";
+import type { EventType, EventTypeMetricDefinition, MetricDefinition, Sport } from "./types";
 
 export class AdminApiError extends Error {
   constructor(
@@ -266,78 +260,5 @@ export async function deleteAdminEventTypeMetricDefinition(
     token,
     `/api/admin/event-types/${eventTypeId}/metric-definitions/${eventTypeMetricDefinitionId}`,
     { method: "DELETE" },
-  );
-}
-
-// Onboarding questions
-
-export async function listAdminOnboardingQuestions(
-  token: string,
-  query: { sportId?: string; active?: boolean } = {},
-): Promise<OnboardingQuestion[]> {
-  const result = await adminFetch<ListResponse<OnboardingQuestion>>(
-    token,
-    `/api/admin/onboarding-questions${buildQuery({
-      sportId: query.sportId,
-      active: query.active === undefined ? undefined : String(query.active),
-    })}`,
-  );
-  return result.items;
-}
-
-export async function getAdminOnboardingQuestion(
-  token: string,
-  onboardingQuestionId: string,
-): Promise<OnboardingQuestion> {
-  return adminFetch<OnboardingQuestion>(
-    token,
-    `/api/admin/onboarding-questions/${onboardingQuestionId}`,
-  );
-}
-
-export async function createAdminOnboardingQuestion(
-  token: string,
-  body: {
-    sportId?: string | null;
-    key: string;
-    prompt: string;
-    helpText?: string;
-    sortOrder?: number;
-    answerType: string;
-    options?: unknown;
-    mapsToField?: string;
-    required?: boolean;
-    active?: boolean;
-  },
-): Promise<OnboardingQuestion> {
-  return adminFetch<OnboardingQuestion>(token, "/api/admin/onboarding-questions", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-}
-
-export async function updateAdminOnboardingQuestion(
-  token: string,
-  onboardingQuestionId: string,
-  body: Partial<{
-    sportId: string | null;
-    key: string;
-    prompt: string;
-    helpText: string | null;
-    sortOrder: number;
-    answerType: string;
-    options: unknown | null;
-    mapsToField: string | null;
-    required: boolean;
-    active: boolean;
-  }>,
-): Promise<OnboardingQuestion> {
-  return adminFetch<OnboardingQuestion>(
-    token,
-    `/api/admin/onboarding-questions/${onboardingQuestionId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    },
   );
 }

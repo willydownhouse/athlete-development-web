@@ -2,14 +2,8 @@
 
 import { redirect } from "next/navigation";
 
-import { athleteOnboardingHref, dashboardHref } from "@/components/dashboard/dashboard-nav";
-import {
-  ApiError,
-  completeOnboardingSession,
-  createAthlete,
-  startOnboardingSession,
-  upsertOnboardingAnswer,
-} from "@/lib/api";
+import { dashboardHref } from "@/components/dashboard/dashboard-nav";
+import { ApiError, createAthlete } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 
 export type OnboardingActionState = {
@@ -77,66 +71,7 @@ export async function createAthleteBasicsAction(
       dateOfBirth: readOptionalDate(formData, "dateOfBirth"),
     });
 
-    const session = await startOnboardingSession(token, athlete.id);
-
-    redirect(athleteOnboardingHref(athlete.id, session.id));
-  } catch (error) {
-    if (isNextRedirect(error)) {
-      throw error;
-    }
-
-    return actionError(error);
-  }
-}
-
-export async function saveOnboardingAnswerAction(input: {
-  athleteId: string;
-  sessionId: string;
-  questionId: string;
-  rawAnswer: string;
-  structuredValue?: unknown;
-  required: boolean;
-}): Promise<OnboardingActionState> {
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    return { error: "You need to sign in again" };
-  }
-
-  const rawAnswer = input.rawAnswer.trim();
-
-  if (input.required && rawAnswer === "") {
-    return { error: "Please answer this question to continue" };
-  }
-
-  try {
-    if (rawAnswer !== "") {
-      await upsertOnboardingAnswer(token, input.athleteId, input.sessionId, {
-        questionId: input.questionId,
-        rawAnswer,
-        structuredValue: input.structuredValue,
-      });
-    }
-
-    return { success: true };
-  } catch (error) {
-    return actionError(error);
-  }
-}
-
-export async function completeOnboardingAction(input: {
-  athleteId: string;
-  sessionId: string;
-}): Promise<OnboardingActionState> {
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    return { error: "You need to sign in again" };
-  }
-
-  try {
-    await completeOnboardingSession(token, input.athleteId, input.sessionId);
-    redirect(dashboardHref(input.athleteId));
+    redirect(dashboardHref(athlete.id));
   } catch (error) {
     if (isNextRedirect(error)) {
       throw error;

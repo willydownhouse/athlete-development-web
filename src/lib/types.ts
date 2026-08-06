@@ -55,9 +55,6 @@ export type EventCategory =
 
 export type MetricValueType = "number" | "text" | "boolean";
 
-export type OnboardingAnswerType =
-  "text" | "number" | "boolean" | "single_select" | "multi_select" | "date" | "json";
-
 export type Sport = {
   id: string;
   slug: string;
@@ -165,62 +162,6 @@ export type EventTypeMetricDefinition = {
   metricDefinition: MetricDefinition;
 };
 
-export type OnboardingQuestion = {
-  id: string;
-  sportId: string | null;
-  key: string;
-  prompt: string;
-  helpText: string | null;
-  sortOrder: number;
-  answerType: OnboardingAnswerType;
-  options: unknown | null;
-  mapsToField: string | null;
-  required: boolean;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  sport: Sport | null;
-};
-
-export type OnboardingAnswer = {
-  id: string;
-  sessionId: string;
-  athleteId: string;
-  sportId: string;
-  questionId: string;
-  questionKey: string;
-  promptSnapshot: string;
-  rawAnswer: string;
-  structuredValue: unknown | null;
-  answeredAt: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type OnboardingSession = {
-  id: string;
-  athleteId: string;
-  sportId: string;
-  status: "in_progress" | "completed" | "abandoned";
-  startedAt: string;
-  completedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  sport: Sport;
-  answers?: OnboardingAnswer[];
-};
-
-type OnboardingSessionAthlete = {
-  id: string;
-  name: string;
-};
-
-export type OnboardingSessionSummary = Omit<OnboardingSession, "answers"> & {
-  athlete: OnboardingSessionAthlete;
-};
-
-export type OnboardingSessionDetail = OnboardingSessionSummary;
-
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",
@@ -237,20 +178,6 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 
 export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean"];
 
-export const ONBOARDING_ANSWER_TYPES: OnboardingAnswerType[] = [
-  "text",
-  "number",
-  "boolean",
-  "single_select",
-  "multi_select",
-  "date",
-  "json",
-];
-
 export function formatCategoryLabel(category: EventCategory): string {
   return category.replace(/_/g, " ");
-}
-
-export function formatAnswerTypeLabel(answerType: OnboardingAnswerType): string {
-  return answerType.replace(/_/g, " ");
 }

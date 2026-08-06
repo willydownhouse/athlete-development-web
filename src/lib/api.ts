@@ -6,11 +6,6 @@ import type {
   EventListResponse,
   EventType,
   EventTypeMetricDefinition,
-  OnboardingAnswer,
-  OnboardingQuestion,
-  OnboardingSession,
-  OnboardingSessionDetail,
-  OnboardingSessionSummary,
   Sport,
   SportStats,
   UserRole,
@@ -350,75 +345,4 @@ export async function fetchEventTypeMetricDefinitions(
 
   const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
   return result.items;
-}
-
-export async function fetchOnboardingQuestions(
-  token: string,
-  sportId: string,
-): Promise<OnboardingQuestion[]> {
-  const result = await apiFetch<{ items: OnboardingQuestion[] }>(
-    token,
-    `/api/onboarding/questions?sportId=${encodeURIComponent(sportId)}`,
-  );
-  return result.items;
-}
-
-export async function fetchOnboardingSessions(token: string): Promise<OnboardingSessionSummary[]> {
-  const result = await apiFetch<{ items: OnboardingSessionSummary[] }>(
-    token,
-    "/api/onboarding/sessions",
-  );
-  return result.items;
-}
-
-export async function getOnboardingSession(
-  token: string,
-  athleteId: string,
-  sessionId: string,
-): Promise<OnboardingSessionDetail> {
-  return apiFetch<OnboardingSessionDetail>(
-    token,
-    `/api/athletes/${athleteId}/onboarding-sessions/${sessionId}`,
-  );
-}
-
-export async function startOnboardingSession(
-  token: string,
-  athleteId: string,
-): Promise<OnboardingSession> {
-  return apiFetch<OnboardingSession>(token, `/api/athletes/${athleteId}/onboarding-sessions`, {
-    method: "POST",
-  });
-}
-
-export async function upsertOnboardingAnswer(
-  token: string,
-  athleteId: string,
-  sessionId: string,
-  body: {
-    questionId: string;
-    rawAnswer: string;
-    structuredValue?: unknown;
-  },
-): Promise<OnboardingAnswer> {
-  return apiFetch<OnboardingAnswer>(
-    token,
-    `/api/athletes/${athleteId}/onboarding-sessions/${sessionId}/answers`,
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-    },
-  );
-}
-
-export async function completeOnboardingSession(
-  token: string,
-  athleteId: string,
-  sessionId: string,
-): Promise<OnboardingSession> {
-  return apiFetch<OnboardingSession>(
-    token,
-    `/api/athletes/${athleteId}/onboarding-sessions/${sessionId}/complete`,
-    { method: "POST" },
-  );
 }

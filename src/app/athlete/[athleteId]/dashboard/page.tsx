@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { fetchAthletes, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { loadShellOnboardingSessions } from "@/lib/shell-data";
 import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { EventType } from "@/lib/types";
 
@@ -32,7 +31,6 @@ export default async function AthleteDashboardPage({
   }
 
   const token = await getAuthBearerToken();
-  const onboardingSessions = await loadShellOnboardingSessions(token);
 
   let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
   let loadError: string | null = null;
@@ -71,7 +69,6 @@ export default async function AthleteDashboardPage({
       eventTypes={eventTypes}
       eventTypesError={eventTypesError}
       loadError={loadError}
-      onboardingSessions={onboardingSessions}
       statsPeriod={parseHockeyStatsPeriod(statsPeriod)}
     />
   );
