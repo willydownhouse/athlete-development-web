@@ -6,6 +6,7 @@ This repo is the mobile-first web client. It handles Google sign-in with Auth.js
 
 ## Tech Stack
 
+- Node.js 24+
 - Next.js (App Router)
 - React
 - TypeScript
