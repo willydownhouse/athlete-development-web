@@ -14,7 +14,7 @@ import type {
 import { athleteEventsCacheTag, eventCacheTag, EVENT_TYPES_CACHE_TAG } from "./cache-tags";
 
 /** Event types are admin config; busted on admin writes via EVENT_TYPES_CACHE_TAG. */
-export const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
+const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
 
 export type AppUser = {
   id: string;
