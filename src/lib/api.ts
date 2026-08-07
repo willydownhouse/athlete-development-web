@@ -216,6 +216,44 @@ export async function fetchEvents(
   return result;
 }
 
+const EVENTS_PAGE_SIZE = 100;
+
+type FetchEventsQuery = {
+  startedAtFrom?: string;
+  startedAtTo?: string;
+  sportId?: string;
+  eventTypeId?: string;
+  include?: "metrics";
+};
+
+export async function fetchAllEvents(
+  token: string,
+  athleteId: string,
+  query: FetchEventsQuery = {},
+): Promise<Event[]> {
+  const events: Event[] = [];
+  let offset = 0;
+  let total = Number.POSITIVE_INFINITY;
+
+  while (offset < total) {
+    const page = await fetchEvents(token, athleteId, {
+      ...query,
+      limit: EVENTS_PAGE_SIZE,
+      offset,
+    });
+
+    events.push(...page.items);
+    total = page.pagination.total;
+    offset += page.items.length;
+
+    if (page.items.length === 0) {
+      break;
+    }
+  }
+
+  return events;
+}
+
 export async function fetchEvent(
   token: string,
   athleteId: string,

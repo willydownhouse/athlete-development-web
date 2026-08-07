@@ -14,7 +14,6 @@ type CreateEventOptions = {
 type DashboardInteractionsContextValue = {
   selectedCalendarDate: Date;
   visibleCalendarMonth: Date;
-  refreshKey: number;
   setSelectedCalendarDate: (date: Date) => void;
   setVisibleCalendarMonth: (month: Date) => void;
   openCreateModal: (options?: CreateEventOptions) => void;
@@ -43,7 +42,6 @@ export function DashboardInteractionsProvider({
   const [visibleCalendarMonth, setVisibleCalendarMonthState] = useState(() =>
     startOfLocalDay(new Date()),
   );
-  const [refreshKey, setRefreshKey] = useState(0);
   const [modalState, setModalState] = useState<EventModalState>(null);
   const [formKey, setFormKey] = useState(0);
 
@@ -70,14 +68,12 @@ export function DashboardInteractionsProvider({
 
   const handleFormSuccess = useCallback(() => {
     closeModal();
-    setRefreshKey((current) => current + 1);
   }, [closeModal]);
 
   const value = useMemo(
     () => ({
       selectedCalendarDate,
       visibleCalendarMonth,
-      refreshKey,
       setSelectedCalendarDate,
       setVisibleCalendarMonth,
       openCreateModal,
@@ -85,7 +81,6 @@ export function DashboardInteractionsProvider({
     [
       selectedCalendarDate,
       visibleCalendarMonth,
-      refreshKey,
       setSelectedCalendarDate,
       setVisibleCalendarMonth,
       openCreateModal,

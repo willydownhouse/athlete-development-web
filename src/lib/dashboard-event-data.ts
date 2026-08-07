@@ -1,5 +1,15 @@
-import { ApiError, fetchEvents } from "@/lib/api";
+import { cache } from "react";
+
+import { ApiError, fetchAllEvents } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { eventsInHalfOpenRange } from "@/lib/event-grouping";
+import {
+  getZonedDayRange,
+  getZonedMonthRange,
+  getZonedWeekRange,
+  mergeTimeRanges,
+  type TimeRange,
+} from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
 export type DashboardEventsResult =
@@ -17,14 +27,13 @@ export async function fetchDashboardEventsInRange(
   }
 
   try {
-    const result = await fetchEvents(token, athleteId, {
+    const events = await fetchAllEvents(token, athleteId, {
       startedAtFrom,
       startedAtTo,
-      limit: 100,
       include: "metrics",
     });
 
-    return { events: result.items };
+    return { events };
   } catch (error) {
     if (error instanceof ApiError) {
       return { events: [], error: error.apiError ?? error.message };
@@ -37,3 +46,39 @@ export async function fetchDashboardEventsInRange(
     return { events: [], error: "Unable to load events" };
   }
 }
+
+export type DashboardEventsBundle = {
+  allEvents: Event[];
+  loadedRange: TimeRange;
+  weekEvents: Event[];
+  todayEvents: Event[];
+  error: string | null;
+};
+
+export const loadDashboardEventsBundle = cache(
+  async (athleteId: string, timeZone: string): Promise<DashboardEventsBundle> => {
+    const monthRange = getZonedMonthRange(timeZone);
+    const weekRange = getZonedWeekRange(timeZone);
+    const todayRange = getZonedDayRange(timeZone);
+    const loadedRange = mergeTimeRanges(monthRange, weekRange);
+    const result = await fetchDashboardEventsInRange(
+      athleteId,
+      loadedRange.startedAtFrom,
+      loadedRange.startedAtTo,
+    );
+
+    const allEvents = result.events;
+
+    return {
+      allEvents,
+      loadedRange,
+      weekEvents: eventsInHalfOpenRange(allEvents, weekRange.startedAtFrom, weekRange.startedAtTo),
+      todayEvents: eventsInHalfOpenRange(
+        allEvents,
+        todayRange.startedAtFrom,
+        todayRange.startedAtTo,
+      ),
+      error: result.error ?? null,
+    };
+  },
+);

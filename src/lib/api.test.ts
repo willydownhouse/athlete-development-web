@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  fetchAllEvents,
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
@@ -133,6 +134,45 @@ describe("api client", () => {
     });
     expect(eventTypes).toHaveLength(1);
     expect(eventTypes[0]?.name).toBe("Ice practice");
+  });
+
+  it("fetches all events in a range across paginated responses", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: Array.from({ length: 100 }, (_, index) => ({ id: `event-${index + 1}` })),
+          pagination: { limit: 100, offset: 0, total: 101 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [{ id: "event-101" }],
+          pagination: { limit: 100, offset: 100, total: 101 },
+        }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const events = await fetchAllEvents("test-token", athleteId, {
+      startedAtFrom: "2026-08-01T00:00:00.000Z",
+      startedAtTo: "2026-09-01T00:00:00.000Z",
+      include: "metrics",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=0&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
+    );
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
+    );
+    expect(events).toHaveLength(101);
   });
 
   it("throws when the API responds with an error", async () => {

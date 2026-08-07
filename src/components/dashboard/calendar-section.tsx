@@ -6,55 +6,93 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
-import { getLocalMonthRange, startOfLocalDay, addLocalMonths } from "@/lib/date-range";
-import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
+import { addLocalMonths, startOfLocalDay } from "@/lib/date-range";
+import { datesWithEvents, eventsForLocalDate, eventsInHalfOpenRange } from "@/lib/event-grouping";
+import { getZonedMonthRange, isTimeRangeWithin, type TimeRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
 import { useDashboardInteractions } from "./dashboard-interactions";
 
 type CalendarSectionProps = {
   athleteId: string;
+  timeZone: string;
+  initialAllEvents: Event[];
+  loadedRange: TimeRange;
+  initialLoadError?: string | null;
 };
 
-export function CalendarSection({ athleteId }: CalendarSectionProps) {
+type RemoteMonthFetchState = {
+  requestKey: string;
+  events: Event[];
+  error: string | null;
+};
+
+export function CalendarSection({
+  athleteId,
+  timeZone,
+  initialAllEvents,
+  loadedRange,
+  initialLoadError = null,
+}: CalendarSectionProps) {
   const {
     selectedCalendarDate,
     visibleCalendarMonth,
-    refreshKey,
     setSelectedCalendarDate,
     setVisibleCalendarMonth,
     openCreateModal,
   } = useDashboardInteractions();
 
-  const [monthEvents, setMonthEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const monthRange = useMemo(
+    () => getZonedMonthRange(timeZone, visibleCalendarMonth),
+    [timeZone, visibleCalendarMonth],
+  );
+  const shouldFetchMonth = !isTimeRangeWithin(monthRange, loadedRange);
+  const remoteRequestKey = `${athleteId}:${monthRange.startedAtFrom}:${monthRange.startedAtTo}`;
+
+  const cachedMonthEvents = useMemo(
+    () => eventsInHalfOpenRange(initialAllEvents, monthRange.startedAtFrom, monthRange.startedAtTo),
+    [initialAllEvents, monthRange],
+  );
+
+  const [remoteFetchState, setRemoteFetchState] = useState<RemoteMonthFetchState | null>(null);
 
   useEffect(() => {
+    if (!shouldFetchMonth) {
+      return;
+    }
+
     let cancelled = false;
 
-    const { startedAtFrom, startedAtTo } = getLocalMonthRange(visibleCalendarMonth);
+    void fetchEventsInRangeAction(athleteId, monthRange.startedAtFrom, monthRange.startedAtTo).then(
+      (result) => {
+        if (cancelled) {
+          return;
+        }
 
-    void fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo).then((result) => {
-      if (cancelled) {
-        return;
-      }
-
-      if (result.error) {
-        setMonthEvents([]);
-        setLoadError(result.error);
-      } else {
-        setMonthEvents(result.events);
-        setLoadError(null);
-      }
-
-      setLoading(false);
-    });
+        setRemoteFetchState({
+          requestKey: remoteRequestKey,
+          events: result.error ? [] : result.events,
+          error: result.error ?? null,
+        });
+      },
+    );
 
     return () => {
       cancelled = true;
     };
-  }, [athleteId, visibleCalendarMonth, refreshKey]);
+  }, [athleteId, monthRange, remoteRequestKey, shouldFetchMonth]);
+
+  const remoteMonthEvents =
+    remoteFetchState?.requestKey === remoteRequestKey ? remoteFetchState.events : null;
+  const remoteLoadError =
+    remoteFetchState?.requestKey === remoteRequestKey ? remoteFetchState.error : null;
+  const loadingRemote = shouldFetchMonth && remoteMonthEvents === null;
+
+  const monthEvents = useMemo(
+    () => (shouldFetchMonth ? (remoteMonthEvents ?? []) : cachedMonthEvents),
+    [cachedMonthEvents, remoteMonthEvents, shouldFetchMonth],
+  );
+  const displayLoadError = shouldFetchMonth ? remoteLoadError : initialLoadError;
 
   const daysWithEvents = useMemo(() => datesWithEvents(monthEvents), [monthEvents]);
   const selectedDayEvents = useMemo(
@@ -63,7 +101,6 @@ export function CalendarSection({ athleteId }: CalendarSectionProps) {
   );
 
   function handleMonthChange(nextMonth: Date) {
-    setLoading(true);
     setVisibleCalendarMonth(startOfLocalDay(nextMonth));
   }
 
@@ -119,8 +156,8 @@ export function CalendarSection({ athleteId }: CalendarSectionProps) {
         athleteId={athleteId}
         selectedDate={selectedCalendarDate}
         events={selectedDayEvents}
-        loading={loading}
-        loadError={loadError}
+        loading={loadingRemote}
+        loadError={displayLoadError}
         onAddClick={() =>
           openCreateModal({ defaultEventDate: format(selectedCalendarDate, "yyyy-MM-dd") })
         }

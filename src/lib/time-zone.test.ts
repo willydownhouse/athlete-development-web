@@ -4,6 +4,8 @@ import {
   getZonedDayRange,
   getZonedMonthRange,
   getZonedWeekRange,
+  isTimeRangeWithin,
+  mergeTimeRanges,
   zonedDateTimeToUtcIso,
 } from "./time-zone";
 
@@ -60,5 +62,30 @@ describe("zoned ranges", () => {
       startedAtFrom: "2026-07-31T22:00:00.000Z",
       startedAtTo: "2026-08-31T22:00:00.000Z",
     });
+  });
+
+  it("merges overlapping ranges to the widest half-open interval", () => {
+    const month = getZonedMonthRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"));
+    const week = getZonedWeekRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"));
+
+    expect(mergeTimeRanges(month, week)).toEqual({
+      startedAtFrom: "2026-07-31T22:00:00.000Z",
+      startedAtTo: "2026-08-31T22:00:00.000Z",
+    });
+  });
+
+  it("detects when a range fits within another", () => {
+    const month = getZonedMonthRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"));
+    const week = getZonedWeekRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"));
+    const merged = mergeTimeRanges(month, week);
+
+    expect(isTimeRangeWithin(week, merged)).toBe(true);
+    expect(isTimeRangeWithin(month, merged)).toBe(true);
+    expect(
+      isTimeRangeWithin(
+        getZonedMonthRange("Europe/Oslo", new Date("2026-07-05T12:00:00.000Z")),
+        merged,
+      ),
+    ).toBe(false);
   });
 });

@@ -246,6 +246,34 @@ export function getZonedMonthRange(timeZone: string, date = new Date()): TimeRan
   };
 }
 
+export function mergeTimeRanges(...ranges: TimeRange[]): TimeRange {
+  const first = ranges[0];
+
+  if (!first) {
+    throw new Error("mergeTimeRanges requires at least one range");
+  }
+
+  let earliestFrom = Date.parse(first.startedAtFrom);
+  let latestTo = Date.parse(first.startedAtTo);
+
+  for (const range of ranges.slice(1)) {
+    earliestFrom = Math.min(earliestFrom, Date.parse(range.startedAtFrom));
+    latestTo = Math.max(latestTo, Date.parse(range.startedAtTo));
+  }
+
+  return {
+    startedAtFrom: new Date(earliestFrom).toISOString(),
+    startedAtTo: new Date(latestTo).toISOString(),
+  };
+}
+
+export function isTimeRangeWithin(inner: TimeRange, outer: TimeRange): boolean {
+  return (
+    Date.parse(inner.startedAtFrom) >= Date.parse(outer.startedAtFrom) &&
+    Date.parse(inner.startedAtTo) <= Date.parse(outer.startedAtTo)
+  );
+}
+
 export function getZonedWeekRange(timeZone: string, date = new Date()): WeekTimeRange {
   const normalizedTimeZone = normalizeTimeZone(timeZone);
   const zonedDate = getZonedParts(date, normalizedTimeZone);

@@ -1,5 +1,19 @@
 import type { Event } from "@/lib/types";
 
+export function eventsInHalfOpenRange(
+  events: Event[],
+  startedAtFrom: string,
+  startedAtTo: string,
+): Event[] {
+  const fromMs = Date.parse(startedAtFrom);
+  const toMs = Date.parse(startedAtTo);
+
+  return events.filter((event) => {
+    const startedAtMs = Date.parse(event.startedAt);
+    return startedAtMs >= fromMs && startedAtMs < toMs;
+  });
+}
+
 function localDateKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
