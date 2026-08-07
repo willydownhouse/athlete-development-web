@@ -4,14 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import { SignOutButton } from "@/components/sign-out-button";
-import type { Athlete, OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete } from "@/lib/types";
 
 type OnboardingShellProps = {
   userEmail: string;
   adminNavLink?: React.ReactNode;
   athletes?: Athlete[];
   dashboardAthleteId?: string | null;
-  onboardingSessions: OnboardingSessionSummary[];
   children: React.ReactNode;
 };
 
@@ -36,7 +35,6 @@ export function OnboardingShell({
   adminNavLink,
   athletes = [],
   dashboardAthleteId = null,
-  onboardingSessions,
   children,
 }: OnboardingShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -84,7 +82,7 @@ export function OnboardingShell({
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Onboarding
+              Add athlete
             </p>
             <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
           </div>
@@ -103,7 +101,6 @@ export function OnboardingShell({
             adminNavLink={adminNavLink}
             athletes={athletes}
             dashboardAthleteId={dashboardAthleteId}
-            onboardingSessions={onboardingSessions}
             onNavigate={closeMobile}
           />
         </div>
@@ -127,7 +124,7 @@ export function OnboardingShell({
           </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">Athlete Development Center</p>
-            <p className="truncate text-xs text-zinc-500">Onboarding</p>
+            <p className="truncate text-xs text-zinc-500">Add athlete</p>
           </div>
         </header>
 

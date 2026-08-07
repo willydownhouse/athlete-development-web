@@ -8,7 +8,6 @@ const navItems = [
   { href: "/admin/sports", label: "Sports" },
   { href: "/admin/event-types", label: "Event types" },
   { href: "/admin/metric-definitions", label: "Metric definitions" },
-  { href: "/admin/onboarding-questions", label: "Onboarding questions" },
 ];
 
 type AdminNavProps = {

@@ -9,8 +9,8 @@ export function DashboardOnboardingPrompt() {
           Dashboard is still empty
         </h1>
         <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:text-base lg:leading-7">
-          This dashboard fills in once you have an athlete profile. Head to onboarding to add your
-          first athlete and get started.
+          This dashboard fills in once you have an athlete profile. Add your first athlete to get
+          started.
         </p>
       </div>
 
@@ -20,7 +20,7 @@ export function DashboardOnboardingPrompt() {
           href="/onboarding"
           className="inline-flex w-full items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] lg:py-3.5 lg:text-base"
         >
-          Go to onboarding
+          Add athlete
         </Link>
       </div>
     </section>

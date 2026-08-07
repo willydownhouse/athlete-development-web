@@ -9,7 +9,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { loadShellAthletes, loadShellOnboardingSessions } from "@/lib/shell-data";
+import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteEventPageProps = {
   params: Promise<{ athleteId: string; eventId: string }>;
@@ -36,10 +36,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
     redirect("/");
   }
 
-  const [onboardingSessions, athletes] = await Promise.all([
-    loadShellOnboardingSessions(token),
-    loadShellAthletes(token),
-  ]);
+  const athletes = await loadShellAthletes(token);
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -53,7 +50,6 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
       adminNavLink={<AppShellAdminNavLink />}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
-      onboardingSessions={onboardingSessions}
     >
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
         <Link

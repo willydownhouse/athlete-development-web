@@ -24,7 +24,7 @@ export function DashboardHeader({ selectedAthlete, eventsThisWeek = 0 }: Dashboa
         <>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">Get started</h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Add your first athlete through onboarding to unlock the dashboard.
+            Add your first athlete to unlock the dashboard.
           </p>
         </>
       )}

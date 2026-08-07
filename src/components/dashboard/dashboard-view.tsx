@@ -1,4 +1,4 @@
-import type { Athlete, EventType, OnboardingSessionSummary } from "@/lib/types";
+import type { Athlete, EventType } from "@/lib/types";
 
 import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
@@ -14,7 +14,6 @@ type DashboardViewProps = {
   eventTypes: EventType[];
   eventTypesError?: string | null;
   loadError?: string | null;
-  onboardingSessions: OnboardingSessionSummary[];
   statsPeriod: HockeyStatsPeriod;
 };
 
@@ -25,7 +24,6 @@ export function DashboardView({
   eventTypes,
   eventTypesError,
   loadError,
-  onboardingSessions,
   statsPeriod,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
@@ -36,7 +34,6 @@ export function DashboardView({
       adminNavLink={<AppShellAdminNavLink />}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
-      onboardingSessions={onboardingSessions}
     >
       <div
         className={`relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6 lg:max-w-3xl lg:px-10 ${

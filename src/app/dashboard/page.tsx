@@ -5,7 +5,6 @@ import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { fetchAthletes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { loadShellOnboardingSessions } from "@/lib/shell-data";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -15,7 +14,6 @@ export default async function DashboardPage() {
   }
 
   const token = await getAuthBearerToken();
-  const onboardingSessions = await loadShellOnboardingSessions(token);
 
   let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
   let loadError: string | null = null;
@@ -42,7 +40,6 @@ export default async function DashboardPage() {
       selectedAthlete={null}
       eventTypes={[]}
       loadError={loadError}
-      onboardingSessions={onboardingSessions}
       statsPeriod="week"
     />
   );
