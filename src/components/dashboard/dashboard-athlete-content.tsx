@@ -11,6 +11,7 @@ import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { CalendarSection } from "./calendar-section";
+import { athleteEventsWeekHref } from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
 import { HockeyStats } from "./hockey-stats";
@@ -42,10 +43,12 @@ async function DashboardHeaderSection({
   selectedAthlete,
   startedAtFrom,
   startedAtTo,
+  timeZone,
 }: {
   selectedAthlete: Athlete;
   startedAtFrom: string;
   startedAtTo: string;
+  timeZone: string;
 }) {
   const weekResult = await fetchDashboardEventsInRange(
     selectedAthlete.id,
@@ -54,7 +57,13 @@ async function DashboardHeaderSection({
   );
   const { events } = eventsFromResult(weekResult);
 
-  return <DashboardHeader selectedAthlete={selectedAthlete} eventsThisWeek={events.length} />;
+  return (
+    <DashboardHeader
+      selectedAthlete={selectedAthlete}
+      eventsThisWeek={events.length}
+      eventsWeekHref={athleteEventsWeekHref(selectedAthlete.id, timeZone)}
+    />
+  );
 }
 
 export async function DashboardAthleteContent({
@@ -80,6 +89,7 @@ export async function DashboardAthleteContent({
           selectedAthlete={selectedAthlete}
           startedAtFrom={weekRange.startedAtFrom}
           startedAtTo={weekRange.startedAtTo}
+          timeZone={timeZone}
         />
       </Suspense>
       <div className="mt-6 flex flex-col gap-3.5">
@@ -88,6 +98,7 @@ export async function DashboardAthleteContent({
             athleteId={selectedAthlete.id}
             startedAtFrom={todayRange.startedAtFrom}
             startedAtTo={todayRange.startedAtTo}
+            timeZone={timeZone}
           />
         </Suspense>
         <QuickLogSection

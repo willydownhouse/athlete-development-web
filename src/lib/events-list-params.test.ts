@@ -7,6 +7,7 @@ import {
   eventsListDateRange,
   eventsListPageCount,
   getDefaultEventsListWeekDates,
+  getEventsListDayDates,
   parseEventsListSearchParams,
   resolveEventsListSearchParams,
 } from "./events-list-params";
@@ -99,6 +100,15 @@ describe("getDefaultEventsListWeekDates", () => {
     ).toEqual({
       from: "2026-08-03",
       to: "2026-08-09",
+    });
+  });
+});
+
+describe("getEventsListDayDates", () => {
+  it("returns the same local date for from and to", () => {
+    expect(getEventsListDayDates("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"))).toEqual({
+      from: "2026-08-05",
+      to: "2026-08-05",
     });
   });
 });

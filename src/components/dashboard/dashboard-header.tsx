@@ -1,13 +1,24 @@
+import Link from "next/link";
+
 import type { Athlete } from "@/lib/types";
 
-import { athleteSubtitle } from "./athlete-meta";
+import { athleteEventsThisWeekLabel, athleteIdentityLabel } from "./athlete-meta";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
   eventsThisWeek?: number;
+  eventsWeekHref?: string;
 };
 
-export function DashboardHeader({ selectedAthlete, eventsThisWeek = 0 }: DashboardHeaderProps) {
+export function DashboardHeader({
+  selectedAthlete,
+  eventsThisWeek = 0,
+  eventsWeekHref,
+}: DashboardHeaderProps) {
+  const identity = selectedAthlete ? athleteIdentityLabel(selectedAthlete) : null;
+  const eventsLabel = athleteEventsThisWeekLabel(eventsThisWeek);
+  const eventsHref = selectedAthlete ? eventsWeekHref : null;
+
   return (
     <header>
       <p className="text-sm text-zinc-400">Today</p>
@@ -17,7 +28,19 @@ export function DashboardHeader({ selectedAthlete, eventsThisWeek = 0 }: Dashboa
             {selectedAthlete.name}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            {athleteSubtitle(selectedAthlete, eventsThisWeek)}
+            {identity ? (
+              <>
+                {identity}
+                {" · "}
+              </>
+            ) : null}
+            {eventsHref ? (
+              <Link href={eventsHref} className="transition hover:text-zinc-200">
+                {eventsLabel}
+              </Link>
+            ) : (
+              eventsLabel
+            )}
           </p>
         </>
       ) : (

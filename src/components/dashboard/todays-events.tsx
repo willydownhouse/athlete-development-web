@@ -1,3 +1,4 @@
+import { athleteEventsDayHref } from "@/components/dashboard/dashboard-nav";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 
 import { TodaysEventsCard } from "./todays-events-card";
@@ -6,10 +7,23 @@ type TodaysEventsProps = {
   athleteId: string;
   startedAtFrom: string;
   startedAtTo: string;
+  timeZone: string;
 };
 
-export async function TodaysEvents({ athleteId, startedAtFrom, startedAtTo }: TodaysEventsProps) {
+export async function TodaysEvents({
+  athleteId,
+  startedAtFrom,
+  startedAtTo,
+  timeZone,
+}: TodaysEventsProps) {
   const result = await fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
 
-  return <TodaysEventsCard athleteId={athleteId} events={result.events} loadError={result.error} />;
+  return (
+    <TodaysEventsCard
+      athleteId={athleteId}
+      events={result.events}
+      loadError={result.error}
+      eventsHref={athleteEventsDayHref(athleteId, timeZone)}
+    />
+  );
 }

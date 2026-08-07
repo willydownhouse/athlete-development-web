@@ -149,6 +149,18 @@ export function getDefaultEventsListWeekDates(
   };
 }
 
+export function getEventsListDayDates(
+  timeZone: string,
+  date = new Date(),
+): { from: string; to: string } {
+  const day = formatDateInTimeZone(date, timeZone);
+
+  return {
+    from: day,
+    to: day,
+  };
+}
+
 export function resolveEventsListSearchParams(
   params: EventsListSearchParams,
   timeZone: string,

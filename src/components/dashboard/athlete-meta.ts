@@ -74,11 +74,14 @@ function positionFromProfile(athlete: Athlete): string | null {
   return typeof position === "string" && position.trim() ? position.trim() : null;
 }
 
-export function athleteSubtitle(athlete: Athlete, eventsThisWeek: number): string {
+export function athleteEventsThisWeekLabel(eventsThisWeek: number): string {
+  return `${eventsThisWeek} event${eventsThisWeek === 1 ? "" : "s"} this week`;
+}
+
+export function athleteIdentityLabel(athlete: Athlete): string | null {
   const level = athlete.profile?.level?.trim() || ageGroupFromDateOfBirth(athlete.dateOfBirth);
   const position = positionFromProfile(athlete);
   const identity = [level, position].filter(Boolean).join(" ");
-  const eventsLabel = `${eventsThisWeek} event${eventsThisWeek === 1 ? "" : "s"} this week`;
 
-  return identity ? `${identity} · ${eventsLabel}` : eventsLabel;
+  return identity || null;
 }
