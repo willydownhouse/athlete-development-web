@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Audit production dependencies
+        run: yarn audit --groups dependencies
+
       - name: Generate Prisma client
         run: yarn db:generate
 
