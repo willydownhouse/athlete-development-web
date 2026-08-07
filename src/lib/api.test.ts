@@ -126,7 +126,10 @@ describe("api client", () => {
     const eventTypes = await fetchEventTypes(sportId);
 
     expect(fetchMock).toHaveBeenCalledWith(`http://api.test/api/event-types?sportId=${sportId}`, {
-      cache: "no-store",
+      next: {
+        revalidate: 3600,
+        tags: ["event-types"],
+      },
     });
     expect(eventTypes).toHaveLength(1);
     expect(eventTypes[0]?.name).toBe("Ice practice");

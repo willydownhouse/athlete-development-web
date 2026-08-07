@@ -11,7 +11,10 @@ import type {
   SportStats,
   UserRole,
 } from "./types";
-import { athleteEventsCacheTag, eventCacheTag } from "./cache-tags";
+import { athleteEventsCacheTag, eventCacheTag, EVENT_TYPES_CACHE_TAG } from "./cache-tags";
+
+/** Event types are admin config; busted on admin writes via EVENT_TYPES_CACHE_TAG. */
+export const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
 
 export type AppUser = {
   id: string;
@@ -325,7 +328,10 @@ export async function fetchSportStats(
 export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
   const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
   const response = await fetch(`${getApiBaseUrl()}/api/event-types${query}`, {
-    cache: "no-store",
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
   });
 
   if (!response.ok) {

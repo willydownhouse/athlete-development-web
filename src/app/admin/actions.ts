@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import {
   AdminApiError,
@@ -15,6 +15,7 @@ import {
   updateAdminSport,
 } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
+import { EVENT_TYPES_CACHE_TAG } from "@/lib/cache-tags";
 
 export type ActionState = {
   error?: string;
@@ -31,6 +32,10 @@ function actionError(error: unknown): ActionState {
   }
 
   return { error: "Something went wrong" };
+}
+
+function revalidateEventTypesCache() {
+  updateTag(EVENT_TYPES_CACHE_TAG);
 }
 
 function readString(formData: FormData, key: string): string {
@@ -137,6 +142,7 @@ export async function createEventTypeAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/event-types");
+    revalidateEventTypesCache();
     return { success: "Event type created" };
   } catch (error) {
     return actionError(error);
@@ -163,6 +169,7 @@ export async function updateEventTypeAction(
     revalidatePath("/admin");
     revalidatePath("/admin/event-types");
     revalidatePath(`/admin/event-types/${eventTypeId}`);
+    revalidateEventTypesCache();
     return { success: "Event type updated" };
   } catch (error) {
     return actionError(error);

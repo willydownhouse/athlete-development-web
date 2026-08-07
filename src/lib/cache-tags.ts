@@ -5,3 +5,5 @@ export function athleteEventsCacheTag(athleteId: string): string {
 export function eventCacheTag(eventId: string): string {
   return `event-${eventId}`;
 }
+
+export const EVENT_TYPES_CACHE_TAG = "event-types";
