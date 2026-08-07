@@ -1,11 +1,11 @@
 import type { Athlete, EventType } from "@/lib/types";
 
-import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./bottom-nav";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
+import { getIsAdminUser } from "@/lib/is-admin-user";
 
 type DashboardViewProps = {
   userEmail: string;
@@ -17,7 +17,7 @@ type DashboardViewProps = {
   statsPeriod: HockeyStatsPeriod;
 };
 
-export function DashboardView({
+export async function DashboardView({
   userEmail,
   athletes,
   selectedAthlete,
@@ -27,11 +27,12 @@ export function DashboardView({
   statsPeriod,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
+  const isAdmin = await getIsAdminUser();
 
   return (
     <DashboardShell
       userEmail={userEmail}
-      adminNavLink={<AppShellAdminNavLink />}
+      isAdmin={isAdmin}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
     >

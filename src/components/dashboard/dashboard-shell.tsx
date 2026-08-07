@@ -8,7 +8,7 @@ import type { Athlete } from "@/lib/types";
 
 type DashboardShellProps = {
   userEmail: string;
-  adminNavLink?: React.ReactNode;
+  isAdmin?: boolean;
   athletes: Athlete[];
   selectedAthlete: Athlete | null;
   children: React.ReactNode;
@@ -32,7 +32,7 @@ function CloseIcon() {
 
 export function DashboardShell({
   userEmail,
-  adminNavLink,
+  isAdmin = false,
   athletes,
   selectedAthlete,
   children,
@@ -98,7 +98,7 @@ export function DashboardShell({
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
-            adminNavLink={adminNavLink}
+            isAdmin={isAdmin}
             athletes={athletes}
             selectedAthlete={selectedAthlete}
             onNavigate={closeMobile}

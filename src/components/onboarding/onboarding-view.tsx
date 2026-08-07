@@ -1,7 +1,7 @@
 import { OnboardingShell } from "./onboarding-shell";
 import { SportSelect } from "./sport-select";
 import type { Athlete, Sport } from "@/lib/types";
-import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
+import { getIsAdminUser } from "@/lib/is-admin-user";
 
 type OnboardingViewProps = {
   userEmail: string;
@@ -11,7 +11,7 @@ type OnboardingViewProps = {
   athletes: Athlete[];
 };
 
-export function OnboardingView({
+export async function OnboardingView({
   userEmail,
   userName,
   sports,
@@ -19,13 +19,10 @@ export function OnboardingView({
   athletes,
 }: OnboardingViewProps) {
   const greetingName = userName?.trim().split(/\s+/)[0];
+  const isAdmin = await getIsAdminUser();
 
   return (
-    <OnboardingShell
-      userEmail={userEmail}
-      adminNavLink={<AppShellAdminNavLink />}
-      athletes={athletes}
-    >
+    <OnboardingShell userEmail={userEmail} isAdmin={isAdmin} athletes={athletes}>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <section className="space-y-8 lg:space-y-10">
           <div>

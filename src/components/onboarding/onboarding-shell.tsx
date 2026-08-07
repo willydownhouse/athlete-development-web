@@ -8,7 +8,7 @@ import type { Athlete } from "@/lib/types";
 
 type OnboardingShellProps = {
   userEmail: string;
-  adminNavLink?: React.ReactNode;
+  isAdmin?: boolean;
   athletes?: Athlete[];
   dashboardAthleteId?: string | null;
   children: React.ReactNode;
@@ -32,7 +32,7 @@ function CloseIcon() {
 
 export function OnboardingShell({
   userEmail,
-  adminNavLink,
+  isAdmin = false,
   athletes = [],
   dashboardAthleteId = null,
   children,
@@ -98,7 +98,7 @@ export function OnboardingShell({
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <AppShellNav
-            adminNavLink={adminNavLink}
+            isAdmin={isAdmin}
             athletes={athletes}
             dashboardAthleteId={dashboardAthleteId}
             onNavigate={closeMobile}

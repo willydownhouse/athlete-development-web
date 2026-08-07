@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
@@ -15,7 +14,7 @@ import {
 import type { Athlete } from "@/lib/types";
 
 type AppShellNavProps = {
-  adminNavLink?: ReactNode;
+  isAdmin?: boolean;
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
   dashboardAthleteId?: string | null;
@@ -68,7 +67,7 @@ function AthleteNavLink({
 }
 
 export function AppShellNav({
-  adminNavLink,
+  isAdmin = false,
   athletes = [],
   selectedAthlete = null,
   dashboardAthleteId = null,
@@ -107,7 +106,11 @@ export function AppShellNav({
         Add athlete
       </Link>
 
-      {adminNavLink}
+      {isAdmin ? (
+        <Link href="/admin" className={navLinkClass(pathname.startsWith("/admin"))}>
+          Admin
+        </Link>
+      ) : null}
     </nav>
   );
 }

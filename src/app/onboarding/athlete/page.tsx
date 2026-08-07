@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { AthleteBasicsForm } from "@/components/onboarding/athlete-basics-form";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type OnboardingAthletePageProps = {
@@ -48,12 +48,10 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
     redirect("/onboarding");
   }
 
+  const isAdmin = await getIsAdminUser();
+
   return (
-    <OnboardingShell
-      userEmail={session.user.email ?? ""}
-      adminNavLink={<AppShellAdminNavLink />}
-      athletes={athletes}
-    >
+    <OnboardingShell userEmail={session.user.email ?? ""} isAdmin={isAdmin} athletes={athletes}>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <section className="space-y-6 lg:space-y-8">
           <div>

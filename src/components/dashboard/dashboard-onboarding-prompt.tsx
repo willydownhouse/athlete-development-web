@@ -5,7 +5,7 @@ export function DashboardOnboardingPrompt() {
     <section className="space-y-8 lg:space-y-10">
       <div>
         <p className="text-sm text-zinc-400 lg:text-base">Welcome</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
           Dashboard is still empty
         </h1>
         <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:text-base lg:leading-7">

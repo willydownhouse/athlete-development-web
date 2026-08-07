@@ -3,12 +3,12 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { AppShellAdminNavLink } from "@/components/app-shell-admin-nav-link";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteEventPageProps = {
@@ -44,10 +44,12 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
     redirect("/dashboard");
   }
 
+  const isAdmin = await getIsAdminUser();
+
   return (
     <DashboardShell
       userEmail={session.user.email ?? ""}
-      adminNavLink={<AppShellAdminNavLink />}
+      isAdmin={isAdmin}
       athletes={athletes}
       selectedAthlete={selectedAthlete}
     >
