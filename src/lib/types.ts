@@ -1,4 +1,6 @@
-export type UserRole = "owner" | "athlete" | "coach" | "admin";
+export type UserRole = "user" | "maintainer" | "admin";
+
+export type AthleteAccessRole = "parent" | "athlete";
 
 type AthleteProfile = {
   id: string;
@@ -19,7 +21,6 @@ type AthleteProfile = {
 
 export type Athlete = {
   id: string;
-  ownerUserId: string;
   focusSportId: string;
   name: string;
   dateOfBirth: string | null;

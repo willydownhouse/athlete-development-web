@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { ApiError, createAthlete } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import type { AthleteAccessRole } from "@/lib/types";
 
 export type OnboardingActionState = {
   error?: string;
@@ -43,6 +44,14 @@ function readOptionalDate(formData: FormData, key: string): string | undefined {
   return value === "" ? undefined : value;
 }
 
+function readRelationshipToAthlete(formData: FormData): AthleteAccessRole | null {
+  const value = readString(formData, "relationshipToAthlete");
+  if (value === "parent" || value === "athlete") {
+    return value;
+  }
+  return null;
+}
+
 export async function createAthleteBasicsAction(
   _prevState: OnboardingActionState,
   formData: FormData,
@@ -54,10 +63,15 @@ export async function createAthleteBasicsAction(
   }
 
   const focusSportId = readString(formData, "focusSportId");
+  const relationshipToAthlete = readRelationshipToAthlete(formData);
   const name = readString(formData, "name");
 
   if (!focusSportId) {
     return { error: "Focus sport is required" };
+  }
+
+  if (!relationshipToAthlete) {
+    return { error: "Please choose who this profile is for" };
   }
 
   if (!name) {
@@ -66,6 +80,7 @@ export async function createAthleteBasicsAction(
 
   try {
     const athlete = await createAthlete(token, {
+      relationshipToAthlete,
       focusSportId,
       name,
       dateOfBirth: readOptionalDate(formData, "dateOfBirth"),

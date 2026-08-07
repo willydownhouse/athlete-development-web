@@ -58,7 +58,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
         <section className="space-y-6 lg:space-y-8">
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">{sportName}</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
               Athlete details
             </h1>
           </div>

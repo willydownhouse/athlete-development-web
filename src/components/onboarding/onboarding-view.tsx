@@ -32,7 +32,7 @@ export function OnboardingView({
             <p className="text-sm text-zinc-400 lg:text-base">
               Welcome{greetingName ? `, ${greetingName}` : ""}
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:mt-3 lg:text-5xl lg:leading-[1.1]">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
               Let&apos;s set up your athlete profile
             </h1>
             <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:space-y-4 lg:text-base lg:leading-7">

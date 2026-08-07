@@ -1,5 +1,6 @@
 import type {
   Athlete,
+  AthleteAccessRole,
   AthleteListResponse,
   Event,
   EventIntensity,
@@ -88,6 +89,7 @@ export async function fetchAthletes(token: string): Promise<Athlete[]> {
 export async function createAthlete(
   token: string,
   body: {
+    relationshipToAthlete: AthleteAccessRole;
     focusSportId: string;
     name: string;
     dateOfBirth?: string;
