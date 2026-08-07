@@ -63,7 +63,12 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
 
         <div className="mt-6">
           <Suspense fallback={<EventDetailSkeleton />}>
-            <EventDetailSection athleteId={normalizedAthleteId} eventId={normalizedEventId} />
+            <EventDetailSection
+              athleteId={normalizedAthleteId}
+              eventId={normalizedEventId}
+              focusSportId={selectedAthlete.focusSportId}
+              focusSportName={selectedAthlete.focusSport.name}
+            />
           </Suspense>
         </div>
       </div>

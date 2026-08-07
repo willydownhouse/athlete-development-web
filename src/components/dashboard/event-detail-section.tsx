@@ -7,12 +7,19 @@ import { fetchEventPageData, fetchEventPageFormData } from "@/lib/event-page-dat
 type EventDetailSectionProps = {
   athleteId: string;
   eventId: string;
+  focusSportId: string;
+  focusSportName: string;
 };
 
-export async function EventDetailSection({ athleteId, eventId }: EventDetailSectionProps) {
+export async function EventDetailSection({
+  athleteId,
+  eventId,
+  focusSportId,
+  focusSportName,
+}: EventDetailSectionProps) {
   const [eventResult, formData] = await Promise.all([
     fetchEventPageData(athleteId, eventId),
-    fetchEventPageFormData(),
+    fetchEventPageFormData(focusSportId),
   ]);
 
   if (eventResult.notFound) {
@@ -37,6 +44,7 @@ export async function EventDetailSection({ athleteId, eventId }: EventDetailSect
           athleteId={athleteId}
           event={event}
           eventTypes={formData.eventTypes}
+          focusSportName={focusSportName}
           eventTypesError={formData.eventTypesError}
         />
       }

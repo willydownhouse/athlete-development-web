@@ -25,6 +25,7 @@ const DashboardInteractionsContext = createContext<DashboardInteractionsContextV
 type DashboardInteractionsProviderProps = {
   athleteId: string;
   eventTypes: EventType[];
+  focusSportName: string;
   eventTypesError?: string | null;
   children: ReactNode;
 };
@@ -32,6 +33,7 @@ type DashboardInteractionsProviderProps = {
 export function DashboardInteractionsProvider({
   athleteId,
   eventTypes,
+  focusSportName,
   eventTypesError,
   children,
 }: DashboardInteractionsProviderProps) {
@@ -96,6 +98,7 @@ export function DashboardInteractionsProvider({
       <EventFormModal
         athleteId={athleteId}
         eventTypes={eventTypes}
+        focusSportName={focusSportName}
         eventTypesError={eventTypesError}
         modalState={modalState}
         formKey={formKey}

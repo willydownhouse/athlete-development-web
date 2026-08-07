@@ -10,6 +10,7 @@ type EventEditControlsProps = {
   athleteId: string;
   event: Event;
   eventTypes: EventType[];
+  focusSportName: string;
   eventTypesError?: string | null;
 };
 
@@ -17,6 +18,7 @@ export function EventEditControls({
   athleteId,
   event,
   eventTypes,
+  focusSportName,
   eventTypesError,
 }: EventEditControlsProps) {
   const [editOpen, setEditOpen] = useState(false);
@@ -47,6 +49,7 @@ export function EventEditControls({
       <EventFormModal
         athleteId={athleteId}
         eventTypes={eventTypes}
+        focusSportName={focusSportName}
         eventTypesError={eventTypesError}
         modalState={editOpen ? { mode: "edit", event } : null}
         formKey={formKey}

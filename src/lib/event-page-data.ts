@@ -44,9 +44,11 @@ export async function fetchEventPageData(
   }
 }
 
-export async function fetchEventPageFormData(): Promise<EventPageFormDataResult> {
+export async function fetchEventPageFormData(
+  focusSportId: string,
+): Promise<EventPageFormDataResult> {
   try {
-    const eventTypes = await fetchEventTypes();
+    const eventTypes = await fetchEventTypes(focusSportId);
     return { eventTypes };
   } catch (error) {
     return {

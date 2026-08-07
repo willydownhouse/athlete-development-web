@@ -7,15 +7,21 @@ import { useDashboardInteractions } from "./dashboard-interactions";
 
 type QuickLogSectionProps = {
   eventTypes: EventType[];
+  focusSportName: string;
   eventTypesError?: string | null;
 };
 
-export function QuickLogSection({ eventTypes, eventTypesError }: QuickLogSectionProps) {
+export function QuickLogSection({
+  eventTypes,
+  focusSportName,
+  eventTypesError,
+}: QuickLogSectionProps) {
   const { openCreateModal } = useDashboardInteractions();
 
   return (
     <QuickLogCard
       eventTypes={eventTypes}
+      focusSportName={focusSportName}
       loadError={eventTypesError}
       onEventTypeClick={(defaultEventTypeId) => openCreateModal({ defaultEventTypeId })}
     />

@@ -72,6 +72,7 @@ export async function DashboardAthleteContent({
       key={selectedAthlete.id}
       athleteId={selectedAthlete.id}
       eventTypes={eventTypes}
+      focusSportName={selectedAthlete.focusSport.name}
       eventTypesError={eventTypesError}
     >
       <Suspense fallback={<DashboardHeaderSkeleton selectedAthlete={selectedAthlete} />}>
@@ -89,7 +90,11 @@ export async function DashboardAthleteContent({
             startedAtTo={todayRange.startedAtTo}
           />
         </Suspense>
-        <QuickLogSection eventTypes={eventTypes} eventTypesError={eventTypesError} />
+        <QuickLogSection
+          eventTypes={eventTypes}
+          focusSportName={selectedAthlete.focusSport.name}
+          eventTypesError={eventTypesError}
+        />
         {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
           <Suspense fallback={<HockeyStatsSkeleton />}>
             <HockeyStatsSection period={statsPeriod}>

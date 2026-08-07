@@ -2,42 +2,38 @@
 
 import { useMemo, useState } from "react";
 
-import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import { filterEventTypesByScope, type EventTypeScope } from "@/lib/event-type-groups";
 import type { EventType } from "@/lib/types";
-
-type QuickLogScope = "general" | typeof HOCKEY_SPORT_SLUG;
 
 type QuickLogCardProps = {
   eventTypes: EventType[];
+  focusSportName: string;
   loadError?: string | null;
   onEventTypeClick?: (eventTypeId: string) => void;
 };
 
-const SCOPES: { id: QuickLogScope; label: string }[] = [
-  { id: HOCKEY_SPORT_SLUG, label: "Hockey" },
-  { id: "general", label: "General" },
-];
+export function QuickLogCard({
+  eventTypes,
+  focusSportName,
+  loadError,
+  onEventTypeClick,
+}: QuickLogCardProps) {
+  const scopes = useMemo(
+    () =>
+      [
+        { id: "sport" as const, label: focusSportName },
+        { id: "general" as const, label: "General" },
+      ] satisfies { id: EventTypeScope; label: string }[],
+    [focusSportName],
+  );
+  const [scope, setScope] = useState<EventTypeScope>("sport");
 
-function isHockeyEventType(eventType: EventType): boolean {
-  const slug = eventType.sport?.slug.toLowerCase();
-  const name = eventType.sport?.name.toLowerCase();
-  return slug === HOCKEY_SPORT_SLUG || name === HOCKEY_SPORT_SLUG;
-}
+  const visibleEventTypes = useMemo(
+    () => filterEventTypesByScope(eventTypes, scope),
+    [eventTypes, scope],
+  );
 
-function isGeneralEventType(eventType: EventType): boolean {
-  return eventType.sportId === null;
-}
-
-export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickLogCardProps) {
-  const [scope, setScope] = useState<QuickLogScope>(HOCKEY_SPORT_SLUG);
-
-  const visibleEventTypes = useMemo(() => {
-    return eventTypes
-      .filter((eventType) =>
-        scope === HOCKEY_SPORT_SLUG ? isHockeyEventType(eventType) : isGeneralEventType(eventType),
-      )
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [eventTypes, scope]);
+  const emptyScopeLabel = scope === "sport" ? focusSportName.toLowerCase() : "general";
 
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
@@ -46,7 +42,7 @@ export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickL
 
         {!loadError ? (
           <div className="flex flex-wrap justify-end gap-2">
-            {SCOPES.map((item) => {
+            {scopes.map((item) => {
               const active = scope === item.id;
 
               return (
@@ -86,8 +82,7 @@ export function QuickLogCard({ eventTypes, loadError, onEventTypeClick }: QuickL
         </div>
       ) : (
         <p className="mt-4 text-sm text-zinc-500">
-          No {scope === HOCKEY_SPORT_SLUG ? HOCKEY_SPORT_SLUG : "general"} event types available
-          yet.
+          No {emptyScopeLabel} event types available yet.
         </p>
       )}
     </section>

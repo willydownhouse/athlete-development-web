@@ -55,8 +55,7 @@ export default async function AthleteDashboardPage({
   let eventTypesError: string | null = null;
 
   try {
-    // Fetch the full active catalog so Quick Log can split General vs Hockey.
-    eventTypes = await fetchEventTypes();
+    eventTypes = await fetchEventTypes(selectedAthlete.focusSportId);
   } catch (error) {
     eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
   }

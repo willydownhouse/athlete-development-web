@@ -18,7 +18,7 @@ import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
-import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import { groupEventTypes } from "@/lib/event-type-groups";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
 import {
@@ -43,6 +43,7 @@ const INTENSITY_OPTIONS = [
 type EventFormProps = {
   athleteId: string;
   eventTypes: EventType[];
+  focusSportName: string;
   event?: Event;
   defaultEventTypeId?: string;
   defaultEventDate?: string;
@@ -50,32 +51,6 @@ type EventFormProps = {
   onDeleteSuccess?: () => void;
   deleteRedirectTo?: string;
 };
-
-type EventTypeGroup = {
-  label: string;
-  items: EventType[];
-};
-
-function groupEventTypes(eventTypes: EventType[]): EventTypeGroup[] {
-  const general = eventTypes
-    .filter((eventType) => eventType.sportId === null)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const hockey = eventTypes
-    .filter((eventType) => eventType.sport?.slug === HOCKEY_SPORT_SLUG)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const groups: EventTypeGroup[] = [];
-
-  if (hockey.length > 0) {
-    groups.push({ label: "Hockey", items: hockey });
-  }
-
-  if (general.length > 0) {
-    groups.push({ label: "General", items: general });
-  }
-
-  return groups;
-}
 
 function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
   const { pending } = useFormStatus();
@@ -104,6 +79,7 @@ function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
 export function EventForm({
   athleteId,
   eventTypes,
+  focusSportName,
   event,
   defaultEventTypeId,
   defaultEventDate,
@@ -119,7 +95,10 @@ export function EventForm({
     initialState,
   );
   const [deleteState, deleteFormAction] = useActionState(deleteEventAction, initialState);
-  const groups = useMemo(() => groupEventTypes(eventTypes), [eventTypes]);
+  const groups = useMemo(
+    () => groupEventTypes(eventTypes, focusSportName),
+    [eventTypes, focusSportName],
+  );
   const values = useMemo(
     () =>
       event

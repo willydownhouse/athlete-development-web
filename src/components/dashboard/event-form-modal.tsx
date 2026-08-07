@@ -12,6 +12,7 @@ export type EventModalState =
 type EventFormModalProps = {
   athleteId: string;
   eventTypes: EventType[];
+  focusSportName: string;
   eventTypesError?: string | null;
   modalState: EventModalState;
   formKey: number;
@@ -24,6 +25,7 @@ type EventFormModalProps = {
 export function EventFormModal({
   athleteId,
   eventTypes,
+  focusSportName,
   eventTypesError,
   modalState,
   formKey,
@@ -44,6 +46,7 @@ export function EventFormModal({
           key={formKey}
           athleteId={athleteId}
           eventTypes={eventTypes}
+          focusSportName={focusSportName}
           event={modalState?.mode === "edit" ? modalState.event : undefined}
           defaultEventTypeId={
             modalState?.mode === "create" ? modalState.defaultEventTypeId : undefined
