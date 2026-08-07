@@ -6,6 +6,10 @@ export function athleteEventHref(athleteId: string, eventId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/event/${encodeURIComponent(eventId)}`;
 }
 
+export function athleteEventsHref(athleteId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/events`;
+}
+
 export function defaultDashboardHref(athletes: { id: string }[]): string {
   const firstAthlete = athletes[0];
 

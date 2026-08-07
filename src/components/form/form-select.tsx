@@ -14,12 +14,14 @@ export type FormSelectGroup = {
 };
 
 type FormSelectProps = {
-  name: string;
+  name?: string;
   options?: FormSelectOption[];
   groups?: FormSelectGroup[];
+  value?: string;
   defaultValue?: string;
   placeholder?: string;
   className?: string;
+  onChange?: (value: string) => void;
   onValueChange?: (value: string) => void;
 };
 
@@ -38,21 +40,35 @@ export function FormSelect({
   name,
   options,
   groups,
+  value,
   defaultValue = "",
   placeholder = "Select",
   className = "",
+  onChange,
   onValueChange,
 }: FormSelectProps) {
   const listboxId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(defaultValue);
+  const isControlled = value !== undefined;
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const currentValue = isControlled ? value : uncontrolledValue;
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const allOptions = flattenOptions(options, groups);
-  const selectedOption = allOptions.find((option) => option.value === value);
+  const selectedOption = allOptions.find((option) => option.value === currentValue);
   const displayLabel = selectedOption?.label ?? placeholder;
+
+  function selectOption(nextValue: string) {
+    if (!isControlled) {
+      setUncontrolledValue(nextValue);
+    }
+
+    onChange?.(nextValue);
+    onValueChange?.(nextValue);
+    setOpen(false);
+  }
 
   useEffect(() => {
     if (!open || !triggerRef.current) {
@@ -127,7 +143,7 @@ export function FormSelect({
   }, [open]);
 
   function renderOption(option: FormSelectOption) {
-    const selected = option.value === value;
+    const selected = option.value === currentValue;
 
     return (
       <button
@@ -136,9 +152,7 @@ export function FormSelect({
         role="option"
         aria-selected={selected}
         onClick={() => {
-          setValue(option.value);
-          onValueChange?.(option.value);
-          setOpen(false);
+          selectOption(option.value);
         }}
         className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 ${
           selected ? "bg-white/5 text-white" : "text-zinc-300"
@@ -177,7 +191,7 @@ export function FormSelect({
 
   return (
     <>
-      <input type="hidden" name={name} value={value} />
+      {name ? <input type="hidden" name={name} value={currentValue} /> : null}
       <button
         ref={triggerRef}
         type="button"

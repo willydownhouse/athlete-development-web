@@ -24,9 +24,11 @@ const datePickerClassNames = {
 };
 
 type DatePickerInputProps = {
-  name: string;
+  name?: string;
   id?: string;
+  value?: string;
   defaultValue?: string;
+  onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
   disabledDates?: Matcher | Matcher[];
@@ -47,7 +49,9 @@ function parseDateValue(value: string | undefined): Date | undefined {
 export function DatePickerInput({
   name,
   id,
+  value,
   defaultValue,
+  onChange,
   placeholder = "Select date",
   className,
   disabledDates,
@@ -60,7 +64,11 @@ export function DatePickerInput({
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Date | undefined>(() => parseDateValue(defaultValue));
+  const isControlled = value !== undefined;
+  const [uncontrolledSelected, setUncontrolledSelected] = useState<Date | undefined>(() =>
+    parseDateValue(defaultValue),
+  );
+  const selected = isControlled ? parseDateValue(value) : uncontrolledSelected;
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
 
   useEffect(() => {
@@ -158,7 +166,12 @@ export function DatePickerInput({
               mode="single"
               selected={selected}
               onSelect={(date) => {
-                setSelected(date);
+                if (isControlled) {
+                  onChange?.(date ? format(date, "yyyy-MM-dd") : "");
+                } else {
+                  setUncontrolledSelected(date);
+                }
+
                 setOpen(false);
               }}
               defaultMonth={selected}
@@ -179,7 +192,7 @@ export function DatePickerInput({
 
   return (
     <div ref={containerRef} className="relative">
-      <input type="hidden" name={name} value={formattedValue} />
+      {name ? <input type="hidden" name={name} value={formattedValue} /> : null}
       <button
         ref={triggerRef}
         id={inputId}

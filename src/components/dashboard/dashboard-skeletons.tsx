@@ -97,3 +97,26 @@ export function EventDetailSkeleton() {
     </article>
   );
 }
+
+export function EventsListSkeleton() {
+  return (
+    <section className={CARD_CLASS}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="mt-4 space-y-3">
+        <EventListRowSkeleton />
+        <EventListRowSkeleton />
+        <EventListRowSkeleton />
+      </div>
+      <div className="mt-4 flex justify-between border-t border-white/10 pt-4">
+        <Skeleton className="h-4 w-24" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24 rounded-xl" />
+          <Skeleton className="h-9 w-20 rounded-xl" />
+        </div>
+      </div>
+    </section>
+  );
+}
