@@ -97,7 +97,7 @@ export async function DashboardAthleteContent({
         />
         {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
           <Suspense fallback={<HockeyStatsSkeleton />}>
-            <HockeyStatsSection period={statsPeriod}>
+            <HockeyStatsSection sportName={selectedAthlete.focusSport.name} period={statsPeriod}>
               <Suspense key={statsPeriod} fallback={<HockeyStatsGridSkeleton />}>
                 <HockeyStats
                   athleteId={selectedAthlete.id}

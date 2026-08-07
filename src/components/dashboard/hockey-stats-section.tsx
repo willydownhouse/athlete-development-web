@@ -11,11 +11,12 @@ const PERIOD_OPTIONS: Array<{ value: HockeyStatsPeriod; label: string }> = [
 ];
 
 type HockeyStatsSectionProps = {
+  sportName: string;
   period: HockeyStatsPeriod;
   children: React.ReactNode;
 };
 
-export function HockeyStatsSection({ period, children }: HockeyStatsSectionProps) {
+export function HockeyStatsSection({ sportName, period, children }: HockeyStatsSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,7 +30,7 @@ export function HockeyStatsSection({ period, children }: HockeyStatsSectionProps
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Hockey stats</h2>
+        <h2 className="text-base font-semibold text-white">{sportName} stats</h2>
         <div className="flex rounded-lg bg-white/5 p-0.5">
           {PERIOD_OPTIONS.map((option) => {
             const isActive = option.value === period;
