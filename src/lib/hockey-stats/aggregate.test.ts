@@ -248,4 +248,14 @@ describe("formatHockeyStatTotal", () => {
       }),
     ).toBe("3 goals");
   });
+
+  it("formats RPE metrics without the scale unit", () => {
+    expect(
+      formatHockeyStatTotal({
+        name: "RPE",
+        canonicalUnit: "scale_1_10",
+        total: 7,
+      }),
+    ).toBe("7");
+  });
 });

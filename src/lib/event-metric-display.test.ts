@@ -66,6 +66,19 @@ describe("formatEventMetricValue", () => {
     expect(formatEventMetricValue(metric)).toBe("1h 1m");
   });
 
+  it("formats RPE metrics without the scale unit", () => {
+    const metric = buildMetric(
+      buildMetricDefinition({
+        canonicalUnit: "scale_1_10",
+        key: "rpe",
+        name: "RPE",
+      }),
+      { numericValue: "7" },
+    );
+
+    expect(formatEventMetricValue(metric)).toBe("7");
+  });
+
   it("formats boolean and text metrics", () => {
     const booleanMetric = buildMetric(
       buildMetricDefinition({ valueType: "boolean", name: "Completed" }),

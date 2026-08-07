@@ -226,4 +226,39 @@ describe("validateMetricForm", () => {
 
     expect(validateMetricForm(formData, [mapping])).toBe("Shot count must be a number");
   });
+
+  it("validates RPE metrics must be between 1 and 10", () => {
+    const mapping = buildMapping(
+      { metricDefinitionId: "rpe-metric" },
+      {
+        id: "rpe-metric",
+        key: "rpe",
+        name: "RPE",
+        valueType: "number",
+        canonicalUnit: "scale_1_10",
+        description: "Rating of perceived exertion on a 1-10 scale.",
+      },
+    );
+    const formData = new FormData();
+    formData.set(metricFieldName("rpe-metric"), "11");
+
+    expect(validateMetricForm(formData, [mapping])).toBe("RPE must be between 1 and 10");
+  });
+
+  it("accepts valid optional RPE metrics", () => {
+    const mapping = buildMapping(
+      { metricDefinitionId: "rpe-metric" },
+      {
+        id: "rpe-metric",
+        key: "rpe",
+        name: "RPE",
+        valueType: "number",
+        canonicalUnit: "scale_1_10",
+      },
+    );
+    const formData = new FormData();
+    formData.set(metricFieldName("rpe-metric"), "7");
+
+    expect(validateMetricForm(formData, [mapping])).toBeNull();
+  });
 });

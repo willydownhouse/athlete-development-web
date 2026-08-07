@@ -18,6 +18,10 @@ export function isSecondsMetric(canonicalUnit: string | null): boolean {
   return canonicalUnit === "s";
 }
 
+export function isScale1To10Metric(canonicalUnit: string | null): boolean {
+  return canonicalUnit === "scale_1_10";
+}
+
 export const EVENT_DURATION_FIELDS = {
   hours: "durationHours",
   minutes: "durationMinutes",
@@ -213,6 +217,31 @@ export function validateDurationPartsForm(
   return null;
 }
 
+function validateNumericMetricValue(
+  mapping: EventTypeMetricDefinition,
+  value: string,
+): string | null {
+  const { name, canonicalUnit } = mapping.metricDefinition;
+
+  if (Number.isNaN(Number(value))) {
+    return `${name} must be a number`;
+  }
+
+  if (isScale1To10Metric(canonicalUnit)) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
+      return `${name} must be between 1 and 10`;
+    }
+  }
+
+  return null;
+}
+
+function readMetricFieldValue(formData: FormData, mapping: EventTypeMetricDefinition): string {
+  const raw = formData.get(metricFieldName(mapping.metricDefinitionId));
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
 export function validateMetricForm(
   formData: FormData,
   mappings: EventTypeMetricDefinition[],
@@ -263,8 +292,33 @@ export function validateMetricForm(
       return `${mapping.metricDefinition.name} is required`;
     }
 
-    if (mapping.metricDefinition.valueType === "number" && Number.isNaN(Number(value))) {
-      return `${mapping.metricDefinition.name} must be a number`;
+    if (mapping.metricDefinition.valueType === "number") {
+      const numericError = validateNumericMetricValue(mapping, value);
+      if (numericError) {
+        return numericError;
+      }
+    }
+
+    continue;
+  }
+
+  for (const mapping of mappings) {
+    if (mapping.metricDefinition.valueType !== "number") {
+      continue;
+    }
+
+    if (isSecondsMetric(mapping.metricDefinition.canonicalUnit)) {
+      continue;
+    }
+
+    const value = readMetricFieldValue(formData, mapping);
+    if (value === "") {
+      continue;
+    }
+
+    const numericError = validateNumericMetricValue(mapping, value);
+    if (numericError) {
+      return numericError;
     }
   }
 
@@ -272,7 +326,7 @@ export function validateMetricForm(
 }
 
 export function formatMetricUnit(canonicalUnit: string | null): string | null {
-  if (!canonicalUnit) {
+  if (!canonicalUnit || isScale1To10Metric(canonicalUnit)) {
     return null;
   }
 

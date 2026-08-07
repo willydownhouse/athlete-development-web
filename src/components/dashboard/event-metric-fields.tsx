@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+import { RpeScaleInfoTooltip } from "@/components/dashboard/rpe-scale-guide";
 import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import {
   eventMetricsToFormValues,
   formatMetricUnit,
+  isScale1To10Metric,
   isSecondsMetric,
   metricDurationFieldName,
   metricFieldName,
@@ -111,23 +113,40 @@ function EventMetricFields({
             );
           }
 
+          const isRpeMetric = isScale1To10Metric(mapping.metricDefinition.canonicalUnit);
+          const inputId = `metric-input-${mapping.metricDefinitionId}`;
+
           return (
-            <label key={mapping.id} className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-zinc-300">{label}</span>
+            <div key={mapping.id} className="flex flex-col gap-1 text-sm">
+              <div className="flex items-center gap-2">
+                <label htmlFor={inputId} className="font-medium text-zinc-300">
+                  {label}
+                </label>
+                {isRpeMetric ? <RpeScaleInfoTooltip /> : null}
+              </div>
               <input
+                id={inputId}
                 name={fieldName}
                 type={mapping.metricDefinition.valueType === "number" ? "number" : "text"}
                 defaultValue={defaultValue}
                 className={inputClassName}
+                {...(isRpeMetric ? { min: 1, max: 10, step: 1 } : {})}
               />
-              {mapping.metricDefinition.description || unit ? (
+              {mapping.metricDefinition.description || unit || isRpeMetric ? (
                 <span className="text-xs text-zinc-500">
-                  {[mapping.metricDefinition.description, unit ? `Unit: ${unit}` : null]
+                  {[
+                    mapping.metricDefinition.description,
+                    isRpeMetric
+                      ? "Enter a whole number from 1 to 10"
+                      : unit
+                        ? `Unit: ${unit}`
+                        : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
               ) : null}
-            </label>
+            </div>
           );
         })}
       </div>

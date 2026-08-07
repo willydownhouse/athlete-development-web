@@ -53,7 +53,7 @@ describe("buildHockeyStatTiles", () => {
       },
       {
         key: "11111111-1111-4111-8111-111111111111-rpe",
-        value: "7 scale 1 10",
+        value: "7",
         label: "RPE",
         subtitle: "Ice practice",
       },
