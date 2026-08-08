@@ -13,6 +13,14 @@ function formatTime(startedAt: string): string {
   return format(new Date(startedAt), "HH:mm");
 }
 
+function formatEventListDate(startedAt: string): string {
+  const date = new Date(startedAt);
+  const now = new Date();
+  const pattern = date.getFullYear() === now.getFullYear() ? "EEE d MMM" : "EEE d MMM yyyy";
+
+  return format(date, pattern);
+}
+
 export function eventShortLabel(name: string): string {
   const words = name.trim().split(/\s+/);
 
@@ -40,8 +48,18 @@ function truncateText(text: string, maxLength: number): string {
   return `${text.slice(0, maxLength).trimEnd()}…`;
 }
 
-export function eventDetail(event: Event): string {
-  const parts: string[] = [formatTime(event.startedAt)];
+type EventDetailOptions = {
+  showDate?: boolean;
+};
+
+export function eventDetail(event: Event, options: EventDetailOptions = {}): string {
+  const parts: string[] = [];
+
+  if (options.showDate) {
+    parts.push(formatEventListDate(event.startedAt));
+  }
+
+  parts.push(formatTime(event.startedAt));
 
   if (event.durationSeconds) {
     parts.push(formatDurationSeconds(event.durationSeconds));

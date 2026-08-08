@@ -37,6 +37,7 @@ export function EventsListContent({ athleteId, params, events, total }: EventsLi
               key={event.id}
               event={event}
               href={athleteEventHref(athleteId, event.id)}
+              showDate
             />
           ))}
         </div>
