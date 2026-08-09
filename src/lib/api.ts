@@ -96,8 +96,6 @@ export async function createAthlete(
     focusSportId: string;
     name: string;
     dateOfBirth?: string;
-    heightCm?: number;
-    weightKg?: number;
   },
 ): Promise<Athlete> {
   return apiFetch<Athlete>(token, "/api/athletes", {

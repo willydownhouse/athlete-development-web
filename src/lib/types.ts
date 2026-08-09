@@ -24,8 +24,6 @@ export type Athlete = {
   focusSportId: string;
   name: string;
   dateOfBirth: string | null;
-  heightCm: number | null;
-  weightKg: number | null;
   createdAt: string;
   deletedAt: string | null;
   focusSport: Sport;
