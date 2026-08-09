@@ -2,11 +2,9 @@ import type { Athlete, EventType } from "@/lib/types";
 
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./bottom-nav";
-import { DeployMarker } from "./deploy-marker";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
-import { getDeployInfo } from "@/lib/deploy-info";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 
 type DashboardViewProps = {
@@ -30,7 +28,6 @@ export async function DashboardView({
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
   const isAdmin = await getIsAdminUser();
-  const deployInfo = getDeployInfo();
 
   return (
     <DashboardShell
@@ -71,7 +68,6 @@ export async function DashboardView({
       </div>
 
       <DashboardBottomNav />
-      <DeployMarker info={deployInfo} />
     </DashboardShell>
   );
 }
