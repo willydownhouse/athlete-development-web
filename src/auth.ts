@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-import { AUTH_PROVIDER_ACCOUNT_ID_CLAIM, AUTH_PROVIDER_CLAIM } from "@/lib/auth-claims";
+import {
+  AUTH_PROVIDER_ACCOUNT_ID_CLAIM,
+  AUTH_PROVIDER_CLAIM,
+  IMAGE_URL_CLAIM,
+} from "@/lib/auth-claims";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -29,6 +33,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Auth.js only provides user during sign-in.
       if (user?.name) {
         token.name = user.name;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Auth.js only provides user during sign-in.
+      if (user?.image) {
+        token[IMAGE_URL_CLAIM] = user.image;
       }
 
       return token;

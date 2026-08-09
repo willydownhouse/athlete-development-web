@@ -30,6 +30,7 @@ describe("api client", () => {
         id: "11111111-1111-4111-8111-111111111111",
         email: "parent@example.com",
         name: "Parent User",
+        imageUrl: "https://lh3.googleusercontent.com/a/parent",
         role: "user",
       }),
     });
