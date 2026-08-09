@@ -96,6 +96,7 @@ export type Event = {
   id: string;
   athleteId: string;
   eventTypeId: string;
+  createdByUserId: string;
   sportId: string | null;
   category: EventCategory;
   title: string | null;

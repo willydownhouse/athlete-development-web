@@ -44,6 +44,7 @@ function buildEvent(metrics: EventMetric[], overrides: Partial<Event> = {}): Eve
     id: "event-1",
     athleteId: "athlete-1",
     eventTypeId: "event-type-shooting",
+    createdByUserId: "user-1",
     sportId: "00000000-0000-4000-8000-000000000001",
     category: "training",
     title: "Shooting practice",

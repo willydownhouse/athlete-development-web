@@ -18,6 +18,7 @@ function buildEvent(overrides: Partial<Event> = {}): Event {
     id: "event-1",
     athleteId: "athlete-1",
     eventTypeId: "type-1",
+    createdByUserId: "user-1",
     sportId: null,
     category: "training",
     title: null,
