@@ -123,8 +123,8 @@ export function OnboardingShell({
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Athlete Development Center</p>
-            <p className="truncate text-xs text-zinc-500">Add athlete</p>
+            <p className="truncate text-sm font-semibold text-white">Add athlete</p>
+            <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
           </div>
         </header>
 
