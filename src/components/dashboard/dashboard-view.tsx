@@ -1,7 +1,6 @@
 import type { Athlete, EventType } from "@/lib/types";
 
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
-import { DashboardBottomNav } from "./bottom-nav";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
@@ -38,7 +37,7 @@ export async function DashboardView({
     >
       <div
         className={`relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 sm:px-6 lg:max-w-3xl lg:px-10 ${
-          hasAthlete ? "pb-28 pt-6" : "justify-center py-10 pb-28 lg:py-16"
+          hasAthlete ? "pb-6 pt-6" : "justify-center py-10 pb-6 lg:py-16"
         }`}
       >
         {hasAthlete ? (
@@ -66,8 +65,6 @@ export async function DashboardView({
           </>
         )}
       </div>
-
-      <DashboardBottomNav />
     </DashboardShell>
   );
 }

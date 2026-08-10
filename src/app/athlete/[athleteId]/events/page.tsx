@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { DashboardBottomNav } from "@/components/dashboard/bottom-nav";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
@@ -73,7 +72,7 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
       athletes={athletes}
       selectedAthlete={selectedAthlete}
     >
-      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
+      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
         <Link
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
@@ -96,8 +95,6 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           </Suspense>
         </div>
       </div>
-
-      <DashboardBottomNav />
     </DashboardShell>
   );
 }
