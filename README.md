@@ -31,6 +31,7 @@ Required values:
 
 - `AUTH_SECRET` — must match the backend service
 - `AUTH_URL` — frontend URL, e.g. `http://localhost:3000`
+- `AUTH_TOKEN_SALT` — Auth.js session cookie name/salt; must match the backend service (`authjs.session-token` locally, `__Secure-authjs.session-token` for HTTPS production)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth web client
 - `NEXT_PUBLIC_API_URL` — Fastify API URL, e.g. `http://localhost:3001`
 
