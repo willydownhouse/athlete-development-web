@@ -5,16 +5,6 @@ export type AthleteAccessRole = "parent" | "athlete";
 type AthleteProfile = {
   id: string;
   athleteId: string;
-  teamName: string | null;
-  level: string | null;
-  strengths: unknown | null;
-  developmentAreas: unknown | null;
-  trainingEnvironment: unknown | null;
-  injuryNotes: string | null;
-  motivationNotes: string | null;
-  parentObservations: string | null;
-  sportSpecificData: unknown | null;
-  aiProfileSummary: string | null;
   createdAt: string;
   updatedAt: string;
 };

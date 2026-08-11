@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { Athlete } from "@/lib/types";
 
-import { athleteEventsThisWeekLabel, athleteIdentityLabel } from "./athlete-meta";
+import { ageGroupFromDateOfBirth, athleteEventsThisWeekLabel } from "./athlete-meta";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
@@ -15,7 +15,7 @@ export function DashboardHeader({
   eventsThisWeek = 0,
   eventsWeekHref,
 }: DashboardHeaderProps) {
-  const identity = selectedAthlete ? athleteIdentityLabel(selectedAthlete) : null;
+  const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
   const eventsLabel = athleteEventsThisWeekLabel(eventsThisWeek);
   const eventsHref = selectedAthlete ? eventsWeekHref : null;
 
@@ -28,9 +28,9 @@ export function DashboardHeader({
             {selectedAthlete.name}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            {identity ? (
+            {ageGroup ? (
               <>
-                {identity}
+                {ageGroup}
                 {" · "}
               </>
             ) : null}
