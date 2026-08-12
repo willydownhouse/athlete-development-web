@@ -1,4 +1,3 @@
-import type { Athlete } from "@/lib/types";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,18 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HockeyStatsSection } from "./hockey-stats-section";
 
 const CARD_CLASS = "rounded-[1.35rem] bg-[#171b22] px-4 py-4";
-
-function DashboardHeaderSkeleton({ selectedAthlete }: { selectedAthlete: Athlete }) {
-  return (
-    <header>
-      <p className="text-sm text-zinc-400">Today</p>
-      <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
-        {selectedAthlete.name}
-      </h1>
-      <Skeleton className="mt-2 h-4 w-52 max-w-full" />
-    </header>
-  );
-}
 
 function EventListRowSkeleton() {
   return (
@@ -31,45 +18,22 @@ function EventListRowSkeleton() {
   );
 }
 
-function TodaysEventsCardSkeleton() {
+export function TodaysEventsSkeleton({ count = 2 }: { count?: number }) {
   return (
     <section className={CARD_CLASS}>
       <Skeleton className="h-5 w-32" />
-      <div className="mt-4 space-y-3">
-        <EventListRowSkeleton />
-        <EventListRowSkeleton />
-        <EventListRowSkeleton />
-      </div>
-    </section>
-  );
-}
-
-function TodaysEventsSkeleton() {
-  return <TodaysEventsCardSkeleton />;
-}
-
-function QuickLogSkeleton() {
-  return (
-    <section className={CARD_CLASS}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Quick log</h2>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Skeleton className="h-9 w-24 rounded-full" />
-          <Skeleton className="h-9 w-20 rounded-full" />
+      {count > 0 ? (
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: count }, (_, index) => (
+            <EventListRowSkeleton key={index} />
+          ))}
         </div>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2.5">
-        <Skeleton className="h-9 w-28 rounded-full" />
-        <Skeleton className="h-9 w-24 rounded-full" />
-        <Skeleton className="h-9 w-32 rounded-full" />
-        <Skeleton className="h-9 w-20 rounded-full" />
-        <Skeleton className="h-9 w-36 rounded-full" />
-      </div>
+      ) : null}
     </section>
   );
 }
 
-function CalendarSectionSkeleton() {
+export function CalendarSectionSkeleton() {
   return (
     <section className={CARD_CLASS}>
       <div className="flex items-center justify-between gap-3">
@@ -85,19 +49,6 @@ function CalendarSectionSkeleton() {
         <CalendarDayEventsSkeleton />
       </div>
     </section>
-  );
-}
-
-export function DashboardEventsSkeleton({ selectedAthlete }: { selectedAthlete: Athlete }) {
-  return (
-    <>
-      <DashboardHeaderSkeleton selectedAthlete={selectedAthlete} />
-      <div className="mt-6 flex flex-col gap-3.5">
-        <TodaysEventsSkeleton />
-        <QuickLogSkeleton />
-        <CalendarSectionSkeleton />
-      </div>
-    </>
   );
 }
 

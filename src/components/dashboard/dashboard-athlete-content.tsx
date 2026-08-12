@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
@@ -6,6 +7,7 @@ import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
 
+import { athleteEventsThisWeekLabel } from "./athlete-meta";
 import { CalendarSection } from "./calendar-section";
 import { athleteEventsDayHref, athleteEventsWeekHref } from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
@@ -14,11 +16,15 @@ import { HockeyStats } from "./hockey-stats";
 import { HockeyStatsSection } from "./hockey-stats-section";
 import { QuickLogSection } from "./quick-log-section";
 import {
-  DashboardEventsSkeleton,
+  CalendarSectionSkeleton,
   HockeyStatsGridSkeleton,
   HockeyStatsSkeleton,
+  TodaysEventsSkeleton,
 } from "./dashboard-skeletons";
 import { TodaysEventsCard } from "./todays-events-card";
+
+const inlineSkeletonClassName =
+  "inline-block h-4 w-36 animate-pulse rounded-lg bg-white/[0.07] align-middle";
 
 type DashboardAthleteContentProps = {
   selectedAthlete: Athlete;
@@ -27,14 +33,72 @@ type DashboardAthleteContentProps = {
   statsPeriod: HockeyStatsPeriod;
 };
 
-async function DashboardAthleteBody({
+async function DashboardWeekEventsMeta({
+  athleteId,
+  timeZone,
+}: {
+  athleteId: string;
+  timeZone: string;
+}) {
+  const eventsBundle = await loadDashboardEventsBundle(athleteId, timeZone);
+  const eventsLabel = athleteEventsThisWeekLabel(eventsBundle.weekEvents.length);
+
+  return (
+    <Link
+      href={athleteEventsWeekHref(athleteId, timeZone)}
+      className="transition hover:text-zinc-200"
+    >
+      {eventsLabel}
+    </Link>
+  );
+}
+
+async function DashboardTodaysEventsSection({
+  selectedAthlete,
+  timeZone,
+}: {
+  selectedAthlete: Athlete;
+  timeZone: string;
+}) {
+  const eventsBundle = await loadDashboardEventsBundle(selectedAthlete.id, timeZone);
+
+  return (
+    <TodaysEventsCard
+      athleteId={selectedAthlete.id}
+      events={eventsBundle.todayEvents}
+      loadError={eventsBundle.error}
+      eventsHref={athleteEventsDayHref(selectedAthlete.id, timeZone)}
+    />
+  );
+}
+
+async function DashboardCalendarSection({
+  selectedAthlete,
+  timeZone,
+}: {
+  selectedAthlete: Athlete;
+  timeZone: string;
+}) {
+  const eventsBundle = await loadDashboardEventsBundle(selectedAthlete.id, timeZone);
+
+  return (
+    <CalendarSection
+      athleteId={selectedAthlete.id}
+      timeZone={timeZone}
+      initialAllEvents={eventsBundle.allEvents}
+      loadedRange={eventsBundle.loadedRange}
+      initialLoadError={eventsBundle.error}
+    />
+  );
+}
+
+export async function DashboardAthleteContent({
   selectedAthlete,
   eventTypes,
   eventTypesError,
   statsPeriod,
 }: DashboardAthleteContentProps) {
   const timeZone = await getRequestTimeZone();
-  const eventsBundle = await loadDashboardEventsBundle(selectedAthlete.id, timeZone);
 
   return (
     <DashboardInteractionsProvider
@@ -46,16 +110,16 @@ async function DashboardAthleteBody({
     >
       <DashboardHeader
         selectedAthlete={selectedAthlete}
-        eventsThisWeek={eventsBundle.weekEvents.length}
-        eventsWeekHref={athleteEventsWeekHref(selectedAthlete.id, timeZone)}
+        eventsMeta={
+          <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>
+            <DashboardWeekEventsMeta athleteId={selectedAthlete.id} timeZone={timeZone} />
+          </Suspense>
+        }
       />
       <div className="mt-6 flex flex-col gap-3.5">
-        <TodaysEventsCard
-          athleteId={selectedAthlete.id}
-          events={eventsBundle.todayEvents}
-          loadError={eventsBundle.error}
-          eventsHref={athleteEventsDayHref(selectedAthlete.id, timeZone)}
-        />
+        <Suspense fallback={<TodaysEventsSkeleton />}>
+          <DashboardTodaysEventsSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
+        </Suspense>
         <QuickLogSection
           eventTypes={eventTypes}
           focusSportName={selectedAthlete.focusSport.name}
@@ -82,23 +146,10 @@ async function DashboardAthleteBody({
             </HockeyStatsSection>
           </Suspense>
         ) : null}
-
-        <CalendarSection
-          athleteId={selectedAthlete.id}
-          timeZone={timeZone}
-          initialAllEvents={eventsBundle.allEvents}
-          loadedRange={eventsBundle.loadedRange}
-          initialLoadError={eventsBundle.error}
-        />
+        <Suspense fallback={<CalendarSectionSkeleton />}>
+          <DashboardCalendarSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
+        </Suspense>
       </div>
     </DashboardInteractionsProvider>
-  );
-}
-
-export async function DashboardAthleteContent(props: DashboardAthleteContentProps) {
-  return (
-    <Suspense fallback={<DashboardEventsSkeleton selectedAthlete={props.selectedAthlete} />}>
-      <DashboardAthleteBody {...props} />
-    </Suspense>
   );
 }
