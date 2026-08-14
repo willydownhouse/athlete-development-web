@@ -7,6 +7,7 @@ import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
 import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
 import {
@@ -65,7 +66,8 @@ export function CalendarSection({
   const [formKey, setFormKey] = useState(0);
   const [monthEvents, setMonthEvents] = useState(initialMonthEvents);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
-  const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const showLoading = useDelayedLoading(isFetching);
   const hasNavigatedAwayRef = useRef(false);
 
   const monthRange = useMemo(() => {
@@ -78,14 +80,14 @@ export function CalendarSection({
 
   const fetchMonthEvents = useCallback(
     async (startedAtFrom: string, startedAtTo: string) => {
-      setLoading(true);
+      setIsFetching(true);
 
       try {
         const result = await fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo);
         setMonthEvents(result.error ? [] : result.events);
         setLoadError(result.error ?? null);
       } finally {
-        setLoading(false);
+        setIsFetching(false);
       }
     },
     [athleteId],
@@ -100,7 +102,7 @@ export function CalendarSection({
     }
 
     let cancelled = false;
-    setLoading(true);
+    setIsFetching(true);
 
     void fetchEventsInRangeAction(athleteId, monthRange.startedAtFrom, monthRange.startedAtTo).then(
       (result) => {
@@ -110,12 +112,13 @@ export function CalendarSection({
 
         setMonthEvents(result.error ? [] : result.events);
         setLoadError(result.error ?? null);
-        setLoading(false);
+        setIsFetching(false);
       },
     );
 
     return () => {
       cancelled = true;
+      setIsFetching(false);
     };
   }, [
     athleteId,
@@ -235,7 +238,7 @@ export function CalendarSection({
           athleteId={athleteId}
           selectedDate={selectedCalendarDate}
           events={selectedDayEvents}
-          loading={loading}
+          loading={showLoading}
           loadError={loadError}
           onAddClick={openCreateModal}
         />
