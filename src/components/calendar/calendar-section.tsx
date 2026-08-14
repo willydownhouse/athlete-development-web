@@ -6,7 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
-import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
+import {
+  EventFormModal,
+  type CreateEventModalState,
+} from "@/components/dashboard/event-form-modal";
+import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
 import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
@@ -62,8 +66,12 @@ export function CalendarSection({
   const [visibleCalendarMonth, setVisibleCalendarMonth] = useState(() =>
     parseLocalDateString(initialVisibleMonth),
   );
-  const [modalState, setModalState] = useState<EventModalState>(null);
+  const [modalState, setModalState] = useState<CreateEventModalState | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createFormMounted, setCreateFormMounted] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const createFormMountedRef = useRef(false);
+  const applyHandlersRef = useRef<EventFormApplyHandlers | null>(null);
   const [monthEvents, setMonthEvents] = useState(initialMonthEvents);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [isFetching, setIsFetching] = useState(false);
@@ -145,21 +153,45 @@ export function CalendarSection({
   );
 
   const openCreateModal = useCallback(() => {
-    setModalState({
-      mode: "create",
-      defaultEventDate: format(selectedCalendarDate, "yyyy-MM-dd"),
-    });
-    setFormKey((current) => current + 1);
+    const selectedDate = format(selectedCalendarDate, "yyyy-MM-dd");
+
+    if (!createFormMountedRef.current) {
+      setModalState({ mode: "create", defaultEventDate: selectedDate });
+      setFormKey((current) => current + 1);
+      setCreateFormMounted(true);
+      createFormMountedRef.current = true;
+    } else {
+      applyHandlersRef.current?.applyDate(selectedDate);
+    }
+
+    setCreateModalOpen(true);
   }, [selectedCalendarDate]);
 
+  const handleApplyHandlersReady = useCallback((handlers: EventFormApplyHandlers) => {
+    applyHandlersRef.current = handlers;
+  }, []);
+
   const closeModal = useCallback(() => {
-    setModalState(null);
+    setCreateModalOpen(false);
   }, []);
 
   const handleFormSuccess = useCallback(() => {
-    closeModal();
+    setCreateModalOpen(false);
+    setCreateFormMounted(false);
+    createFormMountedRef.current = false;
+    applyHandlersRef.current = null;
+    setModalState(null);
+    setFormKey((current) => current + 1);
     void fetchMonthEvents(monthRange.startedAtFrom, monthRange.startedAtTo);
-  }, [closeModal, fetchMonthEvents, monthRange.startedAtFrom, monthRange.startedAtTo]);
+  }, [fetchMonthEvents, monthRange.startedAtFrom, monthRange.startedAtTo]);
+
+  useEffect(() => {
+    if (!createModalOpen) {
+      return;
+    }
+
+    applyHandlersRef.current?.applyDate(format(selectedCalendarDate, "yyyy-MM-dd"));
+  }, [createModalOpen, selectedCalendarDate]);
 
   function markMonthNavigation() {
     hasNavigatedAwayRef.current = true;
@@ -244,16 +276,21 @@ export function CalendarSection({
         />
       </section>
 
-      <EventFormModal
-        athleteId={athleteId}
-        eventTypes={eventTypes}
-        focusSportName={focusSportName}
-        eventTypesError={eventTypesError}
-        modalState={modalState}
-        formKey={formKey}
-        onClose={closeModal}
-        onSuccess={handleFormSuccess}
-      />
+      {createFormMounted && modalState ? (
+        <EventFormModal
+          open={createModalOpen}
+          keepMounted
+          athleteId={athleteId}
+          eventTypes={eventTypes}
+          focusSportName={focusSportName}
+          eventTypesError={eventTypesError}
+          modalState={modalState}
+          formKey={formKey}
+          onApplyHandlersReady={handleApplyHandlersReady}
+          onClose={closeModal}
+          onSuccess={handleFormSuccess}
+        />
+      ) : null}
     </>
   );
 }

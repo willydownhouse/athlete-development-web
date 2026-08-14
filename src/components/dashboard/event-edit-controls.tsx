@@ -46,17 +46,20 @@ export function EventEditControls({
       >
         Edit
       </button>
-      <EventFormModal
-        athleteId={athleteId}
-        eventTypes={eventTypes}
-        focusSportName={focusSportName}
-        eventTypesError={eventTypesError}
-        modalState={editOpen ? { mode: "edit", event } : null}
-        formKey={formKey}
-        onClose={closeEditModal}
-        onSuccess={handleUpdateSuccess}
-        deleteRedirectTo={dashboardHref(athleteId)}
-      />
+      {editOpen ? (
+        <EventFormModal
+          open={editOpen}
+          athleteId={athleteId}
+          eventTypes={eventTypes}
+          focusSportName={focusSportName}
+          eventTypesError={eventTypesError}
+          modalState={{ mode: "edit", event }}
+          formKey={formKey}
+          onClose={closeEditModal}
+          onSuccess={handleUpdateSuccess}
+          deleteRedirectTo={dashboardHref(athleteId)}
+        />
+      ) : null}
     </>
   );
 }
