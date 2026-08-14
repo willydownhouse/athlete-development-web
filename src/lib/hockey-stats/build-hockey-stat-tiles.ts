@@ -5,6 +5,7 @@ import type { SportStats } from "@/lib/types";
 export type HockeyStatTile = {
   key: string;
   value: string;
+  eventCount?: number;
   label: string;
   subtitle?: string;
 };
@@ -37,6 +38,7 @@ export function buildHockeyStatTiles(sportStats: SportStats): HockeyStatTile[] {
           canonicalUnit: metric.canonicalUnit,
           total: metric.total,
         }),
+        eventCount: metric.eventCount,
         label: metric.name,
         subtitle: eventType.name,
       });

@@ -72,10 +72,7 @@ export function formatHockeyStatTotal(stat: {
   }
 
   const unit = formatMetricUnit(stat.canonicalUnit);
+  const formattedTotal = Number.isInteger(stat.total) ? String(stat.total) : stat.total.toFixed(1);
 
-  if (unit) {
-    return `${stat.total} ${unit}`;
-  }
-
-  return String(stat.total);
+  return unit ? `${formattedTotal} ${unit}` : formattedTotal;
 }

@@ -39,6 +39,7 @@ describe("buildHockeyStatTiles", () => {
               name: "RPE",
               canonicalUnit: "scale_1_10",
               total: 7,
+              eventCount: 1,
             },
           },
         },
@@ -54,6 +55,7 @@ describe("buildHockeyStatTiles", () => {
       {
         key: "11111111-1111-4111-8111-111111111111-rpe",
         value: "7",
+        eventCount: 1,
         label: "RPE",
         subtitle: "Ice practice",
       },
@@ -67,6 +69,42 @@ describe("buildHockeyStatTiles", () => {
         value: "50 shots",
         label: "Shot count",
         subtitle: "Shooting",
+      },
+    ]);
+  });
+
+  it("passes eventCount for averaged metrics", () => {
+    const sportStats: SportStats = {
+      athleteId: "33333333-3333-4333-8333-333333333333",
+      sportId: "00000000-0000-4000-8000-000000000001",
+      eventTypes: {
+        "11111111-1111-4111-8111-111111111111": {
+          name: "Ice practice",
+          durationSeconds: 3600,
+          metrics: {
+            rpe: {
+              name: "RPE",
+              canonicalUnit: "scale_1_10",
+              total: 6.5,
+              eventCount: 2,
+            },
+          },
+        },
+      },
+    };
+
+    expect(buildHockeyStatTiles(sportStats)).toEqual([
+      {
+        key: "11111111-1111-4111-8111-111111111111-duration",
+        value: "1h",
+        label: "Ice practice",
+      },
+      {
+        key: "11111111-1111-4111-8111-111111111111-rpe",
+        value: "6.5",
+        eventCount: 2,
+        label: "RPE",
+        subtitle: "Ice practice",
       },
     ]);
   });

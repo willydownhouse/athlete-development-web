@@ -259,4 +259,14 @@ describe("formatHockeyStatTotal", () => {
       }),
     ).toBe("7");
   });
+
+  it("formats decimal totals to one decimal place", () => {
+    expect(
+      formatHockeyStatTotal({
+        name: "RPE",
+        canonicalUnit: "scale_1_10",
+        total: 6.5,
+      }),
+    ).toBe("6.5");
+  });
 });

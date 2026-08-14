@@ -121,6 +121,7 @@ type SportStatsMetricStats = {
   name: string;
   canonicalUnit: string | null;
   total: number;
+  eventCount?: number;
 };
 
 export type SportStats = {
