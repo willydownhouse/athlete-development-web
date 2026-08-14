@@ -156,6 +156,22 @@ function formatDateOnly(date: CalendarDate): string {
   return `${date.year}-${month}-${day}`;
 }
 
+export function getZonedDateString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+
+  return formatDateOnly(zonedDate);
+}
+
+export function getZonedMonthStartDateString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+
+  return formatDateOnly({
+    year: zonedDate.year,
+    month: zonedDate.month,
+    day: 1,
+  });
+}
+
 function localMidnightDate(date: CalendarDate, timeZone: string): Date {
   const iso = zonedDateTimeToUtcIso(formatDateOnly(date), "00:00", timeZone);
 

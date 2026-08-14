@@ -60,11 +60,7 @@ export const loadDashboardEventsBundle = cache(
     const weekEvents = result.events;
 
     return {
-      weekEvents: eventsInHalfOpenRange(
-        weekEvents,
-        weekRange.startedAtFrom,
-        weekRange.startedAtTo,
-      ),
+      weekEvents: eventsInHalfOpenRange(weekEvents, weekRange.startedAtFrom, weekRange.startedAtTo),
       todayEvents: eventsInHalfOpenRange(
         weekEvents,
         todayRange.startedAtFrom,
