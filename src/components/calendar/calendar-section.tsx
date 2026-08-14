@@ -228,7 +228,7 @@ export function CalendarSection({
     <>
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
         <div className="flex items-center gap-3">
-          <h2 className="shrink-0 text-base font-semibold text-white">Calendar</h2>
+          <h2 className="hidden shrink-0 text-base font-semibold text-white sm:block">Calendar</h2>
           <div className="flex flex-1 items-center justify-center gap-1">
             <button
               type="button"
