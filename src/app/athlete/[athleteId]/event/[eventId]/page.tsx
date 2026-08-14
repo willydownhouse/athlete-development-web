@@ -36,15 +36,13 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
     redirect("/");
   }
 
-  const athletes = await loadShellAthletes(token);
+  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");
   }
-
-  const isAdmin = await getIsAdminUser();
 
   return (
     <DashboardShell

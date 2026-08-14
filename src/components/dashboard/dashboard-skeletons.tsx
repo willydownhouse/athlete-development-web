@@ -33,25 +33,6 @@ export function TodaysEventsSkeleton({ count = 2 }: { count?: number }) {
   );
 }
 
-export function CalendarSectionSkeleton() {
-  return (
-    <section className={CARD_CLASS}>
-      <div className="flex items-center justify-between gap-3">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-8 w-40" />
-      </div>
-      <Skeleton className="mt-4 h-52 w-full rounded-xl" />
-      <div className="border-t border-white/5 pt-4">
-        <div className="flex items-center justify-between gap-3">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-14 rounded-lg" />
-        </div>
-        <CalendarDayEventsSkeleton />
-      </div>
-    </section>
-  );
-}
-
 function HockeyStatsTileSkeleton({ withSubtitle = false }: { withSubtitle?: boolean }) {
   return (
     <div className="rounded-xl bg-white/5 px-3 py-3">

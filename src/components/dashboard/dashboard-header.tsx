@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { Athlete } from "@/lib/types";
@@ -7,10 +8,16 @@ import { ageGroupFromDateOfBirth } from "./athlete-meta";
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
   eventsMeta?: ReactNode;
+  calendarHref?: string;
 };
 
-export function DashboardHeader({ selectedAthlete, eventsMeta }: DashboardHeaderProps) {
+export function DashboardHeader({
+  selectedAthlete,
+  eventsMeta,
+  calendarHref,
+}: DashboardHeaderProps) {
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
+  const showMetaRow = ageGroup || eventsMeta || calendarHref;
 
   return (
     <header>
@@ -20,15 +27,25 @@ export function DashboardHeader({ selectedAthlete, eventsMeta }: DashboardHeader
           <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
             {selectedAthlete.name}
           </h1>
-          {ageGroup || eventsMeta ? (
-            <div className="mt-1 text-sm text-zinc-400">
-              {ageGroup ? (
-                <>
-                  {ageGroup}
-                  {eventsMeta ? " · " : null}
-                </>
+          {showMetaRow ? (
+            <div className="mt-1 flex items-center justify-between gap-3 text-sm text-zinc-400">
+              <div className="min-w-0 truncate">
+                {ageGroup ? (
+                  <>
+                    {ageGroup}
+                    {eventsMeta ? " · " : null}
+                  </>
+                ) : null}
+                {eventsMeta}
+              </div>
+              {calendarHref ? (
+                <Link
+                  href={calendarHref}
+                  className="shrink-0 font-medium text-zinc-300 transition hover:text-white"
+                >
+                  Calendar
+                </Link>
               ) : null}
-              {eventsMeta}
             </div>
           ) : null}
         </>

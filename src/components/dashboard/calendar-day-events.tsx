@@ -29,13 +29,15 @@ export function CalendarDayEvents({
     <div className="border-t border-white/5 pt-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-white">{dayLabel}</h3>
-        <button
-          type="button"
-          onClick={onAddClick}
-          className="rounded-lg bg-[#9ec9e8] px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec]"
-        >
-          Add
-        </button>
+        {onAddClick ? (
+          <button
+            type="button"
+            onClick={onAddClick}
+            className="rounded-lg bg-[#9ec9e8] px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec]"
+          >
+            Add
+          </button>
+        ) : null}
       </div>
 
       {loadError ? (

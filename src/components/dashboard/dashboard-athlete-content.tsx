@@ -8,15 +8,13 @@ import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
-import { CalendarSection } from "./calendar-section";
-import { athleteEventsDayHref, athleteEventsWeekHref } from "./dashboard-nav";
+import { athleteEventsDayHref, athleteCalendarHref, athleteEventsWeekHref } from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
 import { HockeyStats } from "./hockey-stats";
 import { HockeyStatsSection } from "./hockey-stats-section";
 import { QuickLogSection } from "./quick-log-section";
 import {
-  CalendarSectionSkeleton,
   HockeyStatsGridSkeleton,
   HockeyStatsSkeleton,
   TodaysEventsSkeleton,
@@ -72,26 +70,6 @@ async function DashboardTodaysEventsSection({
   );
 }
 
-async function DashboardCalendarSection({
-  selectedAthlete,
-  timeZone,
-}: {
-  selectedAthlete: Athlete;
-  timeZone: string;
-}) {
-  const eventsBundle = await loadDashboardEventsBundle(selectedAthlete.id, timeZone);
-
-  return (
-    <CalendarSection
-      athleteId={selectedAthlete.id}
-      timeZone={timeZone}
-      initialAllEvents={eventsBundle.allEvents}
-      loadedRange={eventsBundle.loadedRange}
-      initialLoadError={eventsBundle.error}
-    />
-  );
-}
-
 export async function DashboardAthleteContent({
   selectedAthlete,
   eventTypes,
@@ -110,6 +88,7 @@ export async function DashboardAthleteContent({
     >
       <DashboardHeader
         selectedAthlete={selectedAthlete}
+        calendarHref={athleteCalendarHref(selectedAthlete.id)}
         eventsMeta={
           <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>
             <DashboardWeekEventsMeta athleteId={selectedAthlete.id} timeZone={timeZone} />
@@ -146,9 +125,6 @@ export async function DashboardAthleteContent({
             </HockeyStatsSection>
           </Suspense>
         ) : null}
-        <Suspense fallback={<CalendarSectionSkeleton />}>
-          <DashboardCalendarSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
-        </Suspense>
       </div>
     </DashboardInteractionsProvider>
   );

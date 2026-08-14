@@ -1,21 +1,24 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
-import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
-import { startOfLocalDay } from "@/lib/date-range";
+import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
+import { EventFormModal } from "@/components/dashboard/event-form-modal";
 import type { EventType } from "@/lib/types";
 
 type CreateEventOptions = {
   defaultEventTypeId?: string;
-  defaultEventDate?: string;
 };
 
 type DashboardInteractionsContextValue = {
-  selectedCalendarDate: Date;
-  visibleCalendarMonth: Date;
-  setSelectedCalendarDate: (date: Date) => void;
-  setVisibleCalendarMonth: (month: Date) => void;
   openCreateModal: (options?: CreateEventOptions) => void;
 };
 
@@ -36,70 +39,68 @@ export function DashboardInteractionsProvider({
   eventTypesError,
   children,
 }: DashboardInteractionsProviderProps) {
-  const [selectedCalendarDate, setSelectedCalendarDateState] = useState(() =>
-    startOfLocalDay(new Date()),
-  );
-  const [visibleCalendarMonth, setVisibleCalendarMonthState] = useState(() =>
-    startOfLocalDay(new Date()),
-  );
-  const [modalState, setModalState] = useState<EventModalState>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createFormMounted, setCreateFormMounted] = useState(false);
+  const [createOptions, setCreateOptions] = useState<CreateEventOptions>({});
   const [formKey, setFormKey] = useState(0);
+  const createFormMountedRef = useRef(false);
+  const applyHandlersRef = useRef<EventFormApplyHandlers | null>(null);
 
-  const setSelectedCalendarDate = useCallback((date: Date) => {
-    setSelectedCalendarDateState(startOfLocalDay(date));
-  }, []);
-
-  const setVisibleCalendarMonth = useCallback((month: Date) => {
-    setVisibleCalendarMonthState(startOfLocalDay(month));
+  const handleApplyHandlersReady = useCallback((handlers: EventFormApplyHandlers) => {
+    applyHandlersRef.current = handlers;
   }, []);
 
   const openCreateModal = useCallback((options?: CreateEventOptions) => {
-    setModalState({
-      mode: "create",
-      defaultEventTypeId: options?.defaultEventTypeId,
-      defaultEventDate: options?.defaultEventDate,
-    });
-    setFormKey((current) => current + 1);
+    if (!createFormMountedRef.current) {
+      setCreateOptions(options?.defaultEventTypeId ? options : {});
+      setFormKey((current) => current + 1);
+      setCreateFormMounted(true);
+      createFormMountedRef.current = true;
+    } else if (options?.defaultEventTypeId) {
+      applyHandlersRef.current?.applyEventType(options.defaultEventTypeId);
+    }
+
+    setCreateModalOpen(true);
   }, []);
 
   const closeModal = useCallback(() => {
-    setModalState(null);
+    setCreateModalOpen(false);
   }, []);
 
   const handleFormSuccess = useCallback(() => {
-    closeModal();
-  }, [closeModal]);
+    setCreateModalOpen(false);
+    setCreateFormMounted(false);
+    createFormMountedRef.current = false;
+    applyHandlersRef.current = null;
+    setCreateOptions({});
+    setFormKey((current) => current + 1);
+  }, []);
 
   const value = useMemo(
     () => ({
-      selectedCalendarDate,
-      visibleCalendarMonth,
-      setSelectedCalendarDate,
-      setVisibleCalendarMonth,
       openCreateModal,
     }),
-    [
-      selectedCalendarDate,
-      visibleCalendarMonth,
-      setSelectedCalendarDate,
-      setVisibleCalendarMonth,
-      openCreateModal,
-    ],
+    [openCreateModal],
   );
 
   return (
     <DashboardInteractionsContext.Provider value={value}>
       {children}
-      <EventFormModal
-        athleteId={athleteId}
-        eventTypes={eventTypes}
-        focusSportName={focusSportName}
-        eventTypesError={eventTypesError}
-        modalState={modalState}
-        formKey={formKey}
-        onClose={closeModal}
-        onSuccess={handleFormSuccess}
-      />
+      {createFormMounted ? (
+        <EventFormModal
+          open={createModalOpen}
+          keepMounted
+          athleteId={athleteId}
+          eventTypes={eventTypes}
+          focusSportName={focusSportName}
+          eventTypesError={eventTypesError}
+          modalState={{ mode: "create", ...createOptions }}
+          formKey={formKey}
+          onApplyHandlersReady={handleApplyHandlersReady}
+          onClose={closeModal}
+          onSuccess={handleFormSuccess}
+        />
+      ) : null}
     </DashboardInteractionsContext.Provider>
   );
 }
