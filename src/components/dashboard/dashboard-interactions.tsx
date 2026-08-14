@@ -26,6 +26,7 @@ const DashboardInteractionsContext = createContext<DashboardInteractionsContextV
 
 type DashboardInteractionsProviderProps = {
   athleteId: string;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   eventTypesError?: string | null;
@@ -34,6 +35,7 @@ type DashboardInteractionsProviderProps = {
 
 export function DashboardInteractionsProvider({
   athleteId,
+  timeZone,
   eventTypes,
   focusSportName,
   eventTypesError,
@@ -91,6 +93,7 @@ export function DashboardInteractionsProvider({
           open={createModalOpen}
           keepMounted
           athleteId={athleteId}
+          timeZone={timeZone}
           eventTypes={eventTypes}
           focusSportName={focusSportName}
           eventTypesError={eventTypesError}

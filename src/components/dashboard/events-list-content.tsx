@@ -8,6 +8,7 @@ type EventsListContentProps = {
   athleteId: string;
   params: EventsListSearchParams;
   events: Event[];
+  timeZone: string;
   total: number;
 };
 
@@ -22,7 +23,13 @@ function resultSummary(params: EventsListSearchParams, total: number, count: num
   return `Showing ${start}–${end} of ${total} events`;
 }
 
-export function EventsListContent({ athleteId, params, events, total }: EventsListContentProps) {
+export function EventsListContent({
+  athleteId,
+  params,
+  events,
+  timeZone,
+  total,
+}: EventsListContentProps) {
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -36,6 +43,7 @@ export function EventsListContent({ athleteId, params, events, total }: EventsLi
             <EventListRow
               key={event.id}
               event={event}
+              timeZone={timeZone}
               href={athleteEventHref(athleteId, event.id)}
               showDate
             />

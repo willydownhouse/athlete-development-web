@@ -4,10 +4,11 @@ import type { EventsListSearchParams } from "@/lib/events-list-params";
 
 type EventsListSectionProps = {
   athleteId: string;
+  timeZone: string;
   params: EventsListSearchParams;
 };
 
-export async function EventsListSection({ athleteId, params }: EventsListSectionProps) {
+export async function EventsListSection({ athleteId, timeZone, params }: EventsListSectionProps) {
   const result = await fetchAthleteEventsList(athleteId, params);
 
   if (result.error || !result.data) {
@@ -23,6 +24,7 @@ export async function EventsListSection({ athleteId, params }: EventsListSection
       athleteId={athleteId}
       params={params}
       events={result.data.items}
+      timeZone={timeZone}
       total={result.data.pagination.total}
     />
   );

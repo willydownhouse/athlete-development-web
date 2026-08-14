@@ -13,6 +13,7 @@ import type { Event, EventType } from "@/lib/types";
 type EventEditControlsProps = {
   athleteId: string;
   event: Event;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   eventTypesError?: string | null;
@@ -21,6 +22,7 @@ type EventEditControlsProps = {
 export function EventEditControls({
   athleteId,
   event,
+  timeZone,
   eventTypes,
   focusSportName,
   eventTypesError,
@@ -137,6 +139,7 @@ export function EventEditControls({
         <EventFormModal
           open={editOpen}
           athleteId={athleteId}
+          timeZone={timeZone}
           eventTypes={eventTypes}
           focusSportName={focusSportName}
           eventTypesError={eventTypesError}

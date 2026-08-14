@@ -91,7 +91,11 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           />
 
           <Suspense key={eventsListSuspenseKey(listParams)} fallback={<EventsListSkeleton />}>
-            <EventsListSection athleteId={normalizedAthleteId} params={listParams} />
+            <EventsListSection
+              athleteId={normalizedAthleteId}
+              timeZone={timeZone}
+              params={listParams}
+            />
           </Suspense>
         </div>
       </div>

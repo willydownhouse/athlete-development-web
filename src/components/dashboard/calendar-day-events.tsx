@@ -8,6 +8,7 @@ import type { Event } from "@/lib/types";
 
 type CalendarDayEventsProps = {
   athleteId: string;
+  timeZone: string;
   selectedDate: Date;
   events: Event[];
   loading?: boolean;
@@ -17,6 +18,7 @@ type CalendarDayEventsProps = {
 
 export function CalendarDayEvents({
   athleteId,
+  timeZone,
   selectedDate,
   events,
   loading = false,
@@ -52,7 +54,7 @@ export function CalendarDayEvents({
               href={athleteEventHref(athleteId, event.id)}
               className="block rounded-2xl transition hover:bg-white/[0.02]"
             >
-              <EventDetailCard event={event} />
+              <EventDetailCard event={event} timeZone={timeZone} />
             </Link>
           ))}
         </div>

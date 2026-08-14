@@ -1,6 +1,5 @@
-import { format } from "date-fns";
-
 import { formatDurationSeconds } from "@/lib/event-metric-display";
+import { formatZonedShortDate, formatZonedTime } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 const EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH = 200;
@@ -9,16 +8,12 @@ function formatIntensity(intensity: EventIntensity): string {
   return intensity.charAt(0).toUpperCase() + intensity.slice(1);
 }
 
-function formatTime(startedAt: string): string {
-  return format(new Date(startedAt), "HH:mm");
+function formatTime(startedAt: string, timeZone: string): string {
+  return formatZonedTime(timeZone, new Date(startedAt));
 }
 
-function formatEventListDate(startedAt: string): string {
-  const date = new Date(startedAt);
-  const now = new Date();
-  const pattern = date.getFullYear() === now.getFullYear() ? "EEE d MMM" : "EEE d MMM yyyy";
-
-  return format(date, pattern);
+function formatEventListDate(startedAt: string, timeZone: string): string {
+  return formatZonedShortDate(timeZone, new Date(startedAt));
 }
 
 export function eventShortLabel(name: string): string {
@@ -50,16 +45,17 @@ function truncateText(text: string, maxLength: number): string {
 
 type EventDetailOptions = {
   showDate?: boolean;
+  timeZone: string;
 };
 
-export function eventDetail(event: Event, options: EventDetailOptions = {}): string {
+export function eventDetail(event: Event, options: EventDetailOptions): string {
   const parts: string[] = [];
 
   if (options.showDate) {
-    parts.push(formatEventListDate(event.startedAt));
+    parts.push(formatEventListDate(event.startedAt, options.timeZone));
   }
 
-  parts.push(formatTime(event.startedAt));
+  parts.push(formatTime(event.startedAt, options.timeZone));
 
   if (event.durationSeconds) {
     parts.push(formatDurationSeconds(event.durationSeconds));

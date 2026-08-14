@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import type { ReactNode } from "react";
 
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
@@ -8,17 +7,18 @@ import {
   sortEventMetrics,
 } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
+import { formatZonedTime } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 function formatIntensity(intensity: EventIntensity): string {
   return intensity.charAt(0).toUpperCase() + intensity.slice(1);
 }
 
-function formatTimeRange(event: Event): string {
-  const start = format(new Date(event.startedAt), "HH:mm");
+function formatTimeRange(event: Event, timeZone: string): string {
+  const start = formatZonedTime(timeZone, new Date(event.startedAt));
 
   if (event.endedAt) {
-    const end = format(new Date(event.endedAt), "HH:mm");
+    const end = formatZonedTime(timeZone, new Date(event.endedAt));
     return `${start} – ${end}`;
   }
 
@@ -45,10 +45,11 @@ function DetailField({ label, value }: DetailFieldProps) {
 
 type EventDetailCardProps = {
   event: Event;
+  timeZone: string;
   editAction?: ReactNode;
 };
 
-export function EventDetailCard({ event, editAction }: EventDetailCardProps) {
+export function EventDetailCard({ event, timeZone, editAction }: EventDetailCardProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = sortEventMetrics(event.metrics ?? []);
@@ -74,7 +75,7 @@ export function EventDetailCard({ event, editAction }: EventDetailCardProps) {
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
-        <DetailField label="Time" value={formatTimeRange(event)} />
+        <DetailField label="Time" value={formatTimeRange(event, timeZone)} />
         {event.durationSeconds ? (
           <DetailField label="Duration" value={formatDurationSeconds(event.durationSeconds)} />
         ) : null}

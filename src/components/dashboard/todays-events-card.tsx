@@ -7,6 +7,7 @@ import type { Event } from "@/lib/types";
 type TodaysEventsCardProps = {
   athleteId: string;
   events: Event[];
+  timeZone: string;
   loadError?: string | null;
   eventsHref: string;
 };
@@ -14,6 +15,7 @@ type TodaysEventsCardProps = {
 export function TodaysEventsCard({
   athleteId,
   events,
+  timeZone,
   loadError,
   eventsHref,
 }: TodaysEventsCardProps) {
@@ -37,6 +39,7 @@ export function TodaysEventsCard({
             <EventListRow
               key={event.id}
               event={event}
+              timeZone={timeZone}
               href={athleteEventHref(athleteId, event.id)}
             />
           ))}

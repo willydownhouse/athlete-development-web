@@ -170,6 +170,31 @@ export function getZonedTimeString(timeZone: string, date = new Date()): string 
   return `${hour}:${minute}`;
 }
 
+export function formatZonedTime(timeZone: string, date: Date): string {
+  return getZonedTimeString(timeZone, date);
+}
+
+export function formatZonedShortDate(
+  timeZone: string,
+  date: Date,
+  referenceDate = new Date(),
+): string {
+  const normalizedTimeZone = normalizeTimeZone(timeZone);
+  const eventDate = getZonedParts(date, normalizedTimeZone);
+  const reference = getZonedParts(referenceDate, normalizedTimeZone);
+  const month = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    month: "short",
+  }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));
+  const weekday = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    weekday: "short",
+  }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));
+  const year = eventDate.year === reference.year ? "" : ` ${eventDate.year}`;
+
+  return `${weekday} ${eventDate.day} ${month}${year}`;
+}
+
 export function getZonedMonthStartDateString(timeZone: string, date = new Date()): string {
   const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
 

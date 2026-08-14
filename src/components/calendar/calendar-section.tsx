@@ -146,10 +146,13 @@ export function CalendarSection({
     );
   }, [timeZone, visibleCalendarMonth, selectedCalendarDate]);
 
-  const daysWithEvents = useMemo(() => datesWithEvents(monthEvents), [monthEvents]);
+  const daysWithEvents = useMemo(
+    () => datesWithEvents(monthEvents, timeZone),
+    [monthEvents, timeZone],
+  );
   const selectedDayEvents = useMemo(
-    () => eventsForLocalDate(monthEvents, selectedCalendarDate),
-    [monthEvents, selectedCalendarDate],
+    () => eventsForLocalDate(monthEvents, selectedCalendarDate, timeZone),
+    [monthEvents, selectedCalendarDate, timeZone],
   );
 
   const openCreateModal = useCallback(() => {
@@ -268,6 +271,7 @@ export function CalendarSection({
 
         <CalendarDayEvents
           athleteId={athleteId}
+          timeZone={timeZone}
           selectedDate={selectedCalendarDate}
           events={selectedDayEvents}
           loading={showLoading}
@@ -281,6 +285,7 @@ export function CalendarSection({
           open={createModalOpen}
           keepMounted
           athleteId={athleteId}
+          timeZone={timeZone}
           eventTypes={eventTypes}
           focusSportName={focusSportName}
           eventTypesError={eventTypesError}

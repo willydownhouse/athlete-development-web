@@ -7,10 +7,11 @@ import { eventIconClassName } from "@/lib/event-tone";
 type EventListRowProps = {
   event: Event;
   href: string;
+  timeZone: string;
   showDate?: boolean;
 };
 
-export function EventListRow({ event, href, showDate = false }: EventListRowProps) {
+export function EventListRow({ event, href, timeZone, showDate = false }: EventListRowProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
 
@@ -26,7 +27,9 @@ export function EventListRow({ event, href, showDate = false }: EventListRowProp
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="truncate text-[15px] font-semibold text-white">{title}</p>
-        <p className="mt-0.5 truncate text-sm text-zinc-400">{eventDetail(event, { showDate })}</p>
+        <p className="mt-0.5 truncate text-sm text-zinc-400">
+          {eventDetail(event, { showDate, timeZone })}
+        </p>
       </div>
     </Link>
   );

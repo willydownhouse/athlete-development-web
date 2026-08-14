@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -21,6 +20,7 @@ import { TimePickerInput } from "@/components/time-picker-input";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
+import { getZonedDateString, getZonedTimeString } from "@/lib/time-zone";
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_TITLE_MAX_LENGTH,
@@ -47,6 +47,7 @@ export type EventFormApplyHandlers = {
 
 type EventFormProps = {
   athleteId: string;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   event?: Event;
@@ -84,6 +85,7 @@ function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
 
 export function EventForm({
   athleteId,
+  timeZone,
   eventTypes,
   focusSportName,
   event,
@@ -110,12 +112,13 @@ export function EventForm({
   const values = useMemo(
     () =>
       event
-        ? eventToFormValues(event)
+        ? eventToFormValues(event, timeZone)
         : defaultCreateFormValues(
             defaultEventTypeId,
-            defaultEventDate ?? format(new Date(), "yyyy-MM-dd"),
+            defaultEventDate ?? getZonedDateString(timeZone),
+            getZonedTimeString(timeZone),
           ),
-    [event, defaultEventTypeId, defaultEventDate],
+    [event, timeZone, defaultEventTypeId, defaultEventDate],
   );
   const [eventTypeId, setEventTypeId] = useState(values.eventTypeId);
   const [eventDate, setEventDate] = useState(values.eventDate);

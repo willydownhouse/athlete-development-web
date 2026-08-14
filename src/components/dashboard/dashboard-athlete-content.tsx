@@ -64,6 +64,7 @@ async function DashboardTodaysEventsSection({
     <TodaysEventsCard
       athleteId={selectedAthlete.id}
       events={eventsBundle.todayEvents}
+      timeZone={timeZone}
       loadError={eventsBundle.error}
       eventsHref={athleteEventsDayHref(selectedAthlete.id, timeZone)}
     />
@@ -82,6 +83,7 @@ export async function DashboardAthleteContent({
     <DashboardInteractionsProvider
       key={selectedAthlete.id}
       athleteId={selectedAthlete.id}
+      timeZone={timeZone}
       eventTypes={eventTypes}
       focusSportName={selectedAthlete.focusSport.name}
       eventTypesError={eventTypesError}

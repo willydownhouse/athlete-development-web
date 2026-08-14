@@ -16,6 +16,7 @@ type EventFormModalProps = {
   open: boolean;
   keepMounted?: boolean;
   athleteId: string;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   eventTypesError?: string | null;
@@ -32,6 +33,7 @@ export function EventFormModal({
   open,
   keepMounted = false,
   athleteId,
+  timeZone,
   eventTypes,
   focusSportName,
   eventTypesError,
@@ -63,6 +65,7 @@ export function EventFormModal({
         <EventForm
           key={formKey}
           athleteId={athleteId}
+          timeZone={timeZone}
           eventTypes={eventTypes}
           focusSportName={focusSportName}
           event={modalState.mode === "edit" ? modalState.event : undefined}
