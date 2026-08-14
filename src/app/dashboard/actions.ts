@@ -10,7 +10,6 @@ import {
   fetchEventTypeMetricDefinitions,
   updateEvent,
 } from "@/lib/api";
-import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import {
@@ -27,7 +26,6 @@ import {
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
 import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
-import type { Event } from "@/lib/types";
 
 export type DashboardActionState = {
   error?: string;
@@ -264,12 +262,4 @@ export async function deleteEventAction(
   }
 
   return { success: "Event deleted" };
-}
-
-export async function fetchEventsInRangeAction(
-  athleteId: string,
-  startedAtFrom: string,
-  startedAtTo: string,
-): Promise<{ events: Event[]; error?: undefined } | { events: []; error: string }> {
-  return fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
 }

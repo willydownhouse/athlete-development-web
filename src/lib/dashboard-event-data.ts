@@ -3,13 +3,7 @@ import { cache } from "react";
 import { ApiError, fetchAllEvents } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { eventsInHalfOpenRange } from "@/lib/event-grouping";
-import {
-  getZonedDayRange,
-  getZonedMonthRange,
-  getZonedWeekRange,
-  mergeTimeRanges,
-  type TimeRange,
-} from "@/lib/time-zone";
+import { getZonedDayRange, getZonedWeekRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
 export type DashboardEventsResult =
@@ -48,8 +42,6 @@ export async function fetchDashboardEventsInRange(
 }
 
 export type DashboardEventsBundle = {
-  allEvents: Event[];
-  loadedRange: TimeRange;
   weekEvents: Event[];
   todayEvents: Event[];
   error: string | null;
@@ -57,24 +49,24 @@ export type DashboardEventsBundle = {
 
 export const loadDashboardEventsBundle = cache(
   async (athleteId: string, timeZone: string): Promise<DashboardEventsBundle> => {
-    const monthRange = getZonedMonthRange(timeZone);
     const weekRange = getZonedWeekRange(timeZone);
     const todayRange = getZonedDayRange(timeZone);
-    const loadedRange = mergeTimeRanges(monthRange, weekRange);
     const result = await fetchDashboardEventsInRange(
       athleteId,
-      loadedRange.startedAtFrom,
-      loadedRange.startedAtTo,
+      weekRange.startedAtFrom,
+      weekRange.startedAtTo,
     );
 
-    const allEvents = result.events;
+    const weekEvents = result.events;
 
     return {
-      allEvents,
-      loadedRange,
-      weekEvents: eventsInHalfOpenRange(allEvents, weekRange.startedAtFrom, weekRange.startedAtTo),
+      weekEvents: eventsInHalfOpenRange(
+        weekEvents,
+        weekRange.startedAtFrom,
+        weekRange.startedAtTo,
+      ),
       todayEvents: eventsInHalfOpenRange(
-        allEvents,
+        weekEvents,
         todayRange.startedAtFrom,
         todayRange.startedAtTo,
       ),

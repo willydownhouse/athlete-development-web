@@ -3,19 +3,13 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { EventFormModal, type EventModalState } from "@/components/dashboard/event-form-modal";
-import { startOfLocalDay } from "@/lib/date-range";
 import type { EventType } from "@/lib/types";
 
 type CreateEventOptions = {
   defaultEventTypeId?: string;
-  defaultEventDate?: string;
 };
 
 type DashboardInteractionsContextValue = {
-  selectedCalendarDate: Date;
-  visibleCalendarMonth: Date;
-  setSelectedCalendarDate: (date: Date) => void;
-  setVisibleCalendarMonth: (month: Date) => void;
   openCreateModal: (options?: CreateEventOptions) => void;
 };
 
@@ -36,28 +30,13 @@ export function DashboardInteractionsProvider({
   eventTypesError,
   children,
 }: DashboardInteractionsProviderProps) {
-  const [selectedCalendarDate, setSelectedCalendarDateState] = useState(() =>
-    startOfLocalDay(new Date()),
-  );
-  const [visibleCalendarMonth, setVisibleCalendarMonthState] = useState(() =>
-    startOfLocalDay(new Date()),
-  );
   const [modalState, setModalState] = useState<EventModalState>(null);
   const [formKey, setFormKey] = useState(0);
-
-  const setSelectedCalendarDate = useCallback((date: Date) => {
-    setSelectedCalendarDateState(startOfLocalDay(date));
-  }, []);
-
-  const setVisibleCalendarMonth = useCallback((month: Date) => {
-    setVisibleCalendarMonthState(startOfLocalDay(month));
-  }, []);
 
   const openCreateModal = useCallback((options?: CreateEventOptions) => {
     setModalState({
       mode: "create",
       defaultEventTypeId: options?.defaultEventTypeId,
-      defaultEventDate: options?.defaultEventDate,
     });
     setFormKey((current) => current + 1);
   }, []);
@@ -72,19 +51,9 @@ export function DashboardInteractionsProvider({
 
   const value = useMemo(
     () => ({
-      selectedCalendarDate,
-      visibleCalendarMonth,
-      setSelectedCalendarDate,
-      setVisibleCalendarMonth,
       openCreateModal,
     }),
-    [
-      selectedCalendarDate,
-      visibleCalendarMonth,
-      setSelectedCalendarDate,
-      setVisibleCalendarMonth,
-      openCreateModal,
-    ],
+    [openCreateModal],
   );
 
   return (
