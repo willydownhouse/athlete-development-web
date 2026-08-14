@@ -162,6 +162,14 @@ export function getZonedDateString(timeZone: string, date = new Date()): string 
   return formatDateOnly(zonedDate);
 }
 
+export function getZonedTimeString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+  const hour = String(zonedDate.hour).padStart(2, "0");
+  const minute = String(zonedDate.minute).padStart(2, "0");
+
+  return `${hour}:${minute}`;
+}
+
 export function getZonedMonthStartDateString(timeZone: string, date = new Date()): string {
   const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
 

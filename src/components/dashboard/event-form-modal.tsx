@@ -80,4 +80,4 @@ export function EventFormModal({
   );
 }
 
-export type { CreateEventModalState, EditEventModalState, EventModalState };
+export type { CreateEventModalState };
