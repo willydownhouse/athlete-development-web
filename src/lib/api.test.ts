@@ -103,8 +103,19 @@ describe("api client", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports", {
       cache: "no-store",
     });
+    expect(sports).not.toBeNull();
     expect(sports).toHaveLength(1);
-    expect(sports[0]?.slug).toBe("hockey");
+    expect(sports?.[0]?.slug).toBe("hockey");
+  });
+
+  it("returns null when sports fetch fails", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockRejectedValue(new Error("Network error"));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchSports()).resolves.toBeNull();
   });
 
   it("fetches public event types, optionally filtered by sport", async () => {

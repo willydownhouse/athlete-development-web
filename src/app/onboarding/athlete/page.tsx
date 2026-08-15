@@ -27,28 +27,24 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
   }
 
   const token = await getAuthBearerToken();
-  const athletes = await loadShellAthletes(token);
 
   if (!token) {
     redirect("/");
   }
 
-  let sportName: string | null = null;
+  const [athletes, sports, isAdmin] = await Promise.all([
+    loadShellAthletes(token),
+    fetchSports(),
+    getIsAdminUser(),
+  ]);
 
-  try {
-    const sports = await fetchSports();
-    const sport = sports.find((item) => item.id === sportId);
+  const sport = sports?.find((item) => item.id === sportId);
 
-    if (!sport) {
-      redirect("/onboarding");
-    }
-
-    sportName = sport.name;
-  } catch {
+  if (sports === null || !sport) {
     redirect("/onboarding");
   }
 
-  const isAdmin = await getIsAdminUser();
+  const sportName = sport.name;
 
   return (
     <OnboardingShell userEmail={session.user.email ?? ""} isAdmin={isAdmin} athletes={athletes}>

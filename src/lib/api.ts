@@ -105,17 +105,21 @@ export async function createAthlete(
   });
 }
 
-export async function fetchSports(): Promise<Sport[]> {
-  const response = await fetch(`${getApiBaseUrl()}/api/sports`, {
-    cache: "no-store",
-  });
+export async function fetchSports(): Promise<Sport[] | null> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/sports`, {
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
-    throw await parseApiError(response);
+    if (!response.ok) {
+      throw await parseApiError(response);
+    }
+
+    const result = (await response.json()) as { items: Sport[] };
+    return result.items;
+  } catch {
+    return null;
   }
-
-  const result = (await response.json()) as { items: Sport[] };
-  return result.items;
 }
 
 export type EventMetricInput = {
