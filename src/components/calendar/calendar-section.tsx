@@ -3,15 +3,15 @@
 import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
-import { copyDayEventsForTodayAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
+import { copyDayEventsAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
+import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
 import {
   EventFormModal,
   type CreateEventModalState,
 } from "@/components/dashboard/event-form-modal";
 import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
-import { Modal } from "@/components/ui/modal";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
 import { eventToCopySource } from "@/lib/copy-event";
@@ -78,6 +78,7 @@ export function CalendarSection({
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [isFetching, setIsFetching] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  const [copyConfirmKey, setCopyConfirmKey] = useState(0);
   const [copyError, setCopyError] = useState<string | null>(null);
   const [copyPending, startCopyTransition] = useTransition();
   const showLoading = useDelayedLoading(isFetching);
@@ -204,10 +205,19 @@ export function CalendarSection({
     setSelectedCalendarDate(today.selected);
   }, [timeZone]);
 
-  const canCopySelectedDay = selectedDayEvents.length > 0 && !isShowingToday;
+  const navigateToDate = useCallback(
+    (targetDate: string) => {
+      markMonthNavigation();
+      const date = parseLocalDateString(targetDate);
+      setSelectedCalendarDate(date);
+      setVisibleCalendarMonth(parseLocalDateString(getZonedMonthStartDateString(timeZone, date)));
+    },
+    [timeZone],
+  );
 
   const openCopyConfirm = useCallback(() => {
     setCopyError(null);
+    setCopyConfirmKey((current) => current + 1);
     setCopyConfirmOpen(true);
   }, []);
 
@@ -220,26 +230,28 @@ export function CalendarSection({
     setCopyError(null);
   }, [copyPending]);
 
-  const handleCopyConfirm = useCallback(() => {
-    setCopyError(null);
+  const handleCopyConfirm = useCallback(
+    (targetDate: string) => {
+      setCopyError(null);
 
-    startCopyTransition(async () => {
-      const result = await copyDayEventsForTodayAction(
-        athleteId,
-        selectedDayEvents.map(eventToCopySource),
-      );
+      startCopyTransition(async () => {
+        const result = await copyDayEventsAction(
+          athleteId,
+          selectedDayEvents.map(eventToCopySource),
+          targetDate,
+        );
 
-      if ("error" in result) {
-        setCopyError(result.error);
-        return;
-      }
+        if ("error" in result) {
+          setCopyError(result.error);
+          return;
+        }
 
-      setCopyConfirmOpen(false);
-      handleGoToToday();
-      const todayMonthRange = getZonedMonthRange(timeZone);
-      void fetchMonthEvents(todayMonthRange.startedAtFrom, todayMonthRange.startedAtTo);
-    });
-  }, [athleteId, fetchMonthEvents, handleGoToToday, selectedDayEvents, timeZone]);
+        setCopyConfirmOpen(false);
+        navigateToDate(targetDate);
+      });
+    },
+    [athleteId, navigateToDate, selectedDayEvents],
+  );
 
   useEffect(() => {
     if (!createModalOpen) {
@@ -319,44 +331,21 @@ export function CalendarSection({
           loading={showLoading}
           loadError={loadError}
           onAddClick={openCreateModal}
-          onCopyClick={canCopySelectedDay ? openCopyConfirm : undefined}
-          copyDisabled={copyPending}
+          onCopyClick={openCopyConfirm}
+          copyDisabled={copyPending || selectedDayEvents.length === 0}
         />
       </section>
 
-      <Modal
+      <CopyEventsConfirmModal
+        key={copyConfirmKey}
         open={copyConfirmOpen}
         onClose={closeCopyConfirm}
-        title="Copy day for today?"
-        align="content"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-zinc-300">
-            Create {selectedDayEvents.length} event
-            {selectedDayEvents.length === 1 ? "" : "s"} for today with the same types, details, and
-            metrics?
-          </p>
-          {copyError ? <p className="text-sm text-red-300">{copyError}</p> : null}
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={closeCopyConfirm}
-              disabled={copyPending}
-              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyConfirm}
-              disabled={copyPending}
-              className="inline-flex items-center justify-center rounded-xl bg-[#9ec9e8] px-4 py-2.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {copyPending ? "Copying…" : "Yes, copy for today"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        timeZone={timeZone}
+        eventCount={selectedDayEvents.length}
+        pending={copyPending}
+        error={copyError}
+        onConfirm={handleCopyConfirm}
+      />
 
       {createFormMounted && modalState ? (
         <EventFormModal

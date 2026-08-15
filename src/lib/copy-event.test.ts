@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildCopyForTodayPreservingTime,
-  buildDayCopyForToday,
+  buildCopyForDatePreservingTime,
+  buildDayCopyForDate,
   EVENT_BATCH_CREATE_MAX_ITEMS,
   type EventCopySource,
 } from "./copy-event";
@@ -23,9 +23,8 @@ const baseSource: EventCopySource = {
 };
 
 describe("copy-event helpers", () => {
-  it("preserves local time-of-day when copying to today", () => {
-    const now = new Date("2026-08-15T12:00:00.000Z");
-    const body = buildCopyForTodayPreservingTime(baseSource, "Europe/Oslo", now);
+  it("preserves local time-of-day when copying to a target date", () => {
+    const body = buildCopyForDatePreservingTime(baseSource, "Europe/Oslo", "2026-08-15");
 
     expect(body).toMatchObject({
       eventTypeId: baseSource.eventTypeId,
@@ -44,20 +43,19 @@ describe("copy-event helpers", () => {
       title: `Event ${index}`,
     }));
 
-    expect(buildDayCopyForToday(sources, "Europe/Oslo")).toEqual({
+    expect(buildDayCopyForDate(sources, "Europe/Oslo", "2026-08-15")).toEqual({
       error: `You can copy up to ${EVENT_BATCH_CREATE_MAX_ITEMS} events at a time`,
     });
   });
 
   it("builds a batch payload for multiple events", () => {
-    const now = new Date("2026-08-15T12:00:00.000Z");
     const secondSource: EventCopySource = {
       ...baseSource,
       startedAt: "2026-08-10T16:00:00.000Z",
       title: "Evening game",
     };
 
-    const result = buildDayCopyForToday([baseSource, secondSource], "Europe/Oslo", now);
+    const result = buildDayCopyForDate([baseSource, secondSource], "Europe/Oslo", "2026-08-15");
 
     expect(result).toEqual({
       events: [

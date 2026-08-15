@@ -17,10 +17,11 @@ import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import {
-  buildCopyForTodayPreservingTime,
-  buildDayCopyForToday,
+  buildCopyForDatePreservingTime,
+  buildDayCopyForDate,
   type EventCopySource,
 } from "@/lib/copy-event";
+import { isLocalDateString } from "@/lib/date-range";
 import {
   getEventFormValidationError,
   readEventDescriptionForCreate,
@@ -292,9 +293,10 @@ export type CopyEventForTodaySource = {
   metrics: EventMetricInput[];
 };
 
-export async function copyEventForTodayAction(
+export async function copyEventAction(
   athleteId: string,
   source: CopyEventForTodaySource,
+  targetDate: string,
 ): Promise<{ error: string } | { redirectTo: string }> {
   const token = await getAuthBearerToken();
 
@@ -304,9 +306,14 @@ export async function copyEventForTodayAction(
 
   const normalizedAthleteId = athleteId.trim();
   const eventTypeId = source.eventTypeId.trim();
+  const normalizedTargetDate = targetDate.trim();
 
   if (!normalizedAthleteId || !eventTypeId) {
     return { error: "Event is required" };
+  }
+
+  if (!isLocalDateString(normalizedTargetDate)) {
+    return { error: "Invalid date" };
   }
 
   const timeZone = await getRequestTimeZoneCookie();
@@ -315,7 +322,7 @@ export async function copyEventForTodayAction(
     return { error: "Time zone is not ready. Refresh the page and try again." };
   }
 
-  const body = buildCopyForTodayPreservingTime(source, timeZone);
+  const body = buildCopyForDatePreservingTime(source, timeZone, normalizedTargetDate);
 
   if (!body) {
     return { error: "Unable to build event time" };
@@ -331,9 +338,10 @@ export async function copyEventForTodayAction(
   }
 }
 
-export async function copyDayEventsForTodayAction(
+export async function copyDayEventsAction(
   athleteId: string,
   sources: EventCopySource[],
+  targetDate: string,
 ): Promise<{ error: string } | { success: true; count: number }> {
   const token = await getAuthBearerToken();
 
@@ -342,9 +350,14 @@ export async function copyDayEventsForTodayAction(
   }
 
   const normalizedAthleteId = athleteId.trim();
+  const normalizedTargetDate = targetDate.trim();
 
   if (!normalizedAthleteId) {
     return { error: "Athlete is required" };
+  }
+
+  if (!isLocalDateString(normalizedTargetDate)) {
+    return { error: "Invalid date" };
   }
 
   const timeZone = await getRequestTimeZoneCookie();
@@ -353,7 +366,7 @@ export async function copyDayEventsForTodayAction(
     return { error: "Time zone is not ready. Refresh the page and try again." };
   }
 
-  const prepared = buildDayCopyForToday(sources, timeZone);
+  const prepared = buildDayCopyForDate(sources, timeZone, normalizedTargetDate);
 
   if ("error" in prepared) {
     return { error: prepared.error };

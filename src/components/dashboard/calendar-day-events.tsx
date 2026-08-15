@@ -43,7 +43,7 @@ export function CalendarDayEvents({
               disabled={copyDisabled}
               className="rounded-lg border border-white/10 bg-[#252b36] px-3 py-1.5 text-sm font-medium text-zinc-200 transition hover:bg-[#2f3642] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Copy
+              Copy day
             </button>
           ) : null}
           {onAddClick ? (

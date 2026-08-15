@@ -1,6 +1,6 @@
 import type { EventMetricInput } from "@/lib/api";
 import { eventMetricsToInputs } from "@/lib/event-metric-form";
-import { getZonedDateString, getZonedTimeString, zonedDateTimeToUtcIso } from "@/lib/time-zone";
+import { getZonedTimeString, zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 /** Keep in sync with athlete-development-service EVENT_BATCH_CREATE_MAX_ITEMS. */
@@ -67,20 +67,18 @@ function buildEventCopyCreateBody(
   };
 }
 
-export function buildCopyForTodayPreservingTime(
+export function buildCopyForDatePreservingTime(
   source: EventCopySource,
   timeZone: string,
-  now = new Date(),
+  targetDate: string,
 ): EventCopyCreateBody | null {
-  const targetDate = getZonedDateString(timeZone, now);
-
   return buildEventCopyCreateBody(source, timeZone, targetDate, new Date(source.startedAt));
 }
 
-export function buildDayCopyForToday(
+export function buildDayCopyForDate(
   sources: EventCopySource[],
   timeZone: string,
-  now = new Date(),
+  targetDate: string,
 ): { events: EventCopyCreateBody[] } | { error: string } {
   if (sources.length === 0) {
     return { error: "No events to copy" };
@@ -95,7 +93,7 @@ export function buildDayCopyForToday(
   const events: EventCopyCreateBody[] = [];
 
   for (const source of sources) {
-    const body = buildCopyForTodayPreservingTime(source, timeZone, now);
+    const body = buildCopyForDatePreservingTime(source, timeZone, targetDate);
 
     if (!body) {
       return { error: "Unable to build event time" };

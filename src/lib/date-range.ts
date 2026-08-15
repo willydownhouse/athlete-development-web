@@ -4,6 +4,19 @@ export function startOfLocalDay(date: Date): Date {
 
 const LOCAL_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+export function isLocalDateString(value: string): boolean {
+  if (!LOCAL_DATE_PATTERN.test(value)) {
+    return false;
+  }
+
+  try {
+    parseLocalDateString(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function parseLocalDateString(value: string): Date {
   const match = LOCAL_DATE_PATTERN.exec(value);
 
