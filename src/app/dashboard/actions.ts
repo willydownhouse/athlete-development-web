@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   ApiError,
   createEvent,
+  createEventsBatch,
   deleteEvent,
   fetchEventTypeMetricDefinitions,
   updateEvent,
@@ -15,6 +16,12 @@ import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
+import {
+  buildCopyForDatePreservingTime,
+  buildDayCopyForDate,
+  type EventCopySource,
+} from "@/lib/copy-event";
+import { isLocalDateString } from "@/lib/date-range";
 import {
   getEventFormValidationError,
   readEventDescriptionForCreate,
@@ -28,7 +35,7 @@ import {
 } from "@/lib/event-form-schema";
 import { parseMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
-import { getZonedDateString, getZonedTimeString, zonedDateTimeToUtcIso } from "@/lib/time-zone";
+import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
 export type DashboardActionState = {
@@ -278,6 +285,7 @@ export async function fetchEventsInRangeAction(
 
 export type CopyEventForTodaySource = {
   eventTypeId: string;
+  startedAt: string;
   title: string | null;
   description: string | null;
   durationSeconds: number | null;
@@ -285,9 +293,10 @@ export type CopyEventForTodaySource = {
   metrics: EventMetricInput[];
 };
 
-export async function copyEventForTodayAction(
+export async function copyEventAction(
   athleteId: string,
   source: CopyEventForTodaySource,
+  targetDate: string,
 ): Promise<{ error: string } | { redirectTo: string }> {
   const token = await getAuthBearerToken();
 
@@ -297,9 +306,14 @@ export async function copyEventForTodayAction(
 
   const normalizedAthleteId = athleteId.trim();
   const eventTypeId = source.eventTypeId.trim();
+  const normalizedTargetDate = targetDate.trim();
 
   if (!normalizedAthleteId || !eventTypeId) {
     return { error: "Event is required" };
+  }
+
+  if (!isLocalDateString(normalizedTargetDate)) {
+    return { error: "Invalid date" };
   }
 
   const timeZone = await getRequestTimeZoneCookie();
@@ -308,28 +322,62 @@ export async function copyEventForTodayAction(
     return { error: "Time zone is not ready. Refresh the page and try again." };
   }
 
-  const now = new Date();
-  const eventDate = getZonedDateString(timeZone, now);
-  const eventTime = getZonedTimeString(timeZone, now);
-  const startedAt = zonedDateTimeToUtcIso(eventDate, eventTime, timeZone);
+  const body = buildCopyForDatePreservingTime(source, timeZone, normalizedTargetDate);
 
-  if (!startedAt) {
+  if (!body) {
     return { error: "Unable to build event time" };
   }
 
   try {
-    const newEvent = await createEvent(token, normalizedAthleteId, {
-      eventTypeId,
-      startedAt,
-      source: "form",
-      title: source.title ?? undefined,
-      description: source.description ?? undefined,
-      durationSeconds: source.durationSeconds ?? undefined,
-      intensity: source.intensity ?? undefined,
-      ...(source.metrics.length > 0 ? { metrics: source.metrics } : {}),
-    });
+    const newEvent = await createEvent(token, normalizedAthleteId, body);
 
     return { redirectTo: athleteEventHref(normalizedAthleteId, newEvent.id) };
+  } catch (error) {
+    const result = actionError(error);
+    return { error: result.error ?? "Something went wrong" };
+  }
+}
+
+export async function copyDayEventsAction(
+  athleteId: string,
+  sources: EventCopySource[],
+  targetDate: string,
+): Promise<{ error: string } | { success: true; count: number }> {
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: "You need to sign in again" };
+  }
+
+  const normalizedAthleteId = athleteId.trim();
+  const normalizedTargetDate = targetDate.trim();
+
+  if (!normalizedAthleteId) {
+    return { error: "Athlete is required" };
+  }
+
+  if (!isLocalDateString(normalizedTargetDate)) {
+    return { error: "Invalid date" };
+  }
+
+  const timeZone = await getRequestTimeZoneCookie();
+
+  if (!timeZone) {
+    return { error: "Time zone is not ready. Refresh the page and try again." };
+  }
+
+  const prepared = buildDayCopyForDate(sources, timeZone, normalizedTargetDate);
+
+  if ("error" in prepared) {
+    return { error: prepared.error };
+  }
+
+  try {
+    const result = await createEventsBatch(token, normalizedAthleteId, prepared);
+
+    updateTag(athleteEventsCacheTag(normalizedAthleteId));
+
+    return { success: true, count: result.items.length };
   } catch (error) {
     const result = actionError(error);
     return { error: result.error ?? "Something went wrong" };

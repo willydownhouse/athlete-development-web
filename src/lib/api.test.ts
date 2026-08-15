@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createEventsBatch,
   fetchAllEvents,
   fetchAthletes,
   fetchCurrentAppUser,
@@ -102,8 +103,19 @@ describe("api client", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports", {
       cache: "no-store",
     });
+    expect(sports).not.toBeNull();
     expect(sports).toHaveLength(1);
-    expect(sports[0]?.slug).toBe("hockey");
+    expect(sports?.[0]?.slug).toBe("hockey");
+  });
+
+  it("returns null when sports fetch fails", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockRejectedValue(new Error("Network error"));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchSports()).resolves.toBeNull();
   });
 
   it("fetches public event types, optionally filtered by sport", async () => {
@@ -174,6 +186,59 @@ describe("api client", () => {
       `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
     );
     expect(events).toHaveLength(101);
+  });
+
+  it("creates events in batch", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "event-1" }, { id: "event-2" }],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createEventsBatch("test-token", athleteId, {
+      events: [
+        {
+          eventTypeId: "33333333-3333-4333-8333-333333333333",
+          startedAt: "2026-08-15T08:00:00.000Z",
+          source: "form",
+        },
+        {
+          eventTypeId: "33333333-3333-4333-8333-333333333333",
+          startedAt: "2026-08-15T18:00:00.000Z",
+          source: "form",
+        },
+      ],
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events/batch`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(JSON.parse(String(options.body))).toEqual({
+      events: [
+        {
+          eventTypeId: "33333333-3333-4333-8333-333333333333",
+          startedAt: "2026-08-15T08:00:00.000Z",
+          source: "form",
+        },
+        {
+          eventTypeId: "33333333-3333-4333-8333-333333333333",
+          startedAt: "2026-08-15T18:00:00.000Z",
+          source: "form",
+        },
+      ],
+    });
+    expect(result.items).toHaveLength(2);
   });
 
   it("throws when the API responds with an error", async () => {

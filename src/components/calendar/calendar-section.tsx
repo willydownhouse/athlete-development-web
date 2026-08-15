@@ -1,10 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
-import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
+import { copyDayEventsAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
+import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
 import {
   EventFormModal,
@@ -13,6 +14,7 @@ import {
 import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
+import { eventToCopySource } from "@/lib/copy-event";
 import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
 import {
   getZonedDateString,
@@ -75,6 +77,10 @@ export function CalendarSection({
   const [monthEvents, setMonthEvents] = useState(initialMonthEvents);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [isFetching, setIsFetching] = useState(false);
+  const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  const [copyConfirmKey, setCopyConfirmKey] = useState(0);
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const [copyPending, startCopyTransition] = useTransition();
   const showLoading = useDelayedLoading(isFetching);
   const hasNavigatedAwayRef = useRef(false);
 
@@ -188,6 +194,65 @@ export function CalendarSection({
     void fetchMonthEvents(monthRange.startedAtFrom, monthRange.startedAtTo);
   }, [fetchMonthEvents, monthRange.startedAtFrom, monthRange.startedAtTo]);
 
+  function markMonthNavigation() {
+    hasNavigatedAwayRef.current = true;
+  }
+
+  const handleGoToToday = useCallback(() => {
+    markMonthNavigation();
+    const today = getTodayDates(timeZone);
+    setVisibleCalendarMonth(today.month);
+    setSelectedCalendarDate(today.selected);
+  }, [timeZone]);
+
+  const navigateToDate = useCallback(
+    (targetDate: string) => {
+      markMonthNavigation();
+      const date = parseLocalDateString(targetDate);
+      setSelectedCalendarDate(date);
+      setVisibleCalendarMonth(parseLocalDateString(getZonedMonthStartDateString(timeZone, date)));
+    },
+    [timeZone],
+  );
+
+  const openCopyConfirm = useCallback(() => {
+    setCopyError(null);
+    setCopyConfirmKey((current) => current + 1);
+    setCopyConfirmOpen(true);
+  }, []);
+
+  const closeCopyConfirm = useCallback(() => {
+    if (copyPending) {
+      return;
+    }
+
+    setCopyConfirmOpen(false);
+    setCopyError(null);
+  }, [copyPending]);
+
+  const handleCopyConfirm = useCallback(
+    (targetDate: string) => {
+      setCopyError(null);
+
+      startCopyTransition(async () => {
+        const result = await copyDayEventsAction(
+          athleteId,
+          selectedDayEvents.map(eventToCopySource),
+          targetDate,
+        );
+
+        if ("error" in result) {
+          setCopyError(result.error);
+          return;
+        }
+
+        setCopyConfirmOpen(false);
+        navigateToDate(targetDate);
+      });
+    },
+    [athleteId, navigateToDate, selectedDayEvents],
+  );
+
   useEffect(() => {
     if (!createModalOpen) {
       return;
@@ -195,10 +260,6 @@ export function CalendarSection({
 
     applyHandlersRef.current?.applyDate(format(selectedCalendarDate, "yyyy-MM-dd"));
   }, [createModalOpen, selectedCalendarDate]);
-
-  function markMonthNavigation() {
-    hasNavigatedAwayRef.current = true;
-  }
 
   function handleMonthChange(nextMonth: Date) {
     markMonthNavigation();
@@ -215,13 +276,6 @@ export function CalendarSection({
 
   function handleSelect(date: Date) {
     setSelectedCalendarDate(startOfLocalDay(date));
-  }
-
-  function handleGoToToday() {
-    markMonthNavigation();
-    const today = getTodayDates(timeZone);
-    setVisibleCalendarMonth(today.month);
-    setSelectedCalendarDate(today.selected);
   }
 
   return (
@@ -277,8 +331,21 @@ export function CalendarSection({
           loading={showLoading}
           loadError={loadError}
           onAddClick={openCreateModal}
+          onCopyClick={openCopyConfirm}
+          copyDisabled={copyPending || selectedDayEvents.length === 0}
         />
       </section>
+
+      <CopyEventsConfirmModal
+        key={copyConfirmKey}
+        open={copyConfirmOpen}
+        onClose={closeCopyConfirm}
+        timeZone={timeZone}
+        eventCount={selectedDayEvents.length}
+        pending={copyPending}
+        error={copyError}
+        onConfirm={handleCopyConfirm}
+      />
 
       {createFormMounted && modalState ? (
         <EventFormModal
