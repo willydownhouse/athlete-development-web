@@ -118,29 +118,6 @@ export async function fetchSports(): Promise<Sport[]> {
   return result.items;
 }
 
-export async function createEvent(
-  token: string,
-  athleteId: string,
-  body: {
-    eventTypeId: string;
-    startedAt: string;
-    source: "chat" | "form" | "voice" | "manual";
-    title?: string;
-    description?: string;
-    endedAt?: string;
-    durationSeconds?: number;
-    intensity?: EventIntensity;
-    originalInput?: string;
-    structuredData?: Record<string, unknown>;
-    metrics?: EventMetricInput[];
-  },
-): Promise<Event> {
-  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-}
-
 export type EventMetricInput = {
   metricDefinitionId: string;
   numericValue?: number;
@@ -148,6 +125,42 @@ export type EventMetricInput = {
   booleanValue?: boolean;
   unit?: string;
 };
+
+export type CreateEventBody = {
+  eventTypeId: string;
+  startedAt: string;
+  source: "chat" | "form" | "voice" | "manual";
+  title?: string;
+  description?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  intensity?: EventIntensity;
+  originalInput?: string;
+  structuredData?: Record<string, unknown>;
+  metrics?: EventMetricInput[];
+};
+
+export async function createEvent(
+  token: string,
+  athleteId: string,
+  body: CreateEventBody,
+): Promise<Event> {
+  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createEventsBatch(
+  token: string,
+  athleteId: string,
+  body: { events: CreateEventBody[] },
+): Promise<{ items: Event[] }> {
+  return apiFetch<{ items: Event[] }>(token, `/api/athletes/${athleteId}/events/batch`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
 
 export async function fetchEvents(
   token: string,

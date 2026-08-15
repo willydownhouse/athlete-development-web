@@ -1,9 +1,9 @@
 "use client";
 
 import { format } from "date-fns";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
-import { fetchEventsInRangeAction } from "@/app/dashboard/actions";
+import { copyDayEventsForTodayAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
 import {
@@ -11,8 +11,10 @@ import {
   type CreateEventModalState,
 } from "@/components/dashboard/event-form-modal";
 import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
+import { Modal } from "@/components/ui/modal";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
+import { eventToCopySource } from "@/lib/copy-event";
 import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
 import {
   getZonedDateString,
@@ -75,6 +77,9 @@ export function CalendarSection({
   const [monthEvents, setMonthEvents] = useState(initialMonthEvents);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [isFetching, setIsFetching] = useState(false);
+  const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const [copyPending, startCopyTransition] = useTransition();
   const showLoading = useDelayedLoading(isFetching);
   const hasNavigatedAwayRef = useRef(false);
 
@@ -188,6 +193,54 @@ export function CalendarSection({
     void fetchMonthEvents(monthRange.startedAtFrom, monthRange.startedAtTo);
   }, [fetchMonthEvents, monthRange.startedAtFrom, monthRange.startedAtTo]);
 
+  function markMonthNavigation() {
+    hasNavigatedAwayRef.current = true;
+  }
+
+  const handleGoToToday = useCallback(() => {
+    markMonthNavigation();
+    const today = getTodayDates(timeZone);
+    setVisibleCalendarMonth(today.month);
+    setSelectedCalendarDate(today.selected);
+  }, [timeZone]);
+
+  const canCopySelectedDay = selectedDayEvents.length > 0 && !isShowingToday;
+
+  const openCopyConfirm = useCallback(() => {
+    setCopyError(null);
+    setCopyConfirmOpen(true);
+  }, []);
+
+  const closeCopyConfirm = useCallback(() => {
+    if (copyPending) {
+      return;
+    }
+
+    setCopyConfirmOpen(false);
+    setCopyError(null);
+  }, [copyPending]);
+
+  const handleCopyConfirm = useCallback(() => {
+    setCopyError(null);
+
+    startCopyTransition(async () => {
+      const result = await copyDayEventsForTodayAction(
+        athleteId,
+        selectedDayEvents.map(eventToCopySource),
+      );
+
+      if ("error" in result) {
+        setCopyError(result.error);
+        return;
+      }
+
+      setCopyConfirmOpen(false);
+      handleGoToToday();
+      const todayMonthRange = getZonedMonthRange(timeZone);
+      void fetchMonthEvents(todayMonthRange.startedAtFrom, todayMonthRange.startedAtTo);
+    });
+  }, [athleteId, fetchMonthEvents, handleGoToToday, selectedDayEvents, timeZone]);
+
   useEffect(() => {
     if (!createModalOpen) {
       return;
@@ -195,10 +248,6 @@ export function CalendarSection({
 
     applyHandlersRef.current?.applyDate(format(selectedCalendarDate, "yyyy-MM-dd"));
   }, [createModalOpen, selectedCalendarDate]);
-
-  function markMonthNavigation() {
-    hasNavigatedAwayRef.current = true;
-  }
 
   function handleMonthChange(nextMonth: Date) {
     markMonthNavigation();
@@ -215,13 +264,6 @@ export function CalendarSection({
 
   function handleSelect(date: Date) {
     setSelectedCalendarDate(startOfLocalDay(date));
-  }
-
-  function handleGoToToday() {
-    markMonthNavigation();
-    const today = getTodayDates(timeZone);
-    setVisibleCalendarMonth(today.month);
-    setSelectedCalendarDate(today.selected);
   }
 
   return (
@@ -277,8 +319,44 @@ export function CalendarSection({
           loading={showLoading}
           loadError={loadError}
           onAddClick={openCreateModal}
+          onCopyClick={canCopySelectedDay ? openCopyConfirm : undefined}
+          copyDisabled={copyPending}
         />
       </section>
+
+      <Modal
+        open={copyConfirmOpen}
+        onClose={closeCopyConfirm}
+        title="Copy day for today?"
+        align="content"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-300">
+            Create {selectedDayEvents.length} event
+            {selectedDayEvents.length === 1 ? "" : "s"} for today with the same types, details, and
+            metrics?
+          </p>
+          {copyError ? <p className="text-sm text-red-300">{copyError}</p> : null}
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={closeCopyConfirm}
+              disabled={copyPending}
+              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyConfirm}
+              disabled={copyPending}
+              className="inline-flex items-center justify-center rounded-xl bg-[#9ec9e8] px-4 py-2.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {copyPending ? "Copying…" : "Yes, copy for today"}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {createFormMounted && modalState ? (
         <EventFormModal

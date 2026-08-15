@@ -67,6 +67,7 @@ export function EventEditControls({
     startCopyTransition(async () => {
       const result = await copyEventForTodayAction(athleteId, {
         eventTypeId: event.eventTypeId,
+        startedAt: event.startedAt,
         title: event.title,
         description: event.description,
         durationSeconds: event.durationSeconds,
