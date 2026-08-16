@@ -1,23 +1,26 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import { CalendarSection } from "@/components/calendar/calendar-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { loadCalendarMonthEvents } from "@/lib/calendar-event-data";
-import { fetchEventTypes } from "@/lib/api";
-import { getAuthBearerToken } from "@/lib/auth-token";
-import { getRequestTimeZone } from "@/lib/time-zone-server";
+import { HockeyStats } from "@/components/dashboard/hockey-stats";
+import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
+import { HockeyStatsGridSkeleton } from "@/components/dashboard/dashboard-skeletons";
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
-import type { EventType } from "@/lib/types";
+import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
 
-type AthleteCalendarPageProps = {
+type AthleteStatsPageProps = {
   params: Promise<{ athleteId: string }>;
+  searchParams: Promise<{ statsPeriod?: string }>;
 };
 
-export default async function AthleteCalendarPage({ params }: AthleteCalendarPageProps) {
+export default async function AthleteStatsPage({ params, searchParams }: AthleteStatsPageProps) {
   const session = await auth();
 
   if (!session?.user) {
@@ -25,6 +28,7 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
   }
 
   const { athleteId } = await params;
+  const { statsPeriod } = await searchParams;
   const normalizedAthleteId = athleteId.trim();
 
   if (!normalizedAthleteId) {
@@ -49,16 +53,11 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
     redirect("/dashboard");
   }
 
-  const monthEvents = await loadCalendarMonthEvents(normalizedAthleteId, timeZone);
-
-  let eventTypes: EventType[] = [];
-  let eventTypesError: string | null = null;
-
-  try {
-    eventTypes = await fetchEventTypes(selectedAthlete.focusSportId);
-  } catch (error) {
-    eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
+  if (selectedAthlete.focusSport.slug !== HOCKEY_SPORT_SLUG) {
+    redirect(dashboardHref(selectedAthlete.id));
   }
+
+  const period = parseHockeyStatsPeriod(statsPeriod);
 
   return (
     <DashboardShell
@@ -75,21 +74,19 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Calendar</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Stats</h1>
 
         <div className="mt-6">
-          <CalendarSection
-            athleteId={normalizedAthleteId}
-            timeZone={timeZone}
-            eventTypes={eventTypes}
-            focusSportName={selectedAthlete.focusSport.name}
-            eventTypesError={eventTypesError}
-            initialMonthEvents={monthEvents.events}
-            loadedRange={monthEvents.monthRange}
-            initialSelectedDate={monthEvents.selectedDate}
-            initialVisibleMonth={monthEvents.visibleMonth}
-            initialLoadError={monthEvents.error}
-          />
+          <HockeyStatsSection athleteId={selectedAthlete.id} period={period}>
+            <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
+              <HockeyStats
+                athleteId={selectedAthlete.id}
+                sportId={selectedAthlete.focusSportId}
+                period={period}
+                timeZone={timeZone}
+              />
+            </Suspense>
+          </HockeyStatsSection>
         </div>
       </div>
     </DashboardShell>

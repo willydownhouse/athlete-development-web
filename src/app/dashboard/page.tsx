@@ -40,7 +40,6 @@ export default async function DashboardPage() {
       selectedAthlete={null}
       eventTypes={[]}
       loadError={loadError}
-      statsPeriod="week"
     />
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
+import { appShellMobileTitle } from "@/components/dashboard/dashboard-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Athlete } from "@/lib/types";
 
@@ -37,6 +39,7 @@ export function DashboardShell({
   selectedAthlete,
   children,
 }: DashboardShellProps) {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = useCallback(() => {
@@ -81,10 +84,7 @@ export function DashboardShell({
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Dashboard
-            </p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
+            <p className="text-lg font-semibold text-white">Athlete Development Center</p>
           </div>
           <button
             type="button"
@@ -123,7 +123,9 @@ export function DashboardShell({
             <MenuIcon />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Dashboard</p>
+            <p className="truncate text-sm font-semibold text-white">
+              {appShellMobileTitle(pathname)}
+            </p>
             <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
           </div>
         </header>

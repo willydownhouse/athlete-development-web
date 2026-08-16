@@ -5,6 +5,13 @@ import {
   getDefaultEventsListWeekDates,
   getEventsListDayDates,
 } from "@/lib/events-list-params";
+import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
+
+export const TODAY_NAV_LABEL = "Today";
+
+export function backToTodayLabel(): string {
+  return `← Back to ${TODAY_NAV_LABEL}`;
+}
 
 export function dashboardHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/dashboard`;
@@ -12,6 +19,12 @@ export function dashboardHref(athleteId: string): string {
 
 export function athleteCalendarHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/calendar`;
+}
+
+export function athleteStatsHref(athleteId: string, period: HockeyStatsPeriod = "week"): string {
+  const params = new URLSearchParams({ statsPeriod: period });
+
+  return `/athlete/${encodeURIComponent(athleteId)}/stats?${params.toString()}`;
 }
 
 export function athleteEventHref(athleteId: string, eventId: string): string {
@@ -74,4 +87,28 @@ export function activeAthleteIdFromPath(pathname: string): string | null {
 
 export function isAthleteDashboardPath(pathname: string): boolean {
   return /^\/athlete\/[^/]+\/dashboard\/?$/.test(pathname);
+}
+
+export function appShellMobileTitle(pathname: string): string {
+  if (isAthleteDashboardPath(pathname) || pathname === "/dashboard") {
+    return TODAY_NAV_LABEL;
+  }
+
+  if (/^\/athlete\/[^/]+\/calendar\/?$/.test(pathname)) {
+    return "Calendar";
+  }
+
+  if (/^\/athlete\/[^/]+\/stats\/?$/.test(pathname)) {
+    return "Stats";
+  }
+
+  if (/^\/athlete\/[^/]+\/events\/?$/.test(pathname)) {
+    return "Events";
+  }
+
+  if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {
+    return "Event";
+  }
+
+  return "Athlete Development Center";
 }

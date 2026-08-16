@@ -4,21 +4,19 @@ import { Suspense } from "react";
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
-import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
-import { athleteEventsDayHref, athleteCalendarHref, athleteEventsWeekHref } from "./dashboard-nav";
+import {
+  athleteEventsDayHref,
+  athleteCalendarHref,
+  athleteEventsWeekHref,
+  athleteStatsHref,
+} from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
-import { HockeyStats } from "./hockey-stats";
-import { HockeyStatsSection } from "./hockey-stats-section";
 import { QuickLogSection } from "./quick-log-section";
-import {
-  HockeyStatsGridSkeleton,
-  HockeyStatsSkeleton,
-  TodaysEventsSkeleton,
-} from "./dashboard-skeletons";
+import { TodaysEventsSkeleton } from "./dashboard-skeletons";
 import { TodaysEventsCard } from "./todays-events-card";
 
 const inlineSkeletonClassName =
@@ -28,7 +26,6 @@ type DashboardAthleteContentProps = {
   selectedAthlete: Athlete;
   eventTypes: EventType[];
   eventTypesError?: string | null;
-  statsPeriod: HockeyStatsPeriod;
 };
 
 async function DashboardWeekEventsMeta({
@@ -75,9 +72,12 @@ export async function DashboardAthleteContent({
   selectedAthlete,
   eventTypes,
   eventTypesError,
-  statsPeriod,
 }: DashboardAthleteContentProps) {
   const timeZone = await getRequestTimeZone();
+  const statsHref =
+    selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG
+      ? athleteStatsHref(selectedAthlete.id)
+      : undefined;
 
   return (
     <DashboardInteractionsProvider
@@ -91,6 +91,7 @@ export async function DashboardAthleteContent({
       <DashboardHeader
         selectedAthlete={selectedAthlete}
         calendarHref={athleteCalendarHref(selectedAthlete.id)}
+        statsHref={statsHref}
         eventsMeta={
           <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>
             <DashboardWeekEventsMeta athleteId={selectedAthlete.id} timeZone={timeZone} />
@@ -106,27 +107,6 @@ export async function DashboardAthleteContent({
           focusSportName={selectedAthlete.focusSport.name}
           eventTypesError={eventTypesError}
         />
-        {selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG ? (
-          <Suspense
-            fallback={
-              <HockeyStatsSkeleton
-                sportName={selectedAthlete.focusSport.name}
-                period={statsPeriod}
-              />
-            }
-          >
-            <HockeyStatsSection sportName={selectedAthlete.focusSport.name} period={statsPeriod}>
-              <Suspense key={statsPeriod} fallback={<HockeyStatsGridSkeleton />}>
-                <HockeyStats
-                  athleteId={selectedAthlete.id}
-                  sportId={selectedAthlete.focusSportId}
-                  period={statsPeriod}
-                  timeZone={timeZone}
-                />
-              </Suspense>
-            </HockeyStatsSection>
-          </Suspense>
-        ) : null}
       </div>
     </DashboardInteractionsProvider>
   );

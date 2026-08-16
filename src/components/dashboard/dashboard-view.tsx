@@ -3,7 +3,6 @@ import type { Athlete, EventType } from "@/lib/types";
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
 import { DashboardShell } from "./dashboard-shell";
-import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 
 type DashboardViewProps = {
@@ -13,7 +12,6 @@ type DashboardViewProps = {
   eventTypes: EventType[];
   eventTypesError?: string | null;
   loadError?: string | null;
-  statsPeriod: HockeyStatsPeriod;
 };
 
 export async function DashboardView({
@@ -23,7 +21,6 @@ export async function DashboardView({
   eventTypes,
   eventTypesError,
   loadError,
-  statsPeriod,
 }: DashboardViewProps) {
   const hasAthlete = selectedAthlete !== null;
   const isAdmin = await getIsAdminUser();
@@ -51,7 +48,6 @@ export async function DashboardView({
               selectedAthlete={selectedAthlete}
               eventTypes={eventTypes}
               eventTypesError={eventTypesError}
-              statsPeriod={statsPeriod}
             />
           </>
         ) : (

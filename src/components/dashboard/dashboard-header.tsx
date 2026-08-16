@@ -9,15 +9,17 @@ type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
   eventsMeta?: ReactNode;
   calendarHref?: string;
+  statsHref?: string;
 };
 
 export function DashboardHeader({
   selectedAthlete,
   eventsMeta,
   calendarHref,
+  statsHref,
 }: DashboardHeaderProps) {
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
-  const showMetaRow = ageGroup || eventsMeta || calendarHref;
+  const showMetaRow = ageGroup || eventsMeta || calendarHref || statsHref;
 
   return (
     <header>
@@ -38,13 +40,25 @@ export function DashboardHeader({
                 ) : null}
                 {eventsMeta}
               </div>
-              {calendarHref ? (
-                <Link
-                  href={calendarHref}
-                  className="shrink-0 font-medium text-zinc-300 transition hover:text-white"
-                >
-                  Calendar
-                </Link>
+              {calendarHref || statsHref ? (
+                <div className="flex shrink-0 items-center gap-3">
+                  {statsHref ? (
+                    <Link
+                      href={statsHref}
+                      className="font-medium text-zinc-300 transition hover:text-white"
+                    >
+                      Stats
+                    </Link>
+                  ) : null}
+                  {calendarHref ? (
+                    <Link
+                      href={calendarHref}
+                      className="font-medium text-zinc-300 transition hover:text-white"
+                    >
+                      Calendar
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           ) : null}

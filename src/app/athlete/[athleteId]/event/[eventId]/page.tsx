@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { dashboardHref } from "@/components/dashboard/dashboard-nav";
+import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
@@ -56,7 +56,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          ← Back to dashboard
+          {backToTodayLabel()}
         </Link>
 
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Event</h1>

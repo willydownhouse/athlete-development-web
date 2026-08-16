@@ -1,8 +1,4 @@
-import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
-
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { HockeyStatsSection } from "./hockey-stats-section";
 
 const CARD_CLASS = "rounded-[1.35rem] bg-[#171b22] px-4 py-4";
 
@@ -51,20 +47,6 @@ export function HockeyStatsGridSkeleton() {
       <HockeyStatsTileSkeleton withSubtitle />
       <HockeyStatsTileSkeleton />
     </div>
-  );
-}
-
-export function HockeyStatsSkeleton({
-  sportName,
-  period,
-}: {
-  sportName: string;
-  period: HockeyStatsPeriod;
-}) {
-  return (
-    <HockeyStatsSection sportName={sportName} period={period}>
-      <HockeyStatsGridSkeleton />
-    </HockeyStatsSection>
   );
 }
 
