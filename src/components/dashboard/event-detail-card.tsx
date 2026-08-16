@@ -1,11 +1,7 @@
 import type { ReactNode } from "react";
 
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
-import {
-  formatDurationSeconds,
-  formatEventMetricValue,
-  sortEventMetrics,
-} from "@/lib/event-metric-display";
+import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
 import { formatZonedTime } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
@@ -52,7 +48,7 @@ type EventDetailCardProps = {
 export function EventDetailCard({ event, timeZone, editAction }: EventDetailCardProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
-  const metrics = sortEventMetrics(event.metrics ?? []);
+  const metrics = event.metrics ?? [];
 
   return (
     <article className="rounded-2xl border border-white/5 bg-[#12161d] p-4">

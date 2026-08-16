@@ -26,9 +26,7 @@ export function buildHockeyStatTiles(sportStats: SportStats): HockeyStatTile[] {
       });
     }
 
-    const metrics = Object.entries(eventType.metrics ?? {}).sort(([leftKey], [rightKey]) =>
-      leftKey.localeCompare(rightKey),
-    );
+    const metrics = Object.entries(eventType.metrics ?? {});
 
     for (const [metricKey, metric] of metrics) {
       tiles.push({

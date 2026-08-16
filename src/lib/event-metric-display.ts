@@ -56,9 +56,3 @@ export function formatEventMetricValue(metric: EventMetric): string {
 
   return metric.numericValue;
 }
-
-export function sortEventMetrics(metrics: EventMetric[]): EventMetric[] {
-  return [...metrics].sort((a, b) =>
-    a.metricDefinition.name.localeCompare(b.metricDefinition.name),
-  );
-}
