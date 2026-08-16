@@ -77,7 +77,11 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Stats</h1>
 
         <div className="mt-6">
-          <HockeyStatsSection athleteId={selectedAthlete.id} period={period}>
+          <HockeyStatsSection
+            athleteId={selectedAthlete.id}
+            sportName={selectedAthlete.focusSport.name}
+            period={period}
+          >
             <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
               <HockeyStats
                 athleteId={selectedAthlete.id}
