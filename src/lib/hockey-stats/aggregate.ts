@@ -63,6 +63,7 @@ export function aggregateHockeyStats(events: Event[]): HockeyStatSummary[] {
 }
 
 export function formatHockeyStatTotal(stat: {
+  key?: string;
   name: string;
   canonicalUnit: string | null;
   total: number;
@@ -71,8 +72,13 @@ export function formatHockeyStatTotal(stat: {
     return formatDurationSeconds(stat.total);
   }
 
-  const unit = formatMetricUnit(stat.canonicalUnit);
   const formattedTotal = Number.isInteger(stat.total) ? String(stat.total) : stat.total.toFixed(1);
+
+  if (stat.key === "plus_minus") {
+    return formattedTotal;
+  }
+
+  const unit = formatMetricUnit(stat.canonicalUnit);
 
   return unit ? `${formattedTotal} ${unit}` : formattedTotal;
 }

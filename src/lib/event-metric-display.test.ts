@@ -52,10 +52,10 @@ describe("formatDurationSeconds", () => {
 });
 
 describe("formatEventMetricValue", () => {
-  it("formats numeric metrics with units", () => {
+  it("formats numeric metrics without units", () => {
     const metric = buildMetric(buildMetricDefinition(), { numericValue: "100" });
 
-    expect(formatEventMetricValue(metric)).toBe("100 shots");
+    expect(formatEventMetricValue(metric)).toBe("100");
   });
 
   it("formats seconds metrics as durations", () => {

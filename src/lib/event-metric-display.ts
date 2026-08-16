@@ -1,4 +1,4 @@
-import { formatMetricUnit, isSecondsMetric } from "./event-metric-form";
+import { isSecondsMetric } from "./event-metric-form";
 import type { EventMetric } from "@/lib/types";
 
 export function formatDurationSeconds(seconds: number): string {
@@ -52,13 +52,6 @@ export function formatEventMetricValue(metric: EventMetric): string {
 
   if (isSecondsMetric(metricDefinition.canonicalUnit)) {
     return formatDurationSeconds(numericValue);
-  }
-
-  const unit = metric.unit ?? metricDefinition.canonicalUnit;
-  const formattedUnit = unit ? formatMetricUnit(unit) : null;
-
-  if (formattedUnit) {
-    return `${metric.numericValue} ${formattedUnit}`;
   }
 
   return metric.numericValue;

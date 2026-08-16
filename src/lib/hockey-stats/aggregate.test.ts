@@ -260,6 +260,17 @@ describe("formatHockeyStatTotal", () => {
     ).toBe("7");
   });
 
+  it("formats plus/minus metrics without the count unit", () => {
+    expect(
+      formatHockeyStatTotal({
+        key: "plus_minus",
+        name: "Plus/minus",
+        canonicalUnit: "count",
+        total: -2,
+      }),
+    ).toBe("-2");
+  });
+
   it("formats decimal totals to one decimal place", () => {
     expect(
       formatHockeyStatTotal({

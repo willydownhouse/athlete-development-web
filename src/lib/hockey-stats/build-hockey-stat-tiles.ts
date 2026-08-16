@@ -34,6 +34,7 @@ export function buildHockeyStatTiles(sportStats: SportStats): HockeyStatTile[] {
       tiles.push({
         key: `${eventType.eventTypeId}-${metricKey}`,
         value: formatHockeyStatTotal({
+          key: metricKey,
           name: metric.name,
           canonicalUnit: metric.canonicalUnit,
           total: metric.total,
