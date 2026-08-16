@@ -46,6 +46,8 @@ export function HockeyStatsGridSkeleton() {
       <HockeyStatsTileSkeleton withSubtitle />
       <HockeyStatsTileSkeleton withSubtitle />
       <HockeyStatsTileSkeleton />
+      <HockeyStatsTileSkeleton withSubtitle />
+      <HockeyStatsTileSkeleton />
     </div>
   );
 }
