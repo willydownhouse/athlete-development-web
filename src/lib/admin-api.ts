@@ -1,5 +1,12 @@
 import { getApiBaseUrl } from "./api";
-import type { EventType, EventTypeMetricDefinition, MetricDefinition, Sport } from "./types";
+import type {
+  EventItemType,
+  EventType,
+  EventTypeItemType,
+  EventTypeMetricDefinition,
+  MetricDefinition,
+  Sport,
+} from "./types";
 
 export class AdminApiError extends Error {
   constructor(
@@ -259,6 +266,105 @@ export async function deleteAdminEventTypeMetricDefinition(
   await adminFetch<void>(
     token,
     `/api/admin/event-types/${eventTypeId}/metric-definitions/${eventTypeMetricDefinitionId}`,
+    { method: "DELETE" },
+  );
+}
+
+// Event item types
+
+export async function listAdminEventItemTypes(
+  token: string,
+  query: { sportId?: string; active?: boolean } = {},
+): Promise<EventItemType[]> {
+  const result = await adminFetch<ListResponse<EventItemType>>(
+    token,
+    `/api/admin/event-item-types${buildQuery({
+      sportId: query.sportId,
+      active: query.active === undefined ? undefined : String(query.active),
+    })}`,
+  );
+  return result.items;
+}
+
+export async function createAdminEventItemType(
+  token: string,
+  body: {
+    sportId?: string | null;
+    slug: string;
+    name: string;
+    active?: boolean;
+  },
+): Promise<EventItemType> {
+  return adminFetch<EventItemType>(token, "/api/admin/event-item-types", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateAdminEventItemType(
+  token: string,
+  eventItemTypeId: string,
+  body: Partial<{
+    sportId: string | null;
+    slug: string;
+    name: string;
+    active: boolean;
+  }>,
+): Promise<EventItemType> {
+  return adminFetch<EventItemType>(token, `/api/admin/event-item-types/${eventItemTypeId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+// Event type item types
+
+export async function listAdminEventTypeItemTypes(
+  token: string,
+  eventTypeId: string,
+): Promise<EventTypeItemType[]> {
+  const result = await adminFetch<ListResponse<EventTypeItemType>>(
+    token,
+    `/api/admin/event-types/${eventTypeId}/item-types`,
+  );
+  return result.items;
+}
+
+export async function createAdminEventTypeItemType(
+  token: string,
+  eventTypeId: string,
+  body: { eventItemTypeId: string; required?: boolean; sortOrder?: number },
+): Promise<EventTypeItemType> {
+  return adminFetch<EventTypeItemType>(token, `/api/admin/event-types/${eventTypeId}/item-types`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateAdminEventTypeItemType(
+  token: string,
+  eventTypeId: string,
+  eventTypeItemTypeId: string,
+  body: Partial<{ required: boolean; sortOrder: number }>,
+): Promise<EventTypeItemType> {
+  return adminFetch<EventTypeItemType>(
+    token,
+    `/api/admin/event-types/${eventTypeId}/item-types/${eventTypeItemTypeId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function deleteAdminEventTypeItemType(
+  token: string,
+  eventTypeId: string,
+  eventTypeItemTypeId: string,
+): Promise<void> {
+  await adminFetch<void>(
+    token,
+    `/api/admin/event-types/${eventTypeId}/item-types/${eventTypeItemTypeId}`,
     { method: "DELETE" },
   );
 }

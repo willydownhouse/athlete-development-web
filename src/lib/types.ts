@@ -153,6 +153,26 @@ export type EventTypeMetricDefinition = {
   metricDefinition: MetricDefinition;
 };
 
+export type EventItemType = {
+  id: string;
+  sportId: string | null;
+  slug: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  sport: Sport | null;
+};
+
+export type EventTypeItemType = {
+  id: string;
+  eventTypeId: string;
+  eventItemTypeId: string;
+  required: boolean;
+  sortOrder: number;
+  eventItemType: EventItemType;
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",

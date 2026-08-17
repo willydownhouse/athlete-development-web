@@ -4,12 +4,17 @@ import { revalidatePath, updateTag } from "next/cache";
 
 import {
   AdminApiError,
+  createAdminEventItemType,
   createAdminEventType,
+  createAdminEventTypeItemType,
   createAdminEventTypeMetricDefinition,
   createAdminMetricDefinition,
   createAdminSport,
+  deleteAdminEventTypeItemType,
   deleteAdminEventTypeMetricDefinition,
+  updateAdminEventItemType,
   updateAdminEventType,
+  updateAdminEventTypeItemType,
   updateAdminEventTypeMetricDefinition,
   updateAdminMetricDefinition,
   updateAdminSport,
@@ -273,7 +278,7 @@ export async function updateEventTypeMetricAction(
     const sortOrder = readOptionalInt(formData, "sortOrder");
 
     await updateAdminEventTypeMetricDefinition(token, eventTypeId, mappingId, {
-      required: formData.has("required") ? readBoolean(formData, "required") : undefined,
+      required: readBoolean(formData, "required"),
       sortOrder,
     });
 
@@ -290,5 +295,109 @@ export async function deleteEventTypeMetricAction(formData: FormData): Promise<v
   const mappingId = readString(formData, "eventTypeMetricDefinitionId");
 
   await deleteAdminEventTypeMetricDefinition(token, eventTypeId, mappingId);
+  revalidatePath(`/admin/event-types/${eventTypeId}`);
+}
+
+// Event item types
+
+export async function createEventItemTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const sportId = readSportId(formData);
+
+    await createAdminEventItemType(token, {
+      sportId,
+      slug: readString(formData, "slug"),
+      name: readString(formData, "name"),
+      active: readBoolean(formData, "active"),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/event-item-types");
+    return { success: "Event item type created" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function updateEventItemTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const eventItemTypeId = readString(formData, "eventItemTypeId");
+    const sportId = readSportId(formData);
+
+    await updateAdminEventItemType(token, eventItemTypeId, {
+      sportId,
+      slug: readOptionalString(formData, "slug"),
+      name: readOptionalString(formData, "name"),
+      active: readBoolean(formData, "active"),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/event-item-types");
+    revalidatePath(`/admin/event-types`);
+    return { success: "Event item type updated" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// Event type item type mappings
+
+export async function createEventTypeItemTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const eventTypeId = readString(formData, "eventTypeId");
+
+    await createAdminEventTypeItemType(token, eventTypeId, {
+      eventItemTypeId: readString(formData, "eventItemTypeId"),
+      required: readBoolean(formData, "required"),
+      sortOrder: readOptionalInt(formData, "sortOrder"),
+    });
+
+    revalidatePath(`/admin/event-types/${eventTypeId}`);
+    return { success: "Item type allowed for event type" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function updateEventTypeItemTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const eventTypeId = readString(formData, "eventTypeId");
+    const mappingId = readString(formData, "eventTypeItemTypeId");
+    const sortOrder = readOptionalInt(formData, "sortOrder");
+
+    await updateAdminEventTypeItemType(token, eventTypeId, mappingId, {
+      required: readBoolean(formData, "required"),
+      sortOrder,
+    });
+
+    revalidatePath(`/admin/event-types/${eventTypeId}`);
+    return { success: "Item type mapping updated" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function deleteEventTypeItemTypeAction(formData: FormData): Promise<void> {
+  const { token } = await requireAdmin();
+  const eventTypeId = readString(formData, "eventTypeId");
+  const mappingId = readString(formData, "eventTypeItemTypeId");
+
+  await deleteAdminEventTypeItemType(token, eventTypeId, mappingId);
   revalidatePath(`/admin/event-types/${eventTypeId}`);
 }
