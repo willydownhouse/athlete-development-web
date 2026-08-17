@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from "./api";
 import type {
   EventItemType,
+  EventItemTypeChildType,
   EventType,
   EventTypeItemType,
   EventTypeMetricDefinition,
@@ -315,6 +316,69 @@ export async function updateAdminEventItemType(
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function getAdminEventItemType(
+  token: string,
+  eventItemTypeId: string,
+): Promise<EventItemType> {
+  return adminFetch<EventItemType>(token, `/api/admin/event-item-types/${eventItemTypeId}`);
+}
+
+// Event item type child types
+
+export async function listAdminEventItemTypeChildTypes(
+  token: string,
+  eventItemTypeId: string,
+): Promise<EventItemTypeChildType[]> {
+  const result = await adminFetch<ListResponse<EventItemTypeChildType>>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/child-types`,
+  );
+  return result.items;
+}
+
+export async function createAdminEventItemTypeChildType(
+  token: string,
+  eventItemTypeId: string,
+  body: { childEventItemTypeId: string; sortOrder?: number },
+): Promise<EventItemTypeChildType> {
+  return adminFetch<EventItemTypeChildType>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/child-types`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function updateAdminEventItemTypeChildType(
+  token: string,
+  eventItemTypeId: string,
+  eventItemTypeChildTypeId: string,
+  body: Partial<{ sortOrder: number }>,
+): Promise<EventItemTypeChildType> {
+  return adminFetch<EventItemTypeChildType>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/child-types/${eventItemTypeChildTypeId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function deleteAdminEventItemTypeChildType(
+  token: string,
+  eventItemTypeId: string,
+  eventItemTypeChildTypeId: string,
+): Promise<void> {
+  await adminFetch<void>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/child-types/${eventItemTypeChildTypeId}`,
+    { method: "DELETE" },
+  );
 }
 
 // Event type item types

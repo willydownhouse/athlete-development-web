@@ -173,6 +173,14 @@ export type EventTypeItemType = {
   eventItemType: EventItemType;
 };
 
+export type EventItemTypeChildType = {
+  id: string;
+  parentEventItemTypeId: string;
+  childEventItemTypeId: string;
+  sortOrder: number;
+  childEventItemType: EventItemType;
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",

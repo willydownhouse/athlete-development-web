@@ -5,14 +5,17 @@ import { revalidatePath, updateTag } from "next/cache";
 import {
   AdminApiError,
   createAdminEventItemType,
+  createAdminEventItemTypeChildType,
   createAdminEventType,
   createAdminEventTypeItemType,
   createAdminEventTypeMetricDefinition,
   createAdminMetricDefinition,
   createAdminSport,
+  deleteAdminEventItemTypeChildType,
   deleteAdminEventTypeItemType,
   deleteAdminEventTypeMetricDefinition,
   updateAdminEventItemType,
+  updateAdminEventItemTypeChildType,
   updateAdminEventType,
   updateAdminEventTypeItemType,
   updateAdminEventTypeMetricDefinition,
@@ -341,6 +344,7 @@ export async function updateEventItemTypeAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/event-item-types");
+    revalidatePath(`/admin/event-item-types/${eventItemTypeId}`);
     revalidatePath(`/admin/event-types`);
     return { success: "Event item type updated" };
   } catch (error) {
@@ -400,4 +404,56 @@ export async function deleteEventTypeItemTypeAction(formData: FormData): Promise
 
   await deleteAdminEventTypeItemType(token, eventTypeId, mappingId);
   revalidatePath(`/admin/event-types/${eventTypeId}`);
+}
+
+// Event item type child type mappings
+
+export async function createEventItemTypeChildTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const eventItemTypeId = readString(formData, "eventItemTypeId");
+
+    await createAdminEventItemTypeChildType(token, eventItemTypeId, {
+      childEventItemTypeId: readString(formData, "childEventItemTypeId"),
+      sortOrder: readOptionalInt(formData, "sortOrder"),
+    });
+
+    revalidatePath(`/admin/event-item-types/${eventItemTypeId}`);
+    return { success: "Child item type allowed" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function updateEventItemTypeChildTypeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const eventItemTypeId = readString(formData, "eventItemTypeId");
+    const mappingId = readString(formData, "eventItemTypeChildTypeId");
+    const sortOrder = readOptionalInt(formData, "sortOrder");
+
+    await updateAdminEventItemTypeChildType(token, eventItemTypeId, mappingId, {
+      sortOrder,
+    });
+
+    revalidatePath(`/admin/event-item-types/${eventItemTypeId}`);
+    return { success: "Child item type mapping updated" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function deleteEventItemTypeChildTypeAction(formData: FormData): Promise<void> {
+  const { token } = await requireAdmin();
+  const eventItemTypeId = readString(formData, "eventItemTypeId");
+  const mappingId = readString(formData, "eventItemTypeChildTypeId");
+
+  await deleteAdminEventItemTypeChildType(token, eventItemTypeId, mappingId);
+  revalidatePath(`/admin/event-item-types/${eventItemTypeId}`);
 }

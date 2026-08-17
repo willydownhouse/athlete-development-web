@@ -1,11 +1,8 @@
-import Link from "next/link";
-
 import { AdminCreateModal } from "@/components/admin/admin-create-modal";
 import { CreateEventItemTypeForm } from "@/components/admin/create-event-item-type-form";
 import { EventItemTypeFilters } from "@/components/admin/event-item-type-filters";
+import { EventItemTypeList } from "@/components/admin/event-item-type-list";
 import { PageHeader } from "@/components/admin/page-header";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { UpdateEventItemTypeForm } from "@/components/admin/update-event-item-type-form";
 import { listAdminEventItemTypes, listAdminSports } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -35,7 +32,7 @@ export default async function AdminEventItemTypesPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           title="Event item types"
-          description="Define item types used in nested event details and map them to event types."
+          description="Define item types used in nested event details, child mappings, and event type roots."
         />
         <AdminCreateModal title="Create event item type" buttonLabel="Create item type">
           <CreateEventItemTypeForm sports={sports} />
@@ -44,7 +41,7 @@ export default async function AdminEventItemTypesPage({
 
       <EventItemTypeFilters sports={sports} />
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+      <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">
             Event item types ({eventItemTypes.length})
@@ -56,33 +53,7 @@ export default async function AdminEventItemTypesPage({
             No event item types match the filters.
           </p>
         ) : (
-          <ul className="divide-y divide-white/10">
-            {eventItemTypes.map((eventItemType) => (
-              <li key={eventItemType.id} className="px-4 py-5 sm:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-white">{eventItemType.name}</h3>
-                      <StatusBadge active={eventItemType.active} />
-                    </div>
-                    <p className="mt-1 font-mono text-sm text-zinc-500">{eventItemType.slug}</p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {eventItemType.sport?.name ?? "General"}
-                    </p>
-                  </div>
-                  <Link
-                    href="/admin/event-types?active=true"
-                    className="shrink-0 text-sm font-medium text-[#9ec9e8] hover:text-[#b7d7ec]"
-                  >
-                    Map to event types →
-                  </Link>
-                </div>
-                <div className="mt-4">
-                  <UpdateEventItemTypeForm eventItemType={eventItemType} sports={sports} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <EventItemTypeList eventItemTypes={eventItemTypes} />
         )}
       </section>
     </div>
