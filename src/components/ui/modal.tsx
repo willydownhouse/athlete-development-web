@@ -7,11 +7,20 @@ type ModalProps = {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /** Keep dialog content mounted while hidden so uncontrolled fields keep their values. */
+  keepMounted?: boolean;
   /** Offset centering on lg+ to account for the w-64 app sidebar. */
   align?: "viewport" | "content";
 };
 
-export function Modal({ open, onClose, title, children, align = "viewport" }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  keepMounted = false,
+  align = "viewport",
+}: ModalProps) {
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -38,7 +47,7 @@ export function Modal({ open, onClose, title, children, align = "viewport" }: Mo
     };
   }, [open, onClose]);
 
-  if (!open) {
+  if (!open && !keepMounted) {
     return null;
   }
 
@@ -48,7 +57,7 @@ export function Modal({ open, onClose, title, children, align = "viewport" }: Mo
       : "fixed inset-0 z-50 flex items-center justify-center p-4";
 
   return (
-    <div className={overlayClassName}>
+    <div className={open ? overlayClassName : "hidden"} aria-hidden={open ? undefined : true}>
       <button
         type="button"
         aria-label="Close dialog"

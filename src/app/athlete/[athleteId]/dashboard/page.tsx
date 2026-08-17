@@ -4,18 +4,13 @@ import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { fetchAthletes, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import type { EventType } from "@/lib/types";
 
 type AthleteDashboardPageProps = {
   params: Promise<{ athleteId: string }>;
-  searchParams: Promise<{ statsPeriod?: string }>;
 };
 
-export default async function AthleteDashboardPage({
-  params,
-  searchParams,
-}: AthleteDashboardPageProps) {
+export default async function AthleteDashboardPage({ params }: AthleteDashboardPageProps) {
   const session = await auth();
 
   if (!session?.user) {
@@ -23,7 +18,6 @@ export default async function AthleteDashboardPage({
   }
 
   const { athleteId } = await params;
-  const { statsPeriod } = await searchParams;
   const normalizedAthleteId = athleteId.trim();
 
   if (!normalizedAthleteId) {
@@ -68,7 +62,6 @@ export default async function AthleteDashboardPage({
       eventTypes={eventTypes}
       eventTypesError={eventTypesError}
       loadError={loadError}
-      statsPeriod={parseHockeyStatsPeriod(statsPeriod)}
     />
   );
 }

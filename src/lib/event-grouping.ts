@@ -1,4 +1,5 @@
 import type { Event } from "@/lib/types";
+import { getZonedDateString } from "@/lib/time-zone";
 
 export function eventsInHalfOpenRange(
   events: Event[],
@@ -14,27 +15,24 @@ export function eventsInHalfOpenRange(
   });
 }
 
-function localDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function zonedDateKey(date: Date, timeZone: string): string {
+  return getZonedDateString(timeZone, date);
 }
 
-export function eventsForLocalDate(events: Event[], date: Date): Event[] {
-  const key = localDateKey(date);
-  return events.filter((event) => localDateKey(new Date(event.startedAt)) === key);
+export function eventsForLocalDate(events: Event[], date: Date, timeZone: string): Event[] {
+  const key = zonedDateKey(date, timeZone);
+  return events.filter((event) => zonedDateKey(new Date(event.startedAt), timeZone) === key);
 }
 
-export function datesWithEvents(events: Event[]): Date[] {
+export function datesWithEvents(events: Event[], timeZone: string): Date[] {
   const keys = new Set<string>();
 
   for (const event of events) {
-    keys.add(localDateKey(new Date(event.startedAt)));
+    keys.add(zonedDateKey(new Date(event.startedAt), timeZone));
   }
 
   return [...keys].map((key) => {
-    const [yearText, monthText, dayText] = key.split("-");
+    const [yearText = "0", monthText = "0", dayText = "0"] = key.split("-");
     const year = Number(yearText);
     const month = Number(monthText);
     const day = Number(dayText);

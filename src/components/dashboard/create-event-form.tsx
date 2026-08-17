@@ -1,7 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -21,6 +20,7 @@ import { TimePickerInput } from "@/components/time-picker-input";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
+import { getZonedDateString, getZonedTimeString } from "@/lib/time-zone";
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_TITLE_MAX_LENGTH,
@@ -40,13 +40,20 @@ const INTENSITY_OPTIONS = [
   { value: "hard", label: "Hard" },
 ] as const;
 
+export type EventFormApplyHandlers = {
+  applyEventType: (eventTypeId: string) => void;
+  applyDate: (eventDate: string) => void;
+};
+
 type EventFormProps = {
   athleteId: string;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   event?: Event;
   defaultEventTypeId?: string;
   defaultEventDate?: string;
+  onApplyHandlersReady?: (handlers: EventFormApplyHandlers) => void;
   onSuccess?: () => void;
   onDeleteSuccess?: () => void;
   deleteRedirectTo?: string;
@@ -78,16 +85,19 @@ function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
 
 export function EventForm({
   athleteId,
+  timeZone,
   eventTypes,
   focusSportName,
   event,
   defaultEventTypeId,
   defaultEventDate,
+  onApplyHandlersReady,
   onSuccess,
   onDeleteSuccess,
   deleteRedirectTo,
 }: EventFormProps) {
   const isEdit = event !== undefined;
+  const isCreate = !isEdit;
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [state, formAction] = useActionState(
@@ -102,25 +112,44 @@ export function EventForm({
   const values = useMemo(
     () =>
       event
-        ? eventToFormValues(event)
+        ? eventToFormValues(event, timeZone)
         : defaultCreateFormValues(
             defaultEventTypeId,
-            defaultEventDate ?? format(new Date(), "yyyy-MM-dd"),
+            defaultEventDate ?? getZonedDateString(timeZone),
+            getZonedTimeString(timeZone),
           ),
-    [event, defaultEventTypeId, defaultEventDate],
+    [event, timeZone, defaultEventTypeId, defaultEventDate],
   );
+  const [eventTypeId, setEventTypeId] = useState(values.eventTypeId);
+  const [eventDate, setEventDate] = useState(values.eventDate);
   const [selectedEventTypeId, setSelectedEventTypeId] = useState(values.eventTypeId);
   const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [metricFieldsResetKey, setMetricFieldsResetKey] = useState(values.eventTypeId || "initial");
 
-  function handleEventTypeChange(nextEventTypeId: string) {
+  const handleEventTypeChange = useCallback((nextEventTypeId: string) => {
+    setEventTypeId(nextEventTypeId);
     setSelectedEventTypeId(nextEventTypeId);
     setMetricFieldsResetKey(nextEventTypeId || "initial");
 
     if (!nextEventTypeId) {
       setMetricMappings([]);
     }
-  }
+  }, []);
+
+  const applyDate = useCallback((nextEventDate: string) => {
+    setEventDate(nextEventDate);
+  }, []);
+
+  useEffect(() => {
+    if (!isCreate || !onApplyHandlersReady) {
+      return;
+    }
+
+    onApplyHandlersReady({
+      applyEventType: handleEventTypeChange,
+      applyDate,
+    });
+  }, [applyDate, handleEventTypeChange, isCreate, onApplyHandlersReady]);
 
   useEffect(() => {
     if (state.success) {
@@ -175,8 +204,9 @@ export function EventForm({
             name="eventTypeId"
             placeholder="Select event type"
             className={inputClassName}
-            defaultValue={values.eventTypeId}
-            onValueChange={handleEventTypeChange}
+            {...(isCreate
+              ? { value: eventTypeId, onValueChange: handleEventTypeChange }
+              : { defaultValue: values.eventTypeId, onValueChange: handleEventTypeChange })}
             groups={groups.map((group) => ({
               label: group.label,
               options: group.items.map((eventType) => ({
@@ -192,7 +222,9 @@ export function EventForm({
             <span className="font-medium text-zinc-300">Date</span>
             <DatePickerInput
               name="eventDate"
-              defaultValue={values.eventDate}
+              {...(isCreate
+                ? { value: eventDate, onChange: setEventDate }
+                : { defaultValue: values.eventDate })}
               placeholder="Select date"
               className={inputClassName}
             />

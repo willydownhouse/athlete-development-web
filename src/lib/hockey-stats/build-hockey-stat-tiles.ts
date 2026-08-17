@@ -5,6 +5,7 @@ import type { SportStats } from "@/lib/types";
 export type HockeyStatTile = {
   key: string;
   value: string;
+  eventCount?: number;
   label: string;
   subtitle?: string;
 };
@@ -25,18 +26,18 @@ export function buildHockeyStatTiles(sportStats: SportStats): HockeyStatTile[] {
       });
     }
 
-    const metrics = Object.entries(eventType.metrics ?? {}).sort(([leftKey], [rightKey]) =>
-      leftKey.localeCompare(rightKey),
-    );
+    const metrics = Object.entries(eventType.metrics ?? {});
 
     for (const [metricKey, metric] of metrics) {
       tiles.push({
         key: `${eventType.eventTypeId}-${metricKey}`,
         value: formatHockeyStatTotal({
+          key: metricKey,
           name: metric.name,
           canonicalUnit: metric.canonicalUnit,
           total: metric.total,
         }),
+        eventCount: metric.eventCount,
         label: metric.name,
         subtitle: eventType.name,
       });

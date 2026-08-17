@@ -1,52 +1,73 @@
-"use client";
-
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
-const PERIOD_OPTIONS: Array<{ value: HockeyStatsPeriod; label: string }> = [
-  { value: "day", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
+import { athleteStatsHref } from "./dashboard-nav";
+
+const PERIOD_OPTIONS: Array<{
+  value: HockeyStatsPeriod;
+  label: string;
+  shortLabel: string;
+}> = [
+  { value: "day", label: "Today", shortLabel: "Today" },
+  { value: "week", label: "This week", shortLabel: "Week" },
+  { value: "month", label: "This month", shortLabel: "Month" },
 ];
 
 type HockeyStatsSectionProps = {
+  athleteId: string;
   sportName: string;
   period: HockeyStatsPeriod;
   children: React.ReactNode;
 };
 
-export function HockeyStatsSection({ sportName, period, children }: HockeyStatsSectionProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  function setPeriod(nextPeriod: HockeyStatsPeriod) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("statsPeriod", nextPeriod);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }
-
+export function HockeyStatsSection({
+  athleteId,
+  sportName,
+  period,
+  children,
+}: HockeyStatsSectionProps) {
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">{sportName} stats</h2>
-        <div className="flex rounded-lg bg-white/5 p-0.5">
+      <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+        <h2 className="min-w-0 truncate text-sm font-semibold text-white sm:text-base">
+          {sportName} stats
+        </h2>
+        <div className="flex shrink-0 rounded-lg bg-white/5 p-0.5">
           {PERIOD_OPTIONS.map((option) => {
             const isActive = option.value === period;
+            const className =
+              "rounded-md px-2 py-1 text-xs font-medium transition-colors sm:px-2.5 " +
+              (isActive ? "bg-[#9ec9e8] text-[#171b22]" : "text-zinc-400 hover:text-white");
+            const label = (
+              <>
+                <span className="sm:hidden">{option.shortLabel}</span>
+                <span className="hidden sm:inline">{option.label}</span>
+              </>
+            );
+
+            if (isActive) {
+              return (
+                <span
+                  key={option.value}
+                  aria-current="page"
+                  aria-label={option.label}
+                  className={className}
+                >
+                  {label}
+                </span>
+              );
+            }
 
             return (
-              <button
+              <Link
                 key={option.value}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setPeriod(option.value)}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                  isActive ? "bg-[#9ec9e8] text-[#171b22]" : "text-zinc-400 hover:text-white"
-                }`}
+                href={athleteStatsHref(athleteId, option.value)}
+                aria-label={option.label}
+                className={className}
               >
-                {option.label}
-              </button>
+                {label}
+              </Link>
             );
           })}
         </div>

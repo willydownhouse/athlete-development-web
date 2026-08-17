@@ -49,6 +49,20 @@ function buildEvent(overrides: Partial<Event> = {}): Event {
 }
 
 describe("eventToFormValues duration parts", () => {
+  it("formats stored UTC timestamps in the provided time zone", () => {
+    expect(
+      eventToFormValues(
+        buildEvent({
+          startedAt: "2026-08-05T14:00:00.000Z",
+        }),
+        "Europe/Oslo",
+      ),
+    ).toMatchObject({
+      eventDate: "2026-08-05",
+      eventTime: "16:00",
+    });
+  });
+
   it("splits stored seconds into hours, minutes, and seconds", () => {
     expect(eventToFormValues(buildEvent({ durationSeconds: 4500 }))).toMatchObject({
       durationHours: "1",

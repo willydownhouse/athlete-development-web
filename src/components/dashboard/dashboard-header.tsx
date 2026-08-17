@@ -1,23 +1,25 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import type { Athlete } from "@/lib/types";
 
-import { athleteEventsThisWeekLabel, athleteIdentityLabel } from "./athlete-meta";
+import { ageGroupFromDateOfBirth } from "./athlete-meta";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
-  eventsThisWeek?: number;
-  eventsWeekHref?: string;
+  eventsMeta?: ReactNode;
+  calendarHref?: string;
+  statsHref?: string;
 };
 
 export function DashboardHeader({
   selectedAthlete,
-  eventsThisWeek = 0,
-  eventsWeekHref,
+  eventsMeta,
+  calendarHref,
+  statsHref,
 }: DashboardHeaderProps) {
-  const identity = selectedAthlete ? athleteIdentityLabel(selectedAthlete) : null;
-  const eventsLabel = athleteEventsThisWeekLabel(eventsThisWeek);
-  const eventsHref = selectedAthlete ? eventsWeekHref : null;
+  const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
+  const showMetaRow = ageGroup || eventsMeta || calendarHref || statsHref;
 
   return (
     <header>
@@ -27,21 +29,39 @@ export function DashboardHeader({
           <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
             {selectedAthlete.name}
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            {identity ? (
-              <>
-                {identity}
-                {" · "}
-              </>
-            ) : null}
-            {eventsHref ? (
-              <Link href={eventsHref} className="transition hover:text-zinc-200">
-                {eventsLabel}
-              </Link>
-            ) : (
-              eventsLabel
-            )}
-          </p>
+          {showMetaRow ? (
+            <div className="mt-1 flex items-center justify-between gap-3 text-sm text-zinc-400">
+              <div className="min-w-0 truncate">
+                {ageGroup ? (
+                  <>
+                    {ageGroup}
+                    {eventsMeta ? " · " : null}
+                  </>
+                ) : null}
+                {eventsMeta}
+              </div>
+              {calendarHref || statsHref ? (
+                <div className="flex shrink-0 items-center gap-3">
+                  {statsHref ? (
+                    <Link
+                      href={statsHref}
+                      className="font-medium text-zinc-300 transition hover:text-white"
+                    >
+                      Stats
+                    </Link>
+                  ) : null}
+                  {calendarHref ? (
+                    <Link
+                      href={calendarHref}
+                      className="font-medium text-zinc-300 transition hover:text-white"
+                    >
+                      Calendar
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </>
       ) : (
         <>

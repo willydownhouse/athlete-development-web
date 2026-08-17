@@ -1,31 +1,23 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { CalendarSection } from "@/components/calendar/calendar-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
-import { EventsListFilters } from "@/components/dashboard/events-list-filters";
-import { EventsListSection } from "@/components/dashboard/events-list-section";
+import { loadCalendarMonthEvents } from "@/lib/calendar-event-data";
 import { fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import {
-  eventsListFilterKey,
-  eventsListSuspenseKey,
-  parseEventsListSearchParams,
-  resolveEventsListSearchParams,
-} from "@/lib/events-list-params";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
+import type { EventType } from "@/lib/types";
 
-type AthleteEventsPageProps = {
+type AthleteCalendarPageProps = {
   params: Promise<{ athleteId: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function AthleteEventsPage({ params, searchParams }: AthleteEventsPageProps) {
+export default async function AthleteCalendarPage({ params }: AthleteCalendarPageProps) {
   const session = await auth();
 
   if (!session?.user) {
@@ -45,17 +37,11 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
     redirect("/");
   }
 
-  const [athletes, rawSearchParams, isAdmin, timeZone] = await Promise.all([
+  const [athletes, isAdmin, timeZone] = await Promise.all([
     loadShellAthletes(token),
-    searchParams,
     getIsAdminUser(),
     getRequestTimeZone(),
   ]);
-
-  const listParams = resolveEventsListSearchParams(
-    parseEventsListSearchParams(rawSearchParams),
-    timeZone,
-  );
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -63,7 +49,16 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
     redirect("/dashboard");
   }
 
-  const eventTypes = await fetchEventTypes(selectedAthlete.focusSportId).catch(() => []);
+  const monthEvents = await loadCalendarMonthEvents(normalizedAthleteId, timeZone);
+
+  let eventTypes: EventType[] = [];
+  let eventTypesError: string | null = null;
+
+  try {
+    eventTypes = await fetchEventTypes(selectedAthlete.focusSportId);
+  } catch (error) {
+    eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
+  }
 
   return (
     <DashboardShell
@@ -80,23 +75,21 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Events</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Calendar</h1>
 
-        <div className="mt-6 space-y-4">
-          <EventsListFilters
-            key={eventsListFilterKey(listParams)}
+        <div className="mt-6">
+          <CalendarSection
+            athleteId={normalizedAthleteId}
+            timeZone={timeZone}
             eventTypes={eventTypes}
             focusSportName={selectedAthlete.focusSport.name}
-            params={listParams}
+            eventTypesError={eventTypesError}
+            initialMonthEvents={monthEvents.events}
+            loadedRange={monthEvents.monthRange}
+            initialSelectedDate={monthEvents.selectedDate}
+            initialVisibleMonth={monthEvents.visibleMonth}
+            initialLoadError={monthEvents.error}
           />
-
-          <Suspense key={eventsListSuspenseKey(listParams)} fallback={<EventsListSkeleton />}>
-            <EventsListSection
-              athleteId={normalizedAthleteId}
-              timeZone={timeZone}
-              params={listParams}
-            />
-          </Suspense>
         </div>
       </div>
     </DashboardShell>

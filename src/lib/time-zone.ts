@@ -156,6 +156,55 @@ function formatDateOnly(date: CalendarDate): string {
   return `${date.year}-${month}-${day}`;
 }
 
+export function getZonedDateString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+
+  return formatDateOnly(zonedDate);
+}
+
+export function getZonedTimeString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+  const hour = String(zonedDate.hour).padStart(2, "0");
+  const minute = String(zonedDate.minute).padStart(2, "0");
+
+  return `${hour}:${minute}`;
+}
+
+export function formatZonedTime(timeZone: string, date: Date): string {
+  return getZonedTimeString(timeZone, date);
+}
+
+export function formatZonedShortDate(
+  timeZone: string,
+  date: Date,
+  referenceDate = new Date(),
+): string {
+  const normalizedTimeZone = normalizeTimeZone(timeZone);
+  const eventDate = getZonedParts(date, normalizedTimeZone);
+  const reference = getZonedParts(referenceDate, normalizedTimeZone);
+  const month = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    month: "short",
+  }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));
+  const weekday = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    weekday: "short",
+  }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));
+  const year = eventDate.year === reference.year ? "" : ` ${eventDate.year}`;
+
+  return `${weekday} ${eventDate.day} ${month}${year}`;
+}
+
+export function getZonedMonthStartDateString(timeZone: string, date = new Date()): string {
+  const zonedDate = getZonedParts(date, normalizeTimeZone(timeZone));
+
+  return formatDateOnly({
+    year: zonedDate.year,
+    month: zonedDate.month,
+    day: 1,
+  });
+}
+
 function localMidnightDate(date: CalendarDate, timeZone: string): Date {
   const iso = zonedDateTimeToUtcIso(formatDateOnly(date), "00:00", timeZone);
 

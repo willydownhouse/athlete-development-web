@@ -137,6 +137,41 @@ export function eventMetricsToFormValues(
   return values;
 }
 
+export function eventMetricsToInputs(metrics: EventMetric[]): EventMetricInput[] {
+  const inputs: EventMetricInput[] = [];
+
+  for (const metric of metrics) {
+    const { valueType } = metric.metricDefinition;
+
+    if (valueType === "boolean" && metric.booleanValue !== null) {
+      inputs.push({
+        metricDefinitionId: metric.metricDefinitionId,
+        booleanValue: metric.booleanValue,
+      });
+      continue;
+    }
+
+    if (valueType === "number" && metric.numericValue !== null) {
+      inputs.push({
+        metricDefinitionId: metric.metricDefinitionId,
+        numericValue: Number(metric.numericValue),
+        unit: metric.unit ?? undefined,
+      });
+      continue;
+    }
+
+    if (valueType === "text" && metric.textValue) {
+      inputs.push({
+        metricDefinitionId: metric.metricDefinitionId,
+        textValue: metric.textValue,
+        unit: metric.unit ?? undefined,
+      });
+    }
+  }
+
+  return inputs;
+}
+
 export function parseMetricsFromFormData(
   formData: FormData,
   mappings: EventTypeMetricDefinition[],

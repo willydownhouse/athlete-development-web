@@ -10,6 +10,7 @@ import {
   dashboardHref,
   defaultDashboardHref,
   isAthleteDashboardPath,
+  TODAY_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
 import type { Athlete } from "@/lib/types";
 
@@ -88,7 +89,7 @@ export function AppShellNav({
           onClick={onNavigate}
           className={navLinkClass(isAthleteDashboardPath(pathname))}
         >
-          Dashboard
+          {TODAY_NAV_LABEL}
         </Link>
 
         {athletes.length > 1 ? (

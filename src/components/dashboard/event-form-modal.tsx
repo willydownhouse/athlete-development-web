@@ -1,21 +1,28 @@
 "use client";
 
-import { EventForm } from "@/components/dashboard/create-event-form";
+import { EventForm, type EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
 import { Modal } from "@/components/ui/modal";
 import type { Event, EventType } from "@/lib/types";
 
-export type EventModalState =
-  | { mode: "create"; defaultEventTypeId?: string; defaultEventDate?: string }
-  | { mode: "edit"; event: Event }
-  | null;
+type CreateEventModalState = {
+  mode: "create";
+  defaultEventTypeId?: string;
+  defaultEventDate?: string;
+};
+type EditEventModalState = { mode: "edit"; event: Event };
+type EventModalState = CreateEventModalState | EditEventModalState;
 
 type EventFormModalProps = {
+  open: boolean;
+  keepMounted?: boolean;
   athleteId: string;
+  timeZone: string;
   eventTypes: EventType[];
   focusSportName: string;
   eventTypesError?: string | null;
   modalState: EventModalState;
   formKey: number;
+  onApplyHandlersReady?: (handlers: EventFormApplyHandlers) => void;
   onClose: () => void;
   onSuccess: () => void;
   onDeleteSuccess?: () => void;
@@ -23,35 +30,50 @@ type EventFormModalProps = {
 };
 
 export function EventFormModal({
+  open,
+  keepMounted = false,
   athleteId,
+  timeZone,
   eventTypes,
   focusSportName,
   eventTypesError,
   modalState,
   formKey,
+  onApplyHandlersReady,
   onClose,
   onSuccess,
   onDeleteSuccess,
   deleteRedirectTo,
 }: EventFormModalProps) {
-  const modalOpen = modalState !== null;
-  const modalTitle = modalState?.mode === "edit" ? "Edit event" : "Add event";
+  if (!open && !keepMounted) {
+    return null;
+  }
+
+  const modalTitle = modalState.mode === "edit" ? "Edit event" : "Add event";
 
   return (
-    <Modal open={modalOpen} onClose={onClose} title={modalTitle} align="content">
+    <Modal
+      open={open}
+      keepMounted={keepMounted}
+      onClose={onClose}
+      title={modalTitle}
+      align="content"
+    >
       {eventTypesError ? (
         <p className="text-sm text-red-300">{eventTypesError}</p>
       ) : (
         <EventForm
           key={formKey}
           athleteId={athleteId}
+          timeZone={timeZone}
           eventTypes={eventTypes}
           focusSportName={focusSportName}
-          event={modalState?.mode === "edit" ? modalState.event : undefined}
+          event={modalState.mode === "edit" ? modalState.event : undefined}
           defaultEventTypeId={
-            modalState?.mode === "create" ? modalState.defaultEventTypeId : undefined
+            modalState.mode === "create" ? modalState.defaultEventTypeId : undefined
           }
-          defaultEventDate={modalState?.mode === "create" ? modalState.defaultEventDate : undefined}
+          defaultEventDate={modalState.mode === "create" ? modalState.defaultEventDate : undefined}
+          onApplyHandlersReady={modalState.mode === "create" ? onApplyHandlersReady : undefined}
           onSuccess={onSuccess}
           onDeleteSuccess={onDeleteSuccess}
           deleteRedirectTo={deleteRedirectTo}
@@ -60,3 +82,5 @@ export function EventFormModal({
     </Modal>
   );
 }
+
+export type { CreateEventModalState };

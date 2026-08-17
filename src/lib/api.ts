@@ -105,40 +105,21 @@ export async function createAthlete(
   });
 }
 
-export async function fetchSports(): Promise<Sport[]> {
-  const response = await fetch(`${getApiBaseUrl()}/api/sports`, {
-    cache: "no-store",
-  });
+export async function fetchSports(): Promise<Sport[] | null> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/sports`, {
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
-    throw await parseApiError(response);
+    if (!response.ok) {
+      throw await parseApiError(response);
+    }
+
+    const result = (await response.json()) as { items: Sport[] };
+    return result.items;
+  } catch {
+    return null;
   }
-
-  const result = (await response.json()) as { items: Sport[] };
-  return result.items;
-}
-
-export async function createEvent(
-  token: string,
-  athleteId: string,
-  body: {
-    eventTypeId: string;
-    startedAt: string;
-    source: "chat" | "form" | "voice" | "manual";
-    title?: string;
-    description?: string;
-    endedAt?: string;
-    durationSeconds?: number;
-    intensity?: EventIntensity;
-    originalInput?: string;
-    structuredData?: Record<string, unknown>;
-    metrics?: EventMetricInput[];
-  },
-): Promise<Event> {
-  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
 }
 
 export type EventMetricInput = {
@@ -148,6 +129,42 @@ export type EventMetricInput = {
   booleanValue?: boolean;
   unit?: string;
 };
+
+export type CreateEventBody = {
+  eventTypeId: string;
+  startedAt: string;
+  source: "chat" | "form" | "voice" | "manual";
+  title?: string;
+  description?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  intensity?: EventIntensity;
+  originalInput?: string;
+  structuredData?: Record<string, unknown>;
+  metrics?: EventMetricInput[];
+};
+
+export async function createEvent(
+  token: string,
+  athleteId: string,
+  body: CreateEventBody,
+): Promise<Event> {
+  return apiFetch<Event>(token, `/api/athletes/${athleteId}/events`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createEventsBatch(
+  token: string,
+  athleteId: string,
+  body: { events: CreateEventBody[] },
+): Promise<{ items: Event[] }> {
+  return apiFetch<{ items: Event[] }>(token, `/api/athletes/${athleteId}/events/batch`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
 
 export async function fetchEvents(
   token: string,

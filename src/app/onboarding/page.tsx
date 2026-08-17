@@ -5,7 +5,6 @@ import { OnboardingView } from "@/components/onboarding/onboarding-view";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { loadShellAthletes } from "@/lib/shell-data";
-import type { Sport } from "@/lib/types";
 
 export default async function OnboardingPage() {
   const session = await auth();
@@ -15,25 +14,14 @@ export default async function OnboardingPage() {
   }
 
   const token = await getAuthBearerToken();
-  const athletes = await loadShellAthletes(token);
-
-  let sports: Sport[] = [];
-  let sportsLoaded = false;
-
-  try {
-    sports = await fetchSports();
-    sportsLoaded = true;
-  } catch {
-    sportsLoaded = false;
-  }
-
-  const loadError = !sportsLoaded ? "Unable to load sports" : null;
+  const [athletes, sports] = await Promise.all([loadShellAthletes(token), fetchSports()]);
+  const loadError = sports === null ? "Unable to load sports" : null;
 
   return (
     <OnboardingView
       userEmail={session.user.email ?? ""}
       userName={session.user.name}
-      sports={sports}
+      sports={sports ?? []}
       loadError={loadError}
       athletes={athletes}
     />

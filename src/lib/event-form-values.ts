@@ -1,6 +1,5 @@
-import { format } from "date-fns";
-
 import { secondsToDurationParts } from "@/lib/event-metric-form";
+import { getSystemTimeZone, getZonedDateString, getZonedTimeString } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
 export type EventFormValues = {
@@ -15,7 +14,7 @@ export type EventFormValues = {
   description: string;
 };
 
-export function eventToFormValues(event: Event): EventFormValues {
+export function eventToFormValues(event: Event, timeZone = getSystemTimeZone()): EventFormValues {
   const startedAt = new Date(event.startedAt);
   const durationParts = event.durationSeconds
     ? secondsToDurationParts(event.durationSeconds)
@@ -23,8 +22,8 @@ export function eventToFormValues(event: Event): EventFormValues {
 
   return {
     eventTypeId: event.eventTypeId,
-    eventDate: format(startedAt, "yyyy-MM-dd"),
-    eventTime: format(startedAt, "HH:mm"),
+    eventDate: getZonedDateString(timeZone, startedAt),
+    eventTime: getZonedTimeString(timeZone, startedAt),
     durationHours: durationParts.hours,
     durationMinutes: durationParts.minutes,
     durationSeconds: durationParts.seconds,
@@ -36,8 +35,8 @@ export function eventToFormValues(event: Event): EventFormValues {
 
 export function defaultCreateFormValues(
   defaultEventTypeId?: string,
-  today = format(new Date(), "yyyy-MM-dd"),
-  eventTime = format(new Date(), "HH:mm"),
+  today = getZonedDateString(getSystemTimeZone()),
+  eventTime = getZonedTimeString(getSystemTimeZone()),
 ): EventFormValues {
   return {
     eventTypeId: defaultEventTypeId ?? "",
