@@ -39,7 +39,11 @@ export default async function AdminEventItemTypesPage({
         </AdminCreateModal>
       </div>
 
-      <EventItemTypeFilters sports={sports} />
+      <EventItemTypeFilters
+        sports={sports}
+        defaultSportId={params.sportId ?? ""}
+        defaultActive={params.active ?? ""}
+      />
 
       <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">

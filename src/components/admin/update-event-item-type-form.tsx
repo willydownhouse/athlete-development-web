@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateEventItemTypeAction, type ActionState } from "@/app/admin/actions";
@@ -47,18 +48,11 @@ export function UpdateEventItemTypeForm({ eventItemType, sports }: UpdateEventIt
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
           <span className="font-medium text-zinc-300">Sport</span>
-          <select
+          <AdminFormSelect
             name="sportId"
             defaultValue={eventItemType.sportId ?? "general"}
-            className={inputClassName}
-          >
-            <option value="general">General (all sports)</option>
-            {sports.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+            options={sportScopeOptions(sports)}
+          />
         </label>
       </div>
 

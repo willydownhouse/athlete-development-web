@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
@@ -48,13 +49,15 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Value type</span>
-          <select name="valueType" required className={inputClassName}>
-            {METRIC_VALUE_TYPES.map((valueType) => (
-              <option key={valueType} value={valueType}>
-                {valueType}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="valueType"
+            required
+            defaultValue={METRIC_VALUE_TYPES[0]}
+            options={METRIC_VALUE_TYPES.map((valueType) => ({
+              value: valueType,
+              label: valueType,
+            }))}
+          />
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Canonical unit</span>
@@ -62,14 +65,11 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sport</span>
-          <select name="sportId" defaultValue="" className={inputClassName}>
-            <option value="general">General (all sports)</option>
-            {sports.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="sportId"
+            defaultValue="general"
+            options={sportScopeOptions(sports)}
+          />
         </label>
       </div>
 

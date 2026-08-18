@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createEventItemTypeAction, type ActionState } from "@/app/admin/actions";
@@ -48,14 +49,11 @@ export function CreateEventItemTypeForm({ sports }: CreateEventItemTypeFormProps
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
           <span className="font-medium text-zinc-300">Sport</span>
-          <select name="sportId" defaultValue="" className={inputClassName}>
-            <option value="general">General (all sports)</option>
-            {sports.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="sportId"
+            defaultValue="general"
+            options={sportScopeOptions(sports)}
+          />
         </label>
       </div>
 

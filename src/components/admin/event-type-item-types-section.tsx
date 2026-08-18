@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import { AdminCreateModal, useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import { AdminFormSelect } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import {
@@ -44,14 +45,15 @@ function AddEventTypeItemTypeForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
           <span className="font-medium text-zinc-300">Item type</span>
-          <select name="eventItemTypeId" required className={inputClassName}>
-            <option value="">Select an item type</option>
-            {availableItemTypes.map((itemType) => (
-              <option key={itemType.id} value={itemType.id}>
-                {itemType.name} ({itemType.slug})
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="eventItemTypeId"
+            required
+            placeholder="Select an item type"
+            options={availableItemTypes.map((itemType) => ({
+              value: itemType.id,
+              label: `${itemType.name} (${itemType.slug})`,
+            }))}
+          />
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sort order</span>

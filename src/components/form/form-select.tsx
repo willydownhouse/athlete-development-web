@@ -21,6 +21,7 @@ type FormSelectProps = {
   defaultValue?: string;
   placeholder?: string;
   className?: string;
+  required?: boolean;
   onChange?: (value: string) => void;
   onValueChange?: (value: string) => void;
 };
@@ -44,6 +45,7 @@ export function FormSelect({
   defaultValue = "",
   placeholder = "Select",
   className = "",
+  required = false,
   onChange,
   onValueChange,
 }: FormSelectProps) {
@@ -191,7 +193,7 @@ export function FormSelect({
 
   return (
     <>
-      {name ? <input type="hidden" name={name} value={currentValue} /> : null}
+      {name ? <input type="hidden" name={name} value={currentValue} required={required} /> : null}
       <button
         ref={triggerRef}
         type="button"
