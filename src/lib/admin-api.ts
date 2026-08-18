@@ -2,6 +2,7 @@ import { getApiBaseUrl } from "./api";
 import type {
   EventItemType,
   EventItemTypeChildType,
+  EventItemTypeMetricDefinition,
   EventType,
   EventTypeItemType,
   EventTypeMetricDefinition,
@@ -377,6 +378,62 @@ export async function deleteAdminEventItemTypeChildType(
   await adminFetch<void>(
     token,
     `/api/admin/event-item-types/${eventItemTypeId}/child-types/${eventItemTypeChildTypeId}`,
+    { method: "DELETE" },
+  );
+}
+
+// Event item type metric definitions
+
+export async function listAdminEventItemTypeMetricDefinitions(
+  token: string,
+  eventItemTypeId: string,
+): Promise<EventItemTypeMetricDefinition[]> {
+  const result = await adminFetch<ListResponse<EventItemTypeMetricDefinition>>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/metric-definitions`,
+  );
+  return result.items;
+}
+
+export async function createAdminEventItemTypeMetricDefinition(
+  token: string,
+  eventItemTypeId: string,
+  body: { metricDefinitionId: string; required?: boolean; sortOrder?: number },
+): Promise<EventItemTypeMetricDefinition> {
+  return adminFetch<EventItemTypeMetricDefinition>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/metric-definitions`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function updateAdminEventItemTypeMetricDefinition(
+  token: string,
+  eventItemTypeId: string,
+  eventItemTypeMetricDefinitionId: string,
+  body: Partial<{ required: boolean; sortOrder: number }>,
+): Promise<EventItemTypeMetricDefinition> {
+  return adminFetch<EventItemTypeMetricDefinition>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/metric-definitions/${eventItemTypeMetricDefinitionId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function deleteAdminEventItemTypeMetricDefinition(
+  token: string,
+  eventItemTypeId: string,
+  eventItemTypeMetricDefinitionId: string,
+): Promise<void> {
+  await adminFetch<void>(
+    token,
+    `/api/admin/event-item-types/${eventItemTypeId}/metric-definitions/${eventItemTypeMetricDefinitionId}`,
     { method: "DELETE" },
   );
 }

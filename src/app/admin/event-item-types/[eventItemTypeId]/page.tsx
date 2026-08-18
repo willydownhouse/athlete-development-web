@@ -2,13 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EventItemTypeChildTypesSection } from "@/components/admin/event-item-type-child-types-section";
+import { EventItemTypeMetricsSection } from "@/components/admin/event-item-type-metrics-section";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { UpdateEventItemTypeForm } from "@/components/admin/update-event-item-type-form";
 import {
   getAdminEventItemType,
   listAdminEventItemTypeChildTypes,
+  listAdminEventItemTypeMetricDefinitions,
   listAdminEventItemTypes,
+  listAdminMetricDefinitions,
   listAdminSports,
 } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -28,6 +31,17 @@ function isChildItemTypeCompatibleWithParent(
   return parentSportId === childSportId;
 }
 
+function isMetricCompatibleWithEventItemType(
+  eventItemTypeSportId: string | null,
+  metricSportId: string | null,
+): boolean {
+  if (metricSportId === null) {
+    return true;
+  }
+
+  return eventItemTypeSportId === metricSportId;
+}
+
 export default async function AdminEventItemTypeDetailPage({
   params,
 }: AdminEventItemTypeDetailPageProps) {
@@ -42,13 +56,16 @@ export default async function AdminEventItemTypeDetailPage({
     notFound();
   }
 
-  const [sports, childMappings, allItemTypes] = await Promise.all([
+  const [sports, childMappings, metricMappings, allItemTypes, allMetrics] = await Promise.all([
     listAdminSports(token),
     listAdminEventItemTypeChildTypes(token, eventItemTypeId),
+    listAdminEventItemTypeMetricDefinitions(token, eventItemTypeId),
     listAdminEventItemTypes(token),
+    listAdminMetricDefinitions(token),
   ]);
 
   const mappedChildIds = new Set(childMappings.map((mapping) => mapping.childEventItemTypeId));
+  const mappedMetricIds = new Set(metricMappings.map((mapping) => mapping.metricDefinitionId));
 
   const availableChildItemTypes = allItemTypes.filter(
     (itemType) =>
@@ -56,6 +73,13 @@ export default async function AdminEventItemTypeDetailPage({
       itemType.id !== eventItemTypeId &&
       !mappedChildIds.has(itemType.id) &&
       isChildItemTypeCompatibleWithParent(eventItemType.sportId, itemType.sportId),
+  );
+
+  const availableMetrics = allMetrics.filter(
+    (metric) =>
+      metric.active &&
+      !mappedMetricIds.has(metric.id) &&
+      isMetricCompatibleWithEventItemType(eventItemType.sportId, metric.sportId),
   );
 
   return (
@@ -69,7 +93,7 @@ export default async function AdminEventItemTypeDetailPage({
         </Link>
         <PageHeader
           title={eventItemType.name}
-          description={`Manage item type settings and allowed child types for ${eventItemType.slug}.`}
+          description={`Manage item type settings, allowed child types, and metrics for ${eventItemType.slug}.`}
         />
         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
           <StatusBadge active={eventItemType.active} />
@@ -90,6 +114,12 @@ export default async function AdminEventItemTypeDetailPage({
         eventItemTypeId={eventItemTypeId}
         mappings={childMappings}
         availableChildItemTypes={availableChildItemTypes}
+      />
+
+      <EventItemTypeMetricsSection
+        eventItemTypeId={eventItemTypeId}
+        mappings={metricMappings}
+        availableMetrics={availableMetrics}
       />
     </div>
   );

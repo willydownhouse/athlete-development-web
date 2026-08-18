@@ -181,6 +181,15 @@ export type EventItemTypeChildType = {
   childEventItemType: EventItemType;
 };
 
+export type EventItemTypeMetricDefinition = {
+  id: string;
+  eventItemTypeId: string;
+  metricDefinitionId: string;
+  required: boolean;
+  sortOrder: number;
+  metricDefinition: MetricDefinition;
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",
