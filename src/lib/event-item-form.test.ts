@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  eventItemsToInputs,
   exerciseLabelFieldName,
   parseEventItemsFromFormData,
   parseStrengthTrainingItemsFromFormData,
@@ -141,6 +142,140 @@ describe("parseEventItemsFromFormData", () => {
             metrics: [{ metricDefinitionId: "note-metric-id", textValue: "123" }],
           },
         ],
+      },
+    ]);
+  });
+});
+
+describe("eventItemsToInputs", () => {
+  it("converts saved event items into create payloads", () => {
+    expect(
+      eventItemsToInputs([
+        {
+          id: "exercise-1",
+          eventId: "event-1",
+          eventItemTypeId: "exercise-type-id",
+          parentEventItemId: null,
+          sortOrder: 0,
+          label: "Curls",
+          startedAt: null,
+          endedAt: null,
+          durationSeconds: null,
+          notes: null,
+          structuredData: null,
+          createdAt: "2026-08-05T10:00:00.000Z",
+          updatedAt: "2026-08-05T10:00:00.000Z",
+          eventItemType: {
+            id: "exercise-type-id",
+            sportId: null,
+            slug: "exercise",
+            name: "Exercise",
+            active: true,
+            createdAt: "2026-08-05T10:00:00.000Z",
+            updatedAt: "2026-08-05T10:00:00.000Z",
+            sport: null,
+          },
+          metrics: [],
+          children: [
+            {
+              id: "set-1",
+              eventId: "event-1",
+              eventItemTypeId: "set-type-id",
+              parentEventItemId: "exercise-1",
+              sortOrder: 0,
+              label: null,
+              startedAt: null,
+              endedAt: null,
+              durationSeconds: null,
+              notes: null,
+              structuredData: null,
+              createdAt: "2026-08-05T10:00:00.000Z",
+              updatedAt: "2026-08-05T10:00:00.000Z",
+              eventItemType: {
+                id: "set-type-id",
+                sportId: null,
+                slug: "set",
+                name: "Set",
+                active: true,
+                createdAt: "2026-08-05T10:00:00.000Z",
+                updatedAt: "2026-08-05T10:00:00.000Z",
+                sport: null,
+              },
+              metrics: [
+                {
+                  id: "metric-1",
+                  eventItemId: "set-1",
+                  metricDefinitionId: "rep-metric-id",
+                  numericValue: "10",
+                  textValue: null,
+                  booleanValue: null,
+                  unit: null,
+                  createdAt: "2026-08-05T10:00:00.000Z",
+                  updatedAt: "2026-08-05T10:00:00.000Z",
+                  metricDefinition: config.setMetricMappings[0]!.metricDefinition,
+                },
+              ],
+              children: [],
+            },
+          ],
+        },
+      ]),
+    ).toEqual([
+      {
+        eventItemTypeId: "exercise-type-id",
+        sortOrder: 0,
+        label: "Curls",
+        children: [
+          {
+            eventItemTypeId: "set-type-id",
+            sortOrder: 0,
+            metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 10 }],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("copies optional item fields when present", () => {
+    expect(
+      eventItemsToInputs([
+        {
+          id: "shift-1",
+          eventId: "event-1",
+          eventItemTypeId: "shift-type-id",
+          parentEventItemId: null,
+          sortOrder: 1,
+          label: "Late third-period shift",
+          startedAt: "2026-08-18T18:45:00.000Z",
+          endedAt: "2026-08-18T18:46:00.000Z",
+          durationSeconds: 42,
+          notes: "Strong finish",
+          structuredData: { line: "first" },
+          createdAt: "2026-08-05T10:00:00.000Z",
+          updatedAt: "2026-08-05T10:00:00.000Z",
+          eventItemType: {
+            id: "shift-type-id",
+            sportId: null,
+            slug: "shift",
+            name: "Shift",
+            active: true,
+            createdAt: "2026-08-05T10:00:00.000Z",
+            updatedAt: "2026-08-05T10:00:00.000Z",
+            sport: null,
+          },
+          metrics: [],
+          children: [],
+        },
+      ]),
+    ).toEqual([
+      {
+        eventItemTypeId: "shift-type-id",
+        sortOrder: 1,
+        label: "Late third-period shift",
+        startedAt: "2026-08-18T18:45:00.000Z",
+        endedAt: "2026-08-18T18:46:00.000Z",
+        durationSeconds: 42,
+        notes: "Strong finish",
       },
     ]);
   });

@@ -20,6 +20,7 @@ const baseSource: EventCopySource = {
       numericValue: 6,
     },
   ],
+  items: [],
 };
 
 describe("copy-event helpers", () => {
@@ -35,6 +36,38 @@ describe("copy-event helpers", () => {
       metrics: baseSource.metrics,
     });
     expect(body?.startedAt).toBe("2026-08-15T06:30:00.000Z");
+  });
+
+  it("includes nested event items in the copy payload", () => {
+    const source: EventCopySource = {
+      ...baseSource,
+      title: "Strength session",
+      metrics: [],
+      items: [
+        {
+          eventItemTypeId: "00000000-0000-4000-8000-000000000401",
+          sortOrder: 0,
+          label: "Curls",
+          children: [
+            {
+              eventItemTypeId: "00000000-0000-4000-8000-000000000402",
+              sortOrder: 0,
+              metrics: [
+                {
+                  metricDefinitionId: "00000000-0000-4000-8000-000000000501",
+                  numericValue: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(buildCopyForDatePreservingTime(source, "Europe/Oslo", "2026-08-15")).toMatchObject({
+      title: "Strength session",
+      items: source.items,
+    });
   });
 
   it("rejects batches over the max size", () => {
@@ -66,6 +99,44 @@ describe("copy-event helpers", () => {
         expect.objectContaining({
           title: "Evening game",
           startedAt: "2026-08-15T16:00:00.000Z",
+        }),
+      ],
+    });
+  });
+
+  it("includes event items in a batch copy payload", () => {
+    const strengthSource: EventCopySource = {
+      ...baseSource,
+      title: "Strength session",
+      metrics: [],
+      items: [
+        {
+          eventItemTypeId: "00000000-0000-4000-8000-000000000401",
+          sortOrder: 0,
+          label: "Curls",
+          children: [
+            {
+              eventItemTypeId: "00000000-0000-4000-8000-000000000402",
+              sortOrder: 0,
+              metrics: [
+                {
+                  metricDefinitionId: "00000000-0000-4000-8000-000000000501",
+                  numericValue: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = buildDayCopyForDate([strengthSource], "Europe/Oslo", "2026-08-15");
+
+    expect(result).toEqual({
+      events: [
+        expect.objectContaining({
+          title: "Strength session",
+          items: strengthSource.items,
         }),
       ],
     });

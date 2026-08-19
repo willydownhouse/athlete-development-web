@@ -7,7 +7,7 @@ import { copyEventAction } from "@/app/dashboard/actions";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { EventFormModal } from "@/components/dashboard/event-form-modal";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { eventMetricsToInputs } from "@/lib/event-metric-form";
+import { eventToCopySource } from "@/lib/copy-event";
 import type { Event, EventType } from "@/lib/types";
 
 type EventEditControlsProps = {
@@ -68,19 +68,7 @@ export function EventEditControls({
       setCopyError(null);
 
       startCopyTransition(async () => {
-        const result = await copyEventAction(
-          athleteId,
-          {
-            eventTypeId: event.eventTypeId,
-            startedAt: event.startedAt,
-            title: event.title,
-            description: event.description,
-            durationSeconds: event.durationSeconds,
-            intensity: event.intensity,
-            metrics: eventMetricsToInputs(event.metrics ?? []),
-          },
-          targetDate,
-        );
+        const result = await copyEventAction(athleteId, eventToCopySource(event), targetDate);
 
         if ("error" in result) {
           setCopyError(result.error);

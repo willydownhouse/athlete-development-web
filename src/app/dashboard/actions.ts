@@ -3,14 +3,7 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  ApiError,
-  createEvent,
-  createEventsBatch,
-  deleteEvent,
-  updateEvent,
-  type EventMetricInput,
-} from "@/lib/api";
+import { ApiError, createEvent, createEventsBatch, deleteEvent, updateEvent } from "@/lib/api";
 import { CALENDAR_EVENTS_INCLUDE } from "@/lib/calendar-event-data";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
@@ -282,19 +275,9 @@ export async function fetchEventsInRangeAction(
   );
 }
 
-export type CopyEventForTodaySource = {
-  eventTypeId: string;
-  startedAt: string;
-  title: string | null;
-  description: string | null;
-  durationSeconds: number | null;
-  intensity: Event["intensity"];
-  metrics: EventMetricInput[];
-};
-
 export async function copyEventAction(
   athleteId: string,
-  source: CopyEventForTodaySource,
+  source: EventCopySource,
   targetDate: string,
 ): Promise<{ error: string } | { redirectTo: string }> {
   const token = await getAuthBearerToken();

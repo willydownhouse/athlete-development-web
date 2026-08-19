@@ -1,4 +1,5 @@
-import type { EventMetricInput } from "@/lib/api";
+import type { EventItemInput, EventMetricInput } from "@/lib/api";
+import { eventItemsToInputs } from "@/lib/event-item-form";
 import { eventMetricsToInputs } from "@/lib/event-metric-form";
 import { getZonedTimeString, zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
@@ -14,6 +15,7 @@ export type EventCopySource = {
   durationSeconds: number | null;
   intensity: Event["intensity"];
   metrics: EventMetricInput[];
+  items: EventItemInput[];
 };
 
 export type EventCopyCreateBody = {
@@ -25,6 +27,7 @@ export type EventCopyCreateBody = {
   durationSeconds?: number;
   intensity?: EventIntensity;
   metrics?: EventMetricInput[];
+  items?: EventItemInput[];
 };
 
 export function eventToCopySource(event: Event): EventCopySource {
@@ -36,13 +39,14 @@ export function eventToCopySource(event: Event): EventCopySource {
     durationSeconds: event.durationSeconds,
     intensity: event.intensity,
     metrics: eventMetricsToInputs(event.metrics ?? []),
+    items: eventItemsToInputs(event.items ?? []),
   };
 }
 
 function buildEventCopyCreateBody(
   source: Pick<
     EventCopySource,
-    "eventTypeId" | "title" | "description" | "durationSeconds" | "intensity" | "metrics"
+    "eventTypeId" | "title" | "description" | "durationSeconds" | "intensity" | "metrics" | "items"
   >,
   timeZone: string,
   targetDate: string,
@@ -64,6 +68,7 @@ function buildEventCopyCreateBody(
     durationSeconds: source.durationSeconds ?? undefined,
     intensity: source.intensity ?? undefined,
     ...(source.metrics.length > 0 ? { metrics: source.metrics } : {}),
+    ...(source.items.length > 0 ? { items: source.items } : {}),
   };
 }
 

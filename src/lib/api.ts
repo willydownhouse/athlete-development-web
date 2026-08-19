@@ -137,6 +137,11 @@ export type EventItemInput = {
   eventItemTypeId: string;
   sortOrder?: number;
   label?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  notes?: string;
+  structuredData?: Record<string, unknown>;
   metrics?: EventMetricInput[];
   children?: EventItemInput[];
 };

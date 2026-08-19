@@ -6,6 +6,7 @@ import {
 } from "@/lib/api";
 import {
   eventMetricsToFormValues,
+  eventMetricsToInputs,
   parseMetricInputsWithPrefix,
   parseMetricsFromFormData,
   validateMetricForm,
@@ -440,5 +441,30 @@ export async function loadStrengthTrainingItemFormConfig(
     exerciseItemTypeId: exerciseMapping.eventItemTypeId,
     setItemTypeId: setMapping.childEventItemTypeId,
     setMetricMappings,
+  };
+}
+
+export function eventItemsToInputs(items: EventItem[]): EventItemInput[] {
+  return items.map((item) => eventItemToInput(item));
+}
+
+function eventItemToInput(item: EventItem): EventItemInput {
+  const metrics = eventMetricsToInputs(item.metrics);
+  const children = item.children.length > 0 ? eventItemsToInputs(item.children) : undefined;
+  const label = item.label?.trim();
+  const notes = item.notes?.trim();
+
+  return {
+    eventItemTypeId: item.eventItemTypeId,
+    sortOrder: item.sortOrder,
+    ...(label ? { label } : {}),
+    ...(item.startedAt ? { startedAt: item.startedAt } : {}),
+    ...(item.endedAt ? { endedAt: item.endedAt } : {}),
+    ...(item.durationSeconds != null && item.durationSeconds > 0
+      ? { durationSeconds: item.durationSeconds }
+      : {}),
+    ...(notes ? { notes } : {}),
+    ...(metrics.length > 0 ? { metrics } : {}),
+    ...(children ? { children } : {}),
   };
 }

@@ -140,7 +140,19 @@ export function eventMetricsToFormValues(
   return values;
 }
 
-export function eventMetricsToInputs(metrics: EventMetric[]): EventMetricInput[] {
+export function eventMetricsToInputs(
+  metrics: Array<
+    Pick<
+      EventMetric,
+      | "metricDefinitionId"
+      | "numericValue"
+      | "textValue"
+      | "booleanValue"
+      | "unit"
+      | "metricDefinition"
+    >
+  >,
+): EventMetricInput[] {
   const inputs: EventMetricInput[] = [];
 
   for (const metric of metrics) {
