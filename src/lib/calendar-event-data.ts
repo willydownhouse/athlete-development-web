@@ -9,6 +9,8 @@ import {
 } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
+export const CALENDAR_EVENTS_INCLUDE = "metrics,items" as const;
+
 export type CalendarMonthEvents = {
   events: Event[];
   monthRange: TimeRange;
@@ -24,6 +26,7 @@ export const loadCalendarMonthEvents = cache(
       athleteId,
       monthRange.startedAtFrom,
       monthRange.startedAtTo,
+      CALENDAR_EVENTS_INCLUDE,
     );
 
     return {

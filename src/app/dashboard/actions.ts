@@ -11,6 +11,7 @@ import {
   updateEvent,
   type EventMetricInput,
 } from "@/lib/api";
+import { CALENDAR_EVENTS_INCLUDE } from "@/lib/calendar-event-data";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -273,7 +274,12 @@ export async function fetchEventsInRangeAction(
   startedAtFrom: string,
   startedAtTo: string,
 ): Promise<{ events: Event[]; error?: undefined } | { events: []; error: string }> {
-  return fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
+  return fetchDashboardEventsInRange(
+    athleteId,
+    startedAtFrom,
+    startedAtTo,
+    CALENDAR_EVENTS_INCLUDE,
+  );
 }
 
 export type CopyEventForTodaySource = {
