@@ -80,6 +80,38 @@ export type EventMetric = {
   metricDefinition: MetricDefinition;
 };
 
+export type EventItemMetric = {
+  id: string;
+  eventItemId: string;
+  metricDefinitionId: string;
+  numericValue: string | null;
+  textValue: string | null;
+  booleanValue: boolean | null;
+  unit: string | null;
+  createdAt: string;
+  updatedAt: string;
+  metricDefinition: MetricDefinition;
+};
+
+export type EventItem = {
+  id: string;
+  eventId: string;
+  eventItemTypeId: string;
+  parentEventItemId: string | null;
+  sortOrder: number;
+  label: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  notes: string | null;
+  structuredData: unknown | null;
+  createdAt: string;
+  updatedAt: string;
+  eventItemType: EventItemType;
+  metrics: EventItemMetric[];
+  children: EventItem[];
+};
+
 export type Event = {
   id: string;
   athleteId: string;
@@ -100,6 +132,7 @@ export type Event = {
   updatedAt: string;
   eventType: EventType;
   metrics?: EventMetric[];
+  items?: EventItem[];
 };
 
 export type EventListResponse = {

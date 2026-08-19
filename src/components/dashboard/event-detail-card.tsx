@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { EventItemsDisplay } from "@/components/dashboard/event-items/event-items-display";
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
@@ -110,6 +111,8 @@ export function EventDetailCard({ event, timeZone, editAction }: EventDetailCard
           </dl>
         </div>
       ) : null}
+
+      <EventItemsDisplay event={event} />
 
       {event.originalInput ? (
         <div className="mt-4 border-t border-white/5 pt-4">

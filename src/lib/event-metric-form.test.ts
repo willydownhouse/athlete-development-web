@@ -5,7 +5,10 @@ import {
   eventMetricsToFormValues,
   metricDurationFieldName,
   metricFieldName,
+  parseEventMetricsFromFormData,
+  parseMetricInputsWithPrefix,
   parseMetricsFromFormData,
+  validateEventMetricPayloadForm,
   validateMetricForm,
 } from "./event-metric-form";
 import type { EventMetric, EventTypeMetricDefinition, MetricDefinition } from "./types";
@@ -260,5 +263,53 @@ describe("validateMetricForm", () => {
     formData.set(metricFieldName("rpe-metric"), "7");
 
     expect(validateMetricForm(formData, [mapping])).toBeNull();
+  });
+});
+
+describe("parseEventMetricsFromFormData", () => {
+  it("parses event metrics without a catalog", () => {
+    const formData = new FormData();
+    formData.set(metricFieldName("number-metric-id"), "42");
+    formData.set(metricFieldName("text-metric-id"), "note");
+    formData.set(metricFieldName("bool-metric-id"), "on");
+    formData.set(metricDurationFieldName("duration-metric-id", "hours"), "0");
+    formData.set(metricDurationFieldName("duration-metric-id", "minutes"), "5");
+    formData.set(metricDurationFieldName("duration-metric-id", "seconds"), "30");
+
+    expect(parseEventMetricsFromFormData(formData)).toEqual([
+      { metricDefinitionId: "duration-metric-id", numericValue: durationPartsToSeconds(0, 5, 30) },
+      { metricDefinitionId: "number-metric-id", numericValue: 42 },
+      { metricDefinitionId: "text-metric-id", textValue: "note" },
+      { metricDefinitionId: "bool-metric-id", booleanValue: true },
+    ]);
+  });
+
+  it("parses prefixed set metrics without a catalog", () => {
+    const prefix = "items[0].children[0].metric.";
+    const formData = new FormData();
+    formData.set(`${prefix}rep-metric-id`, "12");
+
+    expect(parseMetricInputsWithPrefix(formData, prefix)).toEqual([
+      { metricDefinitionId: "rep-metric-id", numericValue: 12 },
+    ]);
+  });
+});
+
+describe("validateEventMetricPayloadForm", () => {
+  it("reports text metric names when a numeric string would be parsed incorrectly", () => {
+    const mapping = buildMapping(
+      {},
+      {
+        id: "team-name-metric",
+        key: "team_name",
+        name: "Team name",
+        valueType: "text",
+        canonicalUnit: null,
+      },
+    );
+    const formData = new FormData();
+    formData.set(metricFieldName("team-name-metric"), "123");
+
+    expect(validateEventMetricPayloadForm(formData, [mapping])).toBe("Team name must be text");
   });
 });

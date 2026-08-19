@@ -8,7 +8,6 @@ import {
   createEvent,
   createEventsBatch,
   deleteEvent,
-  fetchEventTypeMetricDefinitions,
   updateEvent,
   type EventMetricInput,
 } from "@/lib/api";
@@ -23,7 +22,6 @@ import {
 } from "@/lib/copy-event";
 import { isLocalDateString } from "@/lib/date-range";
 import {
-  getEventFormValidationError,
   readEventDescriptionForCreate,
   readEventDescriptionForUpdate,
   readEventDurationSecondsForCreate,
@@ -33,7 +31,11 @@ import {
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "@/lib/event-form-schema";
-import { parseMetricsFromFormData } from "@/lib/event-metric-form";
+import {
+  STRENGTH_TRAINING_EVENT_TYPE_SLUG,
+  parseEventItemsFromFormData,
+} from "@/lib/event-item-form";
+import { parseEventMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
 import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
@@ -87,31 +89,6 @@ async function readEventFormFields(formData: FormData) {
   };
 }
 
-function validateEventTextFields(
-  formData: FormData,
-  metricMappings: Awaited<ReturnType<typeof fetchEventTypeMetricDefinitions>> = [],
-): DashboardActionState | null {
-  const error = getEventFormValidationError(formData, metricMappings);
-
-  if (error) {
-    return { error };
-  }
-
-  return null;
-}
-
-async function loadMetricMappingsForEventType(eventTypeId: string) {
-  if (!eventTypeId) {
-    return [];
-  }
-
-  try {
-    return await fetchEventTypeMetricDefinitions(eventTypeId);
-  } catch {
-    return [];
-  }
-}
-
 export async function createEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
@@ -127,30 +104,17 @@ export async function createEventAction(
   const title = readEventTitleForCreate(formData);
   const description = readEventDescriptionForCreate(formData);
   const intensity = readEventIntensityForCreate(formData);
+  const metrics = parseEventMetricsFromFormData(formData);
+  const eventTypeSlug = readString(formData, "eventTypeSlug");
+  const parsedItems =
+    eventTypeSlug === STRENGTH_TRAINING_EVENT_TYPE_SLUG
+      ? parseEventItemsFromFormData(formData)
+      : undefined;
+  const items = parsedItems && parsedItems.length > 0 ? parsedItems : undefined;
 
-  if (!fields.athleteId) {
-    return { error: "Athlete is required" };
-  }
-
-  if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
-  }
-
-  if (!fields.timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
-  }
-
-  if (!fields.eventDate || !fields.startedAt) {
+  if (!fields.startedAt) {
     return { error: "Date is required" };
   }
-
-  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
-  if (textError) {
-    return textError;
-  }
-
-  const metrics = parseMetricsFromFormData(formData, metricMappings);
 
   try {
     await createEvent(token, fields.athleteId, {
@@ -161,7 +125,8 @@ export async function createEventAction(
       description,
       durationSeconds,
       intensity,
-      ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
+      metrics,
+      ...(items !== undefined ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
@@ -188,34 +153,16 @@ export async function updateEventAction(
   const title = readEventTitleForUpdate(formData);
   const description = readEventDescriptionForUpdate(formData);
   const intensity = readEventIntensityForUpdate(formData);
+  const metrics = parseEventMetricsFromFormData(formData);
+  const eventTypeSlug = readString(formData, "eventTypeSlug");
+  const items =
+    eventTypeSlug === STRENGTH_TRAINING_EVENT_TYPE_SLUG
+      ? parseEventItemsFromFormData(formData)
+      : undefined;
 
-  if (!fields.athleteId) {
-    return { error: "Athlete is required" };
-  }
-
-  if (!eventId) {
-    return { error: "Event is required" };
-  }
-
-  if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
-  }
-
-  if (!fields.timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
-  }
-
-  if (!fields.eventDate || !fields.startedAt) {
+  if (!fields.startedAt) {
     return { error: "Date is required" };
   }
-
-  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
-  if (textError) {
-    return textError;
-  }
-
-  const metrics = parseMetricsFromFormData(formData, metricMappings);
 
   try {
     await updateEvent(token, fields.athleteId, eventId, {
@@ -226,6 +173,7 @@ export async function updateEventAction(
       durationSeconds,
       intensity,
       metrics,
+      ...(items !== undefined ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
