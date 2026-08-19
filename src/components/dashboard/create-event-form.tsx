@@ -141,6 +141,8 @@ export function EventForm({
   const [eventDate, setEventDate] = useState(values.eventDate);
   const [selectedEventTypeId, setSelectedEventTypeId] = useState(values.eventTypeId);
   const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);
+  const [metricFieldsLoading, setMetricFieldsLoading] = useState(Boolean(values.eventTypeId));
+  const [metricFieldsLoadError, setMetricFieldsLoadError] = useState<string | null>(null);
   const [strengthItemConfig, setStrengthItemConfig] =
     useState<StrengthTrainingItemFormConfig | null>(null);
   const [strengthItemsLoading, setStrengthItemsLoading] = useState(false);
@@ -154,12 +156,11 @@ export function EventForm({
       }
 
       setMetricFieldsResetKey(nextEventTypeId || "initial");
+      setMetricMappings([]);
+      setMetricFieldsLoading(Boolean(nextEventTypeId));
+      setMetricFieldsLoadError(null);
       setStrengthItemConfig(null);
       setStrengthItemsLoading(false);
-
-      if (!nextEventTypeId) {
-        setMetricMappings([]);
-      }
 
       return nextEventTypeId;
     });
@@ -197,9 +198,20 @@ export function EventForm({
     [eventTypes, selectedEventTypeId],
   );
   const showStrengthItems = isStrengthTrainingEventType(selectedEventType);
+  const metricFieldsLoaded =
+    selectedEventTypeId !== "" && !metricFieldsLoading && metricFieldsLoadError === null;
+  const strengthItemsLoaded = showStrengthItems && !strengthItemsLoading && strengthItemConfig;
 
   const validateFormData = useCallback(
     (formData: FormData) => {
+      if (selectedEventTypeId && metricFieldsLoading) {
+        return "Metric fields are still loading. Try again in a moment.";
+      }
+
+      if (selectedEventTypeId && metricFieldsLoadError) {
+        return "Metric fields could not be loaded for this event type.";
+      }
+
       if (showStrengthItems && strengthItemsLoading) {
         return "Exercise fields are still loading. Try again in a moment.";
       }
@@ -215,7 +227,17 @@ export function EventForm({
         requireEventId: isEdit,
       });
     },
-    [isEdit, metricMappings, showStrengthItems, strengthItemConfig, strengthItemsLoading, timeZone],
+    [
+      isEdit,
+      metricFieldsLoadError,
+      metricFieldsLoading,
+      metricMappings,
+      selectedEventTypeId,
+      showStrengthItems,
+      strengthItemConfig,
+      strengthItemsLoading,
+      timeZone,
+    ],
   );
 
   const syncValidationFromForm = useCallback(() => {
@@ -231,6 +253,8 @@ export function EventForm({
   }, [
     eventTypeId,
     eventDate,
+    metricFieldsLoadError,
+    metricFieldsLoading,
     metricMappings,
     showStrengthItems,
     strengthItemConfig,
@@ -279,6 +303,8 @@ export function EventForm({
       >
         <input type="hidden" name="athleteId" value={athleteId} />
         <input type="hidden" name="eventTypeSlug" value={selectedEventType?.slug ?? ""} />
+        {metricFieldsLoaded ? <input type="hidden" name="metricsLoaded" value="1" /> : null}
+        {strengthItemsLoaded ? <input type="hidden" name="itemsLoaded" value="1" /> : null}
         {isEdit ? <input type="hidden" name="eventId" value={event.id} /> : null}
 
         <label className="flex flex-col gap-1 text-sm">
@@ -356,6 +382,8 @@ export function EventForm({
             }
             fieldsResetKey={`${metricFieldsResetKey}-${isEdit ? event.id : "create"}`}
             onMappingsChange={setMetricMappings}
+            onLoadingChange={setMetricFieldsLoading}
+            onLoadErrorChange={setMetricFieldsLoadError}
           />
         ) : null}
 

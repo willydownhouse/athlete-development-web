@@ -159,6 +159,8 @@ type EventTypeMetricsSectionProps = {
   savedMetrics?: EventMetric[];
   fieldsResetKey: string;
   onMappingsChange: (mappings: EventTypeMetricDefinition[]) => void;
+  onLoadingChange?: (loading: boolean) => void;
+  onLoadErrorChange?: (error: string | null) => void;
 };
 
 export function EventTypeMetricsSection({
@@ -166,6 +168,8 @@ export function EventTypeMetricsSection({
   savedMetrics,
   fieldsResetKey,
   onMappingsChange,
+  onLoadingChange,
+  onLoadErrorChange,
 }: EventTypeMetricsSectionProps) {
   const [mappings, setMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +177,9 @@ export function EventTypeMetricsSection({
 
   useEffect(() => {
     let cancelled = false;
+
+    onLoadingChange?.(true);
+    onLoadErrorChange?.(null);
 
     void fetchEventTypeMetricDefinitions(eventTypeId)
       .then((items) => {
@@ -182,26 +189,32 @@ export function EventTypeMetricsSection({
 
         setMappings(items);
         onMappingsChange(items);
+        setLoadError(null);
+        onLoadErrorChange?.(null);
       })
       .catch((error) => {
         if (cancelled) {
           return;
         }
 
+        const message = error instanceof Error ? error.message : "Unable to load metrics";
         setMappings([]);
         onMappingsChange([]);
-        setLoadError(error instanceof Error ? error.message : "Unable to load metrics");
+        setLoadError(message);
+        onLoadErrorChange?.(message);
       })
       .finally(() => {
         if (!cancelled) {
           setLoading(false);
+          onLoadingChange?.(false);
         }
       });
 
     return () => {
       cancelled = true;
+      onLoadingChange?.(false);
     };
-  }, [eventTypeId, onMappingsChange]);
+  }, [eventTypeId, onLoadErrorChange, onLoadingChange, onMappingsChange]);
 
   return (
     <EventMetricFields

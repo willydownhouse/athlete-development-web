@@ -412,7 +412,6 @@ export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
 export async function fetchEventTypeMetricDefinitions(
   eventTypeId: string,
 ): Promise<EventTypeMetricDefinition[]> {
-  console.log("fetchEventTypeMetricDefinitions🔥🔥🔥");
   const response = await fetch(
     `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/metric-definitions`,
     {

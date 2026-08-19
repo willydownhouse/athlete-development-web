@@ -1,5 +1,5 @@
 import type { EventMetricInput } from "@/lib/api";
-import type { EventMetric, EventTypeMetricDefinition } from "@/lib/types";
+import type { EventMetric, EventTypeMetricDefinition, MetricValueType } from "@/lib/types";
 
 const METRIC_FIELD_PREFIX = "metric.";
 
@@ -268,6 +268,7 @@ function hasDurationInputWithPrefix(
 export function parseMetricInputsWithPrefix(
   formData: FormData,
   prefix: string,
+  valueTypes: Record<string, MetricValueType> = {},
 ): EventMetricInput[] {
   const metrics: EventMetricInput[] = [];
   const durationMetricIds = new Set<string>();
@@ -310,8 +311,13 @@ export function parseMetricInputsWithPrefix(
     }
 
     const raw = formData.get(key);
+    const valueType = valueTypes[metricDefinitionId];
 
-    if (raw === "on") {
+    if (valueType === "boolean" || raw === "on") {
+      if (raw !== "on") {
+        continue;
+      }
+
       metrics.push({
         metricDefinitionId,
         booleanValue: true,
@@ -324,8 +330,20 @@ export function parseMetricInputsWithPrefix(
       continue;
     }
 
+    if (valueType === "text") {
+      metrics.push({
+        metricDefinitionId,
+        textValue: value,
+      });
+      continue;
+    }
+
     const parsed = Number(value);
-    if (!Number.isNaN(parsed)) {
+    if (valueType === "number" || !Number.isNaN(parsed)) {
+      if (Number.isNaN(parsed)) {
+        continue;
+      }
+
       metrics.push({
         metricDefinitionId,
         numericValue: parsed,

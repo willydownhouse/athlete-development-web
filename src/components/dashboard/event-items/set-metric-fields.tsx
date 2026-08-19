@@ -2,7 +2,7 @@
 
 import { RpeScaleInfoTooltip } from "@/components/dashboard/rpe-scale-guide";
 import { formatMetricUnit, isScale1To10Metric, isSecondsMetric } from "@/lib/event-metric-form";
-import { setMetricFieldName } from "@/lib/event-item-form";
+import { setMetricFieldName, setMetricValueTypeFieldName } from "@/lib/event-item-form";
 import type { EventItemTypeMetricDefinition } from "@/lib/types";
 
 const inputClassName =
@@ -29,6 +29,11 @@ export function SetMetricFields({
     <div className="grid gap-3 sm:grid-cols-3">
       {mappings.map((mapping) => {
         const fieldName = setMetricFieldName(exerciseIndex, setIndex, mapping.metricDefinitionId);
+        const valueTypeFieldName = setMetricValueTypeFieldName(
+          exerciseIndex,
+          setIndex,
+          mapping.metricDefinitionId,
+        );
         const defaultValue = defaultValues[mapping.metricDefinitionId] ?? "";
         const unit = formatMetricUnit(mapping.metricDefinition.canonicalUnit);
         const label = mapping.required
@@ -37,15 +42,22 @@ export function SetMetricFields({
 
         if (mapping.metricDefinition.valueType === "boolean") {
           return (
-            <label key={mapping.id} className="flex items-start gap-3 text-sm text-zinc-300">
+            <div key={mapping.id}>
               <input
-                type="checkbox"
-                name={fieldName}
-                defaultChecked={defaultValue === "on"}
-                className="mt-1 rounded border-white/20 bg-[#1c222c]"
+                type="hidden"
+                name={valueTypeFieldName}
+                value={mapping.metricDefinition.valueType}
               />
-              <span className="font-medium text-zinc-300">{label}</span>
-            </label>
+              <label className="flex items-start gap-3 text-sm text-zinc-300">
+                <input
+                  type="checkbox"
+                  name={fieldName}
+                  defaultChecked={defaultValue === "on"}
+                  className="mt-1 rounded border-white/20 bg-[#1c222c]"
+                />
+                <span className="font-medium text-zinc-300">{label}</span>
+              </label>
+            </div>
           );
         }
 
@@ -66,6 +78,11 @@ export function SetMetricFields({
 
         return (
           <label key={mapping.id} className="flex flex-col gap-1 text-sm">
+            <input
+              type="hidden"
+              name={valueTypeFieldName}
+              value={mapping.metricDefinition.valueType}
+            />
             <span className="flex items-center gap-2 font-medium text-zinc-300">
               {label}
               {isRpeMetric ? <RpeScaleInfoTooltip /> : null}

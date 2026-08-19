@@ -15,6 +15,7 @@ import type {
   EventItemTypeMetricDefinition,
   EventType,
   EventTypeMetricDefinition,
+  MetricValueType,
 } from "@/lib/types";
 
 /** Keep in sync with athlete-development-service EVENT_ITEMS_MAX_ROOT_ITEMS. */
@@ -62,6 +63,14 @@ export function setMetricFieldName(
   metricDefinitionId: string,
 ): string {
   return `items[${exerciseIndex}].children[${setIndex}].metric.${metricDefinitionId}`;
+}
+
+export function setMetricValueTypeFieldName(
+  exerciseIndex: number,
+  setIndex: number,
+  metricDefinitionId: string,
+): string {
+  return `items[${exerciseIndex}].children[${setIndex}].metricType.${metricDefinitionId}`;
 }
 
 function readField(formData: FormData, key: string): string {
@@ -173,6 +182,32 @@ function setMetricFieldPrefix(exerciseIndex: number, setIndex: number): string {
   return `items[${exerciseIndex}].children[${setIndex}].metric.`;
 }
 
+function setMetricValueTypeFieldPrefix(exerciseIndex: number, setIndex: number): string {
+  return `items[${exerciseIndex}].children[${setIndex}].metricType.`;
+}
+
+function isMetricValueType(value: FormDataEntryValue | null): value is MetricValueType {
+  return value === "number" || value === "text" || value === "boolean";
+}
+
+function readMetricValueTypes(formData: FormData, prefix: string): Record<string, MetricValueType> {
+  const valueTypes: Record<string, MetricValueType> = {};
+
+  for (const key of formData.keys()) {
+    if (!key.startsWith(prefix)) {
+      continue;
+    }
+
+    const metricDefinitionId = key.slice(prefix.length);
+    const valueType = formData.get(key);
+    if (metricDefinitionId && isMetricValueType(valueType)) {
+      valueTypes[metricDefinitionId] = valueType;
+    }
+  }
+
+  return valueTypes;
+}
+
 function setHasAnyMetricInput(
   formData: FormData,
   exerciseIndex: number,
@@ -238,6 +273,7 @@ export function parseEventItemsFromFormData(formData: FormData): EventItemInput[
       const metrics = parseMetricInputsWithPrefix(
         formData,
         setMetricFieldPrefix(exerciseIndex, setIndex),
+        readMetricValueTypes(formData, setMetricValueTypeFieldPrefix(exerciseIndex, setIndex)),
       );
 
       children.push({
@@ -378,7 +414,6 @@ export function eventItemsToStrengthFormValues(
 export async function loadStrengthTrainingItemFormConfig(
   eventTypeId: string,
 ): Promise<StrengthTrainingItemFormConfig | null> {
-  console.log("Fetching EventTypeItemTypes🔥🔥🔥");
   const rootMappings = await fetchEventTypeItemTypes(eventTypeId);
   const exerciseMapping = rootMappings.find(
     (mapping) => mapping.eventItemType.slug === EXERCISE_ITEM_TYPE_SLUG,

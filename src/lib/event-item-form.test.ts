@@ -5,6 +5,7 @@ import {
   parseEventItemsFromFormData,
   parseStrengthTrainingItemsFromFormData,
   setMetricFieldName,
+  setMetricValueTypeFieldName,
   type StrengthTrainingItemFormConfig,
 } from "./event-item-form";
 
@@ -116,6 +117,28 @@ describe("parseEventItemsFromFormData", () => {
               { metricDefinitionId: "rep-metric-id", numericValue: 10 },
               { metricDefinitionId: "load-metric-id", numericValue: 20 },
             ],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("uses submitted value type metadata for set text metrics", () => {
+    const formData = new FormData();
+    formData.set("items[0].eventItemTypeId", "exercise-type-id");
+    formData.set(exerciseLabelFieldName(0), "Curls");
+    formData.set("items[0].children[0].eventItemTypeId", "set-type-id");
+    formData.set(setMetricValueTypeFieldName(0, 0, "note-metric-id"), "text");
+    formData.set(setMetricFieldName(0, 0, "note-metric-id"), "123");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        eventItemTypeId: "exercise-type-id",
+        label: "Curls",
+        children: [
+          {
+            eventItemTypeId: "set-type-id",
+            metrics: [{ metricDefinitionId: "note-metric-id", textValue: "123" }],
           },
         ],
       },
