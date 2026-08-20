@@ -160,7 +160,7 @@ export function StrengthTrainingItemsSection({
             Add exercises and sets with reps, load, and RPE.
           </p>
         </div>
-        {canAddExercise ? (
+        {exercises.length === 0 && canAddExercise ? (
           <button
             type="button"
             onClick={() => setExercises((current) => [...current, createExerciseDraft()])}
@@ -272,6 +272,16 @@ export function StrengthTrainingItemsSection({
           ))}
         </div>
       )}
+
+      {exercises.length > 0 && canAddExercise ? (
+        <button
+          type="button"
+          onClick={() => setExercises((current) => [...current, createExerciseDraft()])}
+          className="w-full rounded-lg border border-white/10 bg-[#252b36] px-3 py-2 text-sm font-medium text-zinc-200 transition hover:bg-[#2f3642] hover:text-white"
+        >
+          Add exercise
+        </button>
+      ) : null}
     </div>
   );
 }
