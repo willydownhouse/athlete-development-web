@@ -180,8 +180,8 @@ export function StrengthTrainingItemsSection({
               key={exercise.key}
               className="space-y-3 rounded-xl border border-white/10 bg-[#12161d] p-4"
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <label className="min-w-0 flex-1 flex-col gap-1 text-sm">
+              <div className="relative flex flex-wrap items-start justify-between gap-3">
+                <label className="flex min-w-0 w-full flex-col gap-1 text-sm sm:w-auto sm:flex-1">
                   <span className="mb-1 block font-medium text-zinc-300">Exercise</span>
                   <input
                     type="hidden"
@@ -203,7 +203,7 @@ export function StrengthTrainingItemsSection({
                   onClick={() =>
                     setExercises((current) => current.filter((item) => item.key !== exercise.key))
                   }
-                  className="text-sm font-medium text-red-300 transition hover:text-red-200"
+                  className="absolute right-0 top-0 text-sm font-medium text-red-300 transition hover:text-red-200 sm:static"
                 >
                   Remove exercise
                 </button>

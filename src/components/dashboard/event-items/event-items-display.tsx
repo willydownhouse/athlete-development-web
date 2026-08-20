@@ -1,3 +1,4 @@
+import { formatMetricUnit } from "@/lib/event-metric-form";
 import { formatEventMetricValue } from "@/lib/event-metric-display";
 import { isStrengthTrainingEventType } from "@/lib/event-item-form";
 import type { Event, EventItem } from "@/lib/types";
@@ -5,7 +6,8 @@ import type { Event, EventItem } from "@/lib/types";
 function formatSetSummary(setItem: EventItem): string {
   const parts = setItem.metrics.map((metric) => {
     const value = formatEventMetricValue(metric);
-    return `${metric.metricDefinition.name}: ${value}`;
+    const unit = metric.unit ?? formatMetricUnit(metric.metricDefinition.canonicalUnit);
+    return `${value}${unit ? ` ${unit}` : ""}`;
   });
 
   return parts.length > 0 ? parts.join(" · ") : "No set details";
