@@ -30,8 +30,8 @@ export function CopyEventsConfirmModal({
   const title = eventCount === 1 ? "Copy event?" : "Copy day?";
   const description =
     eventCount === 1
-      ? "Create a new event on the selected date with the same type, details, metrics, and exercises?"
-      : `Create ${eventCount} events on the selected date with the same types, details, metrics, and exercises?`;
+      ? "Create a new event on the selected date with the same details?"
+      : `Create ${eventCount} events on the selected date with the same details?`;
 
   return (
     <Modal open={open} onClose={onClose} title={title} align="content">
