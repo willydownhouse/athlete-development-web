@@ -7,25 +7,28 @@ import { AdminFormSelect } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import {
-  createEventTypeMetricAction,
-  deleteEventTypeMetricAction,
-  updateEventTypeMetricAction,
+  createEventItemTypeMetricAction,
+  deleteEventItemTypeMetricAction,
+  updateEventItemTypeMetricAction,
   type ActionState,
 } from "@/app/admin/actions";
-import type { EventTypeMetricDefinition, MetricDefinition } from "@/lib/types";
+import type { EventItemTypeMetricDefinition, MetricDefinition } from "@/lib/types";
 
 const initialState: ActionState = {};
 
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
-type AddEventTypeMetricFormProps = {
-  eventTypeId: string;
+type AddEventItemTypeMetricFormProps = {
+  eventItemTypeId: string;
   availableMetrics: MetricDefinition[];
 };
 
-function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeMetricFormProps) {
-  const [state, formAction] = useActionState(createEventTypeMetricAction, initialState);
+function AddEventItemTypeMetricForm({
+  eventItemTypeId,
+  availableMetrics,
+}: AddEventItemTypeMetricFormProps) {
+  const [state, formAction] = useActionState(createEventItemTypeMetricAction, initialState);
   const closeModal = useAdminCreateModalClose();
 
   useEffect(() => {
@@ -36,7 +39,7 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
 
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="eventTypeId" value={eventTypeId} />
+      <input type="hidden" name="eventItemTypeId" value={eventItemTypeId} />
       <FormMessage error={state.error} success={state.success} />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -68,13 +71,13 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
   );
 }
 
-type EventTypeMetricRowProps = {
-  eventTypeId: string;
-  mapping: EventTypeMetricDefinition;
+type EventItemTypeMetricRowProps = {
+  eventItemTypeId: string;
+  mapping: EventItemTypeMetricDefinition;
 };
 
-function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
-  const [state, formAction] = useActionState(updateEventTypeMetricAction, initialState);
+function EventItemTypeMetricRow({ eventItemTypeId, mapping }: EventItemTypeMetricRowProps) {
+  const [state, formAction] = useActionState(updateEventItemTypeMetricAction, initialState);
 
   return (
     <li className="rounded-xl border border-white/10 bg-[#1c222c] p-3 sm:p-4">
@@ -96,8 +99,8 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
         className="mt-4 space-y-3"
         key={`${mapping.id}-${mapping.required}-${mapping.sortOrder}`}
       >
-        <input type="hidden" name="eventTypeId" value={eventTypeId} />
-        <input type="hidden" name="eventTypeMetricDefinitionId" value={mapping.id} />
+        <input type="hidden" name="eventItemTypeId" value={eventItemTypeId} />
+        <input type="hidden" name="eventItemTypeMetricDefinitionId" value={mapping.id} />
         <FormMessage error={state.error} success={state.success} />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -125,26 +128,26 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
         </div>
       </form>
 
-      <form action={deleteEventTypeMetricAction} className="mt-3">
-        <input type="hidden" name="eventTypeId" value={eventTypeId} />
-        <input type="hidden" name="eventTypeMetricDefinitionId" value={mapping.id} />
+      <form action={deleteEventItemTypeMetricAction} className="mt-3">
+        <input type="hidden" name="eventItemTypeId" value={eventItemTypeId} />
+        <input type="hidden" name="eventItemTypeMetricDefinitionId" value={mapping.id} />
         <SubmitButton variant="danger">Remove</SubmitButton>
       </form>
     </li>
   );
 }
 
-type EventTypeMetricsSectionProps = {
-  eventTypeId: string;
-  mappings: EventTypeMetricDefinition[];
+type EventItemTypeMetricsSectionProps = {
+  eventItemTypeId: string;
+  mappings: EventItemTypeMetricDefinition[];
   availableMetrics: MetricDefinition[];
 };
 
-export function EventTypeMetricsSection({
-  eventTypeId,
+export function EventItemTypeMetricsSection({
+  eventItemTypeId,
   mappings,
   availableMetrics,
-}: EventTypeMetricsSectionProps) {
+}: EventItemTypeMetricsSectionProps) {
   return (
     <div className="space-y-6">
       <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
@@ -152,13 +155,13 @@ export function EventTypeMetricsSection({
           <div>
             <h2 className="text-lg font-medium text-white">Allowed metrics ({mappings.length})</h2>
             <p className="mt-1 text-sm text-zinc-400">
-              Metrics available when logging this event type.
+              Metrics available when logging this item type on nested event items.
             </p>
           </div>
           {availableMetrics.length > 0 ? (
             <AdminCreateModal title="Allow metric" buttonLabel="Allow metric">
-              <AddEventTypeMetricForm
-                eventTypeId={eventTypeId}
+              <AddEventItemTypeMetricForm
+                eventItemTypeId={eventItemTypeId}
                 availableMetrics={availableMetrics}
               />
             </AdminCreateModal>
@@ -167,7 +170,7 @@ export function EventTypeMetricsSection({
 
         {availableMetrics.length === 0 && mappings.length > 0 ? (
           <p className="mt-4 text-sm text-zinc-400">
-            All compatible metrics are already allowed for this event type.
+            All compatible metrics are already allowed for this item type.
           </p>
         ) : null}
 
@@ -176,7 +179,11 @@ export function EventTypeMetricsSection({
         ) : (
           <ul className="mt-4 space-y-4">
             {mappings.map((mapping) => (
-              <EventTypeMetricRow key={mapping.id} eventTypeId={eventTypeId} mapping={mapping} />
+              <EventItemTypeMetricRow
+                key={mapping.id}
+                eventItemTypeId={eventItemTypeId}
+                mapping={mapping}
+              />
             ))}
           </ul>
         )}

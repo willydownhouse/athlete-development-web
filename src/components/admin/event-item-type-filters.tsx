@@ -9,17 +9,17 @@ import {
 } from "@/components/admin/admin-form-select";
 import type { Sport } from "@/lib/types";
 
-type MetricDefinitionFiltersProps = {
+type EventItemTypeFiltersProps = {
   sports: Sport[];
   defaultSportId?: string;
   defaultActive?: string;
 };
 
-export function MetricDefinitionFilters({
+export function EventItemTypeFilters({
   sports,
   defaultSportId = "",
   defaultActive = "",
-}: MetricDefinitionFiltersProps) {
+}: EventItemTypeFiltersProps) {
   return (
     <form
       method="get"
@@ -51,7 +51,7 @@ export function MetricDefinitionFilters({
       </button>
 
       <Link
-        href="/admin/metric-definitions"
+        href="/admin/event-item-types"
         className="px-2 py-2 text-center text-sm text-zinc-400 hover:text-white sm:text-left"
       >
         Clear

@@ -5,7 +5,10 @@ import type {
   Event,
   EventIntensity,
   EventListResponse,
+  EventItemTypeChildType,
+  EventItemTypeMetricDefinition,
   EventType,
+  EventTypeItemType,
   EventTypeMetricDefinition,
   Sport,
   SportStats,
@@ -130,6 +133,19 @@ export type EventMetricInput = {
   unit?: string;
 };
 
+export type EventItemInput = {
+  eventItemTypeId: string;
+  sortOrder?: number;
+  label?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  notes?: string;
+  structuredData?: Record<string, unknown>;
+  metrics?: EventMetricInput[];
+  children?: EventItemInput[];
+};
+
 export type CreateEventBody = {
   eventTypeId: string;
   startedAt: string;
@@ -142,6 +158,7 @@ export type CreateEventBody = {
   originalInput?: string;
   structuredData?: Record<string, unknown>;
   metrics?: EventMetricInput[];
+  items?: EventItemInput[];
 };
 
 export async function createEvent(
@@ -176,7 +193,7 @@ export async function fetchEvents(
     startedAtTo?: string;
     sportId?: string;
     eventTypeId?: string;
-    include?: "metrics";
+    include?: "metrics" | "items" | "metrics,items";
   } = {},
 ): Promise<EventListResponse> {
   const params = new URLSearchParams();
@@ -239,7 +256,7 @@ type FetchEventsQuery = {
   startedAtTo?: string;
   sportId?: string;
   eventTypeId?: string;
-  include?: "metrics";
+  include?: "metrics" | "items" | "metrics,items";
 };
 
 export async function fetchAllEvents(
@@ -275,7 +292,7 @@ export async function fetchEvent(
   athleteId: string,
   eventId: string,
   query: {
-    include?: "metrics";
+    include?: "metrics" | "items" | "metrics,items";
   } = {},
 ): Promise<Event> {
   const params = new URLSearchParams();
@@ -320,6 +337,7 @@ export async function updateEvent(
     intensity?: EventIntensity | null;
     structuredData?: Record<string, unknown>;
     metrics?: EventMetricInput[];
+    items?: EventItemInput[];
   },
 ): Promise<Event> {
   return apiFetch<Event>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
@@ -411,5 +429,57 @@ export async function fetchEventTypeMetricDefinitions(
   }
 
   const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
+  return result.items;
+}
+
+export async function fetchEventTypeItemTypes(eventTypeId: string): Promise<EventTypeItemType[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/item-types`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventTypeItemType[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypeChildTypes(
+  eventItemTypeId: string,
+): Promise<EventItemTypeChildType[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/child-types`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeChildType[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypeMetricDefinitions(
+  eventItemTypeId: string,
+): Promise<EventItemTypeMetricDefinition[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/metric-definitions`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeMetricDefinition[] };
   return result.items;
 }

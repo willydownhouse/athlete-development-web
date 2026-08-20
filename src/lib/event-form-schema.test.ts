@@ -4,7 +4,41 @@ import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_TITLE_MAX_LENGTH,
   getEventFormTextError,
+  getEventFormValidationError,
 } from "./event-form-schema";
+
+describe("getEventFormValidationError", () => {
+  it("requires core form fields before content validation", () => {
+    const formData = new FormData();
+
+    expect(getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" })).toBe(
+      "Athlete is required",
+    );
+
+    formData.set("athleteId", "athlete-1");
+    expect(getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" })).toBe(
+      "Event type is required",
+    );
+
+    formData.set("eventTypeId", "event-type-1");
+    expect(
+      getEventFormValidationError(formData, [], null, {
+        timeZone: "Europe/Helsinki",
+        requireEventId: true,
+      }),
+    ).toBe("Event is required");
+
+    formData.set("eventId", "event-1");
+    expect(getEventFormValidationError(formData, [], null, { timeZone: "" })).toBe(
+      "Time zone is not ready. Refresh the page and try again.",
+    );
+
+    formData.set("eventDate", "2026-08-19");
+    expect(
+      getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" }),
+    ).toBeNull();
+  });
+});
 
 describe("getEventFormTextError", () => {
   it("accepts text within the limits", () => {

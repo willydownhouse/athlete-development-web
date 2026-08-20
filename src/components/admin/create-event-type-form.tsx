@@ -3,10 +3,15 @@
 import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import {
+  AdminFormSelect,
+  eventCategoryOptions,
+  sportScopeOptions,
+} from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createEventTypeAction, type ActionState } from "@/app/admin/actions";
-import { EVENT_CATEGORIES, formatCategoryLabel, type Sport } from "@/lib/types";
+import { EVENT_CATEGORIES, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -48,24 +53,20 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Category</span>
-          <select name="category" required className={inputClassName}>
-            {EVENT_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {formatCategoryLabel(category)}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="category"
+            required
+            defaultValue={EVENT_CATEGORIES[0]}
+            options={eventCategoryOptions(EVENT_CATEGORIES)}
+          />
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sport</span>
-          <select name="sportId" defaultValue="" className={inputClassName}>
-            <option value="general">General (all sports)</option>
-            {sports.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="sportId"
+            defaultValue="general"
+            options={sportScopeOptions(sports)}
+          />
         </label>
       </div>
 

@@ -23,7 +23,7 @@ export async function fetchEventPageData(
 
   try {
     const event = await fetchEvent(token, athleteId, eventId, {
-      include: "metrics",
+      include: "metrics,items",
     });
 
     return { event };

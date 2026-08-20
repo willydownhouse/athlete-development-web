@@ -1,5 +1,5 @@
 import type { EventMetricInput } from "@/lib/api";
-import type { EventMetric, EventTypeMetricDefinition } from "@/lib/types";
+import type { EventMetric, EventTypeMetricDefinition, MetricValueType } from "@/lib/types";
 
 const METRIC_FIELD_PREFIX = "metric.";
 
@@ -103,7 +103,10 @@ export type MetricFormValues = Record<string, string>;
 
 export function eventMetricsToFormValues(
   mappings: EventTypeMetricDefinition[],
-  metrics?: EventMetric[],
+  metrics?: Pick<
+    EventMetric,
+    "metricDefinitionId" | "numericValue" | "textValue" | "booleanValue" | "metricDefinition"
+  >[],
 ): MetricFormValues {
   const values: MetricFormValues = {};
   const metricByDefinitionId = new Map(
@@ -137,7 +140,19 @@ export function eventMetricsToFormValues(
   return values;
 }
 
-export function eventMetricsToInputs(metrics: EventMetric[]): EventMetricInput[] {
+export function eventMetricsToInputs(
+  metrics: Array<
+    Pick<
+      EventMetric,
+      | "metricDefinitionId"
+      | "numericValue"
+      | "textValue"
+      | "booleanValue"
+      | "unit"
+      | "metricDefinition"
+    >
+  >,
+): EventMetricInput[] {
   const inputs: EventMetricInput[] = [];
 
   for (const metric of metrics) {
@@ -235,6 +250,130 @@ export function parseMetricsFromFormData(
   }
 
   return metrics;
+}
+
+function readDurationSecondsWithPrefix(
+  formData: FormData,
+  prefix: string,
+  metricDefinitionId: string,
+): number {
+  return readDurationPartsSecondsFromFormData(formData, {
+    hours: `${prefix}${metricDefinitionId}.hours`,
+    minutes: `${prefix}${metricDefinitionId}.minutes`,
+    seconds: `${prefix}${metricDefinitionId}.seconds`,
+  });
+}
+
+function hasDurationInputWithPrefix(
+  formData: FormData,
+  prefix: string,
+  metricDefinitionId: string,
+): boolean {
+  return hasDurationPartsInput(formData, {
+    hours: `${prefix}${metricDefinitionId}.hours`,
+    minutes: `${prefix}${metricDefinitionId}.minutes`,
+    seconds: `${prefix}${metricDefinitionId}.seconds`,
+  });
+}
+
+/** Parse metric inputs from form field names without a catalog fetch (API validates values). */
+export function parseMetricInputsWithPrefix(
+  formData: FormData,
+  prefix: string,
+  valueTypes: Record<string, MetricValueType> = {},
+): EventMetricInput[] {
+  const metrics: EventMetricInput[] = [];
+  const durationMetricIds = new Set<string>();
+
+  for (const key of formData.keys()) {
+    if (!key.startsWith(prefix)) {
+      continue;
+    }
+
+    const rest = key.slice(prefix.length);
+    const durationMatch = /^(.+)\.(hours|minutes|seconds)$/.exec(rest);
+    if (durationMatch?.[1]) {
+      durationMetricIds.add(durationMatch[1]);
+    }
+  }
+
+  for (const metricDefinitionId of durationMetricIds) {
+    if (!hasDurationInputWithPrefix(formData, prefix, metricDefinitionId)) {
+      continue;
+    }
+
+    metrics.push({
+      metricDefinitionId,
+      numericValue: readDurationSecondsWithPrefix(formData, prefix, metricDefinitionId),
+    });
+  }
+
+  for (const key of formData.keys()) {
+    if (!key.startsWith(prefix)) {
+      continue;
+    }
+
+    const metricDefinitionId = key.slice(prefix.length);
+    if (metricDefinitionId.includes(".")) {
+      continue;
+    }
+
+    if (durationMetricIds.has(metricDefinitionId)) {
+      continue;
+    }
+
+    const raw = formData.get(key);
+    const valueType = valueTypes[metricDefinitionId];
+
+    if (valueType === "boolean" || raw === "on") {
+      if (raw !== "on") {
+        continue;
+      }
+
+      metrics.push({
+        metricDefinitionId,
+        booleanValue: true,
+      });
+      continue;
+    }
+
+    const value = typeof raw === "string" ? raw.trim() : "";
+    if (value === "") {
+      continue;
+    }
+
+    if (valueType === "text") {
+      metrics.push({
+        metricDefinitionId,
+        textValue: value,
+      });
+      continue;
+    }
+
+    const parsed = Number(value);
+    if (valueType === "number" || !Number.isNaN(parsed)) {
+      if (Number.isNaN(parsed)) {
+        continue;
+      }
+
+      metrics.push({
+        metricDefinitionId,
+        numericValue: parsed,
+      });
+      continue;
+    }
+
+    metrics.push({
+      metricDefinitionId,
+      textValue: value,
+    });
+  }
+
+  return metrics;
+}
+
+export function parseEventMetricsFromFormData(formData: FormData): EventMetricInput[] {
+  return parseMetricInputsWithPrefix(formData, METRIC_FIELD_PREFIX);
 }
 
 export function validateDurationPartsForm(
@@ -355,6 +494,56 @@ export function validateMetricForm(
     if (numericError) {
       return numericError;
     }
+  }
+
+  return null;
+}
+
+function metricsPayloadEqual(
+  left: EventMetricInput | undefined,
+  right: EventMetricInput | undefined,
+): boolean {
+  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+}
+
+/** Catch catalog-free parse mismatches before submit (e.g. numeric strings in text metrics). */
+export function validateEventMetricPayloadForm(
+  formData: FormData,
+  mappings: EventTypeMetricDefinition[],
+): string | null {
+  if (mappings.length === 0) {
+    return null;
+  }
+
+  const expectedMetrics = parseMetricsFromFormData(formData, mappings);
+  const payloadMetrics = parseEventMetricsFromFormData(formData);
+  const expectedById = new Map(
+    expectedMetrics.map((metric) => [metric.metricDefinitionId, metric]),
+  );
+  const payloadById = new Map(payloadMetrics.map((metric) => [metric.metricDefinitionId, metric]));
+  const mappingById = new Map(mappings.map((mapping) => [mapping.metricDefinitionId, mapping]));
+
+  for (const [metricDefinitionId, expectedMetric] of expectedById) {
+    if (metricsPayloadEqual(payloadById.get(metricDefinitionId), expectedMetric)) {
+      continue;
+    }
+
+    const mapping = mappingById.get(metricDefinitionId);
+    if (!mapping) {
+      continue;
+    }
+
+    const { name, valueType } = mapping.metricDefinition;
+
+    if (valueType === "text") {
+      return `${name} must be text`;
+    }
+
+    if (valueType === "number") {
+      return `${name} must be a number`;
+    }
+
+    return `${name} is required`;
   }
 
   return null;
