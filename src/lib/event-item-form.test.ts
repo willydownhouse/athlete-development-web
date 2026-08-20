@@ -276,6 +276,7 @@ describe("eventItemsToInputs", () => {
         endedAt: "2026-08-18T18:46:00.000Z",
         durationSeconds: 42,
         notes: "Strong finish",
+        structuredData: { line: "first" },
       },
     ]);
   });

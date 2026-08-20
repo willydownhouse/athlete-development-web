@@ -453,6 +453,12 @@ function eventItemToInput(item: EventItem): EventItemInput {
   const children = item.children.length > 0 ? eventItemsToInputs(item.children) : undefined;
   const label = item.label?.trim();
   const notes = item.notes?.trim();
+  const structuredData =
+    typeof item.structuredData === "object" &&
+    item.structuredData !== null &&
+    !Array.isArray(item.structuredData)
+      ? (item.structuredData as Record<string, unknown>)
+      : undefined;
 
   return {
     eventItemTypeId: item.eventItemTypeId,
@@ -464,6 +470,7 @@ function eventItemToInput(item: EventItem): EventItemInput {
       ? { durationSeconds: item.durationSeconds }
       : {}),
     ...(notes ? { notes } : {}),
+    ...(structuredData ? { structuredData } : {}),
     ...(metrics.length > 0 ? { metrics } : {}),
     ...(children ? { children } : {}),
   };

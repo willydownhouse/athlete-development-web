@@ -10,6 +10,7 @@ import {
 const baseSource: EventCopySource = {
   eventTypeId: "00000000-0000-4000-8000-000000000201",
   startedAt: "2026-08-10T06:30:00.000Z",
+  endedAt: "2026-08-10T08:00:00.000Z",
   title: "Morning skate",
   description: null,
   durationSeconds: 3600,
@@ -36,6 +37,7 @@ describe("copy-event helpers", () => {
       metrics: baseSource.metrics,
     });
     expect(body?.startedAt).toBe("2026-08-15T06:30:00.000Z");
+    expect(body?.endedAt).toBe("2026-08-15T08:00:00.000Z");
   });
 
   it("includes nested event items in the copy payload", () => {
@@ -43,11 +45,13 @@ describe("copy-event helpers", () => {
       ...baseSource,
       title: "Strength session",
       metrics: [],
+      structuredData: { location: "Home gym" },
       items: [
         {
           eventItemTypeId: "00000000-0000-4000-8000-000000000401",
           sortOrder: 0,
           label: "Curls",
+          structuredData: { equipment: "Dumbbells" },
           children: [
             {
               eventItemTypeId: "00000000-0000-4000-8000-000000000402",
@@ -66,7 +70,34 @@ describe("copy-event helpers", () => {
 
     expect(buildCopyForDatePreservingTime(source, "Europe/Oslo", "2026-08-15")).toMatchObject({
       title: "Strength session",
+      structuredData: { location: "Home gym" },
       items: source.items,
+    });
+  });
+
+  it("moves nested item timestamps to the target event date", () => {
+    const source: EventCopySource = {
+      ...baseSource,
+      title: "Strength session",
+      items: [
+        {
+          eventItemTypeId: "00000000-0000-4000-8000-000000000401",
+          sortOrder: 0,
+          label: "Curls",
+          startedAt: "2026-08-10T07:00:00.000Z",
+          endedAt: "2026-08-10T07:20:00.000Z",
+        },
+      ],
+    };
+
+    expect(buildCopyForDatePreservingTime(source, "Europe/Oslo", "2026-08-15")).toMatchObject({
+      startedAt: "2026-08-15T06:30:00.000Z",
+      items: [
+        expect.objectContaining({
+          startedAt: "2026-08-15T07:00:00.000Z",
+          endedAt: "2026-08-15T07:20:00.000Z",
+        }),
+      ],
     });
   });
 

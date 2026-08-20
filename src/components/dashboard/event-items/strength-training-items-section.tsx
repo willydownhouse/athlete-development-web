@@ -182,7 +182,7 @@ export function StrengthTrainingItemsSection({
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <label className="min-w-0 flex-1 flex-col gap-1 text-sm">
-                  <span className="font-medium text-zinc-300">Exercise</span>
+                  <span className="mb-1 block font-medium text-zinc-300">Exercise</span>
                   <input
                     type="hidden"
                     name={exerciseItemTypeIdFieldName(exerciseIndex)}
