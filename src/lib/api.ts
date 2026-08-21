@@ -7,9 +7,12 @@ import type {
   EventListResponse,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
+  EventMediaListResponse,
   EventType,
   EventTypeItemType,
   EventTypeMetricDefinition,
+  MediaReadUrlResponse,
+  MediaUploadIntentResponse,
   Sport,
   SportStats,
   UserRole,
@@ -482,4 +485,74 @@ export async function fetchEventItemTypeMetricDefinitions(
 
   const result = (await response.json()) as { items: EventItemTypeMetricDefinition[] };
   return result.items;
+}
+
+export async function listEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+): Promise<EventMediaListResponse> {
+  return apiFetch<EventMediaListResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media`,
+  );
+}
+
+export async function createMediaUploadIntent(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  body: {
+    kind: "image";
+    declaredMimeType: string;
+    declaredByteSize: number;
+    originalFilename?: string;
+  },
+): Promise<MediaUploadIntentResponse> {
+  return apiFetch<MediaUploadIntentResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/upload-intents`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function completeMediaUpload(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}/complete-upload`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export async function getEventMediaReadUrl(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<MediaReadUrlResponse> {
+  return apiFetch<MediaReadUrlResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}/read-url`,
+  );
+}
+
+export async function deleteEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`, {
+    method: "DELETE",
+  });
 }

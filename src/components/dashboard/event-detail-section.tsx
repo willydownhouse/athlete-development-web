@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import { EventEditControls } from "@/components/dashboard/event-edit-controls";
+import { EventMediaUpload } from "@/components/dashboard/event-media-upload";
 import { fetchEventPageData, fetchEventPageFormData } from "@/lib/event-page-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
@@ -39,19 +40,25 @@ export async function EventDetailSection({
   const event = eventResult.event;
 
   return (
-    <EventDetailCard
-      event={event}
-      timeZone={timeZone}
-      editAction={
-        <EventEditControls
-          athleteId={athleteId}
-          event={event}
-          timeZone={timeZone}
-          eventTypes={formData.eventTypes}
-          focusSportName={focusSportName}
-          eventTypesError={formData.eventTypesError}
-        />
-      }
-    />
+    <>
+      <EventDetailCard
+        event={event}
+        timeZone={timeZone}
+        editAction={
+          <EventEditControls
+            athleteId={athleteId}
+            event={event}
+            timeZone={timeZone}
+            eventTypes={formData.eventTypes}
+            focusSportName={focusSportName}
+            eventTypesError={formData.eventTypesError}
+          />
+        }
+      />
+
+      <div className="mt-4">
+        <EventMediaUpload athleteId={athleteId} eventId={eventId} />
+      </div>
+    </>
   );
 }
