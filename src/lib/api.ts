@@ -314,7 +314,7 @@ export async function fetchEvent(
       },
       cache: "force-cache",
       next: {
-        tags: [eventCacheTag(eventId), athleteEventsCacheTag(athleteId)],
+        tags: [eventCacheTag(eventId)],
       },
     },
   );

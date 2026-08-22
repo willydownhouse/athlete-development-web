@@ -8,13 +8,11 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
+  type SubmitEvent,
 } from "react";
-import { useFormStatus } from "react-dom";
 
 import {
   createEventAction,
-  deleteEventAction,
   updateEventAction,
   type DashboardActionState,
 } from "@/app/dashboard/actions";
@@ -69,33 +67,7 @@ type EventFormProps = {
   defaultEventDate?: string;
   onApplyHandlersReady?: (handlers: EventFormApplyHandlers) => void;
   onSuccess?: () => void;
-  onDeleteSuccess?: () => void;
-  deleteRedirectTo?: string;
 };
-
-function DeleteConfirmActions({ onCancel }: { onCancel: () => void }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
-      >
-        {pending ? "Deleting…" : "Delete event"}
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={onCancel}
-        className="inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
-      >
-        Cancel
-      </button>
-    </div>
-  );
-}
 
 export function EventForm({
   athleteId,
@@ -107,12 +79,9 @@ export function EventForm({
   defaultEventDate,
   onApplyHandlersReady,
   onSuccess,
-  onDeleteSuccess,
-  deleteRedirectTo,
 }: EventFormProps) {
   const isEdit = event !== undefined;
   const isCreate = !isEdit;
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -121,7 +90,6 @@ export function EventForm({
     initialState,
   );
 
-  const [deleteState, deleteFormAction] = useActionState(deleteEventAction, initialState);
   const groups = useMemo(
     () => groupEventTypes(eventTypes, focusSportName),
     [eventTypes, focusSportName],
@@ -186,12 +154,6 @@ export function EventForm({
       onSuccess?.();
     }
   }, [state.success, onSuccess]);
-
-  useEffect(() => {
-    if (deleteState.success) {
-      (onDeleteSuccess ?? onSuccess)?.();
-    }
-  }, [deleteState.success, onDeleteSuccess, onSuccess]);
 
   const selectedEventType = useMemo(
     () => eventTypes.find((eventType) => eventType.id === selectedEventTypeId),
@@ -263,7 +225,7 @@ export function EventForm({
   ]);
 
   const handleSubmit = useCallback(
-    (submitEvent: FormEvent<HTMLFormElement>) => {
+    (submitEvent: SubmitEvent<HTMLFormElement>) => {
       submitEvent.preventDefault();
       setShowValidationErrors(true);
 
@@ -434,33 +396,6 @@ export function EventForm({
           </div>
         </div>
       </form>
-
-      {isEdit ? (
-        <form action={deleteFormAction} className="mt-5 border-t border-white/10 pt-5">
-          <input type="hidden" name="athleteId" value={athleteId} />
-          <input type="hidden" name="eventId" value={event.id} />
-          {deleteRedirectTo ? (
-            <input type="hidden" name="redirectTo" value={deleteRedirectTo} />
-          ) : null}
-
-          {deleteConfirmOpen ? (
-            <div className="space-y-3">
-              <p className="text-sm text-zinc-400">
-                Delete this event permanently? This cannot be undone.
-              </p>
-              <DeleteConfirmActions onCancel={() => setDeleteConfirmOpen(false)} />
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setDeleteConfirmOpen(true)}
-              className="text-sm font-medium text-red-300 transition hover:text-red-200"
-            >
-              Delete event
-            </button>
-          )}
-        </form>
-      ) : null}
     </>
   );
 }

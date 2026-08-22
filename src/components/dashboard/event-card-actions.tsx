@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 
-import { copyEventAction } from "@/app/dashboard/actions";
+import { copyEventAction, deleteEventMenuAction } from "@/app/dashboard/actions";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
+import { DeleteEventConfirmModal } from "@/components/dashboard/delete-event-confirm-modal";
 import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import { EventFormModal } from "@/components/dashboard/event-form-modal";
@@ -33,12 +34,17 @@ function useEventCardActions({
   deleteRedirectTo,
 }: EventCardActionsOptions) {
   const router = useRouter();
+  const redirectTo = deleteRedirectTo ?? dashboardHref(athleteId);
   const [editOpen, setEditOpen] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
   const [copyConfirmKey, setCopyConfirmKey] = useState(0);
   const [copyError, setCopyError] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmKey, setDeleteConfirmKey] = useState(0);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [copyPending, startCopyTransition] = useTransition();
+  const [deletePending, startDeleteTransition] = useTransition();
   const [mediaUploading, setMediaUploading] = useState(false);
   const [pickFileRequestId, setPickFileRequestId] = useState(0);
 
@@ -89,6 +95,31 @@ function useEventCardActions({
     [athleteId, event, router],
   );
 
+  const openDeleteConfirm = useCallback(() => {
+    setDeleteError(null);
+    setDeleteConfirmKey((current) => current + 1);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    if (deletePending) {
+      return;
+    }
+
+    setDeleteConfirmOpen(false);
+    setDeleteError(null);
+  }, [deletePending]);
+
+  const handleDeleteConfirm = useCallback(() => {
+    setDeleteError(null);
+
+    startDeleteTransition(async () => {
+      const result = await deleteEventMenuAction(athleteId, event.id, redirectTo);
+
+      setDeleteError(result.error);
+    });
+  }, [athleteId, event.id, redirectTo]);
+
   const handleAddMedia = useCallback(() => {
     setPickFileRequestId((current) => current + 1);
   }, []);
@@ -107,6 +138,13 @@ function useEventCardActions({
           onClick: handleAddMedia,
           disabled: mediaUploading,
         },
+        {
+          label: "Delete",
+          onClick: openDeleteConfirm,
+          destructive: true,
+          separatorBefore: true,
+          disabled: deletePending,
+        },
       ]}
     />
   );
@@ -114,7 +152,7 @@ function useEventCardActions({
   const modals = (
     <>
       <CopyEventsConfirmModal
-        key={copyConfirmKey}
+        key={`copy-${copyConfirmKey}`}
         open={copyConfirmOpen}
         onClose={closeCopyConfirm}
         timeZone={timeZone}
@@ -122,6 +160,14 @@ function useEventCardActions({
         pending={copyPending}
         error={copyError}
         onConfirm={handleCopyConfirm}
+      />
+      <DeleteEventConfirmModal
+        key={`delete-${deleteConfirmKey}`}
+        open={deleteConfirmOpen}
+        onClose={closeDeleteConfirm}
+        pending={deletePending}
+        error={deleteError}
+        onConfirm={handleDeleteConfirm}
       />
       {editOpen ? (
         <EventFormModal
@@ -135,7 +181,6 @@ function useEventCardActions({
           formKey={formKey}
           onClose={closeEditModal}
           onSuccess={handleUpdateSuccess}
-          deleteRedirectTo={deleteRedirectTo ?? dashboardHref(athleteId)}
         />
       ) : null}
     </>

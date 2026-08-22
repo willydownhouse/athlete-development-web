@@ -7,6 +7,8 @@ export type EventActionMenuItem = {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  destructive?: boolean;
+  separatorBefore?: boolean;
 };
 
 type EventActionMenuProps = {
@@ -133,16 +135,24 @@ export function EventActionMenu({
             }}
           >
             {items.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                role="menuitem"
-                disabled={item.disabled}
-                onClick={() => handleItemClick(item)}
-                className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-200 transition hover:bg-[#252b36] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {item.label}
-              </button>
+              <div key={item.label}>
+                {item.separatorBefore ? (
+                  <div className="my-1 border-t border-white/10" role="separator" />
+                ) : null}
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={item.disabled}
+                  onClick={() => handleItemClick(item)}
+                  className={`flex w-full items-center px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    item.destructive
+                      ? "text-red-300 hover:bg-[#252b36] hover:text-red-200"
+                      : "text-zinc-200 hover:bg-[#252b36] hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              </div>
             ))}
           </div>,
           document.body,

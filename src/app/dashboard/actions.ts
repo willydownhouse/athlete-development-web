@@ -1,6 +1,6 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ApiError, createEvent, createEventsBatch, deleteEvent, updateEvent } from "@/lib/api";
@@ -54,16 +54,6 @@ function actionError(error: unknown): DashboardActionState {
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-function readSafeRedirectTo(formData: FormData): string | null {
-  const value = readString(formData, "redirectTo");
-
-  if (!value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-
-  return value;
 }
 
 async function readEventFormFields(formData: FormData) {
@@ -224,42 +214,38 @@ export async function updateEventAction(
   }
 }
 
-export async function deleteEventAction(
-  _prevState: DashboardActionState,
-  formData: FormData,
-): Promise<DashboardActionState> {
+export async function deleteEventMenuAction(
+  athleteId: string,
+  eventId: string,
+  redirectTo: string,
+): Promise<{ error: string }> {
   const token = await getAuthBearerToken();
 
   if (!token) {
     return { error: "You need to sign in again" };
   }
 
-  const athleteId = readString(formData, "athleteId");
-  const eventId = readString(formData, "eventId");
+  const normalizedAthleteId = athleteId.trim();
+  const normalizedEventId = eventId.trim();
+  const normalizedRedirectTo = redirectTo.trim();
 
-  if (!athleteId) {
-    return { error: "Athlete is required" };
-  }
-
-  if (!eventId) {
+  if (!normalizedAthleteId || !normalizedEventId) {
     return { error: "Event is required" };
   }
 
-  const redirectTo = readSafeRedirectTo(formData);
+  if (!normalizedRedirectTo.startsWith("/") || normalizedRedirectTo.startsWith("//")) {
+    return { error: "Invalid redirect" };
+  }
 
   try {
-    await deleteEvent(token, athleteId, eventId);
-    updateTag(athleteEventsCacheTag(athleteId));
-    updateTag(eventCacheTag(eventId));
+    await deleteEvent(token, normalizedAthleteId, normalizedEventId);
+    revalidateTag(athleteEventsCacheTag(normalizedAthleteId), "max");
   } catch (error) {
-    return actionError(error);
+    const result = actionError(error);
+    return { error: result.error ?? "Something went wrong" };
   }
 
-  if (redirectTo) {
-    redirect(redirectTo);
-  }
-
-  return { success: "Event deleted" };
+  redirect(normalizedRedirectTo);
 }
 
 export async function fetchEventsInRangeAction(

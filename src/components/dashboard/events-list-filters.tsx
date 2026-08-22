@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type SubmitEvent } from "react";
 
 import { DatePickerInput } from "@/components/date-picker-input";
 import { FormSelect, type FormSelectGroup } from "@/components/form/form-select";
@@ -72,7 +72,7 @@ export function EventsListFilters({ eventTypes, focusSportName, params }: Events
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     applyFilters({ from, to, eventTypeId, limit });
   }
