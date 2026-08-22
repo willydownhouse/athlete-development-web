@@ -25,9 +25,16 @@ function formatStatus(status: MediaStatus): string {
 type EventMediaUploadProps = {
   athleteId: string;
   eventId: string;
+  pickFileRequestId?: number;
+  onUploadingChange?: (uploading: boolean) => void;
 };
 
-export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) {
+export function EventMediaUpload({
+  athleteId,
+  eventId,
+  pickFileRequestId = 0,
+  onUploadingChange,
+}: EventMediaUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isActiveRef = useRef(true);
   const [items, setItems] = useState<EventMediaItem[]>([]);
@@ -36,6 +43,10 @@ export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) 
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    onUploadingChange?.(uploading);
+  }, [onUploadingChange, uploading]);
 
   const refreshReadUrls = useCallback(
     async (mediaItems: EventMediaItem[]) => {
@@ -73,6 +84,10 @@ export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) 
       return null;
     }
 
+    if (!isActiveRef.current) {
+      return result.items;
+    }
+
     setItems(result.items);
     await refreshReadUrls(result.items);
     return result.items;
@@ -93,39 +108,18 @@ export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) 
         return;
       }
 
-      const readyItems = result.items.filter((item) => item.status === "ready");
-      const entries = await Promise.all(
-        readyItems.map(async (item) => {
-          const readResult = await getEventMediaReadUrlAction(athleteId, eventId, item.id);
-
-          if ("error" in readResult) {
-            return null;
-          }
-
-          return [item.id, readResult.readUrl] as const;
-        }),
-      );
-
       if (!isActiveRef.current) {
         return;
       }
 
-      const next: Record<string, string> = {};
-
-      for (const entry of entries) {
-        if (entry) {
-          next[entry[0]] = entry[1];
-        }
-      }
-
       setItems(result.items);
-      setReadUrls(next);
+      await refreshReadUrls(result.items);
     })();
 
     return () => {
       isActiveRef.current = false;
     };
-  }, [athleteId, eventId]);
+  }, [athleteId, eventId, refreshReadUrls]);
 
   const hasInFlightItems = items.some((item) => isInFlightStatus(item.status));
 
@@ -141,9 +135,11 @@ export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) 
     return () => window.clearInterval(interval);
   }, [hasInFlightItems, loadMedia]);
 
-  const handlePickFile = () => {
-    inputRef.current?.click();
-  };
+  useEffect(() => {
+    if (pickFileRequestId > 0) {
+      inputRef.current?.click();
+    }
+  }, [pickFileRequestId]);
 
   const handleFileChange = async (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     const file = changeEvent.target.files?.[0];
@@ -232,31 +228,24 @@ export function EventMediaUpload({ athleteId, eventId }: EventMediaUploadProps) 
     await loadMedia();
   };
 
+  const fileInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      className="hidden"
+      onChange={(event) => void handleFileChange(event)}
+    />
+  );
+
   return (
     <section className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-white">Images</h2>
-          <p className="mt-1 text-xs text-zinc-500">Test upload for this event.</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handlePickFile}
-          disabled={uploading}
-          className="rounded-lg bg-[#9ec9e8] px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {uploading ? "Uploading…" : "Add image"}
-        </button>
+      <div>
+        <h2 className="text-sm font-semibold text-white">Images</h2>
+        <p className="mt-1 text-xs text-zinc-500">Add photos from the event menu.</p>
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(event) => void handleFileChange(event)}
-      />
+      {fileInput}
 
       {message ? <p className="mt-3 text-sm text-zinc-400">{message}</p> : null}
       {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
