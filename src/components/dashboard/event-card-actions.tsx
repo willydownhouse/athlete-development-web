@@ -6,6 +6,7 @@ import { useCallback, useState, useTransition } from "react";
 import { copyEventAction, deleteEventMenuAction } from "@/app/dashboard/actions";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { DeleteEventConfirmModal } from "@/components/dashboard/delete-event-confirm-modal";
+import { DeleteEventMediaConfirmModal } from "@/components/dashboard/delete-event-media-confirm-modal";
 import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
 import { EventFormModal } from "@/components/dashboard/event-form-modal";
@@ -46,7 +47,13 @@ function useEventCardActions({
   const [copyPending, startCopyTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const [mediaUploading, setMediaUploading] = useState(false);
+  const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const [pickFileRequestId, setPickFileRequestId] = useState(0);
+  const [deleteMediaConfirmOpen, setDeleteMediaConfirmOpen] = useState(false);
+  const [deleteMediaConfirmKey, setDeleteMediaConfirmKey] = useState(0);
+  const [deleteMediaError, setDeleteMediaError] = useState<string | null>(null);
+  const [deleteMediaPending, setDeleteMediaPending] = useState(false);
+  const [deleteMediaRequestId, setDeleteMediaRequestId] = useState(0);
 
   const openEditModal = useCallback(() => {
     setFormKey((current) => current + 1);
@@ -124,6 +131,39 @@ function useEventCardActions({
     setPickFileRequestId((current) => current + 1);
   }, []);
 
+  const openDeleteMediaConfirm = useCallback(() => {
+    setDeleteMediaError(null);
+    setDeleteMediaConfirmKey((current) => current + 1);
+    setDeleteMediaConfirmOpen(true);
+  }, []);
+
+  const closeDeleteMediaConfirm = useCallback(() => {
+    if (deleteMediaPending) {
+      return;
+    }
+
+    setDeleteMediaConfirmOpen(false);
+    setDeleteMediaError(null);
+  }, [deleteMediaPending]);
+
+  const handleDeleteMediaConfirm = useCallback(() => {
+    setDeleteMediaError(null);
+    setDeleteMediaPending(true);
+    setDeleteMediaRequestId((current) => current + 1);
+  }, []);
+
+  const handleDeleteMediaSettled = useCallback((error: string | null) => {
+    setDeleteMediaPending(false);
+
+    if (error) {
+      setDeleteMediaError(error);
+      return;
+    }
+
+    setDeleteMediaConfirmOpen(false);
+    setDeleteMediaError(null);
+  }, []);
+
   const menu = (
     <EventActionMenu
       onTriggerClick={(triggerEvent) => {
@@ -134,9 +174,15 @@ function useEventCardActions({
         { label: "Edit", onClick: openEditModal },
         { label: "Copy", onClick: openCopyConfirm },
         {
-          label: mediaUploading ? "Uploading…" : "Add media",
+          label: mediaUploading ? "Adding media…" : "Add media",
           onClick: handleAddMedia,
           disabled: mediaUploading,
+        },
+        {
+          label: deleteMediaPending ? "Deleting media…" : "Delete media",
+          onClick: openDeleteMediaConfirm,
+          disabled: !activeMediaId || mediaUploading || deleteMediaPending,
+          destructive: true,
         },
         {
           label: "Delete",
@@ -169,6 +215,14 @@ function useEventCardActions({
         error={deleteError}
         onConfirm={handleDeleteConfirm}
       />
+      <DeleteEventMediaConfirmModal
+        key={`delete-media-${deleteMediaConfirmKey}`}
+        open={deleteMediaConfirmOpen}
+        onClose={closeDeleteMediaConfirm}
+        pending={deleteMediaPending}
+        error={deleteMediaError}
+        onConfirm={handleDeleteMediaConfirm}
+      />
       {editOpen ? (
         <EventFormModal
           open={editOpen}
@@ -190,25 +244,44 @@ function useEventCardActions({
     menu,
     modals,
     pickFileRequestId,
+    deleteMediaRequestId,
     setMediaUploading,
+    setActiveMediaId,
+    handleDeleteMediaSettled,
   };
 }
 
 export function EventDetailActionsLayout(props: EventCardActionsOptions) {
   const { athleteId, event, timeZone } = props;
-  const { menu, modals, pickFileRequestId, setMediaUploading } = useEventCardActions(props);
+  const {
+    menu,
+    modals,
+    pickFileRequestId,
+    deleteMediaRequestId,
+    setMediaUploading,
+    setActiveMediaId,
+    handleDeleteMediaSettled,
+  } = useEventCardActions(props);
 
   return (
     <>
-      <EventDetailCard event={event} timeZone={timeZone} editAction={menu} />
-      <div className="mt-4">
-        <EventMediaUpload
-          athleteId={athleteId}
-          eventId={event.id}
-          pickFileRequestId={pickFileRequestId}
-          onUploadingChange={setMediaUploading}
-        />
-      </div>
+      <EventDetailCard
+        event={event}
+        timeZone={timeZone}
+        editAction={menu}
+        afterBasicInfo={
+          <EventMediaUpload
+            athleteId={athleteId}
+            eventId={event.id}
+            pickFileRequestId={pickFileRequestId}
+            deleteMediaRequestId={deleteMediaRequestId}
+            onUploadingChange={setMediaUploading}
+            onActiveMediaChange={setActiveMediaId}
+            onDeleteSettled={handleDeleteMediaSettled}
+            embedded
+          />
+        }
+      />
       {modals}
     </>
   );

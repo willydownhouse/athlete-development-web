@@ -9,6 +9,10 @@ import {
   getEventMediaReadUrlAction,
   listEventMediaAction,
 } from "@/app/athlete/[athleteId]/event/[eventId]/actions";
+import {
+  EventMediaGallery,
+  EventMediaGallerySkeleton,
+} from "@/components/dashboard/event-media-gallery";
 import type { EventMediaItem, MediaStatus } from "@/lib/types";
 
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -18,66 +22,219 @@ function isInFlightStatus(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
 }
 
-function formatStatus(status: MediaStatus): string {
-  return status.replace(/_/g, " ");
-}
-
 type EventMediaUploadProps = {
   athleteId: string;
   eventId: string;
   pickFileRequestId?: number;
+  deleteMediaRequestId?: number;
   onUploadingChange?: (uploading: boolean) => void;
+  onActiveMediaChange?: (mediaId: string | null) => void;
+  onDeleteSettled?: (error: string | null) => void;
+  embedded?: boolean;
 };
+
+function EventMediaStatusIndicator({ label }: { label: string }) {
+  return (
+    <div
+      className="mt-3 flex items-center gap-2 text-sm text-zinc-400"
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
+        aria-hidden="true"
+      />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function getStatusLabel(
+  uploading: boolean,
+  hasInFlightItems: boolean,
+  pendingFocusMediaId: string | null,
+): string | null {
+  if (uploading) {
+    return "Uploading media…";
+  }
+
+  if (pendingFocusMediaId || hasInFlightItems) {
+    return "Processing media…";
+  }
+
+  return null;
+}
 
 export function EventMediaUpload({
   athleteId,
   eventId,
   pickFileRequestId = 0,
+  deleteMediaRequestId = 0,
   onUploadingChange,
+  onActiveMediaChange,
+  onDeleteSettled,
+  embedded = false,
 }: EventMediaUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isActiveRef = useRef(true);
   const [items, setItems] = useState<EventMediaItem[]>([]);
   const [readUrls, setReadUrls] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [pendingFocusMediaId, setPendingFocusMediaId] = useState<string | null>(null);
+  const [galleryFocusIndex, setGalleryFocusIndex] = useState(0);
+  const [galleryFocusRequestId, setGalleryFocusRequestId] = useState(0);
+
+  const readUrlsRef = useRef(readUrls);
+  const itemsRef = useRef(items);
+  const ensureReadUrlInFlightRef = useRef(new Set<string>());
+  const previousItemsRef = useRef<EventMediaItem[]>([]);
+  const hasLoadedInitialMediaRef = useRef(false);
+  const pendingFocusMediaIdRef = useRef<string | null>(null);
+  const requestGalleryFocusRef = useRef<(index: number) => void>(() => {});
+  const mediaListVersionRef = useRef(0);
+  const activeMediaIdRef = useRef<string | null>(null);
+
+  const setPendingFocus = useCallback((mediaId: string | null) => {
+    pendingFocusMediaIdRef.current = mediaId;
+    setPendingFocusMediaId(mediaId);
+  }, []);
 
   useEffect(() => {
-    onUploadingChange?.(uploading);
-  }, [onUploadingChange, uploading]);
+    readUrlsRef.current = readUrls;
+    itemsRef.current = items;
+  }, [readUrls, items]);
 
-  const refreshReadUrls = useCallback(
-    async (mediaItems: EventMediaItem[]) => {
-      const readyItems = mediaItems.filter((item) => item.status === "ready");
-      const entries = await Promise.all(
-        readyItems.map(async (item) => {
-          const result = await getEventMediaReadUrlAction(athleteId, eventId, item.id);
+  const hasInFlightItems = items.some((item) => isInFlightStatus(item.status));
+  const statusLabel = getStatusLabel(uploading, hasInFlightItems, pendingFocusMediaId);
 
-          if ("error" in result) {
-            return null;
-          }
+  useEffect(() => {
+    onUploadingChange?.(uploading || deleting || hasInFlightItems || pendingFocusMediaId !== null);
+  }, [onUploadingChange, uploading, deleting, hasInFlightItems, pendingFocusMediaId]);
 
-          return [item.id, result.readUrl] as const;
-        }),
-      );
+  const handleActiveMediaChange = useCallback(
+    (mediaId: string | null) => {
+      activeMediaIdRef.current = mediaId;
+      onActiveMediaChange?.(mediaId);
+    },
+    [onActiveMediaChange],
+  );
 
-      const next: Record<string, string> = {};
-
-      for (const entry of entries) {
-        if (entry) {
-          next[entry[0]] = entry[1];
-        }
+  const ensureReadUrl = useCallback(
+    async (mediaId: string, itemOverride?: EventMediaItem) => {
+      if (readUrlsRef.current[mediaId] || ensureReadUrlInFlightRef.current.has(mediaId)) {
+        return;
       }
 
-      setReadUrls(next);
+      const item = itemOverride ?? itemsRef.current.find((entry) => entry.id === mediaId);
+      if (!item || item.status !== "ready") {
+        return;
+      }
+
+      ensureReadUrlInFlightRef.current.add(mediaId);
+
+      try {
+        const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
+
+        if (!isActiveRef.current) {
+          return;
+        }
+
+        if ("error" in result) {
+          return;
+        }
+
+        setReadUrls((current) => {
+          if (current[mediaId]) {
+            return current;
+          }
+
+          return { ...current, [mediaId]: result.readUrl };
+        });
+      } finally {
+        ensureReadUrlInFlightRef.current.delete(mediaId);
+      }
     },
     [athleteId, eventId],
   );
 
+  const applyMediaItems = useCallback(
+    (mediaItems: EventMediaItem[]) => {
+      const activeIds = new Set(mediaItems.map((item) => item.id));
+      const previousItemsById = new Map(previousItemsRef.current.map((item) => [item.id, item]));
+
+      for (const id of ensureReadUrlInFlightRef.current) {
+        if (!activeIds.has(id)) {
+          ensureReadUrlInFlightRef.current.delete(id);
+        }
+      }
+
+      setItems(mediaItems);
+      itemsRef.current = mediaItems;
+      setReadUrls((current) => {
+        const next: Record<string, string> = {};
+
+        for (const [id, url] of Object.entries(current)) {
+          if (activeIds.has(id)) {
+            next[id] = url;
+          }
+        }
+
+        return next;
+      });
+
+      if (hasLoadedInitialMediaRef.current) {
+        for (const item of mediaItems) {
+          if (item.status !== "ready") {
+            continue;
+          }
+
+          const previousItem = previousItemsById.get(item.id);
+          const isNewItem = !previousItem;
+          const becameReady = previousItem != null && previousItem.status !== "ready";
+
+          if (isNewItem || becameReady) {
+            void ensureReadUrl(item.id, item);
+          }
+        }
+      }
+
+      const pendingMediaId = pendingFocusMediaIdRef.current;
+
+      if (pendingMediaId) {
+        const pendingIndex = mediaItems.findIndex((item) => item.id === pendingMediaId);
+        const pendingItem = pendingIndex === -1 ? undefined : mediaItems[pendingIndex];
+
+        if (pendingItem?.status === "ready") {
+          requestGalleryFocusRef.current(pendingIndex);
+          setPendingFocus(null);
+        }
+      }
+
+      previousItemsRef.current = mediaItems;
+      hasLoadedInitialMediaRef.current = true;
+    },
+    [ensureReadUrl, setPendingFocus],
+  );
+
+  const requestGalleryFocus = useCallback((index: number) => {
+    setGalleryFocusIndex(index);
+    setGalleryFocusRequestId((current) => current + 1);
+  }, []);
+
+  useEffect(() => {
+    requestGalleryFocusRef.current = requestGalleryFocus;
+  }, [requestGalleryFocus]);
+
   const loadMedia = useCallback(async () => {
+    const listVersion = ++mediaListVersionRef.current;
     const result = await listEventMediaAction(athleteId, eventId);
+
+    if (listVersion !== mediaListVersionRef.current) {
+      return null;
+    }
 
     if ("error" in result) {
       setError(result.error);
@@ -88,40 +245,48 @@ export function EventMediaUpload({
       return result.items;
     }
 
-    setItems(result.items);
-    await refreshReadUrls(result.items);
+    applyMediaItems(result.items);
     return result.items;
-  }, [athleteId, eventId, refreshReadUrls]);
+  }, [athleteId, eventId, applyMediaItems]);
 
   useEffect(() => {
     isActiveRef.current = true;
 
     void (async () => {
-      const result = await listEventMediaAction(athleteId, eventId);
+      const listVersion = ++mediaListVersionRef.current;
 
-      if ("error" in result) {
+      try {
+        const result = await listEventMediaAction(athleteId, eventId);
+
+        if (listVersion !== mediaListVersionRef.current) {
+          return;
+        }
+
+        if ("error" in result) {
+          if (!isActiveRef.current) {
+            return;
+          }
+
+          setError(result.error);
+          return;
+        }
+
         if (!isActiveRef.current) {
           return;
         }
 
-        setError(result.error);
-        return;
+        applyMediaItems(result.items);
+      } finally {
+        if (isActiveRef.current && listVersion === mediaListVersionRef.current) {
+          setInitialLoading(false);
+        }
       }
-
-      if (!isActiveRef.current) {
-        return;
-      }
-
-      setItems(result.items);
-      await refreshReadUrls(result.items);
     })();
 
     return () => {
       isActiveRef.current = false;
     };
-  }, [athleteId, eventId, refreshReadUrls]);
-
-  const hasInFlightItems = items.some((item) => isInFlightStatus(item.status));
+  }, [athleteId, eventId, applyMediaItems]);
 
   useEffect(() => {
     if (!hasInFlightItems) {
@@ -141,6 +306,53 @@ export function EventMediaUpload({
     }
   }, [pickFileRequestId]);
 
+  useEffect(() => {
+    if (deleteMediaRequestId === 0) {
+      return;
+    }
+
+    const mediaId = activeMediaIdRef.current;
+
+    if (!mediaId) {
+      return;
+    }
+
+    void (async () => {
+      setError(null);
+      setDeleting(true);
+
+      const deletedIndex = itemsRef.current.findIndex((item) => item.id === mediaId);
+      const result = await deleteEventMediaAction(athleteId, eventId, mediaId);
+
+      if ("error" in result) {
+        setError(result.error);
+        onDeleteSettled?.(result.error);
+        setDeleting(false);
+        return;
+      }
+
+      await loadMedia();
+
+      if (itemsRef.current.length > 0) {
+        const focusIndex = deletedIndex === -1 ? 0 : Math.max(0, deletedIndex - 1);
+        requestGalleryFocus(focusIndex);
+      } else {
+        handleActiveMediaChange(null);
+      }
+
+      setDeleting(false);
+      onDeleteSettled?.(null);
+    })();
+  }, [
+    athleteId,
+    deleteMediaRequestId,
+    eventId,
+    handleActiveMediaChange,
+    loadMedia,
+    onDeleteSettled,
+    requestGalleryFocus,
+  ]);
+
   const handleFileChange = async (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     const file = changeEvent.target.files?.[0];
     changeEvent.target.value = "";
@@ -150,7 +362,6 @@ export function EventMediaUpload({
     }
 
     setError(null);
-    setMessage(null);
 
     if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
       setError("Use a JPEG, PNG, or WebP image.");
@@ -168,7 +379,6 @@ export function EventMediaUpload({
     }
 
     setUploading(true);
-    setMessage("Uploading…");
 
     try {
       const intentResult = await createMediaUploadIntentAction(athleteId, eventId, {
@@ -194,114 +404,70 @@ export function EventMediaUpload({
         throw new Error("Upload to storage failed.");
       }
 
-      setMessage("Processing…");
-
       const completeResult = await completeMediaUploadAction(athleteId, eventId, intentResult.id);
 
       if ("error" in completeResult) {
         throw new Error(completeResult.error);
       }
 
+      setPendingFocus(intentResult.id);
       await loadMedia();
-      setMessage(null);
     } catch (uploadError) {
-      setMessage(null);
+      setPendingFocus(null);
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (mediaId: string) => {
-    setError(null);
-    setDeletingId(mediaId);
-
-    const result = await deleteEventMediaAction(athleteId, eventId, mediaId);
-
-    setDeletingId(null);
-
-    if ("error" in result) {
-      setError(result.error);
-      return;
-    }
-
-    await loadMedia();
-  };
-
-  const fileInput = (
-    <input
-      ref={inputRef}
-      type="file"
-      accept="image/jpeg,image/png,image/webp"
-      className="hidden"
-      onChange={(event) => void handleFileChange(event)}
-    />
-  );
-
-  return (
-    <section className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
+  const content = (
+    <>
       <div>
-        <h2 className="text-sm font-semibold text-white">Images</h2>
-        <p className="mt-1 text-xs text-zinc-500">Add photos from the event menu.</p>
+        {embedded ? (
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Media</p>
+        ) : (
+          <>
+            <h2 className="text-sm font-semibold text-white">Media</h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              Swipe or use the dots to browse. Add more from the event menu.
+            </p>
+          </>
+        )}
       </div>
 
-      {fileInput}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(event) => void handleFileChange(event)}
+      />
 
-      {message ? <p className="mt-3 text-sm text-zinc-400">{message}</p> : null}
+      {statusLabel ? <EventMediaStatusIndicator label={statusLabel} /> : null}
       {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
 
-      {items.length > 0 ? (
-        <ul className="mt-4 space-y-3">
-          {items.map((item) => {
-            const readUrl = readUrls[item.id];
-            const aspectRatio =
-              item.width && item.height ? `${item.width} / ${item.height}` : "4 / 3";
-
-            return (
-              <li key={item.id} className="rounded-xl border border-white/5 bg-[#171b22] p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
-                      {item.originalFilename ?? "Image"}
-                    </p>
-                    <p className="mt-1 text-xs capitalize text-zinc-500">
-                      {formatStatus(item.status)}
-                      {item.failureCode ? ` · ${item.failureCode}` : ""}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete(item.id)}
-                    disabled={deletingId === item.id}
-                    className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1 text-xs font-medium text-zinc-300 transition hover:bg-[#252b36] disabled:opacity-60"
-                  >
-                    {deletingId === item.id ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
-
-                {item.status === "ready" && readUrl ? (
-                  // Presigned MinIO URLs are short-lived and not compatible with next/image here.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={readUrl}
-                    alt={item.originalFilename ?? "Event image"}
-                    className="mt-3 w-full rounded-lg bg-[#0f1319] object-contain"
-                    style={{ aspectRatio }}
-                  />
-                ) : isInFlightStatus(item.status) ? (
-                  <div
-                    className="mt-3 animate-pulse rounded-lg bg-[#0f1319]"
-                    style={{ aspectRatio }}
-                  />
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+      {initialLoading && items.length === 0 ? (
+        <EventMediaGallerySkeleton />
+      ) : items.length > 0 ? (
+        <EventMediaGallery
+          items={items}
+          readUrls={readUrls}
+          focusIndex={galleryFocusIndex}
+          focusRequestId={galleryFocusRequestId}
+          onEnsureReadUrl={ensureReadUrl}
+          onActiveMediaChange={handleActiveMediaChange}
+        />
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">No images yet.</p>
+        <p className={`text-sm text-zinc-500 ${embedded ? "mt-3" : "mt-4"}`}>No media yet.</p>
       )}
-    </section>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="mt-4 border-t border-white/5 pt-4">{content}</div>;
+  }
+
+  return (
+    <section className="rounded-2xl border border-white/5 bg-[#12161d] p-4">{content}</section>
   );
 }
