@@ -16,7 +16,7 @@ import {
 import type { EventMediaItem, MediaStatus } from "@/lib/types";
 
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
 function isInFlightStatus(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
@@ -369,7 +369,7 @@ export function EventMediaUpload({
     }
 
     if (file.size > MAX_IMAGE_BYTES) {
-      setError("Image must be 10 MB or smaller.");
+      setError("Image must be 15 MB or smaller.");
       return;
     }
 

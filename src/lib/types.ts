@@ -241,7 +241,7 @@ export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean
 
 type MediaKind = "image";
 
-export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed" | "deleted";
+export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed";
 
 export type EventMediaItem = {
   id: string;
@@ -264,7 +264,7 @@ export type MediaUploadIntentResponse = {
   kind: MediaKind;
   status: MediaStatus;
   declaredMimeType: string;
-  declaredByteSize: number | null;
+  declaredByteSize: number;
   originalFilename: string | null;
   uploadUrl: string;
   uploadExpiresAt: string;
