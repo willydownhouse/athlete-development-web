@@ -11,6 +11,7 @@ import {
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type {
   EventMediaListResponse,
+  MediaKind,
   MediaReadUrlResponse,
   MediaUploadIntentResponse,
 } from "@/lib/types";
@@ -61,6 +62,7 @@ export async function createMediaUploadIntentAction(
   athleteId: string,
   eventId: string,
   body: {
+    kind: MediaKind;
     declaredMimeType: string;
     declaredByteSize: number;
     originalFilename?: string;
@@ -73,10 +75,7 @@ export async function createMediaUploadIntentAction(
   }
 
   try {
-    return await createMediaUploadIntent(token, athleteId, eventId, {
-      kind: "image",
-      ...body,
-    });
+    return await createMediaUploadIntent(token, athleteId, eventId, body);
   } catch (error) {
     return actionError(error);
   }

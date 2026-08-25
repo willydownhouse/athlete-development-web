@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/modal";
 type DeleteEventMediaConfirmModalProps = {
   open: boolean;
   onClose: () => void;
+  itemLabel: "image" | "video";
   pending: boolean;
   error: string | null;
   onConfirm: () => void;
@@ -13,15 +14,16 @@ type DeleteEventMediaConfirmModalProps = {
 export function DeleteEventMediaConfirmModal({
   open,
   onClose,
+  itemLabel,
   pending,
   error,
   onConfirm,
 }: DeleteEventMediaConfirmModalProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Delete media?" align="content">
+    <Modal open={open} onClose={onClose} title={`Delete ${itemLabel}?`} align="content">
       <div className="space-y-4">
         <p className="text-sm text-zinc-300">
-          Delete the media you are viewing? This cannot be undone.
+          Delete the {itemLabel} you are viewing? This cannot be undone.
         </p>
 
         {error ? <p className="text-sm text-red-300">{error}</p> : null}
@@ -41,7 +43,7 @@ export function DeleteEventMediaConfirmModal({
             disabled={pending}
             className="inline-flex items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pending ? "Deleting…" : "Delete media"}
+            {pending ? "Deleting…" : `Delete ${itemLabel}`}
           </button>
         </div>
       </div>

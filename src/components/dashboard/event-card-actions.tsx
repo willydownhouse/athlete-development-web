@@ -179,13 +179,13 @@ function useEventCardActions({
           disabled: mediaUploading,
         },
         {
-          label: deleteMediaPending ? "Deleting media…" : "Delete media",
+          label: deleteMediaPending ? "Deleting image…" : "Delete image",
           onClick: openDeleteMediaConfirm,
           disabled: !activeMediaId || mediaUploading || deleteMediaPending,
           destructive: true,
         },
         {
-          label: "Delete",
+          label: "Delete event",
           onClick: openDeleteConfirm,
           destructive: true,
           separatorBefore: true,
@@ -219,6 +219,7 @@ function useEventCardActions({
         key={`delete-media-${deleteMediaConfirmKey}`}
         open={deleteMediaConfirmOpen}
         onClose={closeDeleteMediaConfirm}
+        itemLabel="image"
         pending={deleteMediaPending}
         error={deleteMediaError}
         onConfirm={handleDeleteMediaConfirm}

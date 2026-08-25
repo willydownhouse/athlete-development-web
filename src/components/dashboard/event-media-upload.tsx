@@ -13,10 +13,8 @@ import {
   EventMediaGallery,
   EventMediaGallerySkeleton,
 } from "@/components/dashboard/event-media-gallery";
-import type { EventMediaItem, MediaStatus } from "@/lib/types";
-
-const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
+import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
 function isInFlightStatus(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
@@ -78,7 +76,7 @@ export function EventMediaUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const isActiveRef = useRef(true);
   const [items, setItems] = useState<EventMediaItem[]>([]);
-  const [readUrls, setReadUrls] = useState<Record<string, string>>({});
+  const [readUrls, setReadUrls] = useState<Record<string, EventMediaReadAssets>>({});
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -151,7 +149,13 @@ export function EventMediaUpload({
             return current;
           }
 
-          return { ...current, [mediaId]: result.readUrl };
+          return {
+            ...current,
+            [mediaId]: {
+              readUrl: result.readUrl,
+              posterUrl: result.posterUrl ?? null,
+            },
+          };
         });
       } finally {
         ensureReadUrlInFlightRef.current.delete(mediaId);
@@ -174,11 +178,11 @@ export function EventMediaUpload({
       setItems(mediaItems);
       itemsRef.current = mediaItems;
       setReadUrls((current) => {
-        const next: Record<string, string> = {};
+        const next: Record<string, EventMediaReadAssets> = {};
 
-        for (const [id, url] of Object.entries(current)) {
+        for (const [id, assets] of Object.entries(current)) {
           if (activeIds.has(id)) {
-            next[id] = url;
+            next[id] = assets;
           }
         }
 
@@ -204,11 +208,19 @@ export function EventMediaUpload({
       const pendingMediaId = pendingFocusMediaIdRef.current;
 
       if (pendingMediaId) {
-        const pendingIndex = mediaItems.findIndex((item) => item.id === pendingMediaId);
-        const pendingItem = pendingIndex === -1 ? undefined : mediaItems[pendingIndex];
+        const pendingItem = mediaItems.find((item) => item.id === pendingMediaId);
 
         if (pendingItem?.status === "ready") {
-          requestGalleryFocusRef.current(pendingIndex);
+          if (pendingItem.kind === "image") {
+            const imageIndex = mediaItems
+              .filter((item) => item.kind === "image")
+              .findIndex((item) => item.id === pendingMediaId);
+
+            if (imageIndex >= 0) {
+              requestGalleryFocusRef.current(imageIndex);
+            }
+          }
+
           setPendingFocus(null);
         }
       }
@@ -321,7 +333,13 @@ export function EventMediaUpload({
       setError(null);
       setDeleting(true);
 
-      const deletedIndex = itemsRef.current.findIndex((item) => item.id === mediaId);
+      const deletedItem = itemsRef.current.find((item) => item.id === mediaId);
+      const deletedImageIndex =
+        deletedItem?.kind === "image"
+          ? itemsRef.current
+              .filter((item) => item.kind === "image")
+              .findIndex((item) => item.id === mediaId)
+          : -1;
       const result = await deleteEventMediaAction(athleteId, eventId, mediaId);
 
       if ("error" in result) {
@@ -333,11 +351,12 @@ export function EventMediaUpload({
 
       await loadMedia();
 
-      if (itemsRef.current.length > 0) {
-        const focusIndex = deletedIndex === -1 ? 0 : Math.max(0, deletedIndex - 1);
-        requestGalleryFocus(focusIndex);
+      const remainingImages = itemsRef.current.filter((item) => item.kind === "image");
+
+      if (deletedItem?.kind === "image" && remainingImages.length > 0) {
+        requestGalleryFocus(Math.max(0, deletedImageIndex - 1));
       } else {
-        handleActiveMediaChange(null);
+        handleActiveMediaChange(remainingImages[0]?.id ?? null);
       }
 
       setDeleting(false);
@@ -363,18 +382,10 @@ export function EventMediaUpload({
 
     setError(null);
 
-    if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
-      setError("Use a JPEG, PNG, or WebP image.");
-      return;
-    }
+    const classified = classifyEventMediaFile(file);
 
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Image must be 15 MB or smaller.");
-      return;
-    }
-
-    if (file.size < 1) {
-      setError("Image file is empty.");
+    if (!classified.ok) {
+      setError(classified.error);
       return;
     }
 
@@ -382,7 +393,8 @@ export function EventMediaUpload({
 
     try {
       const intentResult = await createMediaUploadIntentAction(athleteId, eventId, {
-        declaredMimeType: file.type,
+        kind: classified.value.kind,
+        declaredMimeType: classified.value.declaredMimeType,
         declaredByteSize: file.size,
         originalFilename: file.name,
       });
@@ -394,7 +406,7 @@ export function EventMediaUpload({
       const putResponse = await fetch(intentResult.uploadUrl, {
         method: "PUT",
         headers: {
-          "Content-Type": file.type,
+          "Content-Type": classified.value.declaredMimeType,
           "Content-Length": String(file.size),
         },
         body: file,
@@ -423,9 +435,9 @@ export function EventMediaUpload({
   const content = (
     <>
       <div>
-        {embedded ? (
+        {embedded && items.length === 0 ? (
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Media</p>
-        ) : (
+        ) : embedded ? null : (
           <>
             <h2 className="text-sm font-semibold text-white">Media</h2>
             <p className="mt-1 text-xs text-zinc-500">
@@ -438,7 +450,7 @@ export function EventMediaUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={EVENT_MEDIA_FILE_ACCEPT}
         className="hidden"
         onChange={(event) => void handleFileChange(event)}
       />
@@ -450,6 +462,8 @@ export function EventMediaUpload({
         <EventMediaGallerySkeleton />
       ) : items.length > 0 ? (
         <EventMediaGallery
+          athleteId={athleteId}
+          eventId={eventId}
           items={items}
           readUrls={readUrls}
           focusIndex={galleryFocusIndex}

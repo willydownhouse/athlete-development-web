@@ -239,7 +239,7 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 
 export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean"];
 
-type MediaKind = "image";
+export type MediaKind = "image" | "video";
 
 export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed";
 
@@ -250,8 +250,16 @@ export type EventMediaItem = {
   originalFilename: string | null;
   width: number | null;
   height: number | null;
+  originalWidth: number | null;
+  originalHeight: number | null;
+  durationSeconds: number | null;
   failureCode: string | null;
   updatedAt: string;
+};
+
+export type EventMediaReadAssets = {
+  readUrl: string;
+  posterUrl: string | null;
 };
 
 export type EventMediaListResponse = {
@@ -275,6 +283,8 @@ export type MediaReadUrlResponse = {
   id: string;
   readUrl: string;
   readExpiresAt: string;
+  posterUrl: string | null;
+  posterExpiresAt: string | null;
 };
 
 export function formatCategoryLabel(category: EventCategory): string {

@@ -7,10 +7,12 @@ import type {
   EventListResponse,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
+  EventMediaItem,
   EventMediaListResponse,
   EventType,
   EventTypeItemType,
   EventTypeMetricDefinition,
+  MediaKind,
   MediaReadUrlResponse,
   MediaUploadIntentResponse,
   Sport,
@@ -487,6 +489,18 @@ export async function fetchEventItemTypeMetricDefinitions(
   return result.items;
 }
 
+export async function getEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<EventMediaItem> {
+  return apiFetch<EventMediaItem>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`,
+  );
+}
+
 export async function listEventMedia(
   token: string,
   athleteId: string,
@@ -503,7 +517,7 @@ export async function createMediaUploadIntent(
   athleteId: string,
   eventId: string,
   body: {
-    kind: "image";
+    kind: MediaKind;
     declaredMimeType: string;
     declaredByteSize: number;
     originalFilename?: string;
