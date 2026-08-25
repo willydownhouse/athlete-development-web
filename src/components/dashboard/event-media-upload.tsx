@@ -77,6 +77,7 @@ export function EventMediaUpload({
   const isActiveRef = useRef(true);
   const [items, setItems] = useState<EventMediaItem[]>([]);
   const [readUrls, setReadUrls] = useState<Record<string, EventMediaReadAssets>>({});
+  const [readUrlErrors, setReadUrlErrors] = useState<Record<string, true>>({});
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -86,6 +87,7 @@ export function EventMediaUpload({
   const [galleryFocusRequestId, setGalleryFocusRequestId] = useState(0);
 
   const readUrlsRef = useRef(readUrls);
+  const readUrlErrorsRef = useRef(readUrlErrors);
   const itemsRef = useRef(items);
   const ensureReadUrlInFlightRef = useRef(new Set<string>());
   const previousItemsRef = useRef<EventMediaItem[]>([]);
@@ -102,8 +104,9 @@ export function EventMediaUpload({
 
   useEffect(() => {
     readUrlsRef.current = readUrls;
+    readUrlErrorsRef.current = readUrlErrors;
     itemsRef.current = items;
-  }, [readUrls, items]);
+  }, [readUrls, readUrlErrors, items]);
 
   const hasInFlightItems = items.some((item) => isInFlightStatus(item.status));
   const statusLabel = getStatusLabel(uploading, hasInFlightItems, pendingFocusMediaId);
@@ -122,7 +125,11 @@ export function EventMediaUpload({
 
   const ensureReadUrl = useCallback(
     async (mediaId: string, itemOverride?: EventMediaItem) => {
-      if (readUrlsRef.current[mediaId] || ensureReadUrlInFlightRef.current.has(mediaId)) {
+      if (
+        readUrlsRef.current[mediaId] ||
+        readUrlErrorsRef.current[mediaId] ||
+        ensureReadUrlInFlightRef.current.has(mediaId)
+      ) {
         return;
       }
 
@@ -141,9 +148,20 @@ export function EventMediaUpload({
         }
 
         if ("error" in result) {
+          readUrlErrorsRef.current = { ...readUrlErrorsRef.current, [mediaId]: true };
+          setReadUrlErrors((current) => ({ ...current, [mediaId]: true }));
           return;
         }
 
+        setReadUrlErrors((current) => {
+          if (!current[mediaId]) {
+            return current;
+          }
+
+          const next = { ...current };
+          delete next[mediaId];
+          return next;
+        });
         setReadUrls((current) => {
           if (current[mediaId]) {
             return current;
@@ -157,6 +175,11 @@ export function EventMediaUpload({
             },
           };
         });
+      } catch {
+        if (isActiveRef.current) {
+          readUrlErrorsRef.current = { ...readUrlErrorsRef.current, [mediaId]: true };
+          setReadUrlErrors((current) => ({ ...current, [mediaId]: true }));
+        }
       } finally {
         ensureReadUrlInFlightRef.current.delete(mediaId);
       }
@@ -183,6 +206,17 @@ export function EventMediaUpload({
         for (const [id, assets] of Object.entries(current)) {
           if (activeIds.has(id)) {
             next[id] = assets;
+          }
+        }
+
+        return next;
+      });
+      setReadUrlErrors((current) => {
+        const next: Record<string, true> = {};
+
+        for (const id of Object.keys(current)) {
+          if (activeIds.has(id)) {
+            next[id] = true;
           }
         }
 
@@ -466,6 +500,7 @@ export function EventMediaUpload({
           eventId={eventId}
           items={items}
           readUrls={readUrls}
+          readUrlErrors={readUrlErrors}
           focusIndex={galleryFocusIndex}
           focusRequestId={galleryFocusRequestId}
           onEnsureReadUrl={ensureReadUrl}

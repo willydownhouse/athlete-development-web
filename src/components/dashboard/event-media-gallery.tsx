@@ -110,14 +110,27 @@ function EventMediaSlideImage({ readUrl, alt }: EventMediaSlideImageProps) {
   );
 }
 
+function EventMediaUnavailableCard({ className, message }: { className: string; message: string }) {
+  return (
+    <div
+      className={`${className} flex flex-col items-center justify-center border border-white/5 bg-[#171b22] px-3 py-6 text-center`}
+      style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
+    >
+      <p className="text-xs font-medium text-zinc-300 sm:text-sm">{message}</p>
+    </div>
+  );
+}
+
 function EventMediaVideoThumb({
   item,
   assets,
   href,
+  readFailed,
 }: {
   item: EventMediaItem;
   assets: EventMediaReadAssets | undefined;
   href: string;
+  readFailed: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const posterUrl = assets?.posterUrl ?? assets?.readUrl ?? null;
@@ -156,6 +169,22 @@ function EventMediaVideoThumb({
   }
 
   if (!posterUrl) {
+    if (readFailed) {
+      return (
+        <Link
+          href={href}
+          aria-label={ariaLabel}
+          className={VIDEO_THUMB_CLASS_NAME}
+          style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
+        >
+          <EventMediaUnavailableCard
+            className="absolute inset-0 rounded-lg"
+            message="Couldn't load"
+          />
+        </Link>
+      );
+    }
+
     return (
       <Link
         href={href}
@@ -223,6 +252,7 @@ type EventMediaGalleryProps = {
   eventId: string;
   items: EventMediaItem[];
   readUrls: Record<string, EventMediaReadAssets>;
+  readUrlErrors: Record<string, true>;
   focusIndex?: number;
   focusRequestId?: number;
   onEnsureReadUrl: (mediaId: string) => void | Promise<void>;
@@ -234,6 +264,7 @@ export function EventMediaGallery({
   eventId,
   items,
   readUrls,
+  readUrlErrors,
   focusIndex = 0,
   focusRequestId = 0,
   onEnsureReadUrl,
@@ -301,19 +332,19 @@ export function EventMediaGallery({
     for (const index of prefetchIndices(displayIndex, imageItems.length)) {
       const item = imageItems[index];
 
-      if (item?.status === "ready" && !readUrls[item.id]) {
+      if (item?.status === "ready" && !readUrls[item.id] && !readUrlErrors[item.id]) {
         void onEnsureReadUrl(item.id);
       }
     }
-  }, [displayIndex, imageItems, readUrls, onEnsureReadUrl]);
+  }, [displayIndex, imageItems, readUrlErrors, readUrls, onEnsureReadUrl]);
 
   useEffect(() => {
     for (const item of videoItems) {
-      if (item.status === "ready" && !readUrls[item.id]) {
+      if (item.status === "ready" && !readUrls[item.id] && !readUrlErrors[item.id]) {
         void onEnsureReadUrl(item.id);
       }
     }
-  }, [videoItems, readUrls, onEnsureReadUrl]);
+  }, [videoItems, readUrlErrors, readUrls, onEnsureReadUrl]);
 
   useEffect(() => {
     onActiveMediaChange?.(imageItems[displayIndex]?.id ?? null);
@@ -339,8 +370,10 @@ export function EventMediaGallery({
             {imageItems.map((item, index) => {
               const assets = readUrls[item.id];
               const alt = `Event photo ${index + 1}`;
+              const readFailed = Boolean(readUrlErrors[item.id]);
               const showSkeleton =
-                isInFlightStatus(item.status) || (item.status === "ready" && !assets);
+                isInFlightStatus(item.status) ||
+                (item.status === "ready" && !assets && !readFailed);
 
               return (
                 <div
@@ -366,15 +399,14 @@ export function EventMediaGallery({
                         alt={alt}
                       />
                     ) : (
-                      <div
-                        className={`${GALLERY_CARD_CLASS_NAME} flex flex-col items-center justify-center border border-white/5 bg-[#171b22] px-4 py-8 text-center`}
-                        style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
-                      >
-                        <p className="text-sm font-medium capitalize text-zinc-300">
-                          {formatStatus(item.status)}
-                          {item.failureCode ? ` · ${item.failureCode}` : ""}
-                        </p>
-                      </div>
+                      <EventMediaUnavailableCard
+                        className={GALLERY_CARD_CLASS_NAME}
+                        message={
+                          readFailed
+                            ? "Couldn't load"
+                            : `${formatStatus(item.status)}${item.failureCode ? ` · ${item.failureCode}` : ""}`
+                        }
+                      />
                     )}
                   </div>
                 </div>
@@ -422,6 +454,7 @@ export function EventMediaGallery({
                 item={item}
                 assets={readUrls[item.id]}
                 href={athleteEventMediaHref(athleteId, eventId, item.id)}
+                readFailed={Boolean(readUrlErrors[item.id])}
               />
             ))}
           </div>
