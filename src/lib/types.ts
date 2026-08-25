@@ -259,7 +259,9 @@ export type EventMediaItem = {
 
 export type EventMediaReadAssets = {
   readUrl: string;
+  readExpiresAt: string;
   posterUrl: string | null;
+  posterExpiresAt: string | null;
 };
 
 export type EventMediaListResponse = {

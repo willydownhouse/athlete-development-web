@@ -13,6 +13,7 @@ import {
   EventMediaGallery,
   EventMediaGallerySkeleton,
 } from "@/components/dashboard/event-media-gallery";
+import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
@@ -124,12 +125,18 @@ export function EventMediaUpload({
   );
 
   const ensureReadUrl = useCallback(
-    async (mediaId: string, itemOverride?: EventMediaItem) => {
-      if (
-        readUrlsRef.current[mediaId] ||
-        readUrlErrorsRef.current[mediaId] ||
-        ensureReadUrlInFlightRef.current.has(mediaId)
-      ) {
+    async (mediaId: string, itemOverride?: EventMediaItem, options?: { force?: boolean }) => {
+      const force = options?.force === true;
+
+      if (ensureReadUrlInFlightRef.current.has(mediaId)) {
+        return;
+      }
+
+      if (!force && (readUrlsRef.current[mediaId] || readUrlErrorsRef.current[mediaId])) {
+        return;
+      }
+
+      if (force && readUrlErrorsRef.current[mediaId]) {
         return;
       }
 
@@ -148,11 +155,27 @@ export function EventMediaUpload({
         }
 
         if ("error" in result) {
+          if (force && readUrlsRef.current[mediaId]) {
+            return;
+          }
+
           readUrlErrorsRef.current = { ...readUrlErrorsRef.current, [mediaId]: true };
           setReadUrlErrors((current) => ({ ...current, [mediaId]: true }));
           return;
         }
 
+        const nextAssets: EventMediaReadAssets = {
+          readUrl: result.readUrl,
+          readExpiresAt: result.readExpiresAt,
+          posterUrl: result.posterUrl ?? null,
+          posterExpiresAt: result.posterExpiresAt,
+        };
+
+        if (readUrlErrorsRef.current[mediaId]) {
+          const nextErrors = { ...readUrlErrorsRef.current };
+          delete nextErrors[mediaId];
+          readUrlErrorsRef.current = nextErrors;
+        }
         setReadUrlErrors((current) => {
           if (!current[mediaId]) {
             return current;
@@ -162,30 +185,41 @@ export function EventMediaUpload({
           delete next[mediaId];
           return next;
         });
-        setReadUrls((current) => {
-          if (current[mediaId]) {
-            return current;
-          }
-
-          return {
-            ...current,
-            [mediaId]: {
-              readUrl: result.readUrl,
-              posterUrl: result.posterUrl ?? null,
-            },
-          };
-        });
+        readUrlsRef.current = {
+          ...readUrlsRef.current,
+          [mediaId]: nextAssets,
+        };
+        setReadUrls((current) => ({
+          ...current,
+          [mediaId]: nextAssets,
+        }));
       } catch {
-        if (isActiveRef.current) {
-          readUrlErrorsRef.current = { ...readUrlErrorsRef.current, [mediaId]: true };
-          setReadUrlErrors((current) => ({ ...current, [mediaId]: true }));
+        if (!isActiveRef.current) {
+          return;
         }
+
+        if (force && readUrlsRef.current[mediaId]) {
+          return;
+        }
+
+        readUrlErrorsRef.current = { ...readUrlErrorsRef.current, [mediaId]: true };
+        setReadUrlErrors((current) => ({ ...current, [mediaId]: true }));
       } finally {
         ensureReadUrlInFlightRef.current.delete(mediaId);
       }
     },
     [athleteId, eventId],
   );
+
+  const getReadUrlAssets = useCallback(() => Object.entries(readUrls), [readUrls]);
+  const refreshDueReadUrl = useCallback(
+    (mediaId: string) => {
+      void ensureReadUrl(mediaId, undefined, { force: true });
+    },
+    [ensureReadUrl],
+  );
+
+  useEventMediaReadUrlRefresh(getReadUrlAssets, refreshDueReadUrl);
 
   const applyMediaItems = useCallback(
     (mediaItems: EventMediaItem[]) => {

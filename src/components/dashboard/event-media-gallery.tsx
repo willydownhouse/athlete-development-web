@@ -73,6 +73,39 @@ function EventMediaSlideSkeleton({
   );
 }
 
+function EventMediaDeferredImage({
+  url,
+  alt,
+  className,
+  onLoad,
+}: {
+  url: string;
+  alt: string;
+  className: string;
+  onLoad?: () => void;
+}) {
+  const [visibleUrl, setVisibleUrl] = useState(url);
+
+  return (
+    <>
+      {visibleUrl !== url ? (
+        // Presigned storage URLs are short-lived and not compatible with next/image here.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          onLoad={() => setVisibleUrl(url)}
+          className="hidden"
+          draggable={false}
+        />
+      ) : null}
+      {/* Presigned storage URLs are short-lived and not compatible with next/image here. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={visibleUrl} alt={alt} onLoad={onLoad} className={className} draggable={false} />
+    </>
+  );
+}
+
 type EventMediaSlideImageProps = {
   readUrl: string;
   alt: string;
@@ -95,16 +128,13 @@ function EventMediaSlideImage({ readUrl, alt }: EventMediaSlideImageProps) {
           </div>
         </div>
       ) : null}
-      {/* Presigned storage URLs are short-lived and not compatible with next/image here. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={readUrl}
+      <EventMediaDeferredImage
+        url={readUrl}
         alt={alt}
         onLoad={() => setLoaded(true)}
         className={`absolute inset-0 h-full w-full select-none object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
-        draggable={false}
       />
     </div>
   );
@@ -210,16 +240,13 @@ function EventMediaVideoThumb({
       style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
     >
       {!loaded ? <Skeleton className="absolute inset-0 h-full w-full" /> : null}
-      {/* Presigned storage URLs are short-lived and not compatible with next/image here. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={posterUrl}
+      <EventMediaDeferredImage
+        url={posterUrl}
         alt=""
         onLoad={() => setLoaded(true)}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
-        draggable={false}
       />
       <span className="absolute inset-0 flex items-center justify-center">
         <EventMediaPlayBadge className="h-12 w-12" />
@@ -393,11 +420,7 @@ export function EventMediaGallery({
                         statusText={isInFlightStatus(item.status) ? "Processing…" : "Loading…"}
                       />
                     ) : item.status === "ready" && assets ? (
-                      <EventMediaSlideImage
-                        key={assets.readUrl}
-                        readUrl={assets.readUrl}
-                        alt={alt}
-                      />
+                      <EventMediaSlideImage readUrl={assets.readUrl} alt={alt} />
                     ) : (
                       <EventMediaUnavailableCard
                         className={GALLERY_CARD_CLASS_NAME}

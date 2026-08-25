@@ -31,12 +31,41 @@ export function EventMediaPlayer({
       return;
     }
 
-    void video.play().catch((error: unknown) => {
-      if (isAbortError(error)) {
-        return;
+    const player = video;
+    const previousSrc = player.getAttribute("src");
+    const isInitialLoad = previousSrc == null;
+    const resumeAt = isInitialLoad ? 0 : player.currentTime;
+    const shouldPlay = isInitialLoad || !player.paused;
+
+    if (posterUrl) {
+      player.poster = posterUrl;
+    }
+
+    if (previousSrc === readUrl) {
+      return;
+    }
+
+    function restorePlayback() {
+      if (resumeAt > 0) {
+        player.currentTime = resumeAt;
       }
-    });
-  }, [readUrl]);
+
+      if (shouldPlay) {
+        void player.play().catch((error: unknown) => {
+          if (isAbortError(error)) {
+            return;
+          }
+        });
+      }
+    }
+
+    player.addEventListener("loadedmetadata", restorePlayback, { once: true });
+    player.src = readUrl;
+
+    return () => {
+      player.removeEventListener("loadedmetadata", restorePlayback);
+    };
+  }, [posterUrl, readUrl]);
 
   return (
     <div
@@ -45,7 +74,6 @@ export function EventMediaPlayer({
     >
       <video
         ref={videoRef}
-        src={readUrl}
         poster={posterUrl ?? undefined}
         autoPlay
         controls

@@ -1,14 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import { deleteEventMediaAction } from "@/app/athlete/[athleteId]/event/[eventId]/actions";
+import {
+  deleteEventMediaAction,
+  getEventMediaReadUrlAction,
+} from "@/app/athlete/[athleteId]/event/[eventId]/actions";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { DeleteEventMediaConfirmModal } from "@/components/dashboard/delete-event-media-confirm-modal";
 import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import { EventMediaPlayer } from "@/components/dashboard/event-media-player";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { eventMediaPlayerFrameStyle } from "@/lib/event-media-player-frame";
 import type { EventMediaItem, MediaReadUrlResponse, MediaStatus } from "@/lib/types";
 
@@ -38,6 +42,39 @@ export function EventMediaPlayerView({
   const [confirmKey, setConfirmKey] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playbackAssets, setPlaybackAssets] = useState(assets);
+  const refreshInFlightRef = useRef(false);
+
+  const refreshPlaybackAssets = useCallback(async () => {
+    if (refreshInFlightRef.current || item.status !== "ready") {
+      return;
+    }
+
+    refreshInFlightRef.current = true;
+
+    try {
+      const result = await getEventMediaReadUrlAction(athleteId, eventId, item.id);
+
+      if ("error" in result) {
+        return;
+      }
+
+      setPlaybackAssets(result);
+    } finally {
+      refreshInFlightRef.current = false;
+    }
+  }, [athleteId, eventId, item.id, item.status]);
+
+  const getPlaybackAssets = useCallback(
+    () => (playbackAssets ? ([[item.id, playbackAssets]] as const) : []),
+    [item.id, playbackAssets],
+  );
+
+  const schedulePlaybackRefresh = useCallback(() => {
+    void refreshPlaybackAssets();
+  }, [refreshPlaybackAssets]);
+
+  useEventMediaReadUrlRefresh(getPlaybackAssets, schedulePlaybackRefresh);
 
   const label = item.originalFilename ?? "Event video";
   const inFlight = isInFlightStatus(item.status);
@@ -96,11 +133,10 @@ export function EventMediaPlayerView({
       </div>
 
       <div className="mt-6">
-        {item.status === "ready" && assets ? (
+        {item.status === "ready" && playbackAssets ? (
           <EventMediaPlayer
-            key={assets.readUrl}
-            readUrl={assets.readUrl}
-            posterUrl={assets.posterUrl}
+            readUrl={playbackAssets.readUrl}
+            posterUrl={playbackAssets.posterUrl}
             label={label}
             width={item.originalWidth ?? null}
             height={item.originalHeight ?? null}
