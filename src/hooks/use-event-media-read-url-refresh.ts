@@ -24,7 +24,6 @@ export function useEventMediaReadUrlRefresh(
     function refreshDue() {
       for (const [mediaId, assets] of getAssetsRef.current()) {
         if (shouldRefreshEventMediaReadUrl(assets)) {
-          console.log("[event-media] refreshing signed URL", mediaId, assets.readExpiresAt);
           refreshRef.current(mediaId);
         }
       }

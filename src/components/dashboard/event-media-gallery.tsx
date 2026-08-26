@@ -78,11 +78,13 @@ function EventMediaDeferredImage({
   alt,
   className,
   onLoad,
+  onError,
 }: {
   url: string;
   alt: string;
   className: string;
   onLoad?: () => void;
+  onError?: () => void;
 }) {
   const [visibleUrl, setVisibleUrl] = useState(url);
 
@@ -101,7 +103,18 @@ function EventMediaDeferredImage({
       ) : null}
       {/* Presigned storage URLs are short-lived and not compatible with next/image here. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={visibleUrl} alt={alt} onLoad={onLoad} className={className} draggable={false} />
+      <img
+        src={visibleUrl}
+        alt={alt}
+        onLoad={onLoad}
+        onError={() => {
+          if (visibleUrl === url) {
+            onError?.();
+          }
+        }}
+        className={className}
+        draggable={false}
+      />
     </>
   );
 }
@@ -113,6 +126,14 @@ type EventMediaSlideImageProps = {
 
 function EventMediaSlideImage({ readUrl, alt }: EventMediaSlideImageProps) {
   const [loaded, setLoaded] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const failed = failedUrl === readUrl;
+
+  if (failed) {
+    return (
+      <EventMediaUnavailableCard className={GALLERY_CARD_CLASS_NAME} message="Couldn't load" />
+    );
+  }
 
   return (
     <div className={GALLERY_CARD_CLASS_NAME} style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}>
@@ -132,6 +153,7 @@ function EventMediaSlideImage({ readUrl, alt }: EventMediaSlideImageProps) {
         url={readUrl}
         alt={alt}
         onLoad={() => setLoaded(true)}
+        onError={() => setFailedUrl(readUrl)}
         className={`absolute inset-0 h-full w-full select-none object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
@@ -163,7 +185,9 @@ function EventMediaVideoThumb({
   readFailed: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const posterUrl = assets?.posterUrl ?? assets?.readUrl ?? null;
+  const [failedPosterUrl, setFailedPosterUrl] = useState<string | null>(null);
+  const posterUrl = assets?.posterUrl ?? null;
+  const displayFailed = posterUrl !== null && failedPosterUrl === posterUrl;
   const durationLabel = formatMediaDuration(item.durationSeconds);
   const inFlight = isInFlightStatus(item.status);
   const label = item.originalFilename ?? "Event video";
@@ -203,8 +227,8 @@ function EventMediaVideoThumb({
     );
   }
 
-  if (!posterUrl) {
-    if (readFailed) {
+  if (!posterUrl || displayFailed) {
+    if (readFailed || assets || displayFailed) {
       return (
         <Link
           href={href}
@@ -249,6 +273,7 @@ function EventMediaVideoThumb({
         url={posterUrl}
         alt=""
         onLoad={() => setLoaded(true)}
+        onError={() => setFailedPosterUrl(posterUrl)}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
