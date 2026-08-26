@@ -491,6 +491,7 @@ export function EventMediaUpload({
     } catch (uploadError) {
       setPendingFocus(null);
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+      await loadMedia();
     } finally {
       setUploading(false);
     }
