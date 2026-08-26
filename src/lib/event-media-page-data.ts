@@ -50,6 +50,8 @@ export async function fetchEventMediaPlayerPageData(
       const assets = await getEventMediaReadUrl(token, athleteId, eventId, mediaId);
       return { item, assets };
     } catch (error) {
+      // 409: ready in the DB but display/playback is not available yet.
+      // The player view treats ready + null assets as a load error, not a spinner.
       if (error instanceof ApiError && error.status === 409) {
         return { item, assets: null };
       }

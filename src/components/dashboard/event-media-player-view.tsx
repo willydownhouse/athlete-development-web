@@ -48,6 +48,7 @@ export function EventMediaPlayerView({
   const [error, setError] = useState<string | null>(null);
   const [mediaItem, setMediaItem] = useState(item);
   const [playbackAssets, setPlaybackAssets] = useState(assets);
+  const [readFailed, setReadFailed] = useState(item.status === "ready" && assets === null);
   const refreshInFlightRef = useRef(false);
 
   useEffect(() => {
@@ -94,6 +95,9 @@ export function EventMediaPlayerView({
 
           if (!("error" in assetsResult)) {
             setPlaybackAssets(assetsResult);
+            setReadFailed(false);
+          } else {
+            setReadFailed(true);
           }
         }
 
@@ -125,14 +129,18 @@ export function EventMediaPlayerView({
       const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
 
       if ("error" in result) {
+        if (!playbackAssets) {
+          setReadFailed(true);
+        }
         return;
       }
 
+      setReadFailed(false);
       setPlaybackAssets(result);
     } finally {
       refreshInFlightRef.current = false;
     }
-  }, [athleteId, eventId, mediaId, mediaItem.status]);
+  }, [athleteId, eventId, mediaId, mediaItem.status, playbackAssets]);
 
   const getPlaybackAssets = useCallback(
     () => (playbackAssets ? ([[mediaId, playbackAssets]] as const) : []),
@@ -210,7 +218,7 @@ export function EventMediaPlayerView({
             width={mediaItem.originalWidth ?? null}
             height={mediaItem.originalHeight ?? null}
           />
-        ) : inFlight || mediaItem.status === "ready" ? (
+        ) : inFlight ? (
           <div
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
             style={eventMediaPlayerFrameStyle(
@@ -218,7 +226,7 @@ export function EventMediaPlayerView({
               mediaItem.originalHeight ?? null,
             )}
             aria-busy="true"
-            aria-label={inFlight ? `Processing ${label}` : `Loading ${label}`}
+            aria-label={`Processing ${label}`}
           >
             <Skeleton className="h-full w-full" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
@@ -226,9 +234,36 @@ export function EventMediaPlayerView({
                 className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
                 aria-hidden="true"
               />
-              <p className="text-center text-xs text-zinc-400">
-                {inFlight ? "Processing…" : "Loading…"}
-              </p>
+              <p className="text-center text-xs text-zinc-400">Processing…</p>
+            </div>
+          </div>
+        ) : mediaItem.status === "ready" && readFailed ? (
+          <div
+            className="relative mx-auto flex flex-col items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-[#171b22] px-4 py-8 text-center"
+            style={eventMediaPlayerFrameStyle(
+              mediaItem.originalWidth ?? null,
+              mediaItem.originalHeight ?? null,
+            )}
+          >
+            <p className="text-sm font-medium text-zinc-300">{"Couldn't load"}</p>
+          </div>
+        ) : mediaItem.status === "ready" ? (
+          <div
+            className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
+            style={eventMediaPlayerFrameStyle(
+              mediaItem.originalWidth ?? null,
+              mediaItem.originalHeight ?? null,
+            )}
+            aria-busy="true"
+            aria-label={`Loading ${label}`}
+          >
+            <Skeleton className="h-full w-full" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+              <span
+                className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
+                aria-hidden="true"
+              />
+              <p className="text-center text-xs text-zinc-400">Loading…</p>
             </div>
           </div>
         ) : (
