@@ -472,6 +472,7 @@ export function EventMediaUpload({
         headers: {
           "Content-Type": classified.value.declaredMimeType,
           "Content-Length": String(file.size),
+          "If-None-Match": "*",
         },
         body: file,
       });
