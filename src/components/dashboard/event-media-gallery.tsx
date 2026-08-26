@@ -171,14 +171,19 @@ function EventMediaVideoThumb({
 
   if (inFlight) {
     return (
-      <div className={VIDEO_THUMB_CLASS_NAME} style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}>
+      <Link
+        href={href}
+        aria-label={`Processing ${label}`}
+        className={VIDEO_THUMB_CLASS_NAME}
+        style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
+      >
         <EventMediaSlideSkeleton
           aspectRatio={IMAGE_GALLERY_ASPECT_RATIO}
           className="absolute inset-0"
           label={`Processing ${label}`}
           statusText="Processing…"
         />
-      </div>
+      </Link>
     );
   }
 

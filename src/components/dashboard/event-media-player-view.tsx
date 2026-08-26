@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   deleteEventMediaAction,
+  getEventMediaAction,
   getEventMediaReadUrlAction,
 } from "@/app/athlete/[athleteId]/event/[eventId]/actions";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
@@ -15,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { eventMediaPlayerFrameStyle } from "@/lib/event-media-player-frame";
 import type { EventMediaItem, MediaReadUrlResponse, MediaStatus } from "@/lib/types";
+
+const EVENT_MEDIA_STATUS_POLL_MS = 2000;
 
 function formatStatus(status: MediaStatus): string {
   return status.replace(/_/g, " ");
@@ -38,22 +41,88 @@ export function EventMediaPlayerView({
   assets,
 }: EventMediaPlayerViewProps) {
   const router = useRouter();
+  const mediaId = item.id;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmKey, setConfirmKey] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mediaItem, setMediaItem] = useState(item);
   const [playbackAssets, setPlaybackAssets] = useState(assets);
   const refreshInFlightRef = useRef(false);
 
+  useEffect(() => {
+    if (!isInFlightStatus(mediaItem.status)) {
+      return;
+    }
+
+    let cancelled = false;
+    let requestInFlight = false;
+
+    function isPollCancelled() {
+      return cancelled;
+    }
+
+    async function poll() {
+      if (requestInFlight) {
+        return;
+      }
+
+      requestInFlight = true;
+
+      try {
+        const result = await getEventMediaAction(athleteId, eventId, mediaId);
+
+        if (isPollCancelled()) {
+          return;
+        }
+
+        if ("notFound" in result) {
+          router.replace(athleteEventHref(athleteId, eventId));
+          return;
+        }
+
+        if ("error" in result) {
+          return;
+        }
+
+        if (result.status === "ready") {
+          const assetsResult = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
+
+          if (isPollCancelled()) {
+            return;
+          }
+
+          if (!("error" in assetsResult)) {
+            setPlaybackAssets(assetsResult);
+          }
+        }
+
+        setMediaItem(result);
+      } finally {
+        requestInFlight = false;
+      }
+    }
+
+    void poll();
+    const interval = window.setInterval(() => {
+      void poll();
+    }, EVENT_MEDIA_STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [athleteId, eventId, mediaId, mediaItem.status, router]);
+
   const refreshPlaybackAssets = useCallback(async () => {
-    if (refreshInFlightRef.current || item.status !== "ready") {
+    if (refreshInFlightRef.current || mediaItem.status !== "ready") {
       return;
     }
 
     refreshInFlightRef.current = true;
 
     try {
-      const result = await getEventMediaReadUrlAction(athleteId, eventId, item.id);
+      const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
 
       if ("error" in result) {
         return;
@@ -63,11 +132,11 @@ export function EventMediaPlayerView({
     } finally {
       refreshInFlightRef.current = false;
     }
-  }, [athleteId, eventId, item.id, item.status]);
+  }, [athleteId, eventId, mediaId, mediaItem.status]);
 
   const getPlaybackAssets = useCallback(
-    () => (playbackAssets ? ([[item.id, playbackAssets]] as const) : []),
-    [item.id, playbackAssets],
+    () => (playbackAssets ? ([[mediaId, playbackAssets]] as const) : []),
+    [mediaId, playbackAssets],
   );
 
   const schedulePlaybackRefresh = useCallback(() => {
@@ -76,8 +145,8 @@ export function EventMediaPlayerView({
 
   useEventMediaReadUrlRefresh(getPlaybackAssets, schedulePlaybackRefresh);
 
-  const label = item.originalFilename ?? "Event video";
-  const inFlight = isInFlightStatus(item.status);
+  const label = mediaItem.originalFilename ?? "Event video";
+  const inFlight = isInFlightStatus(mediaItem.status);
 
   const openDeleteConfirm = () => {
     if (pending) {
@@ -102,7 +171,7 @@ export function EventMediaPlayerView({
     setError(null);
     setPending(true);
 
-    const result = await deleteEventMediaAction(athleteId, eventId, item.id);
+    const result = await deleteEventMediaAction(athleteId, eventId, mediaId);
 
     if ("error" in result) {
       setError(result.error);
@@ -133,20 +202,20 @@ export function EventMediaPlayerView({
       </div>
 
       <div className="mt-6">
-        {item.status === "ready" && playbackAssets ? (
+        {mediaItem.status === "ready" && playbackAssets ? (
           <EventMediaPlayer
             readUrl={playbackAssets.readUrl}
             posterUrl={playbackAssets.posterUrl}
             label={label}
-            width={item.originalWidth ?? null}
-            height={item.originalHeight ?? null}
+            width={mediaItem.originalWidth ?? null}
+            height={mediaItem.originalHeight ?? null}
           />
-        ) : inFlight || item.status === "ready" ? (
+        ) : inFlight || mediaItem.status === "ready" ? (
           <div
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
             style={eventMediaPlayerFrameStyle(
-              item.originalWidth ?? null,
-              item.originalHeight ?? null,
+              mediaItem.originalWidth ?? null,
+              mediaItem.originalHeight ?? null,
             )}
             aria-busy="true"
             aria-label={inFlight ? `Processing ${label}` : `Loading ${label}`}
@@ -166,13 +235,13 @@ export function EventMediaPlayerView({
           <div
             className="relative mx-auto flex flex-col items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-[#171b22] px-4 py-8 text-center"
             style={eventMediaPlayerFrameStyle(
-              item.originalWidth ?? null,
-              item.originalHeight ?? null,
+              mediaItem.originalWidth ?? null,
+              mediaItem.originalHeight ?? null,
             )}
           >
             <p className="text-sm font-medium capitalize text-zinc-300">
-              {formatStatus(item.status)}
-              {item.failureCode ? ` · ${item.failureCode}` : ""}
+              {formatStatus(mediaItem.status)}
+              {mediaItem.failureCode ? ` · ${mediaItem.failureCode}` : ""}
             </p>
           </div>
         )}

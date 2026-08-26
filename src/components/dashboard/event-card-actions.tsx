@@ -181,7 +181,7 @@ function useEventCardActions({
         {
           label: deleteMediaPending ? "Deleting image…" : "Delete image",
           onClick: openDeleteMediaConfirm,
-          disabled: !activeMediaId || mediaUploading || deleteMediaPending,
+          disabled: !activeMediaId || deleteMediaPending,
           destructive: true,
         },
         {

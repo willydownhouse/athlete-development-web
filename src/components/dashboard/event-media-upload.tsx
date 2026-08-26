@@ -81,7 +81,6 @@ export function EventMediaUpload({
   const [readUrlErrors, setReadUrlErrors] = useState<Record<string, true>>({});
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [pendingFocusMediaId, setPendingFocusMediaId] = useState<string | null>(null);
   const [galleryFocusIndex, setGalleryFocusIndex] = useState(0);
@@ -113,8 +112,8 @@ export function EventMediaUpload({
   const statusLabel = getStatusLabel(uploading, hasInFlightItems, pendingFocusMediaId);
 
   useEffect(() => {
-    onUploadingChange?.(uploading || deleting || hasInFlightItems || pendingFocusMediaId !== null);
-  }, [onUploadingChange, uploading, deleting, hasInFlightItems, pendingFocusMediaId]);
+    onUploadingChange?.(uploading);
+  }, [onUploadingChange, uploading]);
 
   const handleActiveMediaChange = useCallback(
     (mediaId: string | null) => {
@@ -399,7 +398,6 @@ export function EventMediaUpload({
 
     void (async () => {
       setError(null);
-      setDeleting(true);
 
       const deletedItem = itemsRef.current.find((item) => item.id === mediaId);
       const deletedImageIndex =
@@ -413,7 +411,6 @@ export function EventMediaUpload({
       if ("error" in result) {
         setError(result.error);
         onDeleteSettled?.(result.error);
-        setDeleting(false);
         return;
       }
 
@@ -427,7 +424,6 @@ export function EventMediaUpload({
         handleActiveMediaChange(remainingImages[0]?.id ?? null);
       }
 
-      setDeleting(false);
       onDeleteSettled?.(null);
     })();
   }, [
