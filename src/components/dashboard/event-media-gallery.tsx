@@ -62,13 +62,15 @@ function EventMediaSlideSkeleton({
       aria-label={label ?? "Loading media"}
     >
       <Skeleton className="h-full w-full" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
-        <span
-          className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
-          aria-hidden="true"
-        />
-        {statusText ? <p className="text-center text-xs text-zinc-400">{statusText}</p> : null}
-      </div>
+      {statusText ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+          <span
+            className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
+            aria-hidden="true"
+          />
+          <p className="text-center text-xs text-zinc-400">{statusText}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -140,13 +142,6 @@ function EventMediaSlideImage({ readUrl, alt }: EventMediaSlideImageProps) {
       {!loaded ? (
         <div className="absolute inset-0" aria-busy="true" aria-label={`Loading ${alt}`}>
           <Skeleton className="h-full w-full" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
-            <span
-              className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
-              aria-hidden="true"
-            />
-            <p className="text-center text-xs text-zinc-400">Loading…</p>
-          </div>
         </div>
       ) : null}
       <EventMediaDeferredImage
@@ -294,11 +289,7 @@ export function EventMediaGallerySkeleton() {
   return (
     <div className="mt-4 rounded-xl bg-[#0f1319] p-2">
       <div className="flex min-h-[12rem] items-center justify-center sm:min-h-[14rem]">
-        <EventMediaSlideSkeleton
-          aspectRatio={IMAGE_GALLERY_ASPECT_RATIO}
-          label="Loading media"
-          statusText="Loading media…"
-        />
+        <EventMediaSlideSkeleton aspectRatio={IMAGE_GALLERY_ASPECT_RATIO} label="Loading media" />
       </div>
     </div>
   );
@@ -447,7 +438,7 @@ export function EventMediaGallery({
                         label={
                           isInFlightStatus(item.status) ? `Processing ${alt}` : `Loading ${alt}`
                         }
-                        statusText={isInFlightStatus(item.status) ? "Processing…" : "Loading…"}
+                        statusText={isInFlightStatus(item.status) ? "Processing…" : undefined}
                       />
                     ) : item.status === "ready" && assets ? (
                       <EventMediaSlideImage readUrl={assets.readUrl} alt={alt} />
