@@ -44,9 +44,15 @@ type EventDetailCardProps = {
   event: Event;
   timeZone: string;
   editAction?: ReactNode;
+  afterBasicInfo?: ReactNode;
 };
 
-export function EventDetailCard({ event, timeZone, editAction }: EventDetailCardProps) {
+export function EventDetailCard({
+  event,
+  timeZone,
+  editAction,
+  afterBasicInfo,
+}: EventDetailCardProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = event.metrics ?? [];
@@ -92,6 +98,8 @@ export function EventDetailCard({ event, timeZone, editAction }: EventDetailCard
           </p>
         </div>
       ) : null}
+
+      {afterBasicInfo}
 
       {metrics.length > 0 ? (
         <div className="mt-4 border-t border-white/5 pt-4">

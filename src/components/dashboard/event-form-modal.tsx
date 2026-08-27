@@ -25,8 +25,6 @@ type EventFormModalProps = {
   onApplyHandlersReady?: (handlers: EventFormApplyHandlers) => void;
   onClose: () => void;
   onSuccess: () => void;
-  onDeleteSuccess?: () => void;
-  deleteRedirectTo?: string;
 };
 
 export function EventFormModal({
@@ -42,8 +40,6 @@ export function EventFormModal({
   onApplyHandlersReady,
   onClose,
   onSuccess,
-  onDeleteSuccess,
-  deleteRedirectTo,
 }: EventFormModalProps) {
   if (!open && !keepMounted) {
     return null;
@@ -75,8 +71,6 @@ export function EventFormModal({
           defaultEventDate={modalState.mode === "create" ? modalState.defaultEventDate : undefined}
           onApplyHandlersReady={modalState.mode === "create" ? onApplyHandlersReady : undefined}
           onSuccess={onSuccess}
-          onDeleteSuccess={onDeleteSuccess}
-          deleteRedirectTo={deleteRedirectTo}
         />
       )}
     </Modal>

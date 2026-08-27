@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { EventDetailCard } from "@/components/dashboard/event-detail-card";
-import { EventEditControls } from "@/components/dashboard/event-edit-controls";
+import { EventDetailActionsLayout } from "@/components/dashboard/event-card-actions";
 import { fetchEventPageData, fetchEventPageFormData } from "@/lib/event-page-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
@@ -39,19 +38,13 @@ export async function EventDetailSection({
   const event = eventResult.event;
 
   return (
-    <EventDetailCard
+    <EventDetailActionsLayout
+      athleteId={athleteId}
       event={event}
       timeZone={timeZone}
-      editAction={
-        <EventEditControls
-          athleteId={athleteId}
-          event={event}
-          timeZone={timeZone}
-          eventTypes={formData.eventTypes}
-          focusSportName={focusSportName}
-          eventTypesError={formData.eventTypesError}
-        />
-      }
+      eventTypes={formData.eventTypes}
+      focusSportName={focusSportName}
+      eventTypesError={formData.eventTypesError}
     />
   );
 }

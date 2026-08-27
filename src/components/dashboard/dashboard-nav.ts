@@ -13,6 +13,10 @@ export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
 }
 
+export function backToEventLabel(): string {
+  return "← Back to event";
+}
+
 export function dashboardHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/dashboard`;
 }
@@ -29,6 +33,10 @@ export function athleteStatsHref(athleteId: string, period: HockeyStatsPeriod = 
 
 export function athleteEventHref(athleteId: string, eventId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/event/${encodeURIComponent(eventId)}`;
+}
+
+export function athleteEventMediaHref(athleteId: string, eventId: string, mediaId: string): string {
+  return `${athleteEventHref(athleteId, eventId)}/media/${encodeURIComponent(mediaId)}`;
 }
 
 export function athleteEventsHref(athleteId: string): string {
@@ -104,6 +112,10 @@ export function appShellMobileTitle(pathname: string): string {
 
   if (/^\/athlete\/[^/]+\/events\/?$/.test(pathname)) {
     return "Events";
+  }
+
+  if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {
+    return "Video";
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {

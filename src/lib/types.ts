@@ -239,6 +239,56 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 
 export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean"];
 
+export type MediaKind = "image" | "video";
+
+export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed";
+
+export type EventMediaItem = {
+  id: string;
+  kind: MediaKind;
+  status: MediaStatus;
+  originalFilename: string | null;
+  width: number | null;
+  height: number | null;
+  originalWidth: number | null;
+  originalHeight: number | null;
+  durationSeconds: number | null;
+  failureCode: string | null;
+  updatedAt: string;
+};
+
+export type EventMediaReadAssets = {
+  readUrl: string;
+  readExpiresAt: string;
+  posterUrl: string | null;
+  posterExpiresAt: string | null;
+};
+
+export type EventMediaListResponse = {
+  items: EventMediaItem[];
+};
+
+export type MediaUploadIntentResponse = {
+  id: string;
+  eventId: string;
+  kind: MediaKind;
+  status: MediaStatus;
+  declaredMimeType: string;
+  declaredByteSize: number;
+  originalFilename: string | null;
+  uploadUrl: string;
+  uploadExpiresAt: string;
+  createdAt: string;
+};
+
+export type MediaReadUrlResponse = {
+  id: string;
+  readUrl: string;
+  readExpiresAt: string;
+  posterUrl: string | null;
+  posterExpiresAt: string | null;
+};
+
 export function formatCategoryLabel(category: EventCategory): string {
   return category.replace(/_/g, " ");
 }
