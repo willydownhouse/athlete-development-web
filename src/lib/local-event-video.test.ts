@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   forgetLocalEventVideoPoster,
   getLocalEventVideo,
@@ -96,5 +97,18 @@ describe("local event video cache", () => {
     forgetLocalEventVideo("media-1");
 
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("clears local previews for failed media only", () => {
+    rememberLocalEventVideo("media-1", new Blob(["failed"]));
+    rememberLocalEventVideo("media-2", new Blob(["processing"]));
+
+    forgetFailedLocalEventVideos([
+      { id: "media-1", status: "failed" },
+      { id: "media-2", status: "processing" },
+    ]);
+
+    expect(getLocalEventVideo("media-1")).toBeNull();
+    expect(getLocalEventVideo("media-2")).toBe("blob:test-2");
   });
 });

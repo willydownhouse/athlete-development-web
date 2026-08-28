@@ -17,6 +17,7 @@ import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-re
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
 import { captureLocalVideoPoster } from "@/lib/local-event-video-poster";
 import {
+  forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   rememberLocalEventVideo,
   rememberLocalEventVideoPoster,
@@ -231,6 +232,8 @@ export function EventMediaUpload({
     (mediaItems: EventMediaItem[]) => {
       const activeIds = new Set(mediaItems.map((item) => item.id));
       const previousItemsById = new Map(previousItemsRef.current.map((item) => [item.id, item]));
+
+      forgetFailedLocalEventVideos(mediaItems);
 
       for (const id of ensureReadUrlInFlightRef.current) {
         if (!activeIds.has(id)) {

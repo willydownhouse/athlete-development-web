@@ -71,6 +71,14 @@ export function forgetLocalEventVideo(mediaId: string): void {
   notifyLocalEventVideoListeners();
 }
 
+export function forgetFailedLocalEventVideos(items: Array<{ id: string; status: string }>): void {
+  for (const item of items) {
+    if (item.status === "failed") {
+      forgetLocalEventVideo(item.id);
+    }
+  }
+}
+
 export function resetLocalEventVideosForTests(): void {
   const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
 
