@@ -20,6 +20,7 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: null,
         localUrl,
         localPlaybackFailed: false,
+        processedPlaybackFailed: false,
         readFailed: false,
       }),
     ).toEqual({
@@ -38,6 +39,7 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: processed,
         localUrl,
         localPlaybackFailed: false,
+        processedPlaybackFailed: false,
         readFailed: false,
       }),
     ).toEqual({
@@ -56,6 +58,7 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: null,
         localUrl: null,
         localPlaybackFailed: false,
+        processedPlaybackFailed: false,
         readFailed: false,
       }),
     ).toEqual({ kind: "processing" });
@@ -69,6 +72,7 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: null,
         localUrl,
         localPlaybackFailed: true,
+        processedPlaybackFailed: false,
         readFailed: false,
       }),
     ).toEqual({ kind: "processing" });
@@ -82,6 +86,7 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: null,
         localUrl: null,
         localPlaybackFailed: false,
+        processedPlaybackFailed: false,
         readFailed: false,
       }),
     ).toEqual({ kind: "loading" });
@@ -95,7 +100,41 @@ describe("resolveEventMediaPlaybackView", () => {
         assets: null,
         localUrl: null,
         localPlaybackFailed: false,
+        processedPlaybackFailed: false,
         readFailed: true,
+      }),
+    ).toEqual({ kind: "unavailable", message: "Couldn't load" });
+  });
+
+  it("falls back to the local file when processed playback fails", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: processed,
+        localUrl,
+        localPlaybackFailed: false,
+        processedPlaybackFailed: true,
+        readFailed: false,
+      }),
+    ).toEqual({
+      kind: "player",
+      readUrl: localUrl,
+      posterUrl: null,
+      showOptimizing: false,
+    });
+  });
+
+  it("shows a load error when processed playback fails and there is no local file", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: processed,
+        localUrl: null,
+        localPlaybackFailed: false,
+        processedPlaybackFailed: true,
+        readFailed: false,
       }),
     ).toEqual({ kind: "unavailable", message: "Couldn't load" });
   });

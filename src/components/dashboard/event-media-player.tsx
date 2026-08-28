@@ -12,6 +12,7 @@ type EventMediaPlayerProps = {
   height: number | null;
   optimizingLabel?: string | null;
   onFrameSize?: (width: number, height: number) => void;
+  onPlaybackReady?: () => void;
   onPlaybackError?: () => void;
 };
 
@@ -27,14 +28,17 @@ export function EventMediaPlayer({
   height,
   optimizingLabel = null,
   onFrameSize,
+  onPlaybackReady,
   onPlaybackError,
 }: EventMediaPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onFrameSizeRef = useRef(onFrameSize);
+  const onPlaybackReadyRef = useRef(onPlaybackReady);
   const onPlaybackErrorRef = useRef(onPlaybackError);
 
   useEffect(() => {
     onFrameSizeRef.current = onFrameSize;
+    onPlaybackReadyRef.current = onPlaybackReady;
     onPlaybackErrorRef.current = onPlaybackError;
   });
 
@@ -62,6 +66,8 @@ export function EventMediaPlayer({
       if (player.videoWidth > 0 && player.videoHeight > 0) {
         onFrameSizeRef.current?.(player.videoWidth, player.videoHeight);
       }
+
+      onPlaybackReadyRef.current?.();
 
       if (resumeAt > 0) {
         player.currentTime = resumeAt;

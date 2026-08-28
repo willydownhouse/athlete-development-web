@@ -63,8 +63,12 @@ export function EventMediaPlayerView({
     () => null,
   );
   const [localPlaybackFailed, setLocalPlaybackFailed] = useState(false);
+  const [failedProcessedReadUrl, setFailedProcessedReadUrl] = useState<string | null>(null);
   const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null);
   const refreshInFlightRef = useRef(false);
+  const processedReadUrl = playbackAssets?.readUrl ?? null;
+  const processedPlaybackFailed =
+    processedReadUrl !== null && failedProcessedReadUrl === processedReadUrl;
 
   const dropLocalPreview = useCallback(() => {
     forgetLocalEventVideo(mediaId);
@@ -176,14 +180,6 @@ export function EventMediaPlayerView({
 
   useEventMediaReadUrlRefresh(getPlaybackAssets, schedulePlaybackRefresh);
 
-  useEffect(() => {
-    if (!playbackAssets) {
-      return;
-    }
-
-    dropLocalPreview();
-  }, [dropLocalPreview, playbackAssets]);
-
   const label = mediaItem.originalFilename ?? "Event video";
 
   const openDeleteConfirm = () => {
@@ -227,6 +223,7 @@ export function EventMediaPlayerView({
     assets: playbackAssets,
     localUrl: localPreviewUrl,
     localPlaybackFailed,
+    processedPlaybackFailed,
     readFailed,
   });
   const frameSize = resolveEventMediaPlayerFrameSize({
@@ -271,14 +268,21 @@ export function EventMediaPlayerView({
               setPreviewSize({ width: nextWidth, height: nextHeight });
               rememberLocalEventVideoSize(mediaId, nextWidth, nextHeight);
             }}
-            onPlaybackError={
-              playingLocalPreview
-                ? () => {
-                    dropLocalPreview();
-                    setLocalPlaybackFailed(true);
-                  }
-                : undefined
-            }
+            onPlaybackReady={playingLocalPreview ? undefined : dropLocalPreview}
+            onPlaybackError={() => {
+              if (playingLocalPreview) {
+                dropLocalPreview();
+                setLocalPlaybackFailed(true);
+                return;
+              }
+
+              if (localPreviewUrl) {
+                setFailedProcessedReadUrl(processedReadUrl);
+                return;
+              }
+
+              setReadFailed(true);
+            }}
           />
         ) : playback.kind === "processing" ? (
           <div

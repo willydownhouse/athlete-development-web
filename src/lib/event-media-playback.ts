@@ -21,6 +21,7 @@ type EventMediaPlaybackInput = {
   assets: { readUrl: string; posterUrl: string | null } | null;
   localUrl: string | null;
   localPlaybackFailed: boolean;
+  processedPlaybackFailed: boolean;
   readFailed: boolean;
 };
 
@@ -31,7 +32,7 @@ function formatStatus(status: MediaStatus): string {
 export function resolveEventMediaPlaybackView(
   input: EventMediaPlaybackInput,
 ): EventMediaPlaybackView {
-  if (input.assets) {
+  if (input.assets && !input.processedPlaybackFailed) {
     return {
       kind: "player",
       readUrl: input.assets.readUrl,
@@ -55,7 +56,7 @@ export function resolveEventMediaPlaybackView(
     return { kind: "processing" };
   }
 
-  if (input.status === "ready" && input.readFailed) {
+  if (input.status === "ready" && (input.readFailed || input.processedPlaybackFailed)) {
     return { kind: "unavailable", message: "Couldn't load" };
   }
 
