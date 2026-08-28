@@ -67,8 +67,6 @@ export function EventMediaPlayer({
         onFrameSizeRef.current?.(player.videoWidth, player.videoHeight);
       }
 
-      onPlaybackReadyRef.current?.();
-
       if (resumeAt > 0) {
         player.currentTime = resumeAt;
       }
@@ -85,11 +83,16 @@ export function EventMediaPlayer({
       });
     }
 
+    function handleCanPlay() {
+      onPlaybackReadyRef.current?.();
+    }
+
     function handleError() {
       onPlaybackErrorRef.current?.();
     }
 
     player.addEventListener("loadedmetadata", restorePlayback, { once: true });
+    player.addEventListener("canplay", handleCanPlay, { once: true });
     player.addEventListener("error", handleError);
     player.autoplay = shouldPlay;
     player.src = readUrl;
@@ -100,6 +103,7 @@ export function EventMediaPlayer({
 
     return () => {
       player.removeEventListener("loadedmetadata", restorePlayback);
+      player.removeEventListener("canplay", handleCanPlay);
       player.removeEventListener("error", handleError);
     };
   }, [posterUrl, readUrl]);
