@@ -28,8 +28,7 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
     video.src = videoUrl;
     video.style.position = "fixed";
     video.style.left = "-9999px";
-    video.style.width = "1px";
-    video.style.height = "1px";
+    video.style.top = "0";
     video.style.opacity = "0";
     video.style.pointerEvents = "none";
     document.body.append(video);
@@ -53,22 +52,36 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
       resolve(poster);
     }
 
+    function sizeToIntrinsicFrame(): { width: number; height: number } | null {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      if (!width || !height) {
+        return null;
+      }
+
+      video.width = width;
+      video.height = height;
+      video.style.width = `${width}px`;
+      video.style.height = `${height}px`;
+      return { width, height };
+    }
+
     function grabFrame() {
       if (settled) {
         return;
       }
 
-      const width = video.videoWidth;
-      const height = video.videoHeight;
+      const frame = sizeToIntrinsicFrame();
 
-      if (!width || !height) {
+      if (!frame) {
         finish(null);
         return;
       }
 
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = frame.width;
+      canvas.height = frame.height;
       const context = canvas.getContext("2d");
 
       if (!context) {
@@ -76,12 +89,17 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
         return;
       }
 
-      context.drawImage(video, 0, 0, width, height);
+      context.drawImage(video, 0, 0, frame.width, frame.height);
       canvas.toBlob((blob) => finish(blob), "image/jpeg", 0.8);
     }
 
     function seekThenGrab() {
       if (settled) {
+        return;
+      }
+
+      if (!sizeToIntrinsicFrame()) {
+        finish(null);
         return;
       }
 

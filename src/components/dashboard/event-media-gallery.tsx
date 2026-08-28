@@ -263,7 +263,6 @@ function EventMediaVideoThumb({
           aspectRatio={IMAGE_GALLERY_ASPECT_RATIO}
           className="absolute inset-0"
           label={`Loading ${label}`}
-          statusText="Loading…"
         />
       </Link>
     );
