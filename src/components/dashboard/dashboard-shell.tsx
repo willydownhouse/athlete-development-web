@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
-import { appShellMobileTitle } from "@/components/dashboard/dashboard-nav";
+import { appShellMobileTitle, athleteEventIdFromPath } from "@/components/dashboard/dashboard-nav";
 import { SignOutButton } from "@/components/sign-out-button";
+import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
 type DashboardShellProps = {
@@ -45,6 +46,10 @@ export function DashboardShell({
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
   }, []);
+
+  useEffect(() => {
+    forgetLocalEventVideosOutsideEvent(athleteEventIdFromPath(pathname));
+  }, [pathname]);
 
   useEffect(() => {
     if (!mobileOpen) {

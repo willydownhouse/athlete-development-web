@@ -15,6 +15,13 @@ import {
 } from "@/components/dashboard/event-media-gallery";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
+import { captureLocalVideoPoster } from "@/lib/local-event-video-poster";
+import {
+  forgetFailedLocalEventVideos,
+  forgetLocalEventVideo,
+  rememberLocalEventVideo,
+  rememberLocalEventVideoCaptureIfCached,
+} from "@/lib/local-event-video";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
 function isInFlightStatus(status: MediaStatus): boolean {
@@ -192,6 +199,7 @@ export function EventMediaUpload({
           ...current,
           [mediaId]: nextAssets,
         }));
+        forgetLocalEventVideo(mediaId);
       } catch {
         if (!isActiveRef.current) {
           return;
@@ -224,6 +232,8 @@ export function EventMediaUpload({
     (mediaItems: EventMediaItem[]) => {
       const activeIds = new Set(mediaItems.map((item) => item.id));
       const previousItemsById = new Map(previousItemsRef.current.map((item) => [item.id, item]));
+
+      forgetFailedLocalEventVideos(mediaItems);
 
       for (const id of ensureReadUrlInFlightRef.current) {
         if (!activeIds.has(id)) {
@@ -414,6 +424,8 @@ export function EventMediaUpload({
         return;
       }
 
+      forgetLocalEventVideo(mediaId);
+
       await loadMedia();
 
       const remainingImages = itemsRef.current.filter((item) => item.kind === "image");
@@ -485,6 +497,11 @@ export function EventMediaUpload({
 
       if ("error" in completeResult) {
         throw new Error(completeResult.error);
+      }
+
+      if (classified.value.kind === "video") {
+        rememberLocalEventVideo(intentResult.id, file, eventId);
+        void rememberLocalEventVideoCaptureIfCached(intentResult.id, captureLocalVideoPoster(file));
       }
 
       setPendingFocus(intentResult.id);

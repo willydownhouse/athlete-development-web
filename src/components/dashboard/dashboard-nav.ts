@@ -35,6 +35,16 @@ export function athleteEventHref(athleteId: string, eventId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/event/${encodeURIComponent(eventId)}`;
 }
 
+export function athleteEventIdFromPath(pathname: string): string | null {
+  const match = pathname.match(/^\/athlete\/[^/]+\/event\/([^/]+)(?:\/media\/[^/]+)?\/?$/);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return decodeURIComponent(match[1]);
+}
+
 export function athleteEventMediaHref(athleteId: string, eventId: string, mediaId: string): string {
   return `${athleteEventHref(athleteId, eventId)}/media/${encodeURIComponent(mediaId)}`;
 }

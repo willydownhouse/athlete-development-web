@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
   deleteEventMediaAction,
@@ -14,18 +14,25 @@ import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import { EventMediaPlayer } from "@/components/dashboard/event-media-player";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
-import { eventMediaPlayerFrameStyle } from "@/lib/event-media-player-frame";
-import type { EventMediaItem, MediaReadUrlResponse, MediaStatus } from "@/lib/types";
+import {
+  isInFlightMediaStatus,
+  resolveEventMediaPlaybackView,
+  shouldRetryEventMediaReadUrl,
+} from "@/lib/event-media-playback";
+import {
+  eventMediaPlayerFrameStyle,
+  resolveEventMediaPlayerFrameSize,
+} from "@/lib/event-media-player-frame";
+import {
+  forgetLocalEventVideo,
+  getLocalEventVideo,
+  getLocalEventVideoSize,
+  rememberLocalEventVideoSize,
+  subscribeLocalEventVideos,
+} from "@/lib/local-event-video";
+import type { EventMediaItem, MediaReadUrlResponse } from "@/lib/types";
 
 const EVENT_MEDIA_STATUS_POLL_MS = 2000;
-
-function formatStatus(status: MediaStatus): string {
-  return status.replace(/_/g, " ");
-}
-
-function isInFlightStatus(status: MediaStatus): boolean {
-  return status === "uploading" || status === "queued" || status === "processing";
-}
 
 type EventMediaPlayerViewProps = {
   athleteId: string;
@@ -48,11 +55,31 @@ export function EventMediaPlayerView({
   const [error, setError] = useState<string | null>(null);
   const [mediaItem, setMediaItem] = useState(item);
   const [playbackAssets, setPlaybackAssets] = useState(assets);
-  const [readFailed, setReadFailed] = useState(item.status === "ready" && assets === null);
+  const [readFailed, setReadFailed] = useState(false);
+  const localPreviewUrl = useSyncExternalStore(
+    subscribeLocalEventVideos,
+    () => getLocalEventVideo(mediaId),
+    () => null,
+  );
+  const localPreviewSize = useSyncExternalStore(
+    subscribeLocalEventVideos,
+    () => getLocalEventVideoSize(mediaId),
+    () => null,
+  );
+  const [localPlaybackFailed, setLocalPlaybackFailed] = useState(false);
+  const [failedProcessedReadUrl, setFailedProcessedReadUrl] = useState<string | null>(null);
+  const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null);
   const refreshInFlightRef = useRef(false);
+  const processedReadUrl = playbackAssets?.readUrl ?? null;
+  const processedPlaybackFailed =
+    processedReadUrl !== null && failedProcessedReadUrl === processedReadUrl;
+
+  const dropLocalPreview = useCallback(() => {
+    forgetLocalEventVideo(mediaId);
+  }, [mediaId]);
 
   useEffect(() => {
-    if (!isInFlightStatus(mediaItem.status)) {
+    if (!isInFlightMediaStatus(mediaItem.status)) {
       return;
     }
 
@@ -86,19 +113,8 @@ export function EventMediaPlayerView({
           return;
         }
 
-        if (result.status === "ready") {
-          const assetsResult = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
-
-          if (isPollCancelled()) {
-            return;
-          }
-
-          if (!("error" in assetsResult)) {
-            setPlaybackAssets(assetsResult);
-            setReadFailed(false);
-          } else {
-            setReadFailed(true);
-          }
+        if (result.status === "failed") {
+          dropLocalPreview();
         }
 
         setMediaItem(result);
@@ -116,7 +132,51 @@ export function EventMediaPlayerView({
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [athleteId, eventId, mediaId, mediaItem.status, router]);
+  }, [athleteId, dropLocalPreview, eventId, mediaId, mediaItem.status, router]);
+
+  useEffect(() => {
+    if (!shouldRetryEventMediaReadUrl(mediaItem.status, playbackAssets !== null)) {
+      return;
+    }
+
+    let cancelled = false;
+    let requestInFlight = false;
+
+    async function pull() {
+      if (requestInFlight) {
+        return;
+      }
+
+      requestInFlight = true;
+
+      try {
+        const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
+
+        if (cancelled) {
+          return;
+        }
+
+        if ("error" in result) {
+          return;
+        }
+
+        setReadFailed(false);
+        setPlaybackAssets(result);
+      } finally {
+        requestInFlight = false;
+      }
+    }
+
+    void pull();
+    const interval = window.setInterval(() => {
+      void pull();
+    }, EVENT_MEDIA_STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [athleteId, eventId, mediaId, mediaItem.status, playbackAssets]);
 
   const refreshPlaybackAssets = useCallback(async () => {
     if (refreshInFlightRef.current || mediaItem.status !== "ready") {
@@ -129,9 +189,6 @@ export function EventMediaPlayerView({
       const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
 
       if ("error" in result) {
-        if (!playbackAssets) {
-          setReadFailed(true);
-        }
         return;
       }
 
@@ -140,7 +197,7 @@ export function EventMediaPlayerView({
     } finally {
       refreshInFlightRef.current = false;
     }
-  }, [athleteId, eventId, mediaId, mediaItem.status, playbackAssets]);
+  }, [athleteId, eventId, mediaId, mediaItem.status]);
 
   const getPlaybackAssets = useCallback(
     () => (playbackAssets ? ([[mediaId, playbackAssets]] as const) : []),
@@ -154,7 +211,6 @@ export function EventMediaPlayerView({
   useEventMediaReadUrlRefresh(getPlaybackAssets, schedulePlaybackRefresh);
 
   const label = mediaItem.originalFilename ?? "Event video";
-  const inFlight = isInFlightStatus(mediaItem.status);
 
   const openDeleteConfirm = () => {
     if (pending) {
@@ -187,8 +243,28 @@ export function EventMediaPlayerView({
       return;
     }
 
+    dropLocalPreview();
     router.push(athleteEventHref(athleteId, eventId));
   };
+
+  const playback = resolveEventMediaPlaybackView({
+    status: mediaItem.status,
+    failureCode: mediaItem.failureCode,
+    assets: playbackAssets,
+    localUrl: localPreviewUrl,
+    localPlaybackFailed,
+    processedPlaybackFailed,
+    readFailed,
+  });
+  const frameSize = resolveEventMediaPlayerFrameSize({
+    originalWidth: mediaItem.originalWidth,
+    originalHeight: mediaItem.originalHeight,
+    localSize: localPreviewSize,
+    previewSize,
+  });
+  const frameWidth = frameSize.width;
+  const frameHeight = frameSize.height;
+  const playingLocalPreview = playback.kind === "player" && playback.readUrl === localPreviewUrl;
 
   return (
     <>
@@ -210,21 +286,38 @@ export function EventMediaPlayerView({
       </div>
 
       <div className="mt-6">
-        {mediaItem.status === "ready" && playbackAssets ? (
+        {playback.kind === "player" ? (
           <EventMediaPlayer
-            readUrl={playbackAssets.readUrl}
-            posterUrl={playbackAssets.posterUrl}
+            readUrl={playback.readUrl}
+            posterUrl={playback.posterUrl}
             label={label}
-            width={mediaItem.originalWidth ?? null}
-            height={mediaItem.originalHeight ?? null}
+            width={frameWidth}
+            height={frameHeight}
+            optimizingLabel={playback.showOptimizing ? "Optimizing…" : null}
+            onFrameSize={(nextWidth, nextHeight) => {
+              setPreviewSize({ width: nextWidth, height: nextHeight });
+              rememberLocalEventVideoSize(mediaId, nextWidth, nextHeight);
+            }}
+            onPlaybackReady={playingLocalPreview ? undefined : dropLocalPreview}
+            onPlaybackError={() => {
+              if (playingLocalPreview) {
+                dropLocalPreview();
+                setLocalPlaybackFailed(true);
+                return;
+              }
+
+              if (localPreviewUrl) {
+                setFailedProcessedReadUrl(processedReadUrl);
+                return;
+              }
+
+              setReadFailed(true);
+            }}
           />
-        ) : inFlight ? (
+        ) : playback.kind === "processing" ? (
           <div
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
-            style={eventMediaPlayerFrameStyle(
-              mediaItem.originalWidth ?? null,
-              mediaItem.originalHeight ?? null,
-            )}
+            style={eventMediaPlayerFrameStyle(frameWidth, frameHeight)}
             aria-busy="true"
             aria-label={`Processing ${label}`}
           >
@@ -237,23 +330,10 @@ export function EventMediaPlayerView({
               <p className="text-center text-xs text-zinc-400">Processing…</p>
             </div>
           </div>
-        ) : mediaItem.status === "ready" && readFailed ? (
-          <div
-            className="relative mx-auto flex flex-col items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-[#171b22] px-4 py-8 text-center"
-            style={eventMediaPlayerFrameStyle(
-              mediaItem.originalWidth ?? null,
-              mediaItem.originalHeight ?? null,
-            )}
-          >
-            <p className="text-sm font-medium text-zinc-300">{"Couldn't load"}</p>
-          </div>
-        ) : mediaItem.status === "ready" ? (
+        ) : playback.kind === "loading" ? (
           <div
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
-            style={eventMediaPlayerFrameStyle(
-              mediaItem.originalWidth ?? null,
-              mediaItem.originalHeight ?? null,
-            )}
+            style={eventMediaPlayerFrameStyle(frameWidth, frameHeight)}
             aria-busy="true"
             aria-label={`Loading ${label}`}
           >
@@ -269,15 +349,9 @@ export function EventMediaPlayerView({
         ) : (
           <div
             className="relative mx-auto flex flex-col items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-[#171b22] px-4 py-8 text-center"
-            style={eventMediaPlayerFrameStyle(
-              mediaItem.originalWidth ?? null,
-              mediaItem.originalHeight ?? null,
-            )}
+            style={eventMediaPlayerFrameStyle(frameWidth, frameHeight)}
           >
-            <p className="text-sm font-medium capitalize text-zinc-300">
-              {formatStatus(mediaItem.status)}
-              {mediaItem.failureCode ? ` · ${mediaItem.failureCode}` : ""}
-            </p>
+            <p className="text-sm font-medium capitalize text-zinc-300">{playback.message}</p>
           </div>
         )}
       </div>

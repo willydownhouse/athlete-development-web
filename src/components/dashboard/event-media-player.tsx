@@ -10,6 +10,10 @@ type EventMediaPlayerProps = {
   label: string;
   width: number | null;
   height: number | null;
+  optimizingLabel?: string | null;
+  onFrameSize?: (width: number, height: number) => void;
+  onPlaybackReady?: () => void;
+  onPlaybackError?: () => void;
 };
 
 function isAbortError(error: unknown): boolean {
@@ -22,8 +26,21 @@ export function EventMediaPlayer({
   label,
   width,
   height,
+  optimizingLabel = null,
+  onFrameSize,
+  onPlaybackReady,
+  onPlaybackError,
 }: EventMediaPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const onFrameSizeRef = useRef(onFrameSize);
+  const onPlaybackReadyRef = useRef(onPlaybackReady);
+  const onPlaybackErrorRef = useRef(onPlaybackError);
+
+  useEffect(() => {
+    onFrameSizeRef.current = onFrameSize;
+    onPlaybackReadyRef.current = onPlaybackReady;
+    onPlaybackErrorRef.current = onPlaybackError;
+  });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -46,24 +63,48 @@ export function EventMediaPlayer({
     }
 
     function restorePlayback() {
+      if (player.videoWidth > 0 && player.videoHeight > 0) {
+        onFrameSizeRef.current?.(player.videoWidth, player.videoHeight);
+      }
+
       if (resumeAt > 0) {
         player.currentTime = resumeAt;
       }
 
-      if (shouldPlay) {
-        void player.play().catch((error: unknown) => {
-          if (isAbortError(error)) {
-            return;
-          }
-        });
+      if (!shouldPlay) {
+        player.pause();
+        return;
       }
+
+      void player.play().catch((error: unknown) => {
+        if (isAbortError(error)) {
+          return;
+        }
+      });
+    }
+
+    function handleCanPlay() {
+      onPlaybackReadyRef.current?.();
+    }
+
+    function handleError() {
+      onPlaybackErrorRef.current?.();
     }
 
     player.addEventListener("loadedmetadata", restorePlayback, { once: true });
+    player.addEventListener("canplay", handleCanPlay, { once: true });
+    player.addEventListener("error", handleError);
+    player.autoplay = shouldPlay;
     player.src = readUrl;
+
+    if (!shouldPlay) {
+      player.pause();
+    }
 
     return () => {
       player.removeEventListener("loadedmetadata", restorePlayback);
+      player.removeEventListener("canplay", handleCanPlay);
+      player.removeEventListener("error", handleError);
     };
   }, [posterUrl, readUrl]);
 
@@ -82,6 +123,11 @@ export function EventMediaPlayer({
         aria-label={label}
         className="absolute inset-0 h-full w-full object-cover"
       />
+      {optimizingLabel ? (
+        <p className="pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-xs text-zinc-200">
+          {optimizingLabel}
+        </p>
+      ) : null}
     </div>
   );
 }
