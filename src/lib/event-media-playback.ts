@@ -1,0 +1,72 @@
+import type { MediaStatus } from "@/lib/types";
+
+export function isInFlightMediaStatus(status: MediaStatus): boolean {
+  return status === "uploading" || status === "queued" || status === "processing";
+}
+
+export type EventMediaPlaybackView =
+  | {
+      kind: "player";
+      readUrl: string;
+      posterUrl: string | null;
+      showOptimizing: boolean;
+    }
+  | { kind: "processing" }
+  | { kind: "loading" }
+  | { kind: "unavailable"; message: string };
+
+type EventMediaPlaybackInput = {
+  status: MediaStatus;
+  failureCode: string | null;
+  assets: { readUrl: string; posterUrl: string | null } | null;
+  localUrl: string | null;
+  localPlaybackFailed: boolean;
+  readFailed: boolean;
+};
+
+function formatStatus(status: MediaStatus): string {
+  return status.replace(/_/g, " ");
+}
+
+export function resolveEventMediaPlaybackView(
+  input: EventMediaPlaybackInput,
+): EventMediaPlaybackView {
+  if (input.assets) {
+    return {
+      kind: "player",
+      readUrl: input.assets.readUrl,
+      posterUrl: input.assets.posterUrl,
+      showOptimizing: false,
+    };
+  }
+
+  const localUrl = input.localUrl && !input.localPlaybackFailed ? input.localUrl : null;
+
+  if (localUrl) {
+    return {
+      kind: "player",
+      readUrl: localUrl,
+      posterUrl: null,
+      showOptimizing: isInFlightMediaStatus(input.status),
+    };
+  }
+
+  if (isInFlightMediaStatus(input.status)) {
+    return { kind: "processing" };
+  }
+
+  if (input.status === "ready" && input.readFailed) {
+    return { kind: "unavailable", message: "Couldn't load" };
+  }
+
+  if (input.status === "ready") {
+    return { kind: "loading" };
+  }
+
+  const statusLabel = formatStatus(input.status);
+
+  return {
+    kind: "unavailable",
+    message: input.failureCode ? `${statusLabel} · ${input.failureCode}` : statusLabel,
+  };
+}

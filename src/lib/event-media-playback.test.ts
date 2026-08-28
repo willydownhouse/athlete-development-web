@@ -1,0 +1,99 @@
+import { describe, expect, it } from "vitest";
+
+import { resolveEventMediaPlaybackView } from "./event-media-playback";
+
+const localUrl = "blob:local-clip";
+const processed = {
+  readUrl: "https://storage.example/clip.mp4",
+  posterUrl: "https://storage.example/poster.webp",
+};
+
+describe("resolveEventMediaPlaybackView", () => {
+  it("plays a cached blob while processing", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "processing",
+        failureCode: null,
+        assets: null,
+        localUrl,
+        localPlaybackFailed: false,
+        readFailed: false,
+      }),
+    ).toEqual({
+      kind: "player",
+      readUrl: localUrl,
+      posterUrl: null,
+      showOptimizing: true,
+    });
+  });
+
+  it("swaps to the signed URL when processing is ready", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: processed,
+        localUrl,
+        localPlaybackFailed: false,
+        readFailed: false,
+      }),
+    ).toEqual({
+      kind: "player",
+      readUrl: processed.readUrl,
+      posterUrl: processed.posterUrl,
+      showOptimizing: false,
+    });
+  });
+
+  it("shows processing when there is no cached file", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "queued",
+        failureCode: null,
+        assets: null,
+        localUrl: null,
+        localPlaybackFailed: false,
+        readFailed: false,
+      }),
+    ).toEqual({ kind: "processing" });
+  });
+
+  it("falls back to processing when the browser cannot play the local file", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "processing",
+        failureCode: null,
+        assets: null,
+        localUrl,
+        localPlaybackFailed: true,
+        readFailed: false,
+      }),
+    ).toEqual({ kind: "processing" });
+  });
+
+  it("shows a loading state when ready with no assets or local file", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: null,
+        localUrl: null,
+        localPlaybackFailed: false,
+        readFailed: false,
+      }),
+    ).toEqual({ kind: "loading" });
+  });
+
+  it("shows a load error when ready assets cannot be fetched", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: null,
+        localUrl: null,
+        localPlaybackFailed: false,
+        readFailed: true,
+      }),
+    ).toEqual({ kind: "unavailable", message: "Couldn't load" });
+  });
+});

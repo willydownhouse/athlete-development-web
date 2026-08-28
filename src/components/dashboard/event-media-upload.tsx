@@ -15,6 +15,7 @@ import {
 } from "@/components/dashboard/event-media-gallery";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
+import { forgetLocalEventVideo, rememberLocalEventVideo } from "@/lib/local-event-video";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
 function isInFlightStatus(status: MediaStatus): boolean {
@@ -414,6 +415,8 @@ export function EventMediaUpload({
         return;
       }
 
+      forgetLocalEventVideo(mediaId);
+
       await loadMedia();
 
       const remainingImages = itemsRef.current.filter((item) => item.kind === "image");
@@ -454,6 +457,7 @@ export function EventMediaUpload({
     }
 
     setUploading(true);
+    let rememberedMediaId: string | null = null;
 
     try {
       const intentResult = await createMediaUploadIntentAction(athleteId, eventId, {
@@ -465,6 +469,11 @@ export function EventMediaUpload({
 
       if ("error" in intentResult) {
         throw new Error(intentResult.error);
+      }
+
+      if (classified.value.kind === "video") {
+        rememberLocalEventVideo(intentResult.id, file);
+        rememberedMediaId = intentResult.id;
       }
 
       const putResponse = await fetch(intentResult.uploadUrl, {
@@ -490,6 +499,10 @@ export function EventMediaUpload({
       setPendingFocus(intentResult.id);
       await loadMedia();
     } catch (uploadError) {
+      if (rememberedMediaId) {
+        forgetLocalEventVideo(rememberedMediaId);
+      }
+
       setPendingFocus(null);
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
       await loadMedia();
