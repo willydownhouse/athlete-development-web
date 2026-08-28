@@ -14,7 +14,11 @@ import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import { EventMediaPlayer } from "@/components/dashboard/event-media-player";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
-import { isInFlightMediaStatus, resolveEventMediaPlaybackView } from "@/lib/event-media-playback";
+import {
+  isInFlightMediaStatus,
+  resolveEventMediaPlaybackView,
+  shouldRetryEventMediaReadUrl,
+} from "@/lib/event-media-playback";
 import {
   eventMediaPlayerFrameStyle,
   resolveEventMediaPlayerFrameSize,
@@ -51,7 +55,7 @@ export function EventMediaPlayerView({
   const [error, setError] = useState<string | null>(null);
   const [mediaItem, setMediaItem] = useState(item);
   const [playbackAssets, setPlaybackAssets] = useState(assets);
-  const [readFailed, setReadFailed] = useState(item.status === "ready" && assets === null);
+  const [readFailed, setReadFailed] = useState(false);
   const localPreviewUrl = useSyncExternalStore(
     subscribeLocalEventVideos,
     () => getLocalEventVideo(mediaId),
@@ -109,21 +113,6 @@ export function EventMediaPlayerView({
           return;
         }
 
-        if (result.status === "ready") {
-          const assetsResult = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
-
-          if (isPollCancelled()) {
-            return;
-          }
-
-          if (!("error" in assetsResult)) {
-            setPlaybackAssets(assetsResult);
-            setReadFailed(false);
-          } else if (!getLocalEventVideo(mediaId)) {
-            setReadFailed(true);
-          }
-        }
-
         if (result.status === "failed") {
           dropLocalPreview();
         }
@@ -145,6 +134,50 @@ export function EventMediaPlayerView({
     };
   }, [athleteId, dropLocalPreview, eventId, mediaId, mediaItem.status, router]);
 
+  useEffect(() => {
+    if (!shouldRetryEventMediaReadUrl(mediaItem.status, playbackAssets !== null)) {
+      return;
+    }
+
+    let cancelled = false;
+    let requestInFlight = false;
+
+    async function pull() {
+      if (requestInFlight) {
+        return;
+      }
+
+      requestInFlight = true;
+
+      try {
+        const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
+
+        if (cancelled) {
+          return;
+        }
+
+        if ("error" in result) {
+          return;
+        }
+
+        setReadFailed(false);
+        setPlaybackAssets(result);
+      } finally {
+        requestInFlight = false;
+      }
+    }
+
+    void pull();
+    const interval = window.setInterval(() => {
+      void pull();
+    }, EVENT_MEDIA_STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [athleteId, eventId, mediaId, mediaItem.status, playbackAssets]);
+
   const refreshPlaybackAssets = useCallback(async () => {
     if (refreshInFlightRef.current || mediaItem.status !== "ready") {
       return;
@@ -156,9 +189,6 @@ export function EventMediaPlayerView({
       const result = await getEventMediaReadUrlAction(athleteId, eventId, mediaId);
 
       if ("error" in result) {
-        if (!playbackAssets) {
-          setReadFailed(true);
-        }
         return;
       }
 
@@ -167,7 +197,7 @@ export function EventMediaPlayerView({
     } finally {
       refreshInFlightRef.current = false;
     }
-  }, [athleteId, eventId, mediaId, mediaItem.status, playbackAssets]);
+  }, [athleteId, eventId, mediaId, mediaItem.status]);
 
   const getPlaybackAssets = useCallback(
     () => (playbackAssets ? ([[mediaId, playbackAssets]] as const) : []),

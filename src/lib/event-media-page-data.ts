@@ -51,7 +51,7 @@ export async function fetchEventMediaPlayerPageData(
       return { item, assets };
     } catch (error) {
       // 409: ready in the DB but display/playback is not available yet.
-      // The player view treats ready + null assets as a load error, not a spinner.
+      // The player retries read-url and keeps the local blob when it has one.
       if (error instanceof ApiError && error.status === 409) {
         return { item, assets: null };
       }

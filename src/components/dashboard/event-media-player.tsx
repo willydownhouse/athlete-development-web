@@ -73,13 +73,16 @@ export function EventMediaPlayer({
         player.currentTime = resumeAt;
       }
 
-      if (shouldPlay) {
-        void player.play().catch((error: unknown) => {
-          if (isAbortError(error)) {
-            return;
-          }
-        });
+      if (!shouldPlay) {
+        player.pause();
+        return;
       }
+
+      void player.play().catch((error: unknown) => {
+        if (isAbortError(error)) {
+          return;
+        }
+      });
     }
 
     function handleError() {
@@ -88,7 +91,12 @@ export function EventMediaPlayer({
 
     player.addEventListener("loadedmetadata", restorePlayback, { once: true });
     player.addEventListener("error", handleError);
+    player.autoplay = shouldPlay;
     player.src = readUrl;
+
+    if (!shouldPlay) {
+      player.pause();
+    }
 
     return () => {
       player.removeEventListener("loadedmetadata", restorePlayback);

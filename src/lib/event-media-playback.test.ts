@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveEventMediaPlaybackView,
   resolveEventMediaVideoThumbPoster,
+  shouldRetryEventMediaReadUrl,
 } from "./event-media-playback";
 
 const localUrl = "blob:local-clip";
@@ -78,6 +79,25 @@ describe("resolveEventMediaPlaybackView", () => {
     ).toEqual({ kind: "processing" });
   });
 
+  it("keeps playing the local file when ready but signed URLs are not available yet", () => {
+    expect(
+      resolveEventMediaPlaybackView({
+        status: "ready",
+        failureCode: null,
+        assets: null,
+        localUrl,
+        localPlaybackFailed: false,
+        processedPlaybackFailed: false,
+        readFailed: false,
+      }),
+    ).toEqual({
+      kind: "player",
+      readUrl: localUrl,
+      posterUrl: null,
+      showOptimizing: false,
+    });
+  });
+
   it("shows a loading state when ready with no assets or local file", () => {
     expect(
       resolveEventMediaPlaybackView({
@@ -137,6 +157,20 @@ describe("resolveEventMediaPlaybackView", () => {
         readFailed: false,
       }),
     ).toEqual({ kind: "unavailable", message: "Couldn't load" });
+  });
+});
+
+describe("shouldRetryEventMediaReadUrl", () => {
+  it("retries while ready with no signed URLs", () => {
+    expect(shouldRetryEventMediaReadUrl("ready", false)).toBe(true);
+  });
+
+  it("does not retry after signed URLs arrive", () => {
+    expect(shouldRetryEventMediaReadUrl("ready", true)).toBe(false);
+  });
+
+  it("does not retry while processing", () => {
+    expect(shouldRetryEventMediaReadUrl("processing", false)).toBe(false);
   });
 });
 

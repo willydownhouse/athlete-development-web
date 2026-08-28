@@ -4,6 +4,13 @@ export function isInFlightMediaStatus(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
 }
 
+export function shouldRetryEventMediaReadUrl(
+  status: MediaStatus,
+  hasPlaybackAssets: boolean,
+): boolean {
+  return status === "ready" && !hasPlaybackAssets;
+}
+
 export type EventMediaPlaybackView =
   | {
       kind: "player";
