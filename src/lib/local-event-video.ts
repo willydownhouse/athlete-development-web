@@ -41,6 +41,23 @@ export function rememberLocalEventVideoPoster(mediaId: string, poster: Blob): st
   return objectUrl;
 }
 
+export async function rememberLocalEventVideoPosterIfCached(
+  mediaId: string,
+  posterPromise: Promise<Blob | null>,
+): Promise<void> {
+  try {
+    const poster = await posterPromise;
+
+    if (!poster || !getLocalEventVideo(mediaId)) {
+      return;
+    }
+
+    rememberLocalEventVideoPoster(mediaId, poster);
+  } catch {
+    return;
+  }
+}
+
 export function getLocalEventVideoPoster(mediaId: string): string | null {
   return localEventVideoPosters.get(mediaId) ?? null;
 }

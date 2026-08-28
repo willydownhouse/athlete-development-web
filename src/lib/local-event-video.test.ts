@@ -8,6 +8,7 @@ import {
   getLocalEventVideoPoster,
   rememberLocalEventVideo,
   rememberLocalEventVideoPoster,
+  rememberLocalEventVideoPosterIfCached,
   resetLocalEventVideosForTests,
   subscribeLocalEventVideos,
 } from "./local-event-video";
@@ -18,6 +19,7 @@ describe("local event video cache", () => {
 
   beforeEach(() => {
     let count = 0;
+    createObjectURL.mockReset();
     createObjectURL.mockImplementation(() => `blob:test-${++count}`);
     revokeObjectURL.mockReset();
     Object.assign(URL, { createObjectURL, revokeObjectURL });
@@ -110,5 +112,61 @@ describe("local event video cache", () => {
 
     expect(getLocalEventVideo("media-1")).toBeNull();
     expect(getLocalEventVideo("media-2")).toBe("blob:test-2");
+  });
+
+  it("stores a captured poster when the video is still cached", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    const poster = new Blob(["poster"], { type: "image/jpeg" });
+
+    await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(poster));
+
+    expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+  });
+
+  it("does not store a captured poster after the video was forgotten", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    forgetLocalEventVideo("media-1");
+
+    await rememberLocalEventVideoPosterIfCached(
+      "media-1",
+      Promise.resolve(new Blob(["poster"], { type: "image/jpeg" })),
+    );
+
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("does not store a poster if the video is forgotten while capture is in flight", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    let resolvePoster: (value: Blob | null) => void = () => {};
+    const posterPromise = new Promise<Blob | null>((resolve) => {
+      resolvePoster = resolve;
+    });
+
+    const pending = rememberLocalEventVideoPosterIfCached("media-1", posterPromise);
+    forgetLocalEventVideo("media-1");
+    resolvePoster(new Blob(["poster"], { type: "image/jpeg" }));
+    await pending;
+
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("does not store a poster when capture returns nothing", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+
+    await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(null));
+
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("swallows capture failures without dropping the video", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+
+    await rememberLocalEventVideoPosterIfCached(
+      "media-1",
+      Promise.reject(new Error("decode failed")),
+    );
+
+    expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
   });
 });

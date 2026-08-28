@@ -20,7 +20,7 @@ import {
   forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   rememberLocalEventVideo,
-  rememberLocalEventVideoPoster,
+  rememberLocalEventVideoPosterIfCached,
 } from "@/lib/local-event-video";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
@@ -501,11 +501,7 @@ export function EventMediaUpload({
 
       if (classified.value.kind === "video") {
         rememberLocalEventVideo(intentResult.id, file);
-        const poster = await captureLocalVideoPoster(file);
-
-        if (poster) {
-          rememberLocalEventVideoPoster(intentResult.id, poster);
-        }
+        void rememberLocalEventVideoPosterIfCached(intentResult.id, captureLocalVideoPoster(file));
       }
 
       setPendingFocus(intentResult.id);
