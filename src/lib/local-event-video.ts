@@ -1,6 +1,7 @@
 const localEventVideos = new Map<string, string>();
 const localEventVideoPosters = new Map<string, string>();
 const localEventVideoEventIds = new Map<string, string>();
+const localEventVideoSizes = new Map<string, { width: number; height: number }>();
 const listeners = new Set<() => void>();
 let localEventVideoRevision = 0;
 
@@ -43,25 +44,48 @@ export function rememberLocalEventVideoPoster(mediaId: string, poster: Blob): st
   return objectUrl;
 }
 
-export async function rememberLocalEventVideoPosterIfCached(
+export function getLocalEventVideoPoster(mediaId: string): string | null {
+  return localEventVideoPosters.get(mediaId) ?? null;
+}
+
+export function rememberLocalEventVideoSize(mediaId: string, width: number, height: number): void {
+  if (!getLocalEventVideo(mediaId) || width <= 0 || height <= 0) {
+    return;
+  }
+
+  const existing = localEventVideoSizes.get(mediaId);
+
+  if (existing && existing.width === width && existing.height === height) {
+    return;
+  }
+
+  localEventVideoSizes.set(mediaId, { width, height });
+  notifyLocalEventVideoListeners();
+}
+
+export function getLocalEventVideoSize(mediaId: string): { width: number; height: number } | null {
+  return localEventVideoSizes.get(mediaId) ?? null;
+}
+
+export async function rememberLocalEventVideoCaptureIfCached(
   mediaId: string,
-  posterPromise: Promise<Blob | null>,
+  capturePromise: Promise<{ poster: Blob | null; width: number; height: number } | null>,
 ): Promise<void> {
   try {
-    const poster = await posterPromise;
+    const captured = await capturePromise;
 
-    if (!poster || !getLocalEventVideo(mediaId)) {
+    if (!captured || !getLocalEventVideo(mediaId)) {
       return;
     }
 
-    rememberLocalEventVideoPoster(mediaId, poster);
+    rememberLocalEventVideoSize(mediaId, captured.width, captured.height);
+
+    if (captured.poster) {
+      rememberLocalEventVideoPoster(mediaId, captured.poster);
+    }
   } catch {
     return;
   }
-}
-
-export function getLocalEventVideoPoster(mediaId: string): string | null {
-  return localEventVideoPosters.get(mediaId) ?? null;
 }
 
 export function forgetLocalEventVideoPoster(mediaId: string): void {
@@ -79,6 +103,7 @@ export function forgetLocalEventVideoPoster(mediaId: string): void {
 export function forgetLocalEventVideo(mediaId: string): void {
   forgetLocalEventVideoPoster(mediaId);
   localEventVideoEventIds.delete(mediaId);
+  localEventVideoSizes.delete(mediaId);
 
   const objectUrl = localEventVideos.get(mediaId);
 
@@ -92,7 +117,11 @@ export function forgetLocalEventVideo(mediaId: string): void {
 }
 
 function forgetAllLocalEventVideos(): void {
-  const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
+  const mediaIds = new Set([
+    ...localEventVideos.keys(),
+    ...localEventVideoPosters.keys(),
+    ...localEventVideoSizes.keys(),
+  ]);
 
   for (const mediaId of mediaIds) {
     forgetLocalEventVideo(mediaId);
@@ -105,7 +134,11 @@ export function forgetLocalEventVideosOutsideEvent(eventId: string | null): void
     return;
   }
 
-  const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
+  const mediaIds = new Set([
+    ...localEventVideos.keys(),
+    ...localEventVideoPosters.keys(),
+    ...localEventVideoSizes.keys(),
+  ]);
 
   for (const mediaId of mediaIds) {
     if (localEventVideoEventIds.get(mediaId) !== eventId) {

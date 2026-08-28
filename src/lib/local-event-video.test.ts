@@ -7,9 +7,11 @@ import {
   forgetLocalEventVideosOutsideEvent,
   getLocalEventVideo,
   getLocalEventVideoPoster,
+  getLocalEventVideoSize,
   rememberLocalEventVideo,
+  rememberLocalEventVideoCaptureIfCached,
   rememberLocalEventVideoPoster,
-  rememberLocalEventVideoPosterIfCached,
+  rememberLocalEventVideoSize,
   resetLocalEventVideosForTests,
   subscribeLocalEventVideos,
 } from "./local-event-video";
@@ -119,50 +121,83 @@ describe("local event video cache", () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     const poster = new Blob(["poster"], { type: "image/jpeg" });
 
-    await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(poster));
+    await rememberLocalEventVideoCaptureIfCached(
+      "media-1",
+      Promise.resolve({ poster, width: 1920, height: 1080 }),
+    );
 
     expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1920, height: 1080 });
+  });
+
+  it("stores captured dimensions even when the poster blob is missing", async () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
+
+    await rememberLocalEventVideoCaptureIfCached(
+      "media-1",
+      Promise.resolve({ poster: null, width: 1280, height: 720 }),
+    );
+
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1280, height: 720 });
   });
 
   it("does not store a captured poster after the video was forgotten", async () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     forgetLocalEventVideo("media-1");
 
-    await rememberLocalEventVideoPosterIfCached(
+    await rememberLocalEventVideoCaptureIfCached(
       "media-1",
-      Promise.resolve(new Blob(["poster"], { type: "image/jpeg" })),
+      Promise.resolve({
+        poster: new Blob(["poster"], { type: "image/jpeg" }),
+        width: 1920,
+        height: 1080,
+      }),
     );
 
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
   });
 
   it("does not store a poster if the video is forgotten while capture is in flight", async () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
-    let resolvePoster: (value: Blob | null) => void = () => {};
-    const posterPromise = new Promise<Blob | null>((resolve) => {
-      resolvePoster = resolve;
+    let resolveCapture: (
+      value: { poster: Blob | null; width: number; height: number } | null,
+    ) => void = () => {};
+    const capturePromise = new Promise<{
+      poster: Blob | null;
+      width: number;
+      height: number;
+    } | null>((resolve) => {
+      resolveCapture = resolve;
     });
 
-    const pending = rememberLocalEventVideoPosterIfCached("media-1", posterPromise);
+    const pending = rememberLocalEventVideoCaptureIfCached("media-1", capturePromise);
     forgetLocalEventVideo("media-1");
-    resolvePoster(new Blob(["poster"], { type: "image/jpeg" }));
+    resolveCapture({
+      poster: new Blob(["poster"], { type: "image/jpeg" }),
+      width: 1920,
+      height: 1080,
+    });
     await pending;
 
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
   });
 
   it("does not store a poster when capture returns nothing", async () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
 
-    await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(null));
+    await rememberLocalEventVideoCaptureIfCached("media-1", Promise.resolve(null));
 
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
   });
 
   it("swallows capture failures without dropping the video", async () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
 
-    await rememberLocalEventVideoPosterIfCached(
+    await rememberLocalEventVideoCaptureIfCached(
       "media-1",
       Promise.reject(new Error("decode failed")),
     );
@@ -171,24 +206,45 @@ describe("local event video cache", () => {
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
   });
 
+  it("remembers frame size with the video and drops it when forgotten", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
+    rememberLocalEventVideoSize("media-1", 1920, 1080);
+
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1920, height: 1080 });
+
+    forgetLocalEventVideo("media-1");
+
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
+  });
+
+  it("does not remember frame size for a video that is not cached", () => {
+    rememberLocalEventVideoSize("media-1", 1920, 1080);
+
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
+  });
+
   it("keeps local previews while remaining on the same event", () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+    rememberLocalEventVideoSize("media-1", 1920, 1080);
 
     forgetLocalEventVideosOutsideEvent("event-1");
 
     expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
     expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1920, height: 1080 });
   });
 
   it("drops local previews when leaving the event", () => {
     rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+    rememberLocalEventVideoSize("media-1", 1920, 1080);
 
     forgetLocalEventVideosOutsideEvent(null);
 
     expect(getLocalEventVideo("media-1")).toBeNull();
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(getLocalEventVideoSize("media-1")).toBeNull();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-1");
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-2");
   });

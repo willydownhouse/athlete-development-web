@@ -15,10 +15,15 @@ import { EventMediaPlayer } from "@/components/dashboard/event-media-player";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { isInFlightMediaStatus, resolveEventMediaPlaybackView } from "@/lib/event-media-playback";
-import { eventMediaPlayerFrameStyle } from "@/lib/event-media-player-frame";
+import {
+  eventMediaPlayerFrameStyle,
+  resolveEventMediaPlayerFrameSize,
+} from "@/lib/event-media-player-frame";
 import {
   forgetLocalEventVideo,
   getLocalEventVideo,
+  getLocalEventVideoSize,
+  rememberLocalEventVideoSize,
   subscribeLocalEventVideos,
 } from "@/lib/local-event-video";
 import type { EventMediaItem, MediaReadUrlResponse } from "@/lib/types";
@@ -50,6 +55,11 @@ export function EventMediaPlayerView({
   const localPreviewUrl = useSyncExternalStore(
     subscribeLocalEventVideos,
     () => getLocalEventVideo(mediaId),
+    () => null,
+  );
+  const localPreviewSize = useSyncExternalStore(
+    subscribeLocalEventVideos,
+    () => getLocalEventVideoSize(mediaId),
     () => null,
   );
   const [localPlaybackFailed, setLocalPlaybackFailed] = useState(false);
@@ -219,8 +229,14 @@ export function EventMediaPlayerView({
     localPlaybackFailed,
     readFailed,
   });
-  const frameWidth = mediaItem.originalWidth ?? previewSize?.width ?? null;
-  const frameHeight = mediaItem.originalHeight ?? previewSize?.height ?? null;
+  const frameSize = resolveEventMediaPlayerFrameSize({
+    originalWidth: mediaItem.originalWidth,
+    originalHeight: mediaItem.originalHeight,
+    localSize: localPreviewSize,
+    previewSize,
+  });
+  const frameWidth = frameSize.width;
+  const frameHeight = frameSize.height;
   const playingLocalPreview = playback.kind === "player" && playback.readUrl === localPreviewUrl;
 
   return (
@@ -253,6 +269,7 @@ export function EventMediaPlayerView({
             optimizingLabel={playback.showOptimizing ? "Optimizing…" : null}
             onFrameSize={(nextWidth, nextHeight) => {
               setPreviewSize({ width: nextWidth, height: nextHeight });
+              rememberLocalEventVideoSize(mediaId, nextWidth, nextHeight);
             }}
             onPlaybackError={
               playingLocalPreview

@@ -1,6 +1,12 @@
 const LOCAL_VIDEO_POSTER_TIMEOUT_MS = 2_500;
 
-export async function captureLocalVideoPoster(file: Blob): Promise<Blob | null> {
+type LocalVideoCaptureResult = {
+  poster: Blob | null;
+  width: number;
+  height: number;
+};
+
+export async function captureLocalVideoPoster(file: Blob): Promise<LocalVideoCaptureResult | null> {
   if (typeof document === "undefined") {
     return null;
   }
@@ -16,7 +22,7 @@ export async function captureLocalVideoPoster(file: Blob): Promise<Blob | null> 
   }
 }
 
-function captureFrame(videoUrl: string): Promise<Blob | null> {
+function captureFrame(videoUrl: string): Promise<LocalVideoCaptureResult | null> {
   return new Promise((resolve) => {
     const video = document.createElement("video");
     video.muted = true;
@@ -34,6 +40,7 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
     document.body.append(video);
 
     let settled = false;
+    let capturedSize: { width: number; height: number } | null = null;
 
     const timeout = window.setTimeout(() => {
       finish(null);
@@ -49,7 +56,9 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
       video.removeAttribute("src");
       video.load();
       video.remove();
-      resolve(poster);
+      resolve(
+        capturedSize ? { poster, width: capturedSize.width, height: capturedSize.height } : null,
+      );
     }
 
     function sizeToIntrinsicFrame(): { width: number; height: number } | null {
@@ -64,7 +73,8 @@ function captureFrame(videoUrl: string): Promise<Blob | null> {
       video.height = height;
       video.style.width = `${width}px`;
       video.style.height = `${height}px`;
-      return { width, height };
+      capturedSize = { width, height };
+      return capturedSize;
     }
 
     function grabFrame() {
