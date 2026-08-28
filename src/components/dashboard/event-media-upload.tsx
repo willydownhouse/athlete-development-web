@@ -500,7 +500,7 @@ export function EventMediaUpload({
       }
 
       if (classified.value.kind === "video") {
-        rememberLocalEventVideo(intentResult.id, file);
+        rememberLocalEventVideo(intentResult.id, file, eventId);
         void rememberLocalEventVideoPosterIfCached(intentResult.id, captureLocalVideoPoster(file));
       }
 

@@ -1,5 +1,6 @@
 const localEventVideos = new Map<string, string>();
 const localEventVideoPosters = new Map<string, string>();
+const localEventVideoEventIds = new Map<string, string>();
 const listeners = new Set<() => void>();
 let localEventVideoRevision = 0;
 
@@ -21,10 +22,11 @@ export function getLocalEventVideoRevision(): number {
   return localEventVideoRevision;
 }
 
-export function rememberLocalEventVideo(mediaId: string, file: Blob): string {
+export function rememberLocalEventVideo(mediaId: string, file: Blob, eventId: string): string {
   forgetLocalEventVideo(mediaId);
   const objectUrl = URL.createObjectURL(file);
   localEventVideos.set(mediaId, objectUrl);
+  localEventVideoEventIds.set(mediaId, eventId);
   notifyLocalEventVideoListeners();
   return objectUrl;
 }
@@ -76,6 +78,7 @@ export function forgetLocalEventVideoPoster(mediaId: string): void {
 
 export function forgetLocalEventVideo(mediaId: string): void {
   forgetLocalEventVideoPoster(mediaId);
+  localEventVideoEventIds.delete(mediaId);
 
   const objectUrl = localEventVideos.get(mediaId);
 
@@ -88,6 +91,29 @@ export function forgetLocalEventVideo(mediaId: string): void {
   notifyLocalEventVideoListeners();
 }
 
+function forgetAllLocalEventVideos(): void {
+  const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
+
+  for (const mediaId of mediaIds) {
+    forgetLocalEventVideo(mediaId);
+  }
+}
+
+export function forgetLocalEventVideosOutsideEvent(eventId: string | null): void {
+  if (eventId === null) {
+    forgetAllLocalEventVideos();
+    return;
+  }
+
+  const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
+
+  for (const mediaId of mediaIds) {
+    if (localEventVideoEventIds.get(mediaId) !== eventId) {
+      forgetLocalEventVideo(mediaId);
+    }
+  }
+}
+
 export function forgetFailedLocalEventVideos(items: Array<{ id: string; status: string }>): void {
   for (const item of items) {
     if (item.status === "failed") {
@@ -97,9 +123,5 @@ export function forgetFailedLocalEventVideos(items: Array<{ id: string; status: 
 }
 
 export function resetLocalEventVideosForTests(): void {
-  const mediaIds = new Set([...localEventVideos.keys(), ...localEventVideoPosters.keys()]);
-
-  for (const mediaId of mediaIds) {
-    forgetLocalEventVideo(mediaId);
-  }
+  forgetAllLocalEventVideos();
 }

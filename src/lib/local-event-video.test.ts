@@ -4,6 +4,7 @@ import {
   forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   forgetLocalEventVideoPoster,
+  forgetLocalEventVideosOutsideEvent,
   getLocalEventVideo,
   getLocalEventVideoPoster,
   rememberLocalEventVideo,
@@ -34,7 +35,7 @@ describe("local event video cache", () => {
   it("remembers a blob URL for a media id", () => {
     const file = new Blob(["clip"], { type: "video/mp4" });
 
-    expect(rememberLocalEventVideo("media-1", file)).toBe("blob:test-1");
+    expect(rememberLocalEventVideo("media-1", file, "event-1")).toBe("blob:test-1");
     expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
     expect(createObjectURL).toHaveBeenCalledWith(file);
   });
@@ -44,7 +45,7 @@ describe("local event video cache", () => {
   });
 
   it("revokes and drops a remembered URL", () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     forgetLocalEventVideo("media-1");
 
     expect(getLocalEventVideo("media-1")).toBeNull();
@@ -57,8 +58,8 @@ describe("local event video cache", () => {
   });
 
   it("replaces an existing URL for the same media id", () => {
-    rememberLocalEventVideo("media-1", new Blob(["first"]));
-    expect(rememberLocalEventVideo("media-1", new Blob(["second"]))).toBe("blob:test-2");
+    rememberLocalEventVideo("media-1", new Blob(["first"]), "event-1");
+    expect(rememberLocalEventVideo("media-1", new Blob(["second"]), "event-1")).toBe("blob:test-2");
 
     expect(getLocalEventVideo("media-1")).toBe("blob:test-2");
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-1");
@@ -68,16 +69,16 @@ describe("local event video cache", () => {
     const onStoreChange = vi.fn();
     const unsubscribe = subscribeLocalEventVideos(onStoreChange);
 
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     forgetLocalEventVideo("media-1");
     unsubscribe();
-    rememberLocalEventVideo("media-2", new Blob(["other"]));
+    rememberLocalEventVideo("media-2", new Blob(["other"]), "event-1");
 
     expect(onStoreChange).toHaveBeenCalledTimes(2);
   });
 
   it("remembers a poster separately from the video file", () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
 
     expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
@@ -85,7 +86,7 @@ describe("local event video cache", () => {
   });
 
   it("drops the poster without dropping the video", () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
     forgetLocalEventVideoPoster("media-1");
 
@@ -94,7 +95,7 @@ describe("local event video cache", () => {
   });
 
   it("forgets the poster when the video is forgotten", () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
     forgetLocalEventVideo("media-1");
 
@@ -102,8 +103,8 @@ describe("local event video cache", () => {
   });
 
   it("clears local previews for failed media only", () => {
-    rememberLocalEventVideo("media-1", new Blob(["failed"]));
-    rememberLocalEventVideo("media-2", new Blob(["processing"]));
+    rememberLocalEventVideo("media-1", new Blob(["failed"]), "event-1");
+    rememberLocalEventVideo("media-2", new Blob(["processing"]), "event-1");
 
     forgetFailedLocalEventVideos([
       { id: "media-1", status: "failed" },
@@ -115,7 +116,7 @@ describe("local event video cache", () => {
   });
 
   it("stores a captured poster when the video is still cached", async () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     const poster = new Blob(["poster"], { type: "image/jpeg" });
 
     await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(poster));
@@ -124,7 +125,7 @@ describe("local event video cache", () => {
   });
 
   it("does not store a captured poster after the video was forgotten", async () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     forgetLocalEventVideo("media-1");
 
     await rememberLocalEventVideoPosterIfCached(
@@ -136,7 +137,7 @@ describe("local event video cache", () => {
   });
 
   it("does not store a poster if the video is forgotten while capture is in flight", async () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
     let resolvePoster: (value: Blob | null) => void = () => {};
     const posterPromise = new Promise<Blob | null>((resolve) => {
       resolvePoster = resolve;
@@ -151,7 +152,7 @@ describe("local event video cache", () => {
   });
 
   it("does not store a poster when capture returns nothing", async () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
 
     await rememberLocalEventVideoPosterIfCached("media-1", Promise.resolve(null));
 
@@ -159,7 +160,7 @@ describe("local event video cache", () => {
   });
 
   it("swallows capture failures without dropping the video", async () => {
-    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
 
     await rememberLocalEventVideoPosterIfCached(
       "media-1",
@@ -168,5 +169,37 @@ describe("local event video cache", () => {
 
     expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("keeps local previews while remaining on the same event", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
+    rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+
+    forgetLocalEventVideosOutsideEvent("event-1");
+
+    expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
+    expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+  });
+
+  it("drops local previews when leaving the event", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
+    rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+
+    forgetLocalEventVideosOutsideEvent(null);
+
+    expect(getLocalEventVideo("media-1")).toBeNull();
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-1");
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-2");
+  });
+
+  it("drops local previews that belong to a different event", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]), "event-1");
+    rememberLocalEventVideo("media-2", new Blob(["other"]), "event-2");
+
+    forgetLocalEventVideosOutsideEvent("event-2");
+
+    expect(getLocalEventVideo("media-1")).toBeNull();
+    expect(getLocalEventVideo("media-2")).toBe("blob:test-2");
   });
 });
