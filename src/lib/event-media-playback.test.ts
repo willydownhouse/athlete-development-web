@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveEventMediaPlaybackView } from "./event-media-playback";
+import {
+  resolveEventMediaPlaybackView,
+  resolveEventMediaVideoThumbPoster,
+} from "./event-media-playback";
 
 const localUrl = "blob:local-clip";
 const processed = {
@@ -95,5 +98,60 @@ describe("resolveEventMediaPlaybackView", () => {
         readFailed: true,
       }),
     ).toEqual({ kind: "unavailable", message: "Couldn't load" });
+  });
+});
+
+describe("resolveEventMediaVideoThumbPoster", () => {
+  const localPosterUrl = "blob:local-poster";
+  const processedPosterUrl = "https://storage.example/poster.webp";
+
+  it("does not use a local poster until the video is in-flight after upload", () => {
+    expect(
+      resolveEventMediaVideoThumbPoster({
+        status: "uploading",
+        processedPosterUrl: null,
+        localPosterUrl: null,
+      }),
+    ).toBeNull();
+  });
+
+  it("uses the local poster while processing", () => {
+    expect(
+      resolveEventMediaVideoThumbPoster({
+        status: "processing",
+        processedPosterUrl: null,
+        localPosterUrl,
+      }),
+    ).toBe(localPosterUrl);
+  });
+
+  it("prefers the processed poster when it is ready", () => {
+    expect(
+      resolveEventMediaVideoThumbPoster({
+        status: "ready",
+        processedPosterUrl,
+        localPosterUrl,
+      }),
+    ).toBe(processedPosterUrl);
+  });
+
+  it("keeps the local poster until the processed poster arrives", () => {
+    expect(
+      resolveEventMediaVideoThumbPoster({
+        status: "ready",
+        processedPosterUrl: null,
+        localPosterUrl,
+      }),
+    ).toBe(localPosterUrl);
+  });
+
+  it("does not show a local poster after processing failed", () => {
+    expect(
+      resolveEventMediaVideoThumbPoster({
+        status: "failed",
+        processedPosterUrl: null,
+        localPosterUrl,
+      }),
+    ).toBeNull();
   });
 });

@@ -15,7 +15,12 @@ import {
 } from "@/components/dashboard/event-media-gallery";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
-import { forgetLocalEventVideo, rememberLocalEventVideo } from "@/lib/local-event-video";
+import { captureLocalVideoPoster } from "@/lib/local-event-video-poster";
+import {
+  forgetLocalEventVideo,
+  rememberLocalEventVideo,
+  rememberLocalEventVideoPoster,
+} from "@/lib/local-event-video";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
 function isInFlightStatus(status: MediaStatus): boolean {
@@ -193,6 +198,7 @@ export function EventMediaUpload({
           ...current,
           [mediaId]: nextAssets,
         }));
+        forgetLocalEventVideo(mediaId);
       } catch {
         if (!isActiveRef.current) {
           return;
@@ -457,7 +463,6 @@ export function EventMediaUpload({
     }
 
     setUploading(true);
-    let rememberedMediaId: string | null = null;
 
     try {
       const intentResult = await createMediaUploadIntentAction(athleteId, eventId, {
@@ -469,11 +474,6 @@ export function EventMediaUpload({
 
       if ("error" in intentResult) {
         throw new Error(intentResult.error);
-      }
-
-      if (classified.value.kind === "video") {
-        rememberLocalEventVideo(intentResult.id, file);
-        rememberedMediaId = intentResult.id;
       }
 
       const putResponse = await fetch(intentResult.uploadUrl, {
@@ -496,13 +496,18 @@ export function EventMediaUpload({
         throw new Error(completeResult.error);
       }
 
+      if (classified.value.kind === "video") {
+        rememberLocalEventVideo(intentResult.id, file);
+        const poster = await captureLocalVideoPoster(file);
+
+        if (poster) {
+          rememberLocalEventVideoPoster(intentResult.id, poster);
+        }
+      }
+
       setPendingFocus(intentResult.id);
       await loadMedia();
     } catch (uploadError) {
-      if (rememberedMediaId) {
-        forgetLocalEventVideo(rememberedMediaId);
-      }
-
       setPendingFocus(null);
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
       await loadMedia();

@@ -70,3 +70,19 @@ export function resolveEventMediaPlaybackView(
     message: input.failureCode ? `${statusLabel} · ${input.failureCode}` : statusLabel,
   };
 }
+
+export function resolveEventMediaVideoThumbPoster(input: {
+  status: MediaStatus;
+  processedPosterUrl: string | null;
+  localPosterUrl: string | null;
+}): string | null {
+  if (input.processedPosterUrl) {
+    return input.processedPosterUrl;
+  }
+
+  if (input.localPosterUrl && (isInFlightMediaStatus(input.status) || input.status === "ready")) {
+    return input.localPosterUrl;
+  }
+
+  return null;
+}

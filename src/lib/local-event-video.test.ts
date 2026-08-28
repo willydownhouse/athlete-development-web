@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   forgetLocalEventVideo,
+  forgetLocalEventVideoPoster,
   getLocalEventVideo,
+  getLocalEventVideoPoster,
   rememberLocalEventVideo,
+  rememberLocalEventVideoPoster,
   resetLocalEventVideosForTests,
   subscribeLocalEventVideos,
 } from "./local-event-video";
@@ -68,5 +71,30 @@ describe("local event video cache", () => {
     rememberLocalEventVideo("media-2", new Blob(["other"]));
 
     expect(onStoreChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("remembers a poster separately from the video file", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+
+    expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
+    expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+  });
+
+  it("drops the poster without dropping the video", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+    forgetLocalEventVideoPoster("media-1");
+
+    expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("forgets the poster when the video is forgotten", () => {
+    rememberLocalEventVideo("media-1", new Blob(["clip"]));
+    rememberLocalEventVideoPoster("media-1", new Blob(["poster"], { type: "image/jpeg" }));
+    forgetLocalEventVideo("media-1");
+
+    expect(getLocalEventVideoPoster("media-1")).toBeNull();
   });
 });

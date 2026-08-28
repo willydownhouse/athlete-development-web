@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { athleteEventMediaHref } from "@/components/dashboard/dashboard-nav";
 import { EventMediaPlayBadge } from "@/components/dashboard/event-media-play-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMediaDuration } from "@/lib/event-media-format";
+import { resolveEventMediaVideoThumbPoster } from "@/lib/event-media-playback";
+import {
+  getLocalEventVideoPoster,
+  getLocalEventVideoRevision,
+  subscribeLocalEventVideos,
+} from "@/lib/local-event-video";
 import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
 
 const IMAGE_GALLERY_ASPECT_RATIO = "3 / 4";
@@ -173,22 +179,29 @@ function EventMediaVideoThumb({
   assets,
   href,
   readFailed,
+  localPosterUrl,
 }: {
   item: EventMediaItem;
   assets: EventMediaReadAssets | undefined;
   href: string;
   readFailed: boolean;
+  localPosterUrl: string | null;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [failedPosterUrl, setFailedPosterUrl] = useState<string | null>(null);
-  const posterUrl = assets?.posterUrl ?? null;
+  const posterUrl = resolveEventMediaVideoThumbPoster({
+    status: item.status,
+    processedPosterUrl: assets?.posterUrl ?? null,
+    localPosterUrl,
+  });
   const displayFailed = posterUrl !== null && failedPosterUrl === posterUrl;
   const durationLabel = formatMediaDuration(item.durationSeconds);
   const inFlight = isInFlightStatus(item.status);
   const label = item.originalFilename ?? "Event video";
-  const ariaLabel = item.status === "ready" ? `Play ${label}` : label;
+  const canPlay = item.status === "ready" || (inFlight && posterUrl !== null);
+  const ariaLabel = canPlay ? `Play ${label}` : label;
 
-  if (inFlight) {
+  if (inFlight && !posterUrl) {
     return (
       <Link
         href={href}
@@ -206,7 +219,7 @@ function EventMediaVideoThumb({
     );
   }
 
-  if (item.status !== "ready") {
+  if (item.status !== "ready" && !canPlay) {
     return (
       <Link
         href={href}
@@ -265,6 +278,7 @@ function EventMediaVideoThumb({
     >
       {!loaded ? <Skeleton className="absolute inset-0 h-full w-full" /> : null}
       <EventMediaDeferredImage
+        key={posterUrl}
         url={posterUrl}
         alt=""
         onLoad={() => setLoaded(true)}
@@ -320,6 +334,11 @@ export function EventMediaGallery({
 }: EventMediaGalleryProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const localPreviewRevision = useSyncExternalStore(
+    subscribeLocalEventVideos,
+    getLocalEventVideoRevision,
+    () => 0,
+  );
 
   const imageItems = useMemo(() => items.filter((item) => item.kind === "image"), [items]);
   const videoItems = useMemo(() => items.filter((item) => item.kind === "video"), [items]);
@@ -499,6 +518,9 @@ export function EventMediaGallery({
                 assets={readUrls[item.id]}
                 href={athleteEventMediaHref(athleteId, eventId, item.id)}
                 readFailed={Boolean(readUrlErrors[item.id])}
+                localPosterUrl={
+                  localPreviewRevision >= 0 ? getLocalEventVideoPoster(item.id) : null
+                }
               />
             ))}
           </div>
