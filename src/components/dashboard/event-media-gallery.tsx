@@ -429,7 +429,7 @@ export function EventMediaGallery({
           </p>
           <div
             ref={scrollRef}
-            className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-xl bg-[#0f1319] touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-xl bg-[#0f1319] [touch-action:pan-x_pan-y] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-roledescription="carousel"
             aria-label="Event photos"
           >
