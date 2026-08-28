@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   completeMediaUploadAction,
   createMediaUploadIntentAction,
   deleteEventMediaAction,
@@ -480,27 +479,25 @@ export function EventMediaUpload({
         throw new Error(intentResult.error);
       }
 
-      console.log("UPLOAD URL:", intentResult.uploadUrl);
+      const putResponse = await fetch(intentResult.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": classified.value.declaredMimeType,
+          "Content-Length": String(file.size),
+          "If-None-Match": "*",
+        },
+        body: file,
+      });
 
-      // const putResponse = await fetch(intentResult.uploadUrl, {
-      //   method: "PUT",
-      //   headers: {
-      //     "Content-Type": classified.value.declaredMimeType,
-      //     "Content-Length": String(file.size),
-      //     "If-None-Match": "*",
-      //   },
-      //   body: file,
-      // });
+      if (!putResponse.ok) {
+        throw new Error("Upload to storage failed.");
+      }
 
-      // if (!putResponse.ok) {
-      //   throw new Error("Upload to storage failed.");
-      // }
+      const completeResult = await completeMediaUploadAction(athleteId, eventId, intentResult.id);
 
-      //const completeResult = await completeMediaUploadAction(athleteId, eventId, intentResult.id);
-
-      // if ("error" in completeResult) {
-      //   throw new Error(completeResult.error);
-      // }
+      if ("error" in completeResult) {
+        throw new Error(completeResult.error);
+      }
 
       if (classified.value.kind === "video") {
         rememberLocalEventVideo(intentResult.id, file, eventId);
