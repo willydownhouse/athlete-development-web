@@ -187,13 +187,14 @@ function EventMediaVideoThumb({
   readFailed: boolean;
   localPosterUrl: string | null;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  const [loadedPosterUrl, setLoadedPosterUrl] = useState<string | null>(null);
   const [failedPosterUrl, setFailedPosterUrl] = useState<string | null>(null);
   const posterUrl = resolveEventMediaVideoThumbPoster({
     status: item.status,
     processedPosterUrl: assets?.posterUrl ?? null,
     localPosterUrl,
   });
+  const loaded = loadedPosterUrl === posterUrl;
   const displayFailed = posterUrl !== null && failedPosterUrl === posterUrl;
   const durationLabel = formatMediaDuration(item.durationSeconds);
   const inFlight = isInFlightStatus(item.status);
@@ -280,7 +281,7 @@ function EventMediaVideoThumb({
         key={posterUrl}
         url={posterUrl}
         alt=""
-        onLoad={() => setLoaded(true)}
+        onLoad={() => setLoadedPosterUrl(posterUrl)}
         onError={() => setFailedPosterUrl(posterUrl)}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
