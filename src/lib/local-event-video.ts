@@ -67,6 +67,42 @@ export function getLocalEventVideoSize(mediaId: string): { width: number; height
   return localEventVideoSizes.get(mediaId) ?? null;
 }
 
+export function adoptLocalEventVideoId(fromId: string, toId: string): void {
+  if (fromId === toId) {
+    return;
+  }
+
+  const videoUrl = localEventVideos.get(fromId);
+  const posterUrl = localEventVideoPosters.get(fromId);
+  const eventId = localEventVideoEventIds.get(fromId);
+  const size = localEventVideoSizes.get(fromId);
+
+  localEventVideos.delete(fromId);
+  localEventVideoPosters.delete(fromId);
+  localEventVideoEventIds.delete(fromId);
+  localEventVideoSizes.delete(fromId);
+
+  forgetLocalEventVideo(toId);
+
+  if (videoUrl) {
+    localEventVideos.set(toId, videoUrl);
+  }
+
+  if (posterUrl) {
+    localEventVideoPosters.set(toId, posterUrl);
+  }
+
+  if (eventId) {
+    localEventVideoEventIds.set(toId, eventId);
+  }
+
+  if (size) {
+    localEventVideoSizes.set(toId, size);
+  }
+
+  notifyLocalEventVideoListeners();
+}
+
 export async function rememberLocalEventVideoCaptureIfCached(
   mediaId: string,
   capturePromise: Promise<{ poster: Blob | null; width: number; height: number } | null>,

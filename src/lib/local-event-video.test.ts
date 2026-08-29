@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  adoptLocalEventVideoId,
   forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   forgetLocalEventVideoPoster,
@@ -102,6 +103,49 @@ describe("local event video cache", () => {
     forgetLocalEventVideo("media-1");
 
     expect(getLocalEventVideoPoster("media-1")).toBeNull();
+  });
+
+  it("moves a cached clip to the real media id without revoking it", () => {
+    rememberLocalEventVideo("local-1", new Blob(["clip"]), "event-1");
+    rememberLocalEventVideoPoster("local-1", new Blob(["poster"], { type: "image/jpeg" }));
+    rememberLocalEventVideoSize("local-1", 1920, 1080);
+
+    adoptLocalEventVideoId("local-1", "media-1");
+
+    expect(getLocalEventVideo("local-1")).toBeNull();
+    expect(getLocalEventVideo("media-1")).toBe("blob:test-1");
+    expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1920, height: 1080 });
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+  });
+
+  it("stores a poster that finishes after the clip is adopted", async () => {
+    rememberLocalEventVideo("local-1", new Blob(["clip"]), "event-1");
+    let resolveCapture: (
+      value: { poster: Blob | null; width: number; height: number } | null,
+    ) => void = () => {};
+    const capturePromise = new Promise<{
+      poster: Blob | null;
+      width: number;
+      height: number;
+    } | null>((resolve) => {
+      resolveCapture = resolve;
+    });
+
+    const first = rememberLocalEventVideoCaptureIfCached("local-1", capturePromise);
+    adoptLocalEventVideoId("local-1", "media-1");
+    const second = rememberLocalEventVideoCaptureIfCached("media-1", capturePromise);
+    resolveCapture({
+      poster: new Blob(["poster"], { type: "image/jpeg" }),
+      width: 1920,
+      height: 1080,
+    });
+    await first;
+    await second;
+
+    expect(getLocalEventVideoPoster("local-1")).toBeNull();
+    expect(getLocalEventVideoPoster("media-1")).toBe("blob:test-2");
+    expect(getLocalEventVideoSize("media-1")).toEqual({ width: 1920, height: 1080 });
   });
 
   it("clears local previews for failed media only", () => {

@@ -200,14 +200,14 @@ describe("resolveEventMediaVideoThumbPoster", () => {
   const localPosterUrl = "blob:local-poster";
   const processedPosterUrl = "https://storage.example/poster.webp";
 
-  it("does not use a local poster until the video is in-flight after upload", () => {
+  it("uses the local poster while the chosen file is still uploading", () => {
     expect(
       resolveEventMediaVideoThumbPoster({
         status: "uploading",
         processedPosterUrl: null,
-        localPosterUrl: null,
+        localPosterUrl,
       }),
-    ).toBeNull();
+    ).toBe(localPosterUrl);
   });
 
   it("uses the local poster while processing", () => {

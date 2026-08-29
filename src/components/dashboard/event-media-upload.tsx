@@ -15,18 +15,20 @@ import {
 } from "@/components/dashboard/event-media-gallery";
 import { useEventMediaReadUrlRefresh } from "@/hooks/use-event-media-read-url-refresh";
 import { classifyEventMediaFile, EVENT_MEDIA_FILE_ACCEPT } from "@/lib/event-media-file";
+import {
+  createPendingVideoMediaItem,
+  mergePendingEventMediaItems,
+  shouldPollEventMediaList,
+} from "@/lib/event-media-pending";
 import { captureLocalVideoPoster } from "@/lib/local-event-video-poster";
 import {
+  adoptLocalEventVideoId,
   forgetFailedLocalEventVideos,
   forgetLocalEventVideo,
   rememberLocalEventVideo,
   rememberLocalEventVideoCaptureIfCached,
 } from "@/lib/local-event-video";
-import type { EventMediaItem, EventMediaReadAssets, MediaStatus } from "@/lib/types";
-
-function isInFlightStatus(status: MediaStatus): boolean {
-  return status === "uploading" || status === "queued" || status === "processing";
-}
+import type { EventMediaItem, EventMediaReadAssets } from "@/lib/types";
 
 type EventMediaUploadProps = {
   athleteId: string;
@@ -92,6 +94,7 @@ export function EventMediaUpload({
   const [pendingFocusMediaId, setPendingFocusMediaId] = useState<string | null>(null);
   const [galleryFocusIndex, setGalleryFocusIndex] = useState(0);
   const [galleryFocusRequestId, setGalleryFocusRequestId] = useState(0);
+  const [blockedPlayerMediaIds, setBlockedPlayerMediaIds] = useState<Record<string, true>>({});
 
   const readUrlsRef = useRef(readUrls);
   const readUrlErrorsRef = useRef(readUrlErrors);
@@ -103,6 +106,7 @@ export function EventMediaUpload({
   const requestGalleryFocusRef = useRef<(index: number) => void>(() => {});
   const mediaListVersionRef = useRef(0);
   const activeMediaIdRef = useRef<string | null>(null);
+  const pendingVideoItemsRef = useRef(new Map<string, EventMediaItem>());
 
   const setPendingFocus = useCallback((mediaId: string | null) => {
     pendingFocusMediaIdRef.current = mediaId;
@@ -115,7 +119,7 @@ export function EventMediaUpload({
     itemsRef.current = items;
   }, [readUrls, readUrlErrors, items]);
 
-  const hasInFlightItems = items.some((item) => isInFlightStatus(item.status));
+  const hasInFlightItems = shouldPollEventMediaList(items, blockedPlayerMediaIds);
   const statusLabel = getStatusLabel(uploading, hasInFlightItems, pendingFocusMediaId);
 
   useEffect(() => {
@@ -230,7 +234,16 @@ export function EventMediaUpload({
 
   const applyMediaItems = useCallback(
     (mediaItems: EventMediaItem[]) => {
-      const activeIds = new Set(mediaItems.map((item) => item.id));
+      for (const id of pendingVideoItemsRef.current.keys()) {
+        if (mediaItems.some((item) => item.id === id)) {
+          pendingVideoItemsRef.current.delete(id);
+        }
+      }
+
+      const nextItems = mergePendingEventMediaItems(mediaItems, [
+        ...pendingVideoItemsRef.current.values(),
+      ]);
+      const activeIds = new Set(nextItems.map((item) => item.id));
       const previousItemsById = new Map(previousItemsRef.current.map((item) => [item.id, item]));
 
       forgetFailedLocalEventVideos(mediaItems);
@@ -241,8 +254,8 @@ export function EventMediaUpload({
         }
       }
 
-      setItems(mediaItems);
-      itemsRef.current = mediaItems;
+      setItems(nextItems);
+      itemsRef.current = nextItems;
       setReadUrls((current) => {
         const next: Record<string, EventMediaReadAssets> = {};
 
@@ -267,7 +280,7 @@ export function EventMediaUpload({
       });
 
       if (hasLoadedInitialMediaRef.current) {
-        for (const item of mediaItems) {
+        for (const item of nextItems) {
           if (item.status !== "ready") {
             continue;
           }
@@ -285,11 +298,11 @@ export function EventMediaUpload({
       const pendingMediaId = pendingFocusMediaIdRef.current;
 
       if (pendingMediaId) {
-        const pendingItem = mediaItems.find((item) => item.id === pendingMediaId);
+        const pendingItem = nextItems.find((item) => item.id === pendingMediaId);
 
         if (pendingItem?.status === "ready") {
           if (pendingItem.kind === "image") {
-            const imageIndex = mediaItems
+            const imageIndex = nextItems
               .filter((item) => item.kind === "image")
               .findIndex((item) => item.id === pendingMediaId);
 
@@ -302,7 +315,7 @@ export function EventMediaUpload({
         }
       }
 
-      previousItemsRef.current = mediaItems;
+      previousItemsRef.current = nextItems;
       hasLoadedInitialMediaRef.current = true;
     },
     [ensureReadUrl, setPendingFocus],
@@ -467,7 +480,26 @@ export function EventMediaUpload({
 
     setUploading(true);
 
+    let clientVideoId: string | null = null;
+    let mediaVideoId: string | null = null;
+    let capturePromise: ReturnType<typeof captureLocalVideoPoster> | null = null;
+
     try {
+      if (classified.value.kind === "video") {
+        const videoClientId = crypto.randomUUID();
+        clientVideoId = videoClientId;
+        rememberLocalEventVideo(videoClientId, file, eventId);
+        capturePromise = captureLocalVideoPoster(file);
+        void rememberLocalEventVideoCaptureIfCached(videoClientId, capturePromise);
+
+        const pendingItem = createPendingVideoMediaItem(videoClientId, file.name);
+        pendingVideoItemsRef.current.set(videoClientId, pendingItem);
+        const nextItems = [...itemsRef.current, pendingItem];
+        itemsRef.current = nextItems;
+        setItems(nextItems);
+        setBlockedPlayerMediaIds((current) => ({ ...current, [videoClientId]: true }));
+      }
+
       const intentResult = await createMediaUploadIntentAction(athleteId, eventId, {
         kind: classified.value.kind,
         declaredMimeType: classified.value.declaredMimeType,
@@ -477,6 +509,36 @@ export function EventMediaUpload({
 
       if ("error" in intentResult) {
         throw new Error(intentResult.error);
+      }
+
+      if (clientVideoId) {
+        const videoClientId = clientVideoId;
+        const videoMediaId = intentResult.id;
+        adoptLocalEventVideoId(videoClientId, videoMediaId);
+        if (capturePromise) {
+          void rememberLocalEventVideoCaptureIfCached(videoMediaId, capturePromise);
+        }
+
+        const pendingItem = {
+          ...(pendingVideoItemsRef.current.get(videoClientId) ??
+            createPendingVideoMediaItem(videoMediaId, file.name)),
+          id: videoMediaId,
+        };
+        pendingVideoItemsRef.current.delete(videoClientId);
+        pendingVideoItemsRef.current.set(videoMediaId, pendingItem);
+        mediaVideoId = videoMediaId;
+
+        const nextItems = itemsRef.current.map((item) =>
+          item.id === videoClientId ? pendingItem : item,
+        );
+        itemsRef.current = nextItems;
+        setItems(nextItems);
+        setBlockedPlayerMediaIds((current) => {
+          const next = { ...current };
+          delete next[videoClientId];
+          next[videoMediaId] = true;
+          return next;
+        });
       }
 
       const putResponse = await fetch(intentResult.uploadUrl, {
@@ -499,14 +561,42 @@ export function EventMediaUpload({
         throw new Error(completeResult.error);
       }
 
-      if (classified.value.kind === "video") {
-        rememberLocalEventVideo(intentResult.id, file, eventId);
-        void rememberLocalEventVideoCaptureIfCached(intentResult.id, captureLocalVideoPoster(file));
+      if (mediaVideoId) {
+        const videoMediaId = mediaVideoId;
+        setBlockedPlayerMediaIds((current) => {
+          const next = { ...current };
+          delete next[videoMediaId];
+          return next;
+        });
       }
 
       setPendingFocus(intentResult.id);
       await loadMedia();
     } catch (uploadError) {
+      if (clientVideoId) {
+        forgetLocalEventVideo(clientVideoId);
+        pendingVideoItemsRef.current.delete(clientVideoId);
+      }
+
+      if (mediaVideoId) {
+        forgetLocalEventVideo(mediaVideoId);
+        pendingVideoItemsRef.current.delete(mediaVideoId);
+      }
+
+      setBlockedPlayerMediaIds((current) => {
+        if (!clientVideoId && !mediaVideoId) {
+          return current;
+        }
+
+        const next = { ...current };
+        if (clientVideoId) {
+          delete next[clientVideoId];
+        }
+        if (mediaVideoId) {
+          delete next[mediaVideoId];
+        }
+        return next;
+      });
       setPendingFocus(null);
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
       await loadMedia();
@@ -554,6 +644,7 @@ export function EventMediaUpload({
           focusRequestId={galleryFocusRequestId}
           onEnsureReadUrl={ensureReadUrl}
           onActiveMediaChange={handleActiveMediaChange}
+          blockedPlayerMediaIds={blockedPlayerMediaIds}
         />
       ) : (
         <p className={`text-sm text-zinc-500 ${embedded ? "mt-3" : "mt-4"}`}>No media yet.</p>

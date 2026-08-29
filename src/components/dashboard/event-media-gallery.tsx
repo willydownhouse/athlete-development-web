@@ -19,7 +19,9 @@ const IMAGE_GALLERY_ASPECT_RATIO = "3 / 4";
 const GALLERY_CARD_CLASS_NAME =
   "relative mx-auto w-full overflow-hidden rounded-lg bg-[#0f1319] max-w-[min(28rem,calc(75dvh*3/4))]";
 const VIDEO_THUMB_CLASS_NAME =
-  "relative w-full overflow-hidden rounded-lg bg-[#0f1319] outline-none ring-[#9ec9e8] focus-visible:ring-2";
+  "relative block w-full overflow-hidden rounded-lg bg-[#0f1319] outline-none ring-[#9ec9e8] focus-visible:ring-2";
+const VIDEO_POSTER_IMG_CLASS_NAME =
+  "absolute top-1/2 left-1/2 h-auto w-auto max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200";
 
 function isInFlightStatus(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
@@ -180,12 +182,14 @@ function EventMediaVideoThumb({
   href,
   readFailed,
   localPosterUrl,
+  canOpen,
 }: {
   item: EventMediaItem;
   assets: EventMediaReadAssets | undefined;
   href: string;
   readFailed: boolean;
   localPosterUrl: string | null;
+  canOpen: boolean;
 }) {
   const [loadedPosterUrl, setLoadedPosterUrl] = useState<string | null>(null);
   const [failedPosterUrl, setFailedPosterUrl] = useState<string | null>(null);
@@ -201,6 +205,36 @@ function EventMediaVideoThumb({
   const label = item.originalFilename ?? "Event video";
   const canPlay = item.status === "ready" || (inFlight && posterUrl !== null);
   const ariaLabel = canPlay ? `Play ${label}` : label;
+
+  if (!canOpen) {
+    return (
+      <div
+        className={VIDEO_THUMB_CLASS_NAME}
+        style={{ aspectRatio: IMAGE_GALLERY_ASPECT_RATIO }}
+        aria-busy="true"
+        aria-label={`Uploading ${label}`}
+      >
+        {posterUrl && !displayFailed ? (
+          <EventMediaDeferredImage
+            key={posterUrl}
+            url={posterUrl}
+            alt=""
+            onLoad={() => setLoadedPosterUrl(posterUrl)}
+            onError={() => setFailedPosterUrl(posterUrl)}
+            className={`${VIDEO_POSTER_IMG_CLASS_NAME} ${loaded ? "opacity-100" : "opacity-0"}`}
+          />
+        ) : (
+          <Skeleton className="absolute inset-0 h-full w-full" />
+        )}
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-400 border-t-white"
+            aria-hidden="true"
+          />
+        </span>
+      </div>
+    );
+  }
 
   if (inFlight && !posterUrl) {
     return (
@@ -283,9 +317,7 @@ function EventMediaVideoThumb({
         alt=""
         onLoad={() => setLoadedPosterUrl(posterUrl)}
         onError={() => setFailedPosterUrl(posterUrl)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
+        className={`${VIDEO_POSTER_IMG_CLASS_NAME} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
       <span className="absolute inset-0 flex items-center justify-center">
         <EventMediaPlayBadge className="h-12 w-12" />
@@ -319,6 +351,7 @@ type EventMediaGalleryProps = {
   focusRequestId?: number;
   onEnsureReadUrl: (mediaId: string) => void | Promise<void>;
   onActiveMediaChange?: (mediaId: string | null) => void;
+  blockedPlayerMediaIds?: Record<string, true>;
 };
 
 export function EventMediaGallery({
@@ -331,6 +364,7 @@ export function EventMediaGallery({
   focusRequestId = 0,
   onEnsureReadUrl,
   onActiveMediaChange,
+  blockedPlayerMediaIds,
 }: EventMediaGalleryProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -521,6 +555,7 @@ export function EventMediaGallery({
                 localPosterUrl={
                   localPreviewRevision >= 0 ? getLocalEventVideoPoster(item.id) : null
                 }
+                canOpen={!blockedPlayerMediaIds?.[item.id]}
               />
             ))}
           </div>
