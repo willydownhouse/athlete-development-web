@@ -179,9 +179,31 @@ export function EventMediaPlayer({
     }
 
     let revealed = false;
+    let seekAttempts = 0;
     let seekFallback = 0;
 
+    function incomingTargetTime(): number {
+      const resumeAt = visiblePlayer.currentTime;
+      return canSeekIncomingTo(incomingPlayer, resumeAt)
+        ? Math.min(resumeAt, incomingPlayer.duration)
+        : 0;
+    }
+
+    function incomingIsAtTargetTime(): boolean {
+      const targetTime = incomingTargetTime();
+      return targetTime <= 0.05 || Math.abs(incomingPlayer.currentTime - targetTime) <= 0.3;
+    }
+
+    function kickIncomingDecode() {
+      void incomingPlayer.play().catch((error: unknown) => {
+        if (isAbortError(error)) {
+          return;
+        }
+      });
+    }
+
     function detachIncomingListeners() {
+      incomingPlayer.removeEventListener("loadedmetadata", handleIncomingMetadata);
       incomingPlayer.removeEventListener("canplay", handleIncomingCanPlay);
       incomingPlayer.removeEventListener("seeked", handleIncomingSeeked);
       incomingPlayer.removeEventListener("error", handleIncomingError);
@@ -193,11 +215,16 @@ export function EventMediaPlayer({
         return;
       }
 
+      if (!incomingIsAtTargetTime()) {
+        return;
+      }
+
       revealed = true;
       detachIncomingListeners();
       reportFrameSize(incomingPlayer, onFrameSizeRef.current);
 
       const shouldPlay = !visiblePlayer.paused;
+      incomingPlayer.volume = visiblePlayer.volume;
       incomingMutedRef.current = visiblePlayer.muted;
       incomingPlayer.muted = true;
       applyPlaybackState(incomingPlayer, shouldPlay);
@@ -206,25 +233,59 @@ export function EventMediaPlayer({
       setFront((current) => otherLayer(current));
     }
 
-    function handleIncomingSeeked() {
-      revealIncoming();
-    }
-
-    function handleIncomingCanPlay() {
+    function waitForPlayableAtTarget() {
       if (cancelled || revealed) {
         return;
       }
 
-      const resumeAt = visiblePlayer.currentTime;
+      if (!incomingIsAtTargetTime()) {
+        seekIncomingToVisibleTime();
+        return;
+      }
 
-      if (!canSeekIncomingTo(incomingPlayer, resumeAt)) {
+      if (incomingPlayer.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
         revealIncoming();
         return;
       }
 
+      incomingPlayer.addEventListener("canplay", handleIncomingCanPlay, { once: true });
+      kickIncomingDecode();
+      window.clearTimeout(seekFallback);
+      seekFallback = window.setTimeout(() => {
+        if (incomingIsAtTargetTime()) {
+          revealIncoming();
+        }
+      }, HANDOFF_SEEK_FALLBACK_MS);
+    }
+
+    function seekIncomingToVisibleTime() {
+      if (cancelled || revealed || seekAttempts >= 3) {
+        return;
+      }
+
+      const targetTime = incomingTargetTime();
+
+      if (targetTime <= 0.05) {
+        waitForPlayableAtTarget();
+        return;
+      }
+
+      seekAttempts += 1;
       incomingPlayer.addEventListener("seeked", handleIncomingSeeked, { once: true });
-      seekFallback = window.setTimeout(revealIncoming, HANDOFF_SEEK_FALLBACK_MS);
-      incomingPlayer.currentTime = Math.min(resumeAt, incomingPlayer.duration);
+      incomingPlayer.currentTime = targetTime;
+    }
+
+    function handleIncomingMetadata() {
+      reportFrameSize(incomingPlayer, onFrameSizeRef.current);
+      seekIncomingToVisibleTime();
+    }
+
+    function handleIncomingSeeked() {
+      waitForPlayableAtTarget();
+    }
+
+    function handleIncomingCanPlay() {
+      waitForPlayableAtTarget();
     }
 
     function handleIncomingError() {
@@ -239,19 +300,15 @@ export function EventMediaPlayer({
 
     incomingPlayer.muted = true;
     incomingPlayer.autoplay = false;
+    incomingPlayer.pause();
 
     if (posterUrl) {
       incomingPlayer.poster = posterUrl;
     }
 
-    incomingPlayer.addEventListener("canplay", handleIncomingCanPlay, { once: true });
+    incomingPlayer.addEventListener("loadedmetadata", handleIncomingMetadata, { once: true });
     incomingPlayer.addEventListener("error", handleIncomingError);
     incomingPlayer.src = readUrl;
-    void incomingPlayer.play().catch((error: unknown) => {
-      if (isAbortError(error)) {
-        return;
-      }
-    });
 
     return () => {
       cancelled = true;
@@ -274,7 +331,7 @@ export function EventMediaPlayer({
       <video
         ref={layerARef}
         autoPlay={allowInitialAutoPlay}
-        controls={front === "a"}
+        controls
         playsInline
         preload="auto"
         aria-hidden={front !== "a"}
@@ -283,7 +340,7 @@ export function EventMediaPlayer({
       />
       <video
         ref={layerBRef}
-        controls={front === "b"}
+        controls
         playsInline
         preload="auto"
         aria-hidden={front !== "b"}
