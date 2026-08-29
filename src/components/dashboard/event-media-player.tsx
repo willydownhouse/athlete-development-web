@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { resolveEventMediaSourceLoad } from "@/lib/event-media-playback";
 import { eventMediaPlayerFrameStyle } from "@/lib/event-media-player-frame";
 
 type EventMediaPlayerProps = {
@@ -16,8 +17,57 @@ type EventMediaPlayerProps = {
   onPlaybackError?: () => void;
 };
 
+type PlayerLayer = "a" | "b";
+
+const HANDOFF_SEEK_FALLBACK_MS = 400;
+
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+function otherLayer(layer: PlayerLayer): PlayerLayer {
+  return layer === "a" ? "b" : "a";
+}
+
+function videoClassName(isFront: boolean): string {
+  return `absolute inset-0 h-full w-full object-cover ${
+    isFront ? "" : "pointer-events-none opacity-0"
+  }`;
+}
+
+function reportFrameSize(
+  player: HTMLVideoElement,
+  onFrameSize: ((width: number, height: number) => void) | undefined,
+): void {
+  if (player.videoWidth > 0 && player.videoHeight > 0) {
+    onFrameSize?.(player.videoWidth, player.videoHeight);
+  }
+}
+
+function applyPlaybackState(player: HTMLVideoElement, shouldPlay: boolean): void {
+  player.autoplay = shouldPlay;
+
+  if (!shouldPlay) {
+    player.pause();
+    return;
+  }
+
+  void player.play().catch((error: unknown) => {
+    if (isAbortError(error)) {
+      return;
+    }
+  });
+}
+
+function clearVideoSource(player: HTMLVideoElement): void {
+  player.pause();
+  player.removeAttribute("src");
+  player.removeAttribute("poster");
+  player.load();
+}
+
+function canSeekIncomingTo(player: HTMLVideoElement, time: number): boolean {
+  return time > 0.05 && Number.isFinite(player.duration) && player.duration > 0;
 }
 
 export function EventMediaPlayer({
@@ -31,80 +81,188 @@ export function EventMediaPlayer({
   onPlaybackReady,
   onPlaybackError,
 }: EventMediaPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const layerARef = useRef<HTMLVideoElement>(null);
+  const layerBRef = useRef<HTMLVideoElement>(null);
+  const [front, setFront] = useState<PlayerLayer>("a");
+  const [allowInitialAutoPlay, setAllowInitialAutoPlay] = useState(true);
+  const frontRef = useRef(front);
+  const releaseOutgoingRef = useRef(false);
+  const incomingMutedRef = useRef(false);
   const onFrameSizeRef = useRef(onFrameSize);
   const onPlaybackReadyRef = useRef(onPlaybackReady);
   const onPlaybackErrorRef = useRef(onPlaybackError);
 
   useEffect(() => {
+    frontRef.current = front;
     onFrameSizeRef.current = onFrameSize;
     onPlaybackReadyRef.current = onPlaybackReady;
     onPlaybackErrorRef.current = onPlaybackError;
   });
 
+  function layerElement(layer: PlayerLayer): HTMLVideoElement | null {
+    return layer === "a" ? layerARef.current : layerBRef.current;
+  }
+
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) {
+    if (!releaseOutgoingRef.current) {
       return;
     }
 
-    const player = video;
-    const previousSrc = player.getAttribute("src");
-    const isInitialLoad = previousSrc == null;
-    const resumeAt = isInitialLoad ? 0 : player.currentTime;
-    const shouldPlay = isInitialLoad || !player.paused;
+    releaseOutgoingRef.current = false;
+    const revealed = layerElement(front);
+    const outgoing = layerElement(otherLayer(front));
 
-    if (posterUrl) {
-      player.poster = posterUrl;
+    if (revealed) {
+      revealed.muted = incomingMutedRef.current;
     }
 
-    if (previousSrc === readUrl) {
+    if (outgoing) {
+      clearVideoSource(outgoing);
+    }
+
+    onPlaybackReadyRef.current?.();
+  }, [front]);
+
+  useEffect(() => {
+    const visible = layerElement(frontRef.current);
+    const incoming = layerElement(otherLayer(frontRef.current));
+
+    if (!visible || !incoming) {
       return;
     }
 
-    function restorePlayback() {
-      if (player.videoWidth > 0 && player.videoHeight > 0) {
-        onFrameSizeRef.current?.(player.videoWidth, player.videoHeight);
+    const visiblePlayer = visible;
+    const incomingPlayer = incoming;
+    const loadMode = resolveEventMediaSourceLoad(visiblePlayer.getAttribute("src"), readUrl);
+
+    if (loadMode === "unchanged") {
+      if (posterUrl) {
+        visiblePlayer.poster = posterUrl;
       }
 
-      if (resumeAt > 0) {
-        player.currentTime = resumeAt;
-      }
-
-      if (!shouldPlay) {
-        player.pause();
-        return;
-      }
-
-      void player.play().catch((error: unknown) => {
-        if (isAbortError(error)) {
-          return;
-        }
-      });
+      return;
     }
 
-    function handleCanPlay() {
-      onPlaybackReadyRef.current?.();
-    }
+    let cancelled = false;
 
-    function handleError() {
+    function handleVisibleError() {
       onPlaybackErrorRef.current?.();
     }
 
-    player.addEventListener("loadedmetadata", restorePlayback, { once: true });
-    player.addEventListener("canplay", handleCanPlay, { once: true });
-    player.addEventListener("error", handleError);
-    player.autoplay = shouldPlay;
-    player.src = readUrl;
+    if (loadMode === "initial") {
+      if (posterUrl) {
+        visiblePlayer.poster = posterUrl;
+      }
 
-    if (!shouldPlay) {
-      player.pause();
+      function restorePlayback() {
+        reportFrameSize(visiblePlayer, onFrameSizeRef.current);
+        applyPlaybackState(visiblePlayer, true);
+      }
+
+      function handleCanPlay() {
+        setAllowInitialAutoPlay(false);
+        onPlaybackReadyRef.current?.();
+      }
+
+      visiblePlayer.addEventListener("loadedmetadata", restorePlayback, { once: true });
+      visiblePlayer.addEventListener("canplay", handleCanPlay, { once: true });
+      visiblePlayer.addEventListener("error", handleVisibleError);
+      visiblePlayer.autoplay = true;
+      visiblePlayer.src = readUrl;
+
+      return () => {
+        cancelled = true;
+        visiblePlayer.removeEventListener("loadedmetadata", restorePlayback);
+        visiblePlayer.removeEventListener("canplay", handleCanPlay);
+        visiblePlayer.removeEventListener("error", handleVisibleError);
+      };
     }
 
+    let revealed = false;
+    let seekFallback = 0;
+
+    function detachIncomingListeners() {
+      incomingPlayer.removeEventListener("canplay", handleIncomingCanPlay);
+      incomingPlayer.removeEventListener("seeked", handleIncomingSeeked);
+      incomingPlayer.removeEventListener("error", handleIncomingError);
+      window.clearTimeout(seekFallback);
+    }
+
+    function revealIncoming() {
+      if (cancelled || revealed || incomingPlayer === layerElement(frontRef.current)) {
+        return;
+      }
+
+      revealed = true;
+      detachIncomingListeners();
+      reportFrameSize(incomingPlayer, onFrameSizeRef.current);
+
+      const shouldPlay = !visiblePlayer.paused;
+      incomingMutedRef.current = visiblePlayer.muted;
+      incomingPlayer.muted = true;
+      applyPlaybackState(incomingPlayer, shouldPlay);
+      releaseOutgoingRef.current = true;
+      setAllowInitialAutoPlay(false);
+      setFront((current) => otherLayer(current));
+    }
+
+    function handleIncomingSeeked() {
+      revealIncoming();
+    }
+
+    function handleIncomingCanPlay() {
+      if (cancelled || revealed) {
+        return;
+      }
+
+      const resumeAt = visiblePlayer.currentTime;
+
+      if (!canSeekIncomingTo(incomingPlayer, resumeAt)) {
+        revealIncoming();
+        return;
+      }
+
+      incomingPlayer.addEventListener("seeked", handleIncomingSeeked, { once: true });
+      seekFallback = window.setTimeout(revealIncoming, HANDOFF_SEEK_FALLBACK_MS);
+      incomingPlayer.currentTime = Math.min(resumeAt, incomingPlayer.duration);
+    }
+
+    function handleIncomingError() {
+      if (cancelled || revealed || incomingPlayer === layerElement(frontRef.current)) {
+        return;
+      }
+
+      detachIncomingListeners();
+      clearVideoSource(incomingPlayer);
+      onPlaybackErrorRef.current?.();
+    }
+
+    incomingPlayer.muted = true;
+    incomingPlayer.autoplay = false;
+
+    if (posterUrl) {
+      incomingPlayer.poster = posterUrl;
+    }
+
+    incomingPlayer.addEventListener("canplay", handleIncomingCanPlay, { once: true });
+    incomingPlayer.addEventListener("error", handleIncomingError);
+    incomingPlayer.src = readUrl;
+    void incomingPlayer.play().catch((error: unknown) => {
+      if (isAbortError(error)) {
+        return;
+      }
+    });
+
     return () => {
-      player.removeEventListener("loadedmetadata", restorePlayback);
-      player.removeEventListener("canplay", handleCanPlay);
-      player.removeEventListener("error", handleError);
+      cancelled = true;
+      detachIncomingListeners();
+
+      if (
+        incomingPlayer.getAttribute("src") === readUrl &&
+        incomingPlayer !== layerElement(frontRef.current)
+      ) {
+        clearVideoSource(incomingPlayer);
+      }
     };
   }, [posterUrl, readUrl]);
 
@@ -114,14 +272,23 @@ export function EventMediaPlayer({
       style={eventMediaPlayerFrameStyle(width, height)}
     >
       <video
-        ref={videoRef}
-        poster={posterUrl ?? undefined}
-        autoPlay
-        controls
+        ref={layerARef}
+        autoPlay={allowInitialAutoPlay}
+        controls={front === "a"}
         playsInline
         preload="auto"
-        aria-label={label}
-        className="absolute inset-0 h-full w-full object-cover"
+        aria-hidden={front !== "a"}
+        aria-label={front === "a" ? label : undefined}
+        className={videoClassName(front === "a")}
+      />
+      <video
+        ref={layerBRef}
+        controls={front === "b"}
+        playsInline
+        preload="auto"
+        aria-hidden={front !== "b"}
+        aria-label={front === "b" ? label : undefined}
+        className={videoClassName(front === "b")}
       />
       {optimizingLabel ? (
         <p className="pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-xs text-zinc-200">

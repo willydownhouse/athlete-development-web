@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   resolveEventMediaPlaybackView,
+  resolveEventMediaSourceLoad,
   resolveEventMediaVideoThumbPoster,
   shouldRetryEventMediaReadUrl,
 } from "./event-media-playback";
@@ -157,6 +158,27 @@ describe("resolveEventMediaPlaybackView", () => {
         readFailed: false,
       }),
     ).toEqual({ kind: "unavailable", message: "Couldn't load" });
+  });
+});
+
+describe("resolveEventMediaSourceLoad", () => {
+  it("loads the first source on the visible player", () => {
+    expect(resolveEventMediaSourceLoad(null, "blob:local")).toBe("initial");
+  });
+
+  it("preloads a new source instead of replacing the visible one", () => {
+    expect(resolveEventMediaSourceLoad("blob:local", "https://storage.example/clip.mp4")).toBe(
+      "handoff",
+    );
+  });
+
+  it("does nothing when the visible source is already the next url", () => {
+    expect(
+      resolveEventMediaSourceLoad(
+        "https://storage.example/clip.mp4",
+        "https://storage.example/clip.mp4",
+      ),
+    ).toBe("unchanged");
   });
 });
 

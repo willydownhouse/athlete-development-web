@@ -11,6 +11,21 @@ export function shouldRetryEventMediaReadUrl(
   return status === "ready" && !hasPlaybackAssets;
 }
 
+export function resolveEventMediaSourceLoad(
+  currentSrc: string | null,
+  nextUrl: string,
+): "unchanged" | "initial" | "handoff" {
+  if (currentSrc === nextUrl) {
+    return "unchanged";
+  }
+
+  if (currentSrc == null) {
+    return "initial";
+  }
+
+  return "handoff";
+}
+
 export type EventMediaPlaybackView =
   | {
       kind: "player";
