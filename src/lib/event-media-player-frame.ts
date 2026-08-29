@@ -38,6 +38,6 @@ export function eventMediaPlayerFrameStyle(
 
   return {
     aspectRatio: `${frameWidth} / ${frameHeight}`,
-    width: `min(100%, calc(75dvh * ${frameWidth} / ${frameHeight}))`,
+    width: `min(100%, calc(75svh * ${frameWidth} / ${frameHeight}))`,
   };
 }
