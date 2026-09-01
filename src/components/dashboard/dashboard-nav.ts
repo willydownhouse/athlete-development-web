@@ -8,6 +8,8 @@ import {
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
 export const TODAY_NAV_LABEL = "Today";
+export const CHAT_NAV_LABEL = "Chat";
+export const CHAT_HREF = "/chat";
 
 export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
@@ -107,7 +109,15 @@ export function isAthleteDashboardPath(pathname: string): boolean {
   return /^\/athlete\/[^/]+\/dashboard\/?$/.test(pathname);
 }
 
+export function isChatPath(pathname: string): boolean {
+  return pathname === CHAT_HREF || pathname.startsWith(`${CHAT_HREF}/`);
+}
+
 export function appShellMobileTitle(pathname: string): string {
+  if (isChatPath(pathname)) {
+    return CHAT_NAV_LABEL;
+  }
+
   if (isAthleteDashboardPath(pathname) || pathname === "/dashboard") {
     return TODAY_NAV_LABEL;
   }

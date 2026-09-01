@@ -289,6 +289,64 @@ export type MediaReadUrlResponse = {
   posterExpiresAt: string | null;
 };
 
+type ChatThreadType = "event_logging";
+
+type ChatMessageRole = "user" | "assistant";
+
+type ChatRunStatus = "received" | "processing" | "completed" | "failed";
+
+type ChatToolCallStatus = "requested" | "succeeded" | "failed";
+
+export type ChatThread = {
+  id: string;
+  type: ChatThreadType;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  chatThreadId: string;
+  role: ChatMessageRole;
+  content: string;
+  clientRequestId: string | null;
+  createdAt: string;
+};
+
+type ChatToolCall = {
+  id: string;
+  chatRunId: string;
+  toolName: string;
+  arguments: unknown;
+  result: unknown | null;
+  status: ChatToolCallStatus;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export type ChatTurn = {
+  id: string;
+  chatThreadId: string;
+  status: ChatRunStatus;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  userMessage: ChatMessage;
+  assistantMessage: ChatMessage | null;
+  toolCalls: ChatToolCall[];
+};
+
+export type ChatMessageListResponse = {
+  items: ChatMessage[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
 export function formatCategoryLabel(category: EventCategory): string {
   return category.replace(/_/g, " ");
 }

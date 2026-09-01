@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createChatThread,
   createEventsBatch,
   fetchAllEvents,
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
+  fetchLatestChatMessages,
   fetchSports,
   getApiBaseUrl,
+  submitChatMessage,
 } from "./api";
 
 describe("api client", () => {
@@ -239,6 +242,97 @@ describe("api client", () => {
       ],
     });
     expect(result.items).toHaveLength(2);
+  });
+
+  it("creates the current chat thread", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        type: "event_logging",
+        createdAt: "2026-09-01T12:00:00.000Z",
+        updatedAt: "2026-09-01T12:00:00.000Z",
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const thread = await createChatThread("test-token");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/chat/threads");
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(thread.type).toBe("event_logging");
+  });
+
+  it("fetches chat messages", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-1" }],
+        pagination: { limit: 50, offset: 0, total: 1 },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchLatestChatMessages("test-token", threadId);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=50&offset=0`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("force-cache");
+    expect(options.next).toEqual({
+      tags: [`chat-messages-${threadId}`],
+    });
+    expect(result.items[0]?.id).toBe("msg-1");
+  });
+
+  it("submits a chat message with timezone", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: "run-1",
+        chatThreadId: threadId,
+        status: "completed",
+        failureCode: null,
+        failureMessage: null,
+        userMessage: { id: "msg-1", role: "user", content: "Lisa has ice practice." },
+        assistantMessage: { id: "msg-2", role: "assistant", content: "Logged." },
+        toolCalls: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = {
+      content: "Lisa has ice practice.",
+      clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      timeZone: "Europe/Helsinki",
+    };
+    const turn = await submitChatMessage("test-token", threadId, body);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(JSON.parse(String(options.body))).toEqual(body);
+    expect(turn.status).toBe("completed");
   });
 
   it("throws when the API responds with an error", async () => {
