@@ -342,8 +342,8 @@ export type ChatMessageListResponse = {
   items: ChatMessage[];
   pagination: {
     limit: number;
-    offset: number;
     total: number;
+    hasMore: boolean;
   };
 };
 

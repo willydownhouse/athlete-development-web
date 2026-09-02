@@ -8,6 +8,7 @@ import {
   fetchCurrentAppUser,
   fetchEventTypes,
   fetchLatestChatMessages,
+  fetchOlderChatMessages,
   fetchSports,
   getApiBaseUrl,
   submitChatMessage,
@@ -278,7 +279,7 @@ describe("api client", () => {
       ok: true,
       json: async () => ({
         items: [{ id: "msg-1" }],
-        pagination: { limit: 50, offset: 0, total: 1 },
+        pagination: { limit: 20, total: 1, hasMore: false },
       }),
     });
 
@@ -288,7 +289,7 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=50&offset=0`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("force-cache");
@@ -296,6 +297,31 @@ describe("api client", () => {
       tags: [`chat-messages-${threadId}`],
     });
     expect(result.items[0]?.id).toBe("msg-1");
+  });
+
+  it("fetches older chat messages with a before cursor", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const before = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-0" }],
+        pagination: { limit: 20, total: 21, hasMore: false },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchOlderChatMessages("test-token", threadId, before);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&before=${before}`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(result.items[0]?.id).toBe("msg-0");
   });
 
   it("submits a chat message with timezone", async () => {

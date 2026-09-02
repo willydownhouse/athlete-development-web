@@ -33,6 +33,7 @@ export default async function ChatPage() {
 
   let threadId: string | null = null;
   let messages: ChatMessage[] = [];
+  let hasMore = false;
   let loadError: string | null = null;
 
   try {
@@ -46,6 +47,7 @@ export default async function ChatPage() {
     try {
       const latest = await fetchLatestChatMessages(token, threadId);
       messages = latest.items;
+      hasMore = latest.pagination.hasMore;
     } catch (error) {
       loadError = error instanceof Error ? error.message : "Unable to load messages";
     }
@@ -62,6 +64,7 @@ export default async function ChatPage() {
         <ChatView
           threadId={threadId}
           messages={messages}
+          hasMore={hasMore}
           timeZone={timeZone}
           nowIso={new Date().toISOString()}
           loadError={loadError}

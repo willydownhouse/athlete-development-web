@@ -589,12 +589,15 @@ export async function createChatThread(token: string): Promise<ChatThread> {
 async function fetchChatMessages(
   token: string,
   threadId: string,
-  options: { limit: number; offset: number },
+  options: { limit: number; before?: string; cache: RequestCache },
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
-    offset: String(options.offset),
   });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
 
   const response = await fetch(
     `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
@@ -602,10 +605,14 @@ async function fetchChatMessages(
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: "force-cache",
-      next: {
-        tags: [chatMessagesCacheTag(threadId)],
-      },
+      cache: options.cache,
+      ...(options.cache === "force-cache"
+        ? {
+            next: {
+              tags: [chatMessagesCacheTag(threadId)],
+            },
+          }
+        : {}),
     },
   );
 
@@ -621,7 +628,16 @@ export async function fetchLatestChatMessages(
   threadId: string,
   limit: number = CHAT_MESSAGES_PAGE_SIZE,
 ): Promise<ChatMessageListResponse> {
-  return fetchChatMessages(token, threadId, { limit, offset: 0 });
+  return fetchChatMessages(token, threadId, { limit, cache: "force-cache" });
+}
+
+export async function fetchOlderChatMessages(
+  token: string,
+  threadId: string,
+  before: string,
+  limit: number = CHAT_MESSAGES_PAGE_SIZE,
+): Promise<ChatMessageListResponse> {
+  return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
 }
 
 export async function submitChatMessage(

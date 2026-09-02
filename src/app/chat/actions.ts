@@ -2,12 +2,12 @@
 
 import { updateTag } from "next/cache";
 
-import { ApiError, submitChatMessage } from "@/lib/api";
+import { ApiError, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { chatMessagesCacheTag } from "@/lib/cache-tags";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import type { ChatTurn } from "@/lib/types";
+import type { ChatMessage, ChatTurn } from "@/lib/types";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -79,6 +79,37 @@ export async function sendChatMessageAction(
     }
 
     return { turn };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export type LoadOlderChatMessagesResult = {
+  error?: string;
+  items?: ChatMessage[];
+  hasMore?: boolean;
+};
+
+export async function loadOlderChatMessagesAction(
+  threadId: string,
+  before: string,
+): Promise<LoadOlderChatMessagesResult> {
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: "Missing Auth.js session token" };
+  }
+
+  if (!UUID_PATTERN.test(threadId) || !UUID_PATTERN.test(before)) {
+    return { error: "Could not load older messages" };
+  }
+
+  try {
+    const result = await fetchOlderChatMessages(token, threadId, before);
+    return {
+      items: result.items,
+      hasMore: result.pagination.hasMore,
+    };
   } catch (error) {
     return actionError(error);
   }

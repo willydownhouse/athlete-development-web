@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { sendChatMessageAction } from "@/app/chat/actions";
+import { loadOlderChatMessagesAction, sendChatMessageAction } from "@/app/chat/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
@@ -11,10 +11,29 @@ import type { ChatMessage } from "@/lib/types";
 type ChatViewProps = {
   threadId: string | null;
   messages: ChatMessage[];
+  hasMore: boolean;
   timeZone: string;
   nowIso: string;
   loadError?: string | null;
 };
+
+const LOAD_OLDER_THRESHOLD_PX = 80;
+
+function mergeMessages(earlier: ChatMessage[], later: ChatMessage[]): ChatMessage[] {
+  const seen = new Set<string>();
+  const merged: ChatMessage[] = [];
+
+  for (const message of [...earlier, ...later]) {
+    if (seen.has(message.id)) {
+      continue;
+    }
+
+    seen.add(message.id);
+    merged.push(message);
+  }
+
+  return merged;
+}
 
 function ChatEmptyState() {
   return (
@@ -27,11 +46,26 @@ function ChatEmptyState() {
   );
 }
 
-export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: ChatViewProps) {
+export function ChatView({
+  threadId,
+  messages: initialMessages,
+  hasMore: initialHasMore,
+  timeZone,
+  nowIso,
+  loadError,
+}: ChatViewProps) {
   const [state, formAction, isPending] = useActionState(sendChatMessageAction, {});
+  const [messages, setMessages] = useState(initialMessages);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [olderError, setOlderError] = useState<string | null>(null);
   const [pendingContent, setPendingContent] = useState<string | null>(null);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const didInitialScroll = useRef(false);
+  const loadingOlderRef = useRef(false);
+  const wasPending = useRef(false);
+  const seededThreadId = useRef(threadId);
   const savedPending = Boolean(
     pendingRequestId && messages.some((message) => message.clientRequestId === pendingRequestId),
   );
@@ -44,8 +78,16 @@ export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: Ch
     (isPending || Boolean(state.turn));
 
   const displayedMessages = useMemo(() => {
+    const fromTurn = state.turn
+      ? [
+          state.turn.userMessage,
+          ...(state.turn.assistantMessage ? [state.turn.assistantMessage] : []),
+        ]
+      : [];
+    const withTurn = mergeMessages(messages, fromTurn);
+
     if (!showOptimistic) {
-      return messages;
+      return withTurn;
     }
 
     const optimistic: ChatMessage = {
@@ -57,8 +99,19 @@ export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: Ch
       createdAt: nowIso,
     };
 
-    return [...messages, optimistic];
-  }, [messages, showOptimistic, pendingContent, pendingRequestId, threadId, nowIso]);
+    return [...withTurn, optimistic];
+  }, [messages, showOptimistic, pendingContent, pendingRequestId, threadId, nowIso, state.turn]);
+
+  useEffect(() => {
+    if (threadId === seededThreadId.current) {
+      return;
+    }
+
+    seededThreadId.current = threadId;
+    setMessages(initialMessages);
+    setHasMore(initialHasMore);
+    didInitialScroll.current = false;
+  }, [threadId, initialMessages, initialHasMore]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -66,8 +119,76 @@ export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: Ch
       return;
     }
 
-    list.scrollTop = list.scrollHeight;
+    if (!didInitialScroll.current) {
+      list.scrollTop = list.scrollHeight;
+      didInitialScroll.current = true;
+      wasPending.current = isPending;
+      return;
+    }
+
+    if (isPending || wasPending.current) {
+      list.scrollTop = list.scrollHeight;
+    }
+
+    wasPending.current = isPending;
   }, [displayedMessages, isPending]);
+
+  const loadOlder = useCallback(async () => {
+    const beforeId = messages[0]?.id;
+    if (!threadId || !hasMore || loadingOlderRef.current || messages.length === 0 || !beforeId) {
+      return;
+    }
+
+    const list = listRef.current;
+    const previousHeight = list?.scrollHeight ?? 0;
+    const previousTop = list?.scrollTop ?? 0;
+
+    loadingOlderRef.current = true;
+    setLoadingOlder(true);
+    setOlderError(null);
+
+    const result = await loadOlderChatMessagesAction(threadId, beforeId);
+
+    if (result.error || !result.items) {
+      setOlderError(result.error ?? "Could not load older messages");
+      loadingOlderRef.current = false;
+      setLoadingOlder(false);
+      return;
+    }
+
+    setMessages((current) => mergeMessages(result.items ?? [], current));
+    setHasMore(result.hasMore ?? false);
+    setLoadingOlder(false);
+    loadingOlderRef.current = false;
+
+    requestAnimationFrame(() => {
+      if (!list) {
+        return;
+      }
+
+      list.scrollTop = previousTop + (list.scrollHeight - previousHeight);
+    });
+  }, [hasMore, messages, threadId]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || !hasMore || loadingOlder || messages.length === 0) {
+      return;
+    }
+
+    if (list.scrollHeight <= list.clientHeight + LOAD_OLDER_THRESHOLD_PX) {
+      void loadOlder();
+    }
+  }, [hasMore, loadOlder, loadingOlder, messages.length]);
+
+  function handleListScroll() {
+    const list = listRef.current;
+    if (!list || list.scrollTop > LOAD_OLDER_THRESHOLD_PX) {
+      return;
+    }
+
+    void loadOlder();
+  }
 
   const showEmpty = displayedMessages.length === 0 && !isPending && !loadError;
   const composerKey = state.turn?.id ?? "draft";
@@ -85,7 +206,17 @@ export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: Ch
         </p>
       ) : null}
 
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4">
+      <div
+        ref={listRef}
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4"
+        onScroll={handleListScroll}
+      >
+        {loadingOlder ? (
+          <p className="mb-3 text-center text-xs text-zinc-500" aria-live="polite">
+            Loading earlier messages…
+          </p>
+        ) : null}
+        {olderError ? <p className="mb-3 text-center text-xs text-red-300">{olderError}</p> : null}
         {showEmpty ? (
           <ChatEmptyState />
         ) : (
@@ -111,6 +242,15 @@ export function ChatView({ threadId, messages, timeZone, nowIso, loadError }: Ch
           formAction={formAction}
           isPending={isPending}
           onSend={({ content, clientRequestId }) => {
+            const turn = state.turn;
+            if (turn) {
+              const next = [turn.userMessage];
+              if (turn.assistantMessage) {
+                next.push(turn.assistantMessage);
+              }
+              setMessages((current) => mergeMessages(current, next));
+            }
+
             setPendingContent(content);
             setPendingRequestId(clientRequestId);
           }}
