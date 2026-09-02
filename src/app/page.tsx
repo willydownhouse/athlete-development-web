@@ -17,7 +17,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="relative flex min-h-screen bg-[#0b0d10] text-white">
+    <main className="scheme-dark relative flex min-h-screen bg-[#0b0d10] text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(183,215,236,0.18),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_100%,rgba(95,115,136,0.22),transparent_50%),radial-gradient(ellipse_50%_40%_at_0%_80%,rgba(111,143,106,0.12),transparent_45%)]" />
         <div className="landing-grid absolute inset-0 opacity-[0.35]" />

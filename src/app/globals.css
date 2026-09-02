@@ -25,6 +25,40 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+.scheme-dark {
+  color-scheme: dark;
+  scrollbar-color: rgb(255 255 255 / 0.18) #0b0d10;
+  scrollbar-width: thin;
+}
+
+.scheme-dark::-webkit-scrollbar,
+.scheme-dark *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scheme-dark::-webkit-scrollbar-track,
+.scheme-dark *::-webkit-scrollbar-track {
+  background: #0b0d10;
+}
+
+.scheme-dark::-webkit-scrollbar-thumb,
+.scheme-dark *::-webkit-scrollbar-thumb {
+  background-color: rgb(255 255 255 / 0.18);
+  border: 2px solid #0b0d10;
+  border-radius: 999px;
+}
+
+.scheme-dark::-webkit-scrollbar-thumb:hover,
+.scheme-dark *::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(255 255 255 / 0.3);
+}
+
+.scheme-dark::-webkit-scrollbar-corner,
+.scheme-dark *::-webkit-scrollbar-corner {
+  background: #0b0d10;
+}
+
 @keyframes landing-fade-up {
   from {
     opacity: 0;

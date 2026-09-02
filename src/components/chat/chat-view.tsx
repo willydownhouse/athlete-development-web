@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { loadOlderChatMessagesAction, sendChatMessageAction } from "@/app/chat/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
-import { ChatMessageList } from "@/components/chat/chat-message-list";
+import { ChatMessageList, ChatMessageListSkeleton } from "@/components/chat/chat-message-list";
+import { CHAT_NAV_LABEL } from "@/components/dashboard/dashboard-nav";
+import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
 import type { ChatMessage } from "@/lib/types";
 
 type ChatViewProps = {
@@ -14,25 +17,27 @@ type ChatViewProps = {
   hasMore: boolean;
   timeZone: string;
   nowIso: string;
+  canSend?: boolean;
   loadError?: string | null;
 };
 
 const LOAD_OLDER_THRESHOLD_PX = 80;
 
-function mergeMessages(earlier: ChatMessage[], later: ChatMessage[]): ChatMessage[] {
-  const seen = new Set<string>();
-  const merged: ChatMessage[] = [];
-
-  for (const message of [...earlier, ...later]) {
-    if (seen.has(message.id)) {
-      continue;
-    }
-
-    seen.add(message.id);
-    merged.push(message);
-  }
-
-  return merged;
+function ChatNeedsAthleteState() {
+  return (
+    <div className="flex flex-1 flex-col justify-center py-6">
+      <h2 className="text-lg font-semibold tracking-tight text-white">Add an athlete first</h2>
+      <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-300">
+        Event Agent logs practices, games, and rest for an athlete. Add one to start.
+      </p>
+      <Link
+        href="/onboarding"
+        className="mt-6 inline-flex w-full max-w-xs items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0]"
+      >
+        Add athlete
+      </Link>
+    </div>
+  );
 }
 
 function ChatEmptyState() {
@@ -52,12 +57,14 @@ export function ChatView({
   hasMore: initialHasMore,
   timeZone,
   nowIso,
+  canSend = true,
   loadError,
 }: ChatViewProps) {
   const [state, formAction, isPending] = useActionState(sendChatMessageAction, {});
   const [messages, setMessages] = useState(initialMessages);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [listReady, setListReady] = useState(initialMessages.length === 0);
   const [olderError, setOlderError] = useState<string | null>(null);
   const [pendingContent, setPendingContent] = useState<string | null>(null);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
@@ -66,41 +73,20 @@ export function ChatView({
   const loadingOlderRef = useRef(false);
   const wasPending = useRef(false);
   const seededThreadId = useRef(threadId);
-  const savedPending = Boolean(
-    pendingRequestId && messages.some((message) => message.clientRequestId === pendingRequestId),
+  const pending =
+    pendingContent !== null && pendingRequestId !== null && isPending
+      ? {
+          content: pendingContent,
+          clientRequestId: pendingRequestId,
+          threadId: threadId ?? "",
+          createdAt: nowIso,
+        }
+      : null;
+
+  const displayedMessages = useMemo(
+    () => displayedChatMessages({ messages, turn: state.turn, pending }),
+    [messages, pending, state.turn],
   );
-  const failedWithoutSave = Boolean(state.error && !state.turn && !isPending);
-  const showOptimistic =
-    pendingContent !== null &&
-    pendingRequestId !== null &&
-    !savedPending &&
-    !failedWithoutSave &&
-    (isPending || Boolean(state.turn));
-
-  const displayedMessages = useMemo(() => {
-    const fromTurn = state.turn
-      ? [
-          state.turn.userMessage,
-          ...(state.turn.assistantMessage ? [state.turn.assistantMessage] : []),
-        ]
-      : [];
-    const withTurn = mergeMessages(messages, fromTurn);
-
-    if (!showOptimistic) {
-      return withTurn;
-    }
-
-    const optimistic: ChatMessage = {
-      id: `pending-${pendingRequestId}`,
-      chatThreadId: threadId ?? "",
-      role: "user",
-      content: pendingContent,
-      clientRequestId: pendingRequestId,
-      createdAt: nowIso,
-    };
-
-    return [...withTurn, optimistic];
-  }, [messages, showOptimistic, pendingContent, pendingRequestId, threadId, nowIso, state.turn]);
 
   useEffect(() => {
     if (threadId === seededThreadId.current) {
@@ -111,6 +97,7 @@ export function ChatView({
     setMessages(initialMessages);
     setHasMore(initialHasMore);
     didInitialScroll.current = false;
+    setListReady(initialMessages.length === 0);
   }, [threadId, initialMessages, initialHasMore]);
 
   useEffect(() => {
@@ -123,6 +110,7 @@ export function ChatView({
       list.scrollTop = list.scrollHeight;
       didInitialScroll.current = true;
       wasPending.current = isPending;
+      setListReady(true);
       return;
     }
 
@@ -172,14 +160,14 @@ export function ChatView({
 
   useEffect(() => {
     const list = listRef.current;
-    if (!list || !hasMore || loadingOlder || messages.length === 0) {
+    if (!listReady || !list || !hasMore || loadingOlder || messages.length === 0) {
       return;
     }
 
     if (list.scrollHeight <= list.clientHeight + LOAD_OLDER_THRESHOLD_PX) {
       void loadOlder();
     }
-  }, [hasMore, loadOlder, loadingOlder, messages.length]);
+  }, [hasMore, listReady, loadOlder, loadingOlder, messages.length]);
 
   function handleListScroll() {
     const list = listRef.current;
@@ -195,10 +183,7 @@ export function ChatView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="shrink-0 pb-4">
-        <p className="text-sm text-zinc-400">Chat</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white">Event log</h1>
-      </header>
+      <h1 className="sr-only">{CHAT_NAV_LABEL}</h1>
 
       {loadError ? (
         <p className="mb-4 shrink-0 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
@@ -206,27 +191,50 @@ export function ChatView({
         </p>
       ) : null}
 
-      <div
-        ref={listRef}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4"
-        onScroll={handleListScroll}
-      >
-        {loadingOlder ? (
-          <p className="mb-3 text-center text-xs text-zinc-500" aria-live="polite">
-            Loading earlier messages…
-          </p>
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={listRef}
+          className={`absolute inset-0 flex flex-col pb-4 ${
+            listReady ? "overflow-y-auto" : "overflow-hidden"
+          }`}
+          onScroll={handleListScroll}
+          aria-busy={!listReady}
+          aria-hidden={!listReady}
+        >
+          {loadingOlder ? (
+            <div className="sticky top-0 z-10 mb-3 flex justify-center pt-1" aria-live="polite">
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-white/5 bg-[#171b22] px-4 py-2">
+                <span
+                  className="inline-flex h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
+                  aria-hidden="true"
+                />
+                <p className="text-sm text-zinc-400">Loading earlier messages…</p>
+              </div>
+            </div>
+          ) : null}
+          {olderError ? (
+            <p className="mb-3 text-center text-xs text-red-300">{olderError}</p>
+          ) : null}
+          {showEmpty ? (
+            canSend ? (
+              <ChatEmptyState />
+            ) : (
+              <ChatNeedsAthleteState />
+            )
+          ) : (
+            <ChatMessageList
+              messages={displayedMessages}
+              timeZone={timeZone}
+              nowIso={nowIso}
+              waiting={isPending}
+            />
+          )}
+        </div>
+        {!listReady ? (
+          <div className="absolute inset-0 overflow-hidden bg-[#0b0d10]">
+            <ChatMessageListSkeleton />
+          </div>
         ) : null}
-        {olderError ? <p className="mb-3 text-center text-xs text-red-300">{olderError}</p> : null}
-        {showEmpty ? (
-          <ChatEmptyState />
-        ) : (
-          <ChatMessageList
-            messages={displayedMessages}
-            timeZone={timeZone}
-            nowIso={nowIso}
-            waiting={isPending}
-          />
-        )}
       </div>
 
       {state.error ? (
@@ -235,7 +243,11 @@ export function ChatView({
         </div>
       ) : null}
 
-      {threadId ? (
+      {!threadId ? (
+        <p className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-zinc-500">
+          Chat is unavailable until the thread loads.
+        </p>
+      ) : canSend ? (
         <ChatComposer
           key={composerKey}
           threadId={threadId}
@@ -255,10 +267,13 @@ export function ChatView({
             setPendingRequestId(clientRequestId);
           }}
         />
-      ) : (
-        <div className="shrink-0 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <p className="text-sm text-zinc-500">Chat is unavailable until the thread loads.</p>
-        </div>
+      ) : showEmpty ? null : (
+        <p className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-zinc-500">
+          Add an athlete to keep logging.{" "}
+          <Link href="/onboarding" className="text-[#9ec9e8] transition hover:text-[#c5dff0]">
+            Add athlete
+          </Link>
+        </p>
       )}
     </div>
   );

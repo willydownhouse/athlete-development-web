@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useFormStatus } from "react-dom";
 
-import { SubmitButton } from "@/components/admin/submit-button";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 
-const textareaClassName =
-  "max-h-40 min-h-12 w-full resize-none rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
+function ChatSendButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending || disabled}
+      className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#b7d7ec] px-3 py-2 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {pending ? "Sending…" : "Send"}
+    </button>
+  );
+}
 
 type ChatComposerProps = {
   threadId: string;
@@ -72,14 +83,14 @@ export function ChatComposer({
     <form
       action={formAction}
       onSubmit={handleSubmit}
-      className="shrink-0 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
+      className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <input type="hidden" name="threadId" value={threadId} />
       <input type="hidden" name="clientRequestId" defaultValue="" />
       <label htmlFor="chat-message" className="sr-only">
         Message
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-[#1c222c] px-2 py-2 focus-within:border-[#9ec9e8] focus-within:ring-2 focus-within:ring-[#9ec9e8]/20">
         <textarea
           ref={textareaRef}
           id="chat-message"
@@ -91,16 +102,9 @@ export function ChatComposer({
           disabled={disabled || isPending}
           onChange={(event) => setContent(event.target.value)}
           onKeyDown={handleKeyDown}
-          className={textareaClassName}
+          className="max-h-40 min-h-10 w-full resize-none bg-transparent px-2 py-1.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
         />
-        <SubmitButton
-          disabled={disabled || !content.trim()}
-          pending={isPending}
-          pendingLabel="Sending…"
-          className="sm:w-auto"
-        >
-          Send
-        </SubmitButton>
+        <ChatSendButton disabled={disabled || isPending || !content.trim()} />
       </div>
     </form>
   );

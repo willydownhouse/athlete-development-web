@@ -8,7 +8,7 @@ import {
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
 export const TODAY_NAV_LABEL = "Today";
-export const CHAT_NAV_LABEL = "Chat";
+export const CHAT_NAV_LABEL = "Event Agent";
 export const CHAT_HREF = "/chat";
 
 export function backToTodayLabel(): string {

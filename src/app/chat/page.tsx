@@ -60,13 +60,14 @@ export default async function ChatPage() {
       athletes={athletes}
       selectedAthlete={null}
     >
-      <div className="relative mx-auto flex h-[calc(100dvh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-6 sm:px-6 lg:h-dvh lg:max-w-3xl lg:px-10">
+      <div className="relative mx-auto flex h-[calc(100dvh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-dvh lg:max-w-3xl lg:px-10">
         <ChatView
           threadId={threadId}
           messages={messages}
           hasMore={hasMore}
           timeZone={timeZone}
           nowIso={new Date().toISOString()}
+          canSend={athletes.length > 0}
           loadError={loadError}
         />
       </div>
