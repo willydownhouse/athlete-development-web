@@ -77,14 +77,18 @@ function copyEventItemsForStart(
   const copiedStartTime = new Date(copiedStartedAt).getTime();
   const offsetMilliseconds = copiedStartTime - originalStartedAt.getTime();
 
-  return items.map((item) => ({
-    ...item,
-    ...(item.startedAt ? { startedAt: shiftTimestamp(item.startedAt, offsetMilliseconds) } : {}),
-    ...(item.endedAt ? { endedAt: shiftTimestamp(item.endedAt, offsetMilliseconds) } : {}),
-    ...(item.children
-      ? { children: copyEventItemsForStart(item.children, originalStartedAt, copiedStartedAt) }
-      : {}),
-  }));
+  return items.map((item) => {
+    const copied: EventItemInput = {
+      ...item,
+      ...(item.startedAt ? { startedAt: shiftTimestamp(item.startedAt, offsetMilliseconds) } : {}),
+      ...(item.endedAt ? { endedAt: shiftTimestamp(item.endedAt, offsetMilliseconds) } : {}),
+      ...(item.children
+        ? { children: copyEventItemsForStart(item.children, originalStartedAt, copiedStartedAt) }
+        : {}),
+    };
+    delete copied.id;
+    return copied;
+  });
 }
 
 function buildEventCopyCreateBody(

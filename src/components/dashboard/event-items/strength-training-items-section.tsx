@@ -7,9 +7,11 @@ import {
   EVENT_ITEM_LABEL_MAX_LENGTH,
   STRENGTH_TRAINING_MAX_EXERCISES,
   eventItemsToStrengthFormValues,
+  exerciseItemIdFieldName,
   exerciseItemTypeIdFieldName,
   exerciseLabelFieldName,
   loadStrengthTrainingItemFormConfig,
+  setItemIdFieldName,
   setItemTypeIdFieldName,
   type StrengthTrainingItemFormConfig,
 } from "@/lib/event-item-form";
@@ -20,12 +22,14 @@ const inputClassName =
 
 type ExerciseDraft = {
   key: string;
+  id?: string;
   label: string;
   sets: SetDraft[];
 };
 
 type SetDraft = {
   key: string;
+  id?: string;
   values: Record<string, string>;
 };
 
@@ -37,16 +41,22 @@ type StrengthTrainingItemsSectionProps = {
   onLoadingChange?: (loading: boolean) => void;
 };
 
-function createSetDraft(values: Record<string, string> = {}): SetDraft {
+function createSetDraft(values: Record<string, string> = {}, id?: string): SetDraft {
   return {
     key: crypto.randomUUID(),
+    ...(id ? { id } : {}),
     values,
   };
 }
 
-function createExerciseDraft(label = "", sets: SetDraft[] = [createSetDraft()]): ExerciseDraft {
+function createExerciseDraft(
+  label = "",
+  sets: SetDraft[] = [createSetDraft()],
+  id?: string,
+): ExerciseDraft {
   return {
     key: crypto.randomUUID(),
+    ...(id ? { id } : {}),
     label,
     sets,
   };
@@ -70,7 +80,8 @@ function buildExerciseDrafts(
   return values.map((exercise) =>
     createExerciseDraft(
       exercise.label,
-      exercise.sets.map((setValues) => createSetDraft(setValues)),
+      exercise.sets.map((set) => createSetDraft(set.values, set.id)),
+      exercise.id,
     ),
   );
 }
@@ -183,6 +194,13 @@ export function StrengthTrainingItemsSection({
               <div className="relative flex flex-wrap items-start justify-between gap-3">
                 <label className="flex min-w-0 w-full flex-col gap-1 text-sm sm:w-auto sm:flex-1">
                   <span className="mb-1 block font-medium text-zinc-300">Exercise</span>
+                  {exercise.id ? (
+                    <input
+                      type="hidden"
+                      name={exerciseItemIdFieldName(exerciseIndex)}
+                      value={exercise.id}
+                    />
+                  ) : null}
                   <input
                     type="hidden"
                     name={exerciseItemTypeIdFieldName(exerciseIndex)}
@@ -238,6 +256,13 @@ export function StrengthTrainingItemsSection({
                         </button>
                       ) : null}
                     </div>
+                    {setItem.id ? (
+                      <input
+                        type="hidden"
+                        name={setItemIdFieldName(exerciseIndex, setIndex)}
+                        value={setItem.id}
+                      />
+                    ) : null}
                     <input
                       type="hidden"
                       name={setItemTypeIdFieldName(exerciseIndex, setIndex)}

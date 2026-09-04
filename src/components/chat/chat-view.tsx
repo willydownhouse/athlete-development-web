@@ -73,20 +73,19 @@ export function ChatView({
   const loadingOlderRef = useRef(false);
   const wasPending = useRef(false);
   const seededThreadId = useRef(threadId);
-  const pending =
-    pendingContent !== null && pendingRequestId !== null && isPending
-      ? {
-          content: pendingContent,
-          clientRequestId: pendingRequestId,
-          threadId: threadId ?? "",
-          createdAt: nowIso,
-        }
-      : null;
+  const displayedMessages = useMemo(() => {
+    const pending =
+      pendingContent !== null && pendingRequestId !== null && isPending
+        ? {
+            content: pendingContent,
+            clientRequestId: pendingRequestId,
+            threadId: threadId ?? "",
+            createdAt: nowIso,
+          }
+        : null;
 
-  const displayedMessages = useMemo(
-    () => displayedChatMessages({ messages, turn: state.turn, pending }),
-    [messages, pending, state.turn],
-  );
+    return displayedChatMessages({ messages, turn: state.turn, pending });
+  }, [isPending, messages, nowIso, pendingContent, pendingRequestId, state.turn, threadId]);
 
   useEffect(() => {
     if (threadId === seededThreadId.current) {

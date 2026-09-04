@@ -148,6 +148,7 @@ export type EventMetricInput = {
 };
 
 export type EventItemInput = {
+  id?: string;
   eventItemTypeId: string;
   sortOrder?: number;
   label?: string;
@@ -346,7 +347,7 @@ export async function updateEvent(
     startedAt?: string;
     title?: string | null;
     description?: string | null;
-    endedAt?: string;
+    endedAt?: string | null;
     durationSeconds?: number | null;
     intensity?: EventIntensity | null;
     structuredData?: Record<string, unknown>;

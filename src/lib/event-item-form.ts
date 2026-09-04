@@ -36,8 +36,12 @@ export type StrengthTrainingItemFormConfig = {
 };
 
 export type StrengthTrainingExerciseFormValues = {
+  id?: string;
   label: string;
-  sets: Record<string, string>[];
+  sets: Array<{
+    id?: string;
+    values: Record<string, string>;
+  }>;
 };
 
 export function isStrengthTrainingEventType(
@@ -50,8 +54,16 @@ export function exerciseItemTypeIdFieldName(exerciseIndex: number): string {
   return `items[${exerciseIndex}].eventItemTypeId`;
 }
 
+export function exerciseItemIdFieldName(exerciseIndex: number): string {
+  return `items[${exerciseIndex}].id`;
+}
+
 export function exerciseLabelFieldName(exerciseIndex: number): string {
   return `items[${exerciseIndex}].label`;
+}
+
+export function setItemIdFieldName(exerciseIndex: number, setIndex: number): string {
+  return `items[${exerciseIndex}].children[${setIndex}].id`;
 }
 
 export function setItemTypeIdFieldName(exerciseIndex: number, setIndex: number): string {
@@ -77,6 +89,11 @@ export function setMetricValueTypeFieldName(
 function readField(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function readOptionalId(formData: FormData, key: string): string | undefined {
+  const value = readField(formData, key);
+  return value || undefined;
 }
 
 function listExerciseIndices(formData: FormData): number[] {
@@ -276,14 +293,18 @@ export function parseEventItemsFromFormData(formData: FormData): EventItemInput[
         setMetricFieldPrefix(exerciseIndex, setIndex),
         readMetricValueTypes(formData, setMetricValueTypeFieldPrefix(exerciseIndex, setIndex)),
       );
+      const setId = readOptionalId(formData, setItemIdFieldName(exerciseIndex, setIndex));
 
       children.push({
+        ...(setId ? { id: setId } : {}),
         eventItemTypeId: setItemTypeId,
         metrics: metrics.length > 0 ? metrics : undefined,
       });
     }
 
+    const exerciseId = readOptionalId(formData, exerciseItemIdFieldName(exerciseIndex));
     items.push({
+      ...(exerciseId ? { id: exerciseId } : {}),
       eventItemTypeId,
       label: label || undefined,
       children: children.length > 0 ? children : undefined,
@@ -319,13 +340,17 @@ export function parseStrengthTrainingItemsFromFormData(
         config.setMetricMappings,
       );
 
+      const setId = readOptionalId(formData, setItemIdFieldName(exerciseIndex, setIndex));
       children.push({
+        ...(setId ? { id: setId } : {}),
         eventItemTypeId: config.setItemTypeId,
         metrics: metrics.length > 0 ? metrics : undefined,
       });
     }
 
+    const exerciseId = readOptionalId(formData, exerciseItemIdFieldName(exerciseIndex));
     items.push({
+      ...(exerciseId ? { id: exerciseId } : {}),
       eventItemTypeId: config.exerciseItemTypeId,
       label: label || undefined,
       children: children.length > 0 ? children : undefined,
@@ -392,6 +417,7 @@ export function eventItemsToStrengthFormValues(
   return (items ?? [])
     .filter((item) => item.eventItemTypeId === exerciseItemTypeId)
     .map((exercise) => ({
+      id: exercise.id,
       label: exercise.label ?? "",
       sets: exercise.children
         .filter((child) => child.eventItemTypeId === setItemTypeId)
@@ -407,7 +433,10 @@ export function eventItemsToStrengthFormValues(
             }
           }
 
-          return setValues;
+          return {
+            id: setItem.id,
+            values: setValues,
+          };
         }),
     }));
 }
@@ -444,6 +473,7 @@ export async function loadStrengthTrainingItemFormConfig(
   };
 }
 
+/** Copy/create payload: omit item ids so the API creates new rows. */
 export function eventItemsToInputs(items: EventItem[]): EventItemInput[] {
   return items.map((item) => eventItemToInput(item));
 }
