@@ -1,4 +1,7 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChatTypewriter } from "@/hooks/use-chat-typewriter";
 import { formatChatTimestamp } from "@/lib/chat-time";
 import type { ChatMessage } from "@/lib/types";
 
@@ -40,16 +43,41 @@ type ChatMessageListProps = {
   timeZone: string;
   nowIso: string;
   waiting?: boolean;
+  typewriterMessageId?: string | null;
+  onTypewriterTick?: () => void;
 };
+
+function TypewriterContent({ content, onTick }: { content: string; onTick?: () => void }) {
+  const { visible, complete } = useChatTypewriter(content, onTick);
+
+  return (
+    <>
+      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-zinc-200">
+        <span aria-hidden={!complete}>{visible}</span>
+        {complete ? null : (
+          <span
+            className="ml-0.5 inline-block h-[1em] w-[0.12em] translate-y-0.5 animate-pulse bg-[#9ec9e8] align-text-bottom"
+            aria-hidden="true"
+          />
+        )}
+      </p>
+      {complete ? null : <p className="sr-only">{content}</p>}
+    </>
+  );
+}
 
 function MessageBubble({
   message,
   timeZone,
   nowIso,
+  animate,
+  onTypewriterTick,
 }: {
   message: ChatMessage;
   timeZone: string;
   nowIso: string;
+  animate: boolean;
+  onTypewriterTick?: () => void;
 }) {
   const isUser = message.role === "user";
 
@@ -60,9 +88,13 @@ function MessageBubble({
           isUser ? "rounded-2xl border border-white/10 bg-[#1c222c] px-4 py-3" : "py-1"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-zinc-200">
-          {message.content}
-        </p>
+        {animate ? (
+          <TypewriterContent key={message.id} content={message.content} onTick={onTypewriterTick} />
+        ) : (
+          <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-zinc-200">
+            {message.content}
+          </p>
+        )}
         <p className={`mt-2 text-xs text-zinc-500 ${isUser ? "text-right" : "text-left"}`}>
           {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso))}
         </p>
@@ -76,7 +108,7 @@ function WaitingBubble() {
     <div className="flex justify-start" aria-live="polite">
       <div className="inline-flex max-w-[85%] items-center gap-3 py-1">
         <span className="inline-flex h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]" />
-        <p className="text-sm text-zinc-400">Logging…</p>
+        <p className="text-sm text-zinc-400">Thinking…</p>
       </div>
     </div>
   );
@@ -87,11 +119,20 @@ export function ChatMessageList({
   timeZone,
   nowIso,
   waiting = false,
+  typewriterMessageId = null,
+  onTypewriterTick,
 }: ChatMessageListProps) {
   return (
     <div className="space-y-3">
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} timeZone={timeZone} nowIso={nowIso} />
+        <MessageBubble
+          key={message.id}
+          message={message}
+          timeZone={timeZone}
+          nowIso={nowIso}
+          animate={message.id === typewriterMessageId && message.role === "assistant"}
+          onTypewriterTick={onTypewriterTick}
+        />
       ))}
       {waiting ? <WaitingBubble /> : null}
     </div>

@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList, ChatMessageListSkeleton } from "@/components/chat/chat-message-list";
 import { CHAT_NAV_LABEL } from "@/components/dashboard/dashboard-nav";
+import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
 import type { ChatMessage } from "@/lib/types";
 
@@ -73,6 +74,10 @@ export function ChatView({
   const loadingOlderRef = useRef(false);
   const wasPending = useRef(false);
   const seededThreadId = useRef(threadId);
+  const typewriterMessageId = useIncomingAssistantTypewriter(
+    isPending,
+    state.turn?.assistantMessage?.id ?? null,
+  );
   const displayedMessages = useMemo(() => {
     const pending =
       pendingContent !== null && pendingRequestId !== null && isPending
@@ -99,6 +104,13 @@ export function ChatView({
     setListReady(initialMessages.length === 0);
   }, [threadId, initialMessages, initialHasMore]);
 
+  const pinListToBottom = useCallback(() => {
+    const list = listRef.current;
+    if (list) {
+      list.scrollTop = list.scrollHeight;
+    }
+  }, []);
+
   useEffect(() => {
     const list = listRef.current;
     if (!list) {
@@ -113,12 +125,12 @@ export function ChatView({
       return;
     }
 
-    if (isPending || wasPending.current) {
+    if (isPending || wasPending.current || typewriterMessageId) {
       list.scrollTop = list.scrollHeight;
     }
 
     wasPending.current = isPending;
-  }, [displayedMessages, isPending]);
+  }, [displayedMessages, isPending, typewriterMessageId]);
 
   const loadOlder = useCallback(async () => {
     const beforeId = messages[0]?.id;
@@ -226,6 +238,8 @@ export function ChatView({
               timeZone={timeZone}
               nowIso={nowIso}
               waiting={isPending}
+              typewriterMessageId={typewriterMessageId}
+              onTypewriterTick={pinListToBottom}
             />
           )}
         </div>
