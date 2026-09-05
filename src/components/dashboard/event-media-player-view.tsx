@@ -293,7 +293,6 @@ export function EventMediaPlayerView({
             label={label}
             width={frameWidth}
             height={frameHeight}
-            optimizingLabel={playback.showOptimizing ? "Optimizing…" : null}
             onFrameSize={(nextWidth, nextHeight) => {
               setPreviewSize({ width: nextWidth, height: nextHeight });
               rememberLocalEventVideoSize(mediaId, nextWidth, nextHeight);

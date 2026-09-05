@@ -11,7 +11,6 @@ type EventMediaPlayerProps = {
   label: string;
   width: number | null;
   height: number | null;
-  optimizingLabel?: string | null;
   onFrameSize?: (width: number, height: number) => void;
   onPlaybackReady?: () => void;
   onPlaybackError?: () => void;
@@ -76,7 +75,6 @@ export function EventMediaPlayer({
   label,
   width,
   height,
-  optimizingLabel = null,
   onFrameSize,
   onPlaybackReady,
   onPlaybackError,
@@ -347,11 +345,6 @@ export function EventMediaPlayer({
         aria-label={front === "b" ? label : undefined}
         className={videoClassName(front === "b")}
       />
-      {optimizingLabel ? (
-        <p className="pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-xs text-zinc-200">
-          {optimizingLabel}
-        </p>
-      ) : null}
     </div>
   );
 }
