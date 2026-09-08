@@ -22,6 +22,10 @@ export function isScale1To10Metric(canonicalUnit: string | null): boolean {
   return canonicalUnit === "scale_1_10";
 }
 
+function isCountMetric(canonicalUnit: string | null): boolean {
+  return canonicalUnit === "count";
+}
+
 export const EVENT_DURATION_FIELDS = {
   hours: "durationHours",
   minutes: "durationMinutes",
@@ -550,7 +554,7 @@ export function validateEventMetricPayloadForm(
 }
 
 export function formatMetricUnit(canonicalUnit: string | null): string | null {
-  if (!canonicalUnit || isScale1To10Metric(canonicalUnit)) {
+  if (!canonicalUnit || isScale1To10Metric(canonicalUnit) || isCountMetric(canonicalUnit)) {
     return null;
   }
 
