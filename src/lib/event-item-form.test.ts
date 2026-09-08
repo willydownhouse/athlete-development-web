@@ -1,145 +1,182 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EVENT_ITEMS_MAX_ROOT_ITEMS,
+  eventItemFormSectionTitle,
+  eventItemsToFormDrafts,
   eventItemsToInputs,
-  eventItemsToStrengthFormValues,
-  exerciseItemIdFieldName,
-  exerciseLabelFieldName,
+  itemFieldName,
+  itemMetricFieldName,
+  itemMetricValueTypeFieldName,
   parseEventItemsFromFormData,
-  parseStrengthTrainingItemsFromFormData,
-  setItemIdFieldName,
-  setMetricFieldName,
-  setMetricValueTypeFieldName,
-  type StrengthTrainingItemFormConfig,
+  shouldUseCompactItemMetricFields,
+  validateEventItemsForm,
+  type EventItemFormCatalog,
 } from "./event-item-form";
+import type { EventItem, EventItemTypeMetricDefinition } from "./types";
 
-const config: StrengthTrainingItemFormConfig = {
-  exerciseItemTypeId: "exercise-type-id",
-  setItemTypeId: "set-type-id",
-  setMetricMappings: [
+const setMetrics: EventItemTypeMetricDefinition[] = [
+  {
+    id: "mapping-reps",
+    eventItemTypeId: "set-type-id",
+    metricDefinitionId: "rep-metric-id",
+    required: false,
+    sortOrder: 10,
+    metricDefinition: {
+      id: "rep-metric-id",
+      sportId: null,
+      key: "rep_count",
+      name: "Rep count",
+      description: null,
+      valueType: "number",
+      canonicalUnit: "reps",
+      active: true,
+      createdAt: "2026-08-05T10:00:00.000Z",
+      updatedAt: "2026-08-05T10:00:00.000Z",
+      sport: null,
+    },
+  },
+  {
+    id: "mapping-load",
+    eventItemTypeId: "set-type-id",
+    metricDefinitionId: "load-metric-id",
+    required: false,
+    sortOrder: 20,
+    metricDefinition: {
+      id: "load-metric-id",
+      sportId: null,
+      key: "load_kg",
+      name: "Load",
+      description: null,
+      valueType: "number",
+      canonicalUnit: "kg",
+      active: true,
+      createdAt: "2026-08-05T10:00:00.000Z",
+      updatedAt: "2026-08-05T10:00:00.000Z",
+      sport: null,
+    },
+  },
+];
+
+const catalog: EventItemFormCatalog = {
+  roots: [
     {
-      id: "mapping-reps",
-      eventItemTypeId: "set-type-id",
-      metricDefinitionId: "rep-metric-id",
+      eventItemTypeId: "exercise-type-id",
+      name: "Exercise",
+      slug: "exercise",
       required: false,
       sortOrder: 10,
-      metricDefinition: {
-        id: "rep-metric-id",
-        sportId: null,
-        key: "rep_count",
-        name: "Rep count",
-        description: null,
-        valueType: "number",
-        canonicalUnit: "reps",
-        active: true,
-        createdAt: "2026-08-05T10:00:00.000Z",
-        updatedAt: "2026-08-05T10:00:00.000Z",
-        sport: null,
-      },
-    },
-    {
-      id: "mapping-load",
-      eventItemTypeId: "set-type-id",
-      metricDefinitionId: "load-metric-id",
-      required: false,
-      sortOrder: 20,
-      metricDefinition: {
-        id: "load-metric-id",
-        sportId: null,
-        key: "load_kg",
-        name: "Load",
-        description: null,
-        valueType: "number",
-        canonicalUnit: "kg",
-        active: true,
-        createdAt: "2026-08-05T10:00:00.000Z",
-        updatedAt: "2026-08-05T10:00:00.000Z",
-        sport: null,
-      },
+      metrics: [],
+      children: [
+        {
+          eventItemTypeId: "set-type-id",
+          name: "Set",
+          slug: "set",
+          required: false,
+          sortOrder: 10,
+          metrics: setMetrics,
+          children: [],
+        },
+      ],
     },
   ],
 };
 
-describe("parseStrengthTrainingItemsFromFormData", () => {
-  it("builds exercise and set items from form fields", () => {
-    const formData = new FormData();
-    formData.set("items[0].eventItemTypeId", config.exerciseItemTypeId);
-    formData.set(exerciseLabelFieldName(0), "Curls");
-    formData.set("items[0].children[0].eventItemTypeId", config.setItemTypeId);
-    formData.set(setMetricFieldName(0, 0, "rep-metric-id"), "10");
-    formData.set(setMetricFieldName(0, 0, "load-metric-id"), "20");
-    formData.set("items[0].children[1].eventItemTypeId", config.setItemTypeId);
-    formData.set(setMetricFieldName(0, 1, "rep-metric-id"), "8");
+const gameCatalog: EventItemFormCatalog = {
+  roots: [
+    {
+      eventItemTypeId: "period-type-id",
+      name: "Period",
+      slug: "period",
+      required: false,
+      sortOrder: 10,
+      metrics: [],
+      children: [
+        {
+          eventItemTypeId: "shift-type-id",
+          name: "Shift",
+          slug: "shift",
+          required: false,
+          sortOrder: 10,
+          metrics: [
+            {
+              id: "mapping-hits",
+              eventItemTypeId: "shift-type-id",
+              metricDefinitionId: "hit-metric-id",
+              required: false,
+              sortOrder: 10,
+              metricDefinition: {
+                id: "hit-metric-id",
+                sportId: null,
+                key: "hit_count",
+                name: "Hit count",
+                description: null,
+                valueType: "number",
+                canonicalUnit: "count",
+                active: true,
+                createdAt: "2026-08-05T10:00:00.000Z",
+                updatedAt: "2026-08-05T10:00:00.000Z",
+                sport: null,
+              },
+            },
+          ],
+          children: [],
+        },
+      ],
+    },
+    {
+      eventItemTypeId: "shift-type-id",
+      name: "Shift",
+      slug: "shift",
+      required: false,
+      sortOrder: 20,
+      metrics: [],
+      children: [],
+    },
+  ],
+};
 
-    expect(parseStrengthTrainingItemsFromFormData(formData, config)).toEqual([
-      {
-        eventItemTypeId: "exercise-type-id",
-        label: "Curls",
-        children: [
-          {
-            eventItemTypeId: "set-type-id",
-            metrics: [
-              { metricDefinitionId: "rep-metric-id", numericValue: 10 },
-              { metricDefinitionId: "load-metric-id", numericValue: 20 },
-            ],
-          },
-          {
-            eventItemTypeId: "set-type-id",
-            metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 8 }],
-          },
-        ],
-      },
-    ]);
-  });
-
-  it("skips empty exercises", () => {
-    const formData = new FormData();
-    formData.set("items[0].eventItemTypeId", config.exerciseItemTypeId);
-    formData.set(exerciseLabelFieldName(0), "  ");
-
-    expect(parseStrengthTrainingItemsFromFormData(formData, config)).toEqual([]);
-  });
-
-  it("includes existing item ids when present", () => {
-    const formData = new FormData();
-    formData.set(exerciseItemIdFieldName(0), "exercise-1");
-    formData.set("items[0].eventItemTypeId", config.exerciseItemTypeId);
-    formData.set(exerciseLabelFieldName(0), "Curls");
-    formData.set(setItemIdFieldName(0, 0), "set-1");
-    formData.set("items[0].children[0].eventItemTypeId", config.setItemTypeId);
-    formData.set(setMetricFieldName(0, 0, "rep-metric-id"), "10");
-    formData.set("items[0].children[1].eventItemTypeId", config.setItemTypeId);
-    formData.set(setMetricFieldName(0, 1, "rep-metric-id"), "8");
-
-    expect(parseStrengthTrainingItemsFromFormData(formData, config)).toEqual([
-      {
-        id: "exercise-1",
-        eventItemTypeId: "exercise-type-id",
-        label: "Curls",
-        children: [
-          {
-            id: "set-1",
-            eventItemTypeId: "set-type-id",
-            metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 10 }],
-          },
-          {
-            eventItemTypeId: "set-type-id",
-            metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 8 }],
-          },
-        ],
-      },
-    ]);
-  });
-});
+function sampleExercise(overrides: Partial<EventItem> = {}): EventItem {
+  return {
+    id: "exercise-1",
+    eventId: "event-1",
+    eventItemTypeId: "exercise-type-id",
+    parentEventItemId: null,
+    sortOrder: 0,
+    label: "Curls",
+    startedAt: null,
+    endedAt: null,
+    durationSeconds: null,
+    notes: null,
+    structuredData: null,
+    createdAt: "2026-08-05T10:00:00.000Z",
+    updatedAt: "2026-08-05T10:00:00.000Z",
+    eventItemType: {
+      id: "exercise-type-id",
+      sportId: null,
+      slug: "exercise",
+      name: "Exercise",
+      active: true,
+      createdAt: "2026-08-05T10:00:00.000Z",
+      updatedAt: "2026-08-05T10:00:00.000Z",
+      sport: null,
+    },
+    metrics: [],
+    children: [],
+    ...overrides,
+  };
+}
 
 describe("parseEventItemsFromFormData", () => {
-  it("builds exercise and set items without a catalog", () => {
+  it("builds exercise and set items from form fields", () => {
     const formData = new FormData();
-    formData.set("items[0].eventItemTypeId", "exercise-type-id");
-    formData.set(exerciseLabelFieldName(0), "Curls");
-    formData.set("items[0].children[0].eventItemTypeId", "set-type-id");
-    formData.set(setMetricFieldName(0, 0, "rep-metric-id"), "10");
-    formData.set(setMetricFieldName(0, 0, "load-metric-id"), "20");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "Curls");
+    formData.set(itemFieldName([0, 0], "eventItemTypeId"), "set-type-id");
+    formData.set(itemMetricFieldName([0, 0], "rep-metric-id"), "10");
+    formData.set(itemMetricFieldName([0, 0], "load-metric-id"), "20");
+    formData.set(itemFieldName([0, 1], "eventItemTypeId"), "set-type-id");
+    formData.set(itemMetricFieldName([0, 1], "rep-metric-id"), "8");
 
     expect(parseEventItemsFromFormData(formData)).toEqual([
       {
@@ -153,25 +190,39 @@ describe("parseEventItemsFromFormData", () => {
               { metricDefinitionId: "load-metric-id", numericValue: 20 },
             ],
           },
+          {
+            eventItemTypeId: "set-type-id",
+            metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 8 }],
+          },
         ],
       },
     ]);
   });
 
-  it("includes existing item ids when present", () => {
+  it("skips empty items", () => {
     const formData = new FormData();
-    formData.set(exerciseItemIdFieldName(0), "exercise-1");
-    formData.set("items[0].eventItemTypeId", "exercise-type-id");
-    formData.set(exerciseLabelFieldName(0), "Curls");
-    formData.set(setItemIdFieldName(0, 0), "set-1");
-    formData.set("items[0].children[0].eventItemTypeId", "set-type-id");
-    formData.set(setMetricFieldName(0, 0, "rep-metric-id"), "10");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "  ");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([]);
+  });
+
+  it("includes existing item ids and passthrough fields", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "id"), "exercise-1");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "Curls");
+    formData.set(itemFieldName([0], "notes"), "Felt strong");
+    formData.set(itemFieldName([0, 0], "id"), "set-1");
+    formData.set(itemFieldName([0, 0], "eventItemTypeId"), "set-type-id");
+    formData.set(itemMetricFieldName([0, 0], "rep-metric-id"), "10");
 
     expect(parseEventItemsFromFormData(formData)).toEqual([
       {
         id: "exercise-1",
         eventItemTypeId: "exercise-type-id",
         label: "Curls",
+        notes: "Felt strong",
         children: [
           {
             id: "set-1",
@@ -183,13 +234,49 @@ describe("parseEventItemsFromFormData", () => {
     ]);
   });
 
-  it("uses submitted value type metadata for set text metrics", () => {
+  it("keeps an existing item that has no edited fields", () => {
     const formData = new FormData();
-    formData.set("items[0].eventItemTypeId", "exercise-type-id");
-    formData.set(exerciseLabelFieldName(0), "Curls");
-    formData.set("items[0].children[0].eventItemTypeId", "set-type-id");
-    formData.set(setMetricValueTypeFieldName(0, 0, "note-metric-id"), "text");
-    formData.set(setMetricFieldName(0, 0, "note-metric-id"), "123");
+    formData.set(itemFieldName([0], "id"), "period-1");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "period-type-id");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        id: "period-1",
+        eventItemTypeId: "period-type-id",
+      },
+    ]);
+  });
+
+  it("parses a period with a timed shift", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "eventItemTypeId"), "period-type-id");
+    formData.set(itemFieldName([0], "label"), "Period 1");
+    formData.set(itemFieldName([0, 0], "eventItemTypeId"), "shift-type-id");
+    formData.set(itemFieldName([0, 0], "durationSeconds"), "46");
+    formData.set(itemMetricFieldName([0, 0], "hit-metric-id"), "3");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        eventItemTypeId: "period-type-id",
+        label: "Period 1",
+        children: [
+          {
+            eventItemTypeId: "shift-type-id",
+            durationSeconds: 46,
+            metrics: [{ metricDefinitionId: "hit-metric-id", numericValue: 3 }],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("uses submitted value type metadata for text metrics", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "Curls");
+    formData.set(itemFieldName([0, 0], "eventItemTypeId"), "set-type-id");
+    formData.set(itemMetricValueTypeFieldName([0, 0], "note-metric-id"), "text");
+    formData.set(itemMetricFieldName([0, 0], "note-metric-id"), "123");
 
     expect(parseEventItemsFromFormData(formData)).toEqual([
       {
@@ -206,36 +293,37 @@ describe("parseEventItemsFromFormData", () => {
   });
 });
 
-describe("eventItemsToStrengthFormValues", () => {
+describe("validateEventItemsForm", () => {
+  it("rejects too many root items", () => {
+    const formData = new FormData();
+
+    for (let index = 0; index < EVENT_ITEMS_MAX_ROOT_ITEMS + 1; index += 1) {
+      formData.set(itemFieldName([index], "eventItemTypeId"), "exercise-type-id");
+      formData.set(itemFieldName([index], "label"), `Exercise ${index + 1}`);
+    }
+
+    expect(validateEventItemsForm(formData, catalog)).toBe(
+      `Events can include at most ${EVENT_ITEMS_MAX_ROOT_ITEMS} top-level items`,
+    );
+  });
+
+  it("rejects a label that is too long", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "x".repeat(101));
+
+    expect(validateEventItemsForm(formData, catalog)).toBe(
+      "Exercise 1 · Name must be 100 characters or less",
+    );
+  });
+});
+
+describe("eventItemsToFormDrafts", () => {
   it("keeps saved exercise and set ids", () => {
     expect(
-      eventItemsToStrengthFormValues(
+      eventItemsToFormDrafts(
         [
-          {
-            id: "exercise-1",
-            eventId: "event-1",
-            eventItemTypeId: "exercise-type-id",
-            parentEventItemId: null,
-            sortOrder: 0,
-            label: "Curls",
-            startedAt: null,
-            endedAt: null,
-            durationSeconds: null,
-            notes: null,
-            structuredData: null,
-            createdAt: "2026-08-05T10:00:00.000Z",
-            updatedAt: "2026-08-05T10:00:00.000Z",
-            eventItemType: {
-              id: "exercise-type-id",
-              sportId: null,
-              slug: "exercise",
-              name: "Exercise",
-              active: true,
-              createdAt: "2026-08-05T10:00:00.000Z",
-              updatedAt: "2026-08-05T10:00:00.000Z",
-              sport: null,
-            },
-            metrics: [],
+          sampleExercise({
             children: [
               {
                 id: "set-1",
@@ -272,25 +360,65 @@ describe("eventItemsToStrengthFormValues", () => {
                     unit: null,
                     createdAt: "2026-08-05T10:00:00.000Z",
                     updatedAt: "2026-08-05T10:00:00.000Z",
-                    metricDefinition: config.setMetricMappings[0]!.metricDefinition,
+                    metricDefinition: setMetrics[0]!.metricDefinition,
                   },
                 ],
                 children: [],
               },
             ],
-          },
+          }),
         ],
-        "exercise-type-id",
-        "set-type-id",
-        config.setMetricMappings,
+        catalog,
       ),
     ).toEqual([
       {
+        key: "exercise-1",
         id: "exercise-1",
+        eventItemTypeId: "exercise-type-id",
         label: "Curls",
-        sets: [{ id: "set-1", values: { "rep-metric-id": "10" } }],
+        durationHours: "",
+        durationMinutes: "",
+        durationSeconds: "",
+        metricValues: {},
+        notes: "",
+        startedAt: "",
+        endedAt: "",
+        structuredData: "",
+        children: [
+          {
+            key: "set-1",
+            id: "set-1",
+            eventItemTypeId: "set-type-id",
+            label: "",
+            durationHours: "",
+            durationMinutes: "",
+            durationSeconds: "",
+            metricValues: { "rep-metric-id": "10" },
+            notes: "",
+            startedAt: "",
+            endedAt: "",
+            structuredData: "",
+            children: [],
+          },
+        ],
       },
     ]);
+  });
+});
+
+describe("eventItemFormSectionTitle", () => {
+  it("uses the plural type name when every root is the same type", () => {
+    expect(eventItemFormSectionTitle(catalog.roots)).toBe("Exercises");
+  });
+
+  it("uses Details when root types differ", () => {
+    expect(eventItemFormSectionTitle(gameCatalog.roots)).toBe("Details");
+  });
+});
+
+describe("shouldUseCompactItemMetricFields", () => {
+  it("uses a compact row for a few number metrics", () => {
+    expect(shouldUseCompactItemMetricFields(setMetrics)).toBe(true);
   });
 });
 
@@ -298,31 +426,7 @@ describe("eventItemsToInputs", () => {
   it("converts saved event items into create payloads", () => {
     expect(
       eventItemsToInputs([
-        {
-          id: "exercise-1",
-          eventId: "event-1",
-          eventItemTypeId: "exercise-type-id",
-          parentEventItemId: null,
-          sortOrder: 0,
-          label: "Curls",
-          startedAt: null,
-          endedAt: null,
-          durationSeconds: null,
-          notes: null,
-          structuredData: null,
-          createdAt: "2026-08-05T10:00:00.000Z",
-          updatedAt: "2026-08-05T10:00:00.000Z",
-          eventItemType: {
-            id: "exercise-type-id",
-            sportId: null,
-            slug: "exercise",
-            name: "Exercise",
-            active: true,
-            createdAt: "2026-08-05T10:00:00.000Z",
-            updatedAt: "2026-08-05T10:00:00.000Z",
-            sport: null,
-          },
-          metrics: [],
+        sampleExercise({
           children: [
             {
               id: "set-1",
@@ -359,13 +463,13 @@ describe("eventItemsToInputs", () => {
                   unit: null,
                   createdAt: "2026-08-05T10:00:00.000Z",
                   updatedAt: "2026-08-05T10:00:00.000Z",
-                  metricDefinition: config.setMetricMappings[0]!.metricDefinition,
+                  metricDefinition: setMetrics[0]!.metricDefinition,
                 },
               ],
               children: [],
             },
           ],
-        },
+        }),
       ]),
     ).toEqual([
       {

@@ -554,7 +554,12 @@ export function validateEventMetricPayloadForm(
 }
 
 export function formatMetricUnit(canonicalUnit: string | null): string | null {
-  if (!canonicalUnit || isScale1To10Metric(canonicalUnit) || isCountMetric(canonicalUnit)) {
+  if (
+    !canonicalUnit ||
+    isScale1To10Metric(canonicalUnit) ||
+    isCountMetric(canonicalUnit) ||
+    isSecondsMetric(canonicalUnit)
+  ) {
     return null;
   }
 

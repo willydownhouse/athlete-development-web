@@ -1,5 +1,5 @@
 import { formatEventMetricValue } from "@/lib/event-metric-display";
-import { formatMetricUnit } from "@/lib/event-metric-form";
+import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
 import { formatZonedTime } from "@/lib/time-zone";
 import type { EventItem, EventItemMetric } from "@/lib/types";
 
@@ -63,11 +63,18 @@ export function eventItemTitle(item: EventItem, sameTypeIndex: number): string {
   return `${item.eventItemType.name} ${sameTypeIndex}`;
 }
 
+function itemMetricIsCompactFriendly(metric: EventItemMetric): boolean {
+  const unit = metric.unit ?? metric.metricDefinition.canonicalUnit;
+
+  return metric.metricDefinition.valueType === "number" && !isSecondsMetric(unit);
+}
+
 export function shouldUseCompactItemMetrics(item: EventItem): boolean {
   return (
     item.children.length === 0 &&
     item.metrics.length > 0 &&
-    item.metrics.length <= COMPACT_ITEM_METRIC_LIMIT
+    item.metrics.length <= COMPACT_ITEM_METRIC_LIMIT &&
+    item.metrics.every(itemMetricIsCompactFriendly)
   );
 }
 
@@ -78,7 +85,7 @@ export function eventItemIsCollapsible(item: EventItem): boolean {
     Boolean(item.startedAt) ||
     Boolean(item.endedAt) ||
     item.durationSeconds != null ||
-    item.metrics.length > COMPACT_ITEM_METRIC_LIMIT
+    (item.metrics.length > 0 && !shouldUseCompactItemMetrics(item))
   );
 }
 

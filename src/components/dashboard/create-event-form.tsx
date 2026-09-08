@@ -19,17 +19,14 @@ import {
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { EventTypeMetricsSection } from "@/components/dashboard/event-metric-fields";
-import { StrengthTrainingItemsSection } from "@/components/dashboard/event-items/strength-training-items-section";
+import { EventItemsSection } from "@/components/dashboard/event-items/event-items-section";
 import { DatePickerInput } from "@/components/date-picker-input";
 import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
 import { groupEventTypes } from "@/lib/event-type-groups";
-import {
-  isStrengthTrainingEventType,
-  type StrengthTrainingItemFormConfig,
-} from "@/lib/event-item-form";
+import { type EventItemFormCatalog } from "@/lib/event-item-form";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
 import { getZonedDateString, getZonedTimeString } from "@/lib/time-zone";
@@ -111,9 +108,9 @@ export function EventForm({
   const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [metricFieldsLoading, setMetricFieldsLoading] = useState(Boolean(values.eventTypeId));
   const [metricFieldsLoadError, setMetricFieldsLoadError] = useState<string | null>(null);
-  const [strengthItemConfig, setStrengthItemConfig] =
-    useState<StrengthTrainingItemFormConfig | null>(null);
-  const [strengthItemsLoading, setStrengthItemsLoading] = useState(false);
+  const [itemCatalog, setItemCatalog] = useState<EventItemFormCatalog | null>(null);
+  const [itemFieldsLoading, setItemFieldsLoading] = useState(Boolean(values.eventTypeId));
+  const [itemFieldsLoadError, setItemFieldsLoadError] = useState<string | null>(null);
   const [metricFieldsResetKey, setMetricFieldsResetKey] = useState(values.eventTypeId || "initial");
 
   const handleEventTypeChange = useCallback((nextEventTypeId: string) => {
@@ -127,8 +124,9 @@ export function EventForm({
       setMetricMappings([]);
       setMetricFieldsLoading(Boolean(nextEventTypeId));
       setMetricFieldsLoadError(null);
-      setStrengthItemConfig(null);
-      setStrengthItemsLoading(false);
+      setItemCatalog(null);
+      setItemFieldsLoading(Boolean(nextEventTypeId));
+      setItemFieldsLoadError(null);
 
       return nextEventTypeId;
     });
@@ -159,10 +157,10 @@ export function EventForm({
     () => eventTypes.find((eventType) => eventType.id === selectedEventTypeId),
     [eventTypes, selectedEventTypeId],
   );
-  const showStrengthItems = isStrengthTrainingEventType(selectedEventType);
   const metricFieldsLoaded =
     selectedEventTypeId !== "" && !metricFieldsLoading && metricFieldsLoadError === null;
-  const strengthItemsLoaded = showStrengthItems && !strengthItemsLoading && strengthItemConfig;
+  const itemsEnabled = Boolean(itemCatalog && itemCatalog.roots.length > 0);
+  const itemsLoaded = itemsEnabled && !itemFieldsLoading && itemFieldsLoadError === null;
 
   const validateFormData = useCallback(
     (formData: FormData) => {
@@ -174,30 +172,28 @@ export function EventForm({
         return "Metric fields could not be loaded for this event type.";
       }
 
-      if (showStrengthItems && strengthItemsLoading) {
-        return "Exercise fields are still loading. Try again in a moment.";
+      if (selectedEventTypeId && itemFieldsLoading) {
+        return "Item fields are still loading. Try again in a moment.";
       }
 
-      const strengthConfig = showStrengthItems ? strengthItemConfig : null;
-
-      if (showStrengthItems && !strengthConfig) {
-        return "Exercise fields could not be loaded for this event type.";
+      if (selectedEventTypeId && itemFieldsLoadError) {
+        return "Item fields could not be loaded for this event type.";
       }
 
-      return getEventFormValidationError(formData, metricMappings, strengthConfig, {
+      return getEventFormValidationError(formData, metricMappings, itemCatalog, {
         timeZone,
         requireEventId: isEdit,
       });
     },
     [
       isEdit,
+      itemCatalog,
+      itemFieldsLoadError,
+      itemFieldsLoading,
       metricFieldsLoadError,
       metricFieldsLoading,
       metricMappings,
       selectedEventTypeId,
-      showStrengthItems,
-      strengthItemConfig,
-      strengthItemsLoading,
       timeZone,
     ],
   );
@@ -218,9 +214,9 @@ export function EventForm({
     metricFieldsLoadError,
     metricFieldsLoading,
     metricMappings,
-    showStrengthItems,
-    strengthItemConfig,
-    strengthItemsLoading,
+    itemCatalog,
+    itemFieldsLoadError,
+    itemFieldsLoading,
     syncValidationFromForm,
   ]);
 
@@ -266,7 +262,7 @@ export function EventForm({
         <input type="hidden" name="athleteId" value={athleteId} />
         <input type="hidden" name="eventTypeSlug" value={selectedEventType?.slug ?? ""} />
         {metricFieldsLoaded ? <input type="hidden" name="metricsLoaded" value="1" /> : null}
-        {strengthItemsLoaded ? <input type="hidden" name="itemsLoaded" value="1" /> : null}
+        {itemsLoaded ? <input type="hidden" name="itemsLoaded" value="1" /> : null}
         {isEdit ? <input type="hidden" name="eventId" value={event.id} /> : null}
 
         <label className="flex flex-col gap-1 text-sm">
@@ -349,16 +345,17 @@ export function EventForm({
           />
         ) : null}
 
-        {showStrengthItems ? (
-          <StrengthTrainingItemsSection
+        {selectedEventTypeId ? (
+          <EventItemsSection
             key={`${metricFieldsResetKey}-${isEdit ? event.id : "create"}-items`}
             eventTypeId={selectedEventTypeId}
             savedItems={
               isEdit && selectedEventTypeId === event.eventTypeId ? event.items : undefined
             }
             fieldsResetKey={`${metricFieldsResetKey}-${isEdit ? event.id : "create"}`}
-            onConfigChange={setStrengthItemConfig}
-            onLoadingChange={setStrengthItemsLoading}
+            onCatalogChange={setItemCatalog}
+            onLoadingChange={setItemFieldsLoading}
+            onLoadErrorChange={setItemFieldsLoadError}
           />
         ) : null}
 

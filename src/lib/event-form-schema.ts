@@ -5,10 +5,7 @@ import {
   validateEventMetricPayloadForm,
   validateMetricForm,
 } from "./event-metric-form";
-import {
-  validateStrengthTrainingItemsForm,
-  type StrengthTrainingItemFormConfig,
-} from "./event-item-form";
+import { validateEventItemsForm, type EventItemFormCatalog } from "./event-item-form";
 import type { EventIntensity, EventTypeMetricDefinition } from "./types";
 
 export const EVENT_TITLE_MAX_LENGTH = 100;
@@ -76,7 +73,7 @@ function getEventFormRequiredFieldsError(
 export function getEventFormValidationError(
   formData: FormData,
   metricMappings: EventTypeMetricDefinition[] = [],
-  strengthTrainingConfig: StrengthTrainingItemFormConfig | null = null,
+  itemCatalog: EventItemFormCatalog | null = null,
   options: EventFormValidationOptions = {},
 ): string | null {
   const requiredFieldsError = getEventFormRequiredFieldsError(formData, options);
@@ -104,8 +101,8 @@ export function getEventFormValidationError(
     return metricPayloadError;
   }
 
-  if (strengthTrainingConfig) {
-    return validateStrengthTrainingItemsForm(formData, strengthTrainingConfig);
+  if (itemCatalog && itemCatalog.roots.length > 0) {
+    return validateEventItemsForm(formData, itemCatalog);
   }
 
   return null;

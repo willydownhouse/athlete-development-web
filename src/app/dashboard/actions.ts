@@ -25,10 +25,7 @@ import {
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "@/lib/event-form-schema";
-import {
-  STRENGTH_TRAINING_EVENT_TYPE_SLUG,
-  parseEventItemsFromFormData,
-} from "@/lib/event-item-form";
+import { parseEventItemsFromFormData } from "@/lib/event-item-form";
 import { parseEventMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
 import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
@@ -89,8 +86,6 @@ export async function createEventAction(
   const description = readEventDescriptionForCreate(formData);
   const intensity = readEventIntensityForCreate(formData);
   const metricsLoaded = readString(formData, "metricsLoaded") === "1";
-  const eventTypeSlug = readString(formData, "eventTypeSlug");
-  const isStrengthTraining = eventTypeSlug === STRENGTH_TRAINING_EVENT_TYPE_SLUG;
   const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
@@ -113,12 +108,8 @@ export async function createEventAction(
     return { error: "Metric fields are not ready. Refresh the page and try again." };
   }
 
-  if (isStrengthTraining && !itemsLoaded) {
-    return { error: "Exercise fields are not ready. Refresh the page and try again." };
-  }
-
   const metrics = parseEventMetricsFromFormData(formData);
-  const items = isStrengthTraining ? parseEventItemsFromFormData(formData) : undefined;
+  const items = itemsLoaded ? parseEventItemsFromFormData(formData) : undefined;
 
   try {
     await createEvent(token, fields.athleteId, {
@@ -130,7 +121,7 @@ export async function createEventAction(
       durationSeconds,
       intensity,
       metrics,
-      ...(isStrengthTraining ? { items } : {}),
+      ...(itemsLoaded ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
@@ -158,8 +149,6 @@ export async function updateEventAction(
   const description = readEventDescriptionForUpdate(formData);
   const intensity = readEventIntensityForUpdate(formData);
   const metricsLoaded = readString(formData, "metricsLoaded") === "1";
-  const eventTypeSlug = readString(formData, "eventTypeSlug");
-  const isStrengthTraining = eventTypeSlug === STRENGTH_TRAINING_EVENT_TYPE_SLUG;
   const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
@@ -186,12 +175,8 @@ export async function updateEventAction(
     return { error: "Metric fields are not ready. Refresh the page and try again." };
   }
 
-  if (isStrengthTraining && !itemsLoaded) {
-    return { error: "Exercise fields are not ready. Refresh the page and try again." };
-  }
-
   const metrics = parseEventMetricsFromFormData(formData);
-  const items = isStrengthTraining ? parseEventItemsFromFormData(formData) : undefined;
+  const items = itemsLoaded ? parseEventItemsFromFormData(formData) : undefined;
 
   try {
     await updateEvent(token, fields.athleteId, eventId, {
@@ -202,7 +187,7 @@ export async function updateEventAction(
       durationSeconds,
       intensity,
       metrics,
-      ...(isStrengthTraining ? { items } : {}),
+      ...(itemsLoaded ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));

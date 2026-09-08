@@ -197,6 +197,25 @@ describe("shouldUseCompactItemMetrics and eventItemIsCollapsible", () => {
     expect(eventItemIsCollapsible(buildItem({ startedAt: timestamp }))).toBe(true);
     expect(eventItemIsCollapsible(buildItem({ durationSeconds: 60 }))).toBe(true);
   });
+
+  it("stacks duration metrics so the name stays visible", () => {
+    const item = buildItem({
+      metrics: [
+        buildMetric({
+          numericValue: "1200",
+          metricDefinition: buildMetricDefinition({
+            id: "playing-time-def-id",
+            key: "playing_time_seconds",
+            name: "Playing time",
+            canonicalUnit: "s",
+          }),
+        }),
+      ],
+    });
+
+    expect(shouldUseCompactItemMetrics(item)).toBe(false);
+    expect(eventItemIsCollapsible(item)).toBe(true);
+  });
 });
 
 describe("formatEventItemMetricSummary", () => {
@@ -242,6 +261,22 @@ describe("formatEventItemMetricSummary", () => {
         }),
       ]),
     ).toBe("Hit count 3");
+  });
+
+  it("uses the metric name when the value is already a formatted duration", () => {
+    expect(
+      formatEventItemMetricSummary([
+        buildMetric({
+          numericValue: "1200",
+          metricDefinition: buildMetricDefinition({
+            id: "playing-time-def-id",
+            key: "playing_time_seconds",
+            name: "Playing time",
+            canonicalUnit: "s",
+          }),
+        }),
+      ]),
+    ).toBe("Playing time 20 min");
   });
 });
 

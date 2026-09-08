@@ -38,6 +38,36 @@ describe("getEventFormValidationError", () => {
       getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" }),
     ).toBeNull();
   });
+
+  it("validates nested event items when a catalog is present", () => {
+    const formData = new FormData();
+    formData.set("athleteId", "athlete-1");
+    formData.set("eventTypeId", "event-type-1");
+    formData.set("eventDate", "2026-08-19");
+    formData.set("items[0].eventItemTypeId", "exercise-type-id");
+    formData.set("items[0].label", "x".repeat(101));
+
+    expect(
+      getEventFormValidationError(
+        formData,
+        [],
+        {
+          roots: [
+            {
+              eventItemTypeId: "exercise-type-id",
+              name: "Exercise",
+              slug: "exercise",
+              required: false,
+              sortOrder: 10,
+              metrics: [],
+              children: [],
+            },
+          ],
+        },
+        { timeZone: "Europe/Helsinki" },
+      ),
+    ).toBe("Exercise 1 · Name must be 100 characters or less");
+  });
 });
 
 describe("getEventFormTextError", () => {
