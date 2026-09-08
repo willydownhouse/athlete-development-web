@@ -67,6 +67,7 @@ export default async function ChatPage() {
           hasMore={hasMore}
           timeZone={timeZone}
           nowIso={new Date().toISOString()}
+          exampleAthleteName={athletes[0]?.name ?? ""}
           canSend={athletes.length > 0}
           loadError={loadError}
         />

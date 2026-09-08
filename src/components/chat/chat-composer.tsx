@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { useFormStatus } from "react-dom";
 
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
+import { chatEventLoggingExample } from "@/lib/chat-intro";
 
 function ChatSendButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -24,6 +25,7 @@ type ChatComposerProps = {
   formAction: (formData: FormData) => void;
   isPending: boolean;
   disabled?: boolean;
+  examplePlaceholder?: string;
   onSend?: (payload: { content: string; clientRequestId: string }) => void;
 };
 
@@ -37,6 +39,7 @@ export function ChatComposer({
   formAction,
   isPending,
   disabled = false,
+  examplePlaceholder = chatEventLoggingExample(""),
   onSend,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -97,7 +100,7 @@ export function ChatComposer({
           name="content"
           rows={1}
           maxLength={CHAT_MESSAGE_CONTENT_MAX_LENGTH}
-          placeholder="Lisa had ice practice today at 2pm"
+          placeholder={examplePlaceholder}
           value={content}
           disabled={disabled || isPending}
           onChange={(event) => setContent(event.target.value)}

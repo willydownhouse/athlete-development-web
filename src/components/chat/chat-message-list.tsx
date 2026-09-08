@@ -1,8 +1,8 @@
 "use client";
 
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
+import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useChatTypewriter } from "@/hooks/use-chat-typewriter";
 import { formatChatTimestamp } from "@/lib/chat-time";
 import type { ChatMessage } from "@/lib/types";
 
@@ -48,28 +48,6 @@ type ChatMessageListProps = {
   onTypewriterTick?: () => void;
 };
 
-function TypewriterContent({ content, onTick }: { content: string; onTick?: () => void }) {
-  const { visible, complete } = useChatTypewriter(content, onTick);
-
-  return (
-    <>
-      <ChatMarkdown
-        content={visible}
-        hiddenFromAT={!complete}
-        trailing={
-          complete ? null : (
-            <span
-              className="ml-0.5 inline-block h-[1em] w-[0.12em] translate-y-0.5 animate-pulse bg-[#9ec9e8] align-text-bottom"
-              aria-hidden="true"
-            />
-          )
-        }
-      />
-      {complete ? null : <p className="sr-only">{content}</p>}
-    </>
-  );
-}
-
 function MessageBubble({
   message,
   timeZone,
@@ -93,7 +71,11 @@ function MessageBubble({
         }`}
       >
         {animate ? (
-          <TypewriterContent key={message.id} content={message.content} onTick={onTypewriterTick} />
+          <ChatTypewriterContent
+            key={message.id}
+            content={message.content}
+            onTick={onTypewriterTick}
+          />
         ) : isUser ? (
           <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-zinc-200">
             {message.content}

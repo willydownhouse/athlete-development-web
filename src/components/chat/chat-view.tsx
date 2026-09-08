@@ -7,9 +7,11 @@ import { loadOlderChatMessagesAction, sendChatMessageAction } from "@/app/chat/a
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList, ChatMessageListSkeleton } from "@/components/chat/chat-message-list";
+import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
 import { CHAT_NAV_LABEL } from "@/components/dashboard/dashboard-nav";
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
+import { chatEmptyIntro, chatEventLoggingExample } from "@/lib/chat-intro";
 import type { ChatMessage } from "@/lib/types";
 
 type ChatViewProps = {
@@ -18,19 +20,33 @@ type ChatViewProps = {
   hasMore: boolean;
   timeZone: string;
   nowIso: string;
+  exampleAthleteName?: string;
   canSend?: boolean;
   loadError?: string | null;
 };
 
 const LOAD_OLDER_THRESHOLD_PX = 80;
 
+const CHAT_NEEDS_ATHLETE_INTRO = [
+  "Hey — I'm Toby, your event logging agent.",
+  "I'm here to make daily event logging as easy as possible. Add an athlete to get started.",
+].join("\n\n");
+
+function ChatIntroMessage({ heading, content }: { heading: string; content: string }) {
+  return (
+    <article className="flex justify-start">
+      <div className="max-w-[85%] py-1">
+        <h2 className="sr-only">{heading}</h2>
+        <ChatTypewriterContent content={content} />
+      </div>
+    </article>
+  );
+}
+
 function ChatNeedsAthleteState() {
   return (
     <div className="flex flex-1 flex-col justify-center py-6">
-      <h2 className="text-lg font-semibold tracking-tight text-white">Add an athlete first</h2>
-      <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-300">
-        Event Agent logs practices, games, and rest for an athlete. Add one to start.
-      </p>
+      <ChatIntroMessage heading="Add an athlete first" content={CHAT_NEEDS_ATHLETE_INTRO} />
       <Link
         href="/onboarding"
         className="mt-6 inline-flex w-full max-w-xs items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0]"
@@ -41,13 +57,10 @@ function ChatNeedsAthleteState() {
   );
 }
 
-function ChatEmptyState() {
+function ChatEmptyState({ athleteName }: { athleteName: string }) {
   return (
     <div className="flex flex-1 flex-col justify-center py-6">
-      <h2 className="text-lg font-semibold tracking-tight text-white">Nothing logged yet</h2>
-      <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-300">
-        Describe a practice, game, or rest. Name the athlete if you have more than one.
-      </p>
+      <ChatIntroMessage heading="Nothing logged yet" content={chatEmptyIntro(athleteName)} />
     </div>
   );
 }
@@ -58,6 +71,7 @@ export function ChatView({
   hasMore: initialHasMore,
   timeZone,
   nowIso,
+  exampleAthleteName = "",
   canSend = true,
   loadError,
 }: ChatViewProps) {
@@ -228,7 +242,7 @@ export function ChatView({
           ) : null}
           {showEmpty ? (
             canSend ? (
-              <ChatEmptyState />
+              <ChatEmptyState athleteName={exampleAthleteName} />
             ) : (
               <ChatNeedsAthleteState />
             )
@@ -266,6 +280,7 @@ export function ChatView({
           threadId={threadId}
           formAction={formAction}
           isPending={isPending}
+          examplePlaceholder={chatEventLoggingExample(exampleAthleteName)}
           onSend={({ content, clientRequestId }) => {
             const turn = state.turn;
             if (turn) {

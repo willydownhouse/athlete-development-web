@@ -36,7 +36,7 @@ export function useChatTypewriter(
 ): { visible: string; complete: boolean } {
   const total = splitChatGraphemes(text).length;
   const skip = prefersReducedChatMotion() || total === 0;
-  const [revealedCount, setRevealedCount] = useState(() => (skip ? total : 0));
+  const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
     if (skip) {
@@ -59,6 +59,6 @@ export function useChatTypewriter(
     return () => window.cancelAnimationFrame(frameId);
   }, [onTick, skip, text, total]);
 
-  const visible = visibleChatTypewriterText(text, revealedCount);
+  const visible = visibleChatTypewriterText(text, skip ? total : revealedCount);
   return { visible, complete: visible === text };
 }
