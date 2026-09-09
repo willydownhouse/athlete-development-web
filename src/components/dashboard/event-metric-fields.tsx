@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 
 import { RpeScaleInfoTooltip } from "@/components/dashboard/rpe-scale-guide";
 import { DurationPartsFields } from "@/components/form/duration-parts-fields";
+import { FormSectionDetails } from "@/components/form/form-section-details";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import {
+  BOOLEAN_METRIC_CHECKED_VALUE,
+  BOOLEAN_METRIC_SAVED_VALUE,
+  booleanMetricSavedFieldName,
   eventMetricsToFormValues,
   formatMetricUnit,
+  isSavedBooleanMetricFormValue,
   isScale1To10Metric,
   isSecondsMetric,
   metricDurationFieldName,
@@ -49,107 +54,114 @@ function EventMetricFields({
 
   return (
     <div key={resetKey} className="space-y-4 rounded-xl border border-white/10 bg-[#171b22] p-4">
-      <div>
-        <h3 className="text-sm font-medium text-white">Metrics</h3>
-        <p className="mt-1 text-xs text-zinc-500">
-          Optional details configured for this event type.
-        </p>
-      </div>
+      <FormSectionDetails
+        title="Metrics"
+        description="Optional details configured for this event type."
+      >
+        <div className="space-y-4">
+          {mappings.map((mapping) => {
+            const fieldName = metricFieldName(mapping.metricDefinitionId);
+            const defaultValue = values[mapping.metricDefinitionId] ?? "";
+            const unit = formatMetricUnit(mapping.metricDefinition.canonicalUnit);
+            const label = mapping.required
+              ? `${mapping.metricDefinition.name} *`
+              : mapping.metricDefinition.name;
 
-      <div className="space-y-4">
-        {mappings.map((mapping) => {
-          const fieldName = metricFieldName(mapping.metricDefinitionId);
-          const defaultValue = values[mapping.metricDefinitionId] ?? "";
-          const unit = formatMetricUnit(mapping.metricDefinition.canonicalUnit);
-          const label = mapping.required
-            ? `${mapping.metricDefinition.name} *`
-            : mapping.metricDefinition.name;
-
-          if (mapping.metricDefinition.valueType === "boolean") {
-            return (
-              <label key={mapping.id} className="flex items-start gap-3 text-sm text-zinc-300">
-                <input
-                  type="checkbox"
-                  name={fieldName}
-                  defaultChecked={defaultValue === "on"}
-                  className="mt-1 rounded border-white/20 bg-[#1c222c]"
-                />
-                <span>
-                  <span className="font-medium text-zinc-300">{label}</span>
-                  {mapping.metricDefinition.description ? (
-                    <span className="mt-1 block text-xs text-zinc-500">
-                      {mapping.metricDefinition.description}
-                    </span>
+            if (mapping.metricDefinition.valueType === "boolean") {
+              return (
+                <div key={mapping.id}>
+                  {isSavedBooleanMetricFormValue(defaultValue) ? (
+                    <input
+                      type="hidden"
+                      name={booleanMetricSavedFieldName(fieldName)}
+                      value={BOOLEAN_METRIC_SAVED_VALUE}
+                    />
                   ) : null}
-                </span>
-              </label>
-            );
-          }
+                  <label className="flex items-start gap-3 text-sm text-zinc-300">
+                    <input
+                      type="checkbox"
+                      name={fieldName}
+                      defaultChecked={defaultValue === BOOLEAN_METRIC_CHECKED_VALUE}
+                      className="mt-1 rounded border-white/20 bg-[#1c222c]"
+                    />
+                    <span>
+                      <span className="font-medium text-zinc-300">{label}</span>
+                      {mapping.metricDefinition.description ? (
+                        <span className="mt-1 block text-xs text-zinc-500">
+                          {mapping.metricDefinition.description}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                </div>
+              );
+            }
 
-          if (
-            mapping.metricDefinition.valueType === "number" &&
-            isSecondsMetric(mapping.metricDefinition.canonicalUnit)
-          ) {
-            const hours =
-              values[metricDurationFieldName(mapping.metricDefinitionId, "hours")] ?? "";
-            const minutes =
-              values[metricDurationFieldName(mapping.metricDefinitionId, "minutes")] ?? "";
-            const seconds =
-              values[metricDurationFieldName(mapping.metricDefinitionId, "seconds")] ?? "";
+            if (
+              mapping.metricDefinition.valueType === "number" &&
+              isSecondsMetric(mapping.metricDefinition.canonicalUnit)
+            ) {
+              const hours =
+                values[metricDurationFieldName(mapping.metricDefinitionId, "hours")] ?? "";
+              const minutes =
+                values[metricDurationFieldName(mapping.metricDefinitionId, "minutes")] ?? "";
+              const seconds =
+                values[metricDurationFieldName(mapping.metricDefinitionId, "seconds")] ?? "";
+
+              return (
+                <DurationPartsFields
+                  key={mapping.id}
+                  hoursName={metricDurationFieldName(mapping.metricDefinitionId, "hours")}
+                  minutesName={metricDurationFieldName(mapping.metricDefinitionId, "minutes")}
+                  secondsName={metricDurationFieldName(mapping.metricDefinitionId, "seconds")}
+                  defaultHours={hours}
+                  defaultMinutes={minutes}
+                  defaultSeconds={seconds}
+                  label={label}
+                  description={mapping.metricDefinition.description}
+                  inputClassName={inputClassName}
+                />
+              );
+            }
+
+            const isRpeMetric = isScale1To10Metric(mapping.metricDefinition.canonicalUnit);
+            const inputId = `metric-input-${mapping.metricDefinitionId}`;
 
             return (
-              <DurationPartsFields
-                key={mapping.id}
-                hoursName={metricDurationFieldName(mapping.metricDefinitionId, "hours")}
-                minutesName={metricDurationFieldName(mapping.metricDefinitionId, "minutes")}
-                secondsName={metricDurationFieldName(mapping.metricDefinitionId, "seconds")}
-                defaultHours={hours}
-                defaultMinutes={minutes}
-                defaultSeconds={seconds}
-                label={label}
-                description={mapping.metricDefinition.description}
-                inputClassName={inputClassName}
-              />
-            );
-          }
-
-          const isRpeMetric = isScale1To10Metric(mapping.metricDefinition.canonicalUnit);
-          const inputId = `metric-input-${mapping.metricDefinitionId}`;
-
-          return (
-            <div key={mapping.id} className="flex flex-col gap-1 text-sm">
-              <div className="flex items-center gap-2">
-                <label htmlFor={inputId} className="font-medium text-zinc-300">
-                  {label}
-                </label>
-                {isRpeMetric ? <RpeScaleInfoTooltip /> : null}
+              <div key={mapping.id} className="flex flex-col gap-1 text-sm">
+                <div className="flex items-center gap-2">
+                  <label htmlFor={inputId} className="font-medium text-zinc-300">
+                    {label}
+                  </label>
+                  {isRpeMetric ? <RpeScaleInfoTooltip /> : null}
+                </div>
+                <input
+                  id={inputId}
+                  name={fieldName}
+                  type={mapping.metricDefinition.valueType === "number" ? "number" : "text"}
+                  defaultValue={defaultValue}
+                  className={inputClassName}
+                  {...(isRpeMetric ? { min: 1, max: 10, step: 1 } : {})}
+                />
+                {mapping.metricDefinition.description || unit || isRpeMetric ? (
+                  <span className="text-xs text-zinc-500">
+                    {[
+                      mapping.metricDefinition.description,
+                      isRpeMetric
+                        ? "Enter a whole number from 1 to 10"
+                        : unit
+                          ? `Unit: ${unit}`
+                          : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                ) : null}
               </div>
-              <input
-                id={inputId}
-                name={fieldName}
-                type={mapping.metricDefinition.valueType === "number" ? "number" : "text"}
-                defaultValue={defaultValue}
-                className={inputClassName}
-                {...(isRpeMetric ? { min: 1, max: 10, step: 1 } : {})}
-              />
-              {mapping.metricDefinition.description || unit || isRpeMetric ? (
-                <span className="text-xs text-zinc-500">
-                  {[
-                    mapping.metricDefinition.description,
-                    isRpeMetric
-                      ? "Enter a whole number from 1 to 10"
-                      : unit
-                        ? `Unit: ${unit}`
-                        : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </FormSectionDetails>
     </div>
   );
 }

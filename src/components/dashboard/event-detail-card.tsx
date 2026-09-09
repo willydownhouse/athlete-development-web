@@ -120,7 +120,7 @@ export function EventDetailCard({
         </div>
       ) : null}
 
-      <EventItemsDisplay event={event} />
+      <EventItemsDisplay items={event.items ?? []} timeZone={timeZone} />
 
       {event.originalInput ? (
         <div className="mt-4 border-t border-white/5 pt-4">

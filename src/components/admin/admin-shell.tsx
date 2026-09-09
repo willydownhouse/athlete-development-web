@@ -56,7 +56,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="flex min-h-screen bg-[#0b0d10] text-white">
+    <div className="scheme-dark flex min-h-screen bg-[#0b0d10] text-white">
       {mobileOpen ? (
         <button
           type="button"

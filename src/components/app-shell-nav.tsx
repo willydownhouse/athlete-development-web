@@ -7,9 +7,12 @@ import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
   activeAthleteIdFromPath,
+  CHAT_HREF,
+  CHAT_NAV_LABEL,
   dashboardHref,
   defaultDashboardHref,
   isAthleteDashboardPath,
+  isChatPath,
   TODAY_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
 import type { Athlete } from "@/lib/types";
@@ -98,6 +101,10 @@ export function AppShellNav({
           </div>
         ) : null}
       </div>
+
+      <Link href={CHAT_HREF} onClick={onNavigate} className={navLinkClass(isChatPath(pathname))}>
+        {CHAT_NAV_LABEL}
+      </Link>
 
       <Link
         href="/onboarding"

@@ -31,7 +31,6 @@ export type EventMediaPlaybackView =
       kind: "player";
       readUrl: string;
       posterUrl: string | null;
-      showOptimizing: boolean;
     }
   | { kind: "processing" }
   | { kind: "loading" }
@@ -59,7 +58,6 @@ export function resolveEventMediaPlaybackView(
       kind: "player",
       readUrl: input.assets.readUrl,
       posterUrl: input.assets.posterUrl,
-      showOptimizing: false,
     };
   }
 
@@ -70,7 +68,6 @@ export function resolveEventMediaPlaybackView(
       kind: "player",
       readUrl: localUrl,
       posterUrl: null,
-      showOptimizing: isInFlightMediaStatus(input.status),
     };
   }
 

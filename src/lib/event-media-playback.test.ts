@@ -29,7 +29,6 @@ describe("resolveEventMediaPlaybackView", () => {
       kind: "player",
       readUrl: localUrl,
       posterUrl: null,
-      showOptimizing: true,
     });
   });
 
@@ -48,7 +47,6 @@ describe("resolveEventMediaPlaybackView", () => {
       kind: "player",
       readUrl: processed.readUrl,
       posterUrl: processed.posterUrl,
-      showOptimizing: false,
     });
   });
 
@@ -95,7 +93,6 @@ describe("resolveEventMediaPlaybackView", () => {
       kind: "player",
       readUrl: localUrl,
       posterUrl: null,
-      showOptimizing: false,
     });
   });
 
@@ -142,7 +139,6 @@ describe("resolveEventMediaPlaybackView", () => {
       kind: "player",
       readUrl: localUrl,
       posterUrl: null,
-      showOptimizing: false,
     });
   });
 

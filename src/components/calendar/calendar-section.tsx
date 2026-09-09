@@ -7,11 +7,6 @@ import { copyDayEventsAction, fetchEventsInRangeAction } from "@/app/dashboard/a
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
-import {
-  EventFormModal,
-  type CreateEventModalState,
-} from "@/components/dashboard/event-form-modal";
-import type { EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
 import { eventToCopySource } from "@/lib/copy-event";
@@ -22,14 +17,11 @@ import {
   getZonedMonthStartDateString,
   type TimeRange,
 } from "@/lib/time-zone";
-import type { Event, EventType } from "@/lib/types";
+import type { Event } from "@/lib/types";
 
 type CalendarSectionProps = {
   athleteId: string;
   timeZone: string;
-  eventTypes: EventType[];
-  focusSportName: string;
-  eventTypesError?: string | null;
   initialMonthEvents: Event[];
   loadedRange: TimeRange;
   initialSelectedDate: string;
@@ -53,9 +45,6 @@ function getTodayDates(timeZone: string) {
 export function CalendarSection({
   athleteId,
   timeZone,
-  eventTypes,
-  focusSportName,
-  eventTypesError,
   initialMonthEvents,
   loadedRange,
   initialSelectedDate,
@@ -68,12 +57,6 @@ export function CalendarSection({
   const [visibleCalendarMonth, setVisibleCalendarMonth] = useState(() =>
     parseLocalDateString(initialVisibleMonth),
   );
-  const [modalState, setModalState] = useState<CreateEventModalState | null>(null);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createFormMounted, setCreateFormMounted] = useState(false);
-  const [formKey, setFormKey] = useState(0);
-  const createFormMountedRef = useRef(false);
-  const applyHandlersRef = useRef<EventFormApplyHandlers | null>(null);
   const [monthEvents, setMonthEvents] = useState(initialMonthEvents);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [isFetching, setIsFetching] = useState(false);
@@ -91,21 +74,6 @@ export function CalendarSection({
 
     return getZonedMonthRange(timeZone, visibleCalendarMonth);
   }, [timeZone, visibleCalendarMonth, initialVisibleMonth, loadedRange]);
-
-  const fetchMonthEvents = useCallback(
-    async (startedAtFrom: string, startedAtTo: string) => {
-      setIsFetching(true);
-
-      try {
-        const result = await fetchEventsInRangeAction(athleteId, startedAtFrom, startedAtTo);
-        setMonthEvents(result.error ? [] : result.events);
-        setLoadError(result.error ?? null);
-      } finally {
-        setIsFetching(false);
-      }
-    },
-    [athleteId],
-  );
 
   useEffect(() => {
     if (
@@ -160,39 +128,6 @@ export function CalendarSection({
     () => eventsForLocalDate(monthEvents, selectedCalendarDate, timeZone),
     [monthEvents, selectedCalendarDate, timeZone],
   );
-
-  const openCreateModal = useCallback(() => {
-    const selectedDate = format(selectedCalendarDate, "yyyy-MM-dd");
-
-    if (!createFormMountedRef.current) {
-      setModalState({ mode: "create", defaultEventDate: selectedDate });
-      setFormKey((current) => current + 1);
-      setCreateFormMounted(true);
-      createFormMountedRef.current = true;
-    } else {
-      applyHandlersRef.current?.applyDate(selectedDate);
-    }
-
-    setCreateModalOpen(true);
-  }, [selectedCalendarDate]);
-
-  const handleApplyHandlersReady = useCallback((handlers: EventFormApplyHandlers) => {
-    applyHandlersRef.current = handlers;
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setCreateModalOpen(false);
-  }, []);
-
-  const handleFormSuccess = useCallback(() => {
-    setCreateModalOpen(false);
-    setCreateFormMounted(false);
-    createFormMountedRef.current = false;
-    applyHandlersRef.current = null;
-    setModalState(null);
-    setFormKey((current) => current + 1);
-    void fetchMonthEvents(monthRange.startedAtFrom, monthRange.startedAtTo);
-  }, [fetchMonthEvents, monthRange.startedAtFrom, monthRange.startedAtTo]);
 
   function markMonthNavigation() {
     hasNavigatedAwayRef.current = true;
@@ -252,14 +187,6 @@ export function CalendarSection({
     },
     [athleteId, navigateToDate, selectedDayEvents],
   );
-
-  useEffect(() => {
-    if (!createModalOpen) {
-      return;
-    }
-
-    applyHandlersRef.current?.applyDate(format(selectedCalendarDate, "yyyy-MM-dd"));
-  }, [createModalOpen, selectedCalendarDate]);
 
   function handleMonthChange(nextMonth: Date) {
     markMonthNavigation();
@@ -330,7 +257,6 @@ export function CalendarSection({
           events={selectedDayEvents}
           loading={showLoading}
           loadError={loadError}
-          onAddClick={openCreateModal}
           onCopyClick={openCopyConfirm}
           copyDisabled={copyPending || selectedDayEvents.length === 0}
         />
@@ -346,23 +272,6 @@ export function CalendarSection({
         error={copyError}
         onConfirm={handleCopyConfirm}
       />
-
-      {createFormMounted && modalState ? (
-        <EventFormModal
-          open={createModalOpen}
-          keepMounted
-          athleteId={athleteId}
-          timeZone={timeZone}
-          eventTypes={eventTypes}
-          focusSportName={focusSportName}
-          eventTypesError={eventTypesError}
-          modalState={modalState}
-          formKey={formKey}
-          onApplyHandlersReady={handleApplyHandlersReady}
-          onClose={closeModal}
-          onSuccess={handleFormSuccess}
-        />
-      ) : null}
     </>
   );
 }

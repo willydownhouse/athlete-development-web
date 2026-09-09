@@ -4,105 +4,112 @@ import {
   fetchEventItemTypeMetricDefinitions,
   fetchEventTypeItemTypes,
 } from "@/lib/api";
+import { pluralizeItemTypeName } from "@/lib/event-item-display";
 import {
+  booleanMetricSavedFieldName,
   eventMetricsToFormValues,
   eventMetricsToInputs,
   parseMetricInputsWithPrefix,
-  parseMetricsFromFormData,
+  readDurationPartsSecondsFromFormData,
+  secondsToDurationParts,
+  validateDurationPartsForm,
   validateMetricForm,
 } from "@/lib/event-metric-form";
 import type {
   EventItem,
   EventItemTypeMetricDefinition,
-  EventType,
   EventTypeMetricDefinition,
   MetricValueType,
 } from "@/lib/types";
 
 /** Keep in sync with athlete-development-service EVENT_ITEMS_MAX_ROOT_ITEMS. */
-export const STRENGTH_TRAINING_MAX_EXERCISES = 20;
+export const EVENT_ITEMS_MAX_ROOT_ITEMS = 20;
+
+/** Keep in sync with athlete-development-service EVENT_ITEMS_MAX_TOTAL. */
+export const EVENT_ITEMS_MAX_TOTAL = 100;
+
+/** Keep in sync with athlete-development-service EVENT_ITEMS_MAX_DEPTH. */
+const EVENT_ITEMS_MAX_DEPTH = 10;
 
 /** Keep in sync with athlete-development-service EVENT_ITEM_LABEL_MAX_LENGTH. */
 export const EVENT_ITEM_LABEL_MAX_LENGTH = 100;
 
-export const STRENGTH_TRAINING_EVENT_TYPE_SLUG = "strength_training";
-const EXERCISE_ITEM_TYPE_SLUG = "exercise";
-const SET_ITEM_TYPE_SLUG = "set";
+const COMPACT_ITEM_METRIC_LIMIT = 3;
 
-export type StrengthTrainingItemFormConfig = {
-  exerciseItemTypeId: string;
-  setItemTypeId: string;
-  setMetricMappings: EventItemTypeMetricDefinition[];
+export type EventItemFormPath = number[];
+
+export type EventItemFormTypeNode = {
+  eventItemTypeId: string;
+  name: string;
+  slug: string;
+  required: boolean;
+  sortOrder: number;
+  metrics: EventItemTypeMetricDefinition[];
+  children: EventItemFormTypeNode[];
 };
 
-export type StrengthTrainingExerciseFormValues = {
+export type EventItemFormCatalog = {
+  roots: EventItemFormTypeNode[];
+};
+
+export type EventItemFormDraft = {
+  key: string;
+  id?: string;
+  eventItemTypeId: string;
   label: string;
-  sets: Record<string, string>[];
+  durationHours: string;
+  durationMinutes: string;
+  durationSeconds: string;
+  metricValues: Record<string, string>;
+  notes: string;
+  startedAt: string;
+  endedAt: string;
+  structuredData: string;
+  children: EventItemFormDraft[];
 };
 
-export function isStrengthTrainingEventType(
-  eventType: Pick<EventType, "slug"> | undefined,
-): boolean {
-  return eventType?.slug === STRENGTH_TRAINING_EVENT_TYPE_SLUG;
-}
+function itemFieldPath(path: EventItemFormPath): string {
+  const [rootIndex, ...childIndexes] = path;
 
-export function exerciseItemTypeIdFieldName(exerciseIndex: number): string {
-  return `items[${exerciseIndex}].eventItemTypeId`;
-}
-
-export function exerciseLabelFieldName(exerciseIndex: number): string {
-  return `items[${exerciseIndex}].label`;
-}
-
-export function setItemTypeIdFieldName(exerciseIndex: number, setIndex: number): string {
-  return `items[${exerciseIndex}].children[${setIndex}].eventItemTypeId`;
-}
-
-export function setMetricFieldName(
-  exerciseIndex: number,
-  setIndex: number,
-  metricDefinitionId: string,
-): string {
-  return `items[${exerciseIndex}].children[${setIndex}].metric.${metricDefinitionId}`;
-}
-
-export function setMetricValueTypeFieldName(
-  exerciseIndex: number,
-  setIndex: number,
-  metricDefinitionId: string,
-): string {
-  return `items[${exerciseIndex}].children[${setIndex}].metricType.${metricDefinitionId}`;
-}
-
-function readField(formData: FormData, key: string): string {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function listExerciseIndices(formData: FormData): number[] {
-  const indices = new Set<number>();
-
-  for (const key of formData.keys()) {
-    const match = /^items\[(\d+)\]\./.exec(key);
-    if (match?.[1]) {
-      indices.add(Number.parseInt(match[1], 10));
-    }
+  if (rootIndex === undefined) {
+    return "items";
   }
 
-  return [...indices].sort((left, right) => left - right);
+  return childIndexes.reduce(
+    (current, childIndex) => `${current}.children[${childIndex}]`,
+    `items[${rootIndex}]`,
+  );
 }
 
-function listSetIndices(formData: FormData, exerciseIndex: number): number[] {
-  const indices = new Set<number>();
+export function itemFieldName(path: EventItemFormPath, field: string): string {
+  return `${itemFieldPath(path)}.${field}`;
+}
 
-  for (const key of formData.keys()) {
-    const match = new RegExp(`^items\\[${exerciseIndex}\\]\\.children\\[(\\d+)\\]\\.`).exec(key);
-    if (match?.[1]) {
-      indices.add(Number.parseInt(match[1], 10));
-    }
-  }
+export function itemMetricFieldName(path: EventItemFormPath, metricDefinitionId: string): string {
+  return itemFieldName(path, `metric.${metricDefinitionId}`);
+}
 
-  return [...indices].sort((left, right) => left - right);
+export function itemMetricValueTypeFieldName(
+  path: EventItemFormPath,
+  metricDefinitionId: string,
+): string {
+  return itemFieldName(path, `metricType.${metricDefinitionId}`);
+}
+
+function itemMetricFieldPrefix(path: EventItemFormPath): string {
+  return `${itemFieldPath(path)}.metric.`;
+}
+
+function itemMetricValueTypeFieldPrefix(path: EventItemFormPath): string {
+  return `${itemFieldPath(path)}.metricType.`;
+}
+
+export function itemDurationFieldNames(path: EventItemFormPath) {
+  return {
+    hours: itemFieldName(path, "durationHours"),
+    minutes: itemFieldName(path, "durationMinutes"),
+    seconds: itemFieldName(path, "durationSeconds"),
+  };
 }
 
 function toEventTypeMetricMappings(
@@ -118,73 +125,81 @@ function toEventTypeMetricMappings(
   }));
 }
 
-function prefixSetMetricsFormData(
-  formData: FormData,
-  exerciseIndex: number,
-  setIndex: number,
+export function shouldUseCompactItemMetricFields(
   mappings: EventItemTypeMetricDefinition[],
-): FormData {
-  const prefixedFormData = new FormData();
+): boolean {
+  return (
+    mappings.length > 0 &&
+    mappings.length <= COMPACT_ITEM_METRIC_LIMIT &&
+    mappings.every(
+      (mapping) =>
+        mapping.metricDefinition.valueType === "number" &&
+        mapping.metricDefinition.canonicalUnit !== "s",
+    )
+  );
+}
 
-  for (const mapping of mappings) {
-    const fieldName = setMetricFieldName(exerciseIndex, setIndex, mapping.metricDefinitionId);
-    const value = formData.get(fieldName);
+export function eventItemFormSectionTitle(roots: EventItemFormTypeNode[]): string {
+  const firstRoot = roots[0];
 
-    if (value !== null) {
-      prefixedFormData.set(`metric.${mapping.metricDefinitionId}`, value);
+  if (!firstRoot) {
+    return "Details";
+  }
+
+  if (roots.some((root) => root.eventItemTypeId !== firstRoot.eventItemTypeId)) {
+    return "Details";
+  }
+
+  return pluralizeItemTypeName(firstRoot.name);
+}
+
+export function findItemFormTypeNode(
+  nodes: EventItemFormTypeNode[],
+  eventItemTypeId: string,
+): EventItemFormTypeNode | undefined {
+  for (const node of nodes) {
+    if (node.eventItemTypeId === eventItemTypeId) {
+      return node;
+    }
+
+    const nested = findItemFormTypeNode(node.children, eventItemTypeId);
+    if (nested) {
+      return nested;
     }
   }
 
-  return prefixedFormData;
+  return undefined;
 }
 
-function parseSetMetricsFromFormData(
-  formData: FormData,
-  exerciseIndex: number,
-  setIndex: number,
-  mappings: EventItemTypeMetricDefinition[],
-) {
-  return parseMetricsFromFormData(
-    prefixSetMetricsFormData(formData, exerciseIndex, setIndex, mappings),
-    toEventTypeMetricMappings(mappings),
-  );
+function readField(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
 }
 
-function setHasMetricInput(
-  formData: FormData,
-  exerciseIndex: number,
-  setIndex: number,
-  mappings: EventItemTypeMetricDefinition[],
-): boolean {
-  return mappings.some((mapping) => {
-    const value = readField(
-      formData,
-      setMetricFieldName(exerciseIndex, setIndex, mapping.metricDefinitionId),
-    );
-    return value !== "";
-  });
+function readOptionalId(formData: FormData, key: string): string | undefined {
+  const value = readField(formData, key);
+  return value || undefined;
 }
 
-function exerciseHasInput(
-  formData: FormData,
-  exerciseIndex: number,
-  mappings: EventItemTypeMetricDefinition[],
-): boolean {
-  if (readField(formData, exerciseLabelFieldName(exerciseIndex)) !== "") {
-    return true;
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function listChildIndices(formData: FormData, parentPath: EventItemFormPath): number[] {
+  const indices = new Set<number>();
+  const pattern =
+    parentPath.length === 0
+      ? /^items\[(\d+)\]\./
+      : new RegExp(`^${escapeRegExp(itemFieldPath(parentPath))}\\.children\\[(\\d+)\\]\\.`);
+
+  for (const key of formData.keys()) {
+    const match = pattern.exec(key);
+    if (match?.[1]) {
+      indices.add(Number.parseInt(match[1], 10));
+    }
   }
 
-  return listSetIndices(formData, exerciseIndex).some((setIndex) =>
-    setHasMetricInput(formData, exerciseIndex, setIndex, mappings),
-  );
-}
-
-function setMetricFieldPrefix(exerciseIndex: number, setIndex: number): string {
-  return `items[${exerciseIndex}].children[${setIndex}].metric.`;
-}
-
-function setMetricValueTypeFieldPrefix(exerciseIndex: number, setIndex: number): string {
-  return `items[${exerciseIndex}].children[${setIndex}].metricType.`;
+  return [...indices].sort((left, right) => left - right);
 }
 
 function isMetricValueType(value: FormDataEntryValue | null): value is MetricValueType {
@@ -209,171 +224,187 @@ function readMetricValueTypes(formData: FormData, prefix: string): Record<string
   return valueTypes;
 }
 
-function setHasAnyMetricInput(
-  formData: FormData,
-  exerciseIndex: number,
-  setIndex: number,
-): boolean {
-  const prefix = setMetricFieldPrefix(exerciseIndex, setIndex);
-
-  for (const key of formData.keys()) {
-    if (!key.startsWith(prefix)) {
-      continue;
-    }
-
-    const raw = formData.get(key);
-    if (raw === "on") {
-      return true;
-    }
-
-    if (typeof raw === "string" && raw.trim() !== "") {
-      return true;
-    }
+function parseStructuredData(value: string): Record<string, unknown> | undefined {
+  if (!value) {
+    return undefined;
   }
 
-  return false;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
 }
 
-function exerciseHasAnyInput(formData: FormData, exerciseIndex: number): boolean {
-  if (readField(formData, exerciseLabelFieldName(exerciseIndex)) !== "") {
-    return true;
+function parseItemsAt(formData: FormData, parentPath: EventItemFormPath): EventItemInput[] {
+  const items: EventItemInput[] = [];
+
+  for (const index of listChildIndices(formData, parentPath)) {
+    const parsed = parseItemAt(formData, [...parentPath, index]);
+    if (parsed) {
+      items.push(parsed);
+    }
   }
 
-  return listSetIndices(formData, exerciseIndex).some((setIndex) =>
-    setHasAnyMetricInput(formData, exerciseIndex, setIndex),
+  return items;
+}
+
+function parseItemAt(formData: FormData, path: EventItemFormPath): EventItemInput | null {
+  const eventItemTypeId = readField(formData, itemFieldName(path, "eventItemTypeId"));
+  if (!eventItemTypeId) {
+    return null;
+  }
+
+  const children = parseItemsAt(formData, path);
+  const label = readField(formData, itemFieldName(path, "label"));
+  const durationSeconds = readDurationPartsSecondsFromFormData(
+    formData,
+    itemDurationFieldNames(path),
   );
+  const metrics = parseMetricInputsWithPrefix(
+    formData,
+    itemMetricFieldPrefix(path),
+    readMetricValueTypes(formData, itemMetricValueTypeFieldPrefix(path)),
+  );
+  const id = readOptionalId(formData, itemFieldName(path, "id"));
+  const notes = readField(formData, itemFieldName(path, "notes"));
+  const startedAt = readField(formData, itemFieldName(path, "startedAt"));
+  const endedAt = readField(formData, itemFieldName(path, "endedAt"));
+  const structuredData = parseStructuredData(
+    readField(formData, itemFieldName(path, "structuredData")),
+  );
+
+  const isEmpty =
+    !id &&
+    !label &&
+    durationSeconds === 0 &&
+    metrics.length === 0 &&
+    children.length === 0 &&
+    !notes &&
+    !startedAt &&
+    !endedAt &&
+    !structuredData;
+
+  if (isEmpty) {
+    return null;
+  }
+
+  return {
+    ...(id ? { id } : {}),
+    eventItemTypeId,
+    ...(label ? { label } : {}),
+    ...(durationSeconds > 0 ? { durationSeconds } : {}),
+    ...(notes ? { notes } : {}),
+    ...(startedAt ? { startedAt } : {}),
+    ...(endedAt ? { endedAt } : {}),
+    ...(structuredData ? { structuredData } : {}),
+    ...(metrics.length > 0 ? { metrics } : {}),
+    ...(children.length > 0 ? { children } : {}),
+  };
 }
 
 /** Parse nested event items from form fields without a catalog fetch (API validates values). */
 export function parseEventItemsFromFormData(formData: FormData): EventItemInput[] {
-  const items: EventItemInput[] = [];
+  return parseItemsAt(formData, []);
+}
 
-  for (const exerciseIndex of listExerciseIndices(formData)) {
-    if (!exerciseHasAnyInput(formData, exerciseIndex)) {
+function countFormItems(formData: FormData, parentPath: EventItemFormPath): number {
+  let total = 0;
+
+  for (const index of listChildIndices(formData, parentPath)) {
+    const path = [...parentPath, index];
+    if (!readField(formData, itemFieldName(path, "eventItemTypeId"))) {
       continue;
     }
 
-    const eventItemTypeId = readField(formData, exerciseItemTypeIdFieldName(exerciseIndex));
+    total += 1 + countFormItems(formData, path);
+  }
+
+  return total;
+}
+
+function remapItemMetricsFormData(
+  formData: FormData,
+  path: EventItemFormPath,
+  mappings: EventItemTypeMetricDefinition[],
+): FormData {
+  const remapped = new FormData();
+
+  for (const mapping of mappings) {
+    const metricDefinitionId = mapping.metricDefinitionId;
+    const value = formData.get(itemMetricFieldName(path, metricDefinitionId));
+    if (value !== null) {
+      remapped.set(`metric.${metricDefinitionId}`, value);
+    }
+
+    for (const part of ["hours", "minutes", "seconds"] as const) {
+      const partValue = formData.get(`${itemMetricFieldName(path, metricDefinitionId)}.${part}`);
+      if (partValue !== null) {
+        remapped.set(`metric.${metricDefinitionId}.${part}`, partValue);
+      }
+    }
+
+    const savedValue = formData.get(
+      booleanMetricSavedFieldName(itemMetricFieldName(path, metricDefinitionId)),
+    );
+    if (savedValue !== null) {
+      remapped.set(booleanMetricSavedFieldName(`metric.${metricDefinitionId}`), savedValue);
+    }
+  }
+
+  return remapped;
+}
+
+function validateItemsAt(
+  formData: FormData,
+  parentPath: EventItemFormPath,
+  allowedTypes: EventItemFormTypeNode[],
+  titlePrefix: string,
+): string | null {
+  for (const [position, index] of listChildIndices(formData, parentPath).entries()) {
+    const path = [...parentPath, index];
+    const eventItemTypeId = readField(formData, itemFieldName(path, "eventItemTypeId"));
     if (!eventItemTypeId) {
       continue;
     }
 
-    const label = readField(formData, exerciseLabelFieldName(exerciseIndex));
-    const children: EventItemInput[] = [];
-
-    for (const setIndex of listSetIndices(formData, exerciseIndex)) {
-      if (!setHasAnyMetricInput(formData, exerciseIndex, setIndex)) {
-        continue;
-      }
-
-      const setItemTypeId = readField(formData, setItemTypeIdFieldName(exerciseIndex, setIndex));
-      if (!setItemTypeId) {
-        continue;
-      }
-
-      const metrics = parseMetricInputsWithPrefix(
-        formData,
-        setMetricFieldPrefix(exerciseIndex, setIndex),
-        readMetricValueTypes(formData, setMetricValueTypeFieldPrefix(exerciseIndex, setIndex)),
-      );
-
-      children.push({
-        eventItemTypeId: setItemTypeId,
-        metrics: metrics.length > 0 ? metrics : undefined,
-      });
-    }
-
-    items.push({
-      eventItemTypeId,
-      label: label || undefined,
-      children: children.length > 0 ? children : undefined,
-    });
-  }
-
-  return items;
-}
-
-export function parseStrengthTrainingItemsFromFormData(
-  formData: FormData,
-  config: StrengthTrainingItemFormConfig,
-): EventItemInput[] {
-  const items: EventItemInput[] = [];
-
-  for (const exerciseIndex of listExerciseIndices(formData)) {
-    if (!exerciseHasInput(formData, exerciseIndex, config.setMetricMappings)) {
-      continue;
-    }
-
-    const label = readField(formData, exerciseLabelFieldName(exerciseIndex));
-    const children: EventItemInput[] = [];
-
-    for (const setIndex of listSetIndices(formData, exerciseIndex)) {
-      if (!setHasMetricInput(formData, exerciseIndex, setIndex, config.setMetricMappings)) {
-        continue;
-      }
-
-      const metrics = parseSetMetricsFromFormData(
-        formData,
-        exerciseIndex,
-        setIndex,
-        config.setMetricMappings,
-      );
-
-      children.push({
-        eventItemTypeId: config.setItemTypeId,
-        metrics: metrics.length > 0 ? metrics : undefined,
-      });
-    }
-
-    items.push({
-      eventItemTypeId: config.exerciseItemTypeId,
-      label: label || undefined,
-      children: children.length > 0 ? children : undefined,
-    });
-  }
-
-  return items;
-}
-
-function validateSetMetricsForm(
-  formData: FormData,
-  exerciseIndex: number,
-  setIndex: number,
-  mappings: EventItemTypeMetricDefinition[],
-): string | null {
-  return validateMetricForm(
-    prefixSetMetricsFormData(formData, exerciseIndex, setIndex, mappings),
-    toEventTypeMetricMappings(mappings),
-  );
-}
-
-export function validateStrengthTrainingItemsForm(
-  formData: FormData,
-  config: StrengthTrainingItemFormConfig,
-): string | null {
-  const exerciseIndices = listExerciseIndices(formData);
-
-  if (exerciseIndices.length > STRENGTH_TRAINING_MAX_EXERCISES) {
-    return `Strength training can include at most ${STRENGTH_TRAINING_MAX_EXERCISES} exercises`;
-  }
-
-  for (const exerciseIndex of exerciseIndices) {
-    const label = readField(formData, exerciseLabelFieldName(exerciseIndex));
+    const typeNode =
+      allowedTypes.find((node) => node.eventItemTypeId === eventItemTypeId) ??
+      findItemFormTypeNode(allowedTypes, eventItemTypeId);
+    const typeName = typeNode?.name ?? "Item";
+    const itemTitle = `${titlePrefix}${typeName} ${position + 1}`;
+    const label = readField(formData, itemFieldName(path, "label"));
 
     if (label.length > EVENT_ITEM_LABEL_MAX_LENGTH) {
-      return `Exercise ${exerciseIndex + 1} · Exercise name must be ${EVENT_ITEM_LABEL_MAX_LENGTH} characters or less`;
+      return `${itemTitle} · Name must be ${EVENT_ITEM_LABEL_MAX_LENGTH} characters or less`;
     }
 
-    for (const setIndex of listSetIndices(formData, exerciseIndex)) {
-      const metricError = validateSetMetricsForm(
-        formData,
-        exerciseIndex,
-        setIndex,
-        config.setMetricMappings,
-      );
+    const durationError = validateDurationPartsForm(
+      formData,
+      itemDurationFieldNames(path),
+      `${itemTitle} · Duration`,
+    );
+    if (durationError) {
+      return durationError;
+    }
 
+    if (typeNode) {
+      const metricError = validateMetricForm(
+        remapItemMetricsFormData(formData, path, typeNode.metrics),
+        toEventTypeMetricMappings(typeNode.metrics),
+      );
       if (metricError) {
-        return `Exercise ${exerciseIndex + 1}, Set ${setIndex + 1} · ${metricError}`;
+        return `${itemTitle} · ${metricError}`;
+      }
+
+      const childError = validateItemsAt(formData, path, typeNode.children, `${itemTitle}, `);
+      if (childError) {
+        return childError;
       }
     }
   }
@@ -381,69 +412,152 @@ export function validateStrengthTrainingItemsForm(
   return null;
 }
 
-export function eventItemsToStrengthFormValues(
-  items: EventItem[] | undefined,
-  exerciseItemTypeId: string,
-  setItemTypeId: string,
-  setMetricMappings: EventItemTypeMetricDefinition[],
-): StrengthTrainingExerciseFormValues[] {
-  const metricMappings = toEventTypeMetricMappings(setMetricMappings);
+export function validateEventItemsForm(
+  formData: FormData,
+  catalog: EventItemFormCatalog,
+): string | null {
+  const rootCount = listChildIndices(formData, []).filter((index) =>
+    Boolean(readField(formData, itemFieldName([index], "eventItemTypeId"))),
+  ).length;
 
-  return (items ?? [])
-    .filter((item) => item.eventItemTypeId === exerciseItemTypeId)
-    .map((exercise) => ({
-      label: exercise.label ?? "",
-      sets: exercise.children
-        .filter((child) => child.eventItemTypeId === setItemTypeId)
-        .map((setItem) => {
-          const values = eventMetricsToFormValues(metricMappings, setItem.metrics);
+  if (rootCount > EVENT_ITEMS_MAX_ROOT_ITEMS) {
+    return `Events can include at most ${EVENT_ITEMS_MAX_ROOT_ITEMS} top-level items`;
+  }
 
-          const setValues: Record<string, string> = {};
+  if (countFormItems(formData, []) > EVENT_ITEMS_MAX_TOTAL) {
+    return `Events can include at most ${EVENT_ITEMS_MAX_TOTAL} items`;
+  }
 
-          for (const mapping of setMetricMappings) {
-            const value = values[mapping.metricDefinitionId];
-            if (value !== undefined) {
-              setValues[mapping.metricDefinitionId] = value;
-            }
-          }
-
-          return setValues;
-        }),
-    }));
+  return validateItemsAt(formData, [], catalog.roots, "");
 }
 
-export async function loadStrengthTrainingItemFormConfig(
-  eventTypeId: string,
-): Promise<StrengthTrainingItemFormConfig | null> {
-  const rootMappings = await fetchEventTypeItemTypes(eventTypeId);
-  const exerciseMapping = rootMappings.find(
-    (mapping) => mapping.eventItemType.slug === EXERCISE_ITEM_TYPE_SLUG,
-  );
+function metricValuesFromItem(
+  mappings: EventItemTypeMetricDefinition[],
+  metrics: EventItem["metrics"],
+): Record<string, string> {
+  const values = eventMetricsToFormValues(toEventTypeMetricMappings(mappings), metrics);
+  const metricValues: Record<string, string> = {};
 
-  if (!exerciseMapping) {
-    return null;
+  for (const [key, value] of Object.entries(values)) {
+    metricValues[key.startsWith("metric.") ? key.slice("metric.".length) : key] = value;
   }
 
-  const childMappings = await fetchEventItemTypeChildTypes(exerciseMapping.eventItemTypeId);
-  const setMapping = childMappings.find(
-    (mapping) => mapping.childEventItemType.slug === SET_ITEM_TYPE_SLUG,
-  );
+  return metricValues;
+}
 
-  if (!setMapping) {
-    return null;
+function stringifyStructuredData(value: unknown): string {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return JSON.stringify(value);
   }
 
-  const setMetricMappings = await fetchEventItemTypeMetricDefinitions(
-    setMapping.childEventItemTypeId,
-  );
+  return "";
+}
+
+function eventItemToFormDraft(item: EventItem, catalog: EventItemFormCatalog): EventItemFormDraft {
+  const typeNode = findItemFormTypeNode(catalog.roots, item.eventItemTypeId);
+  const durationParts = item.durationSeconds
+    ? secondsToDurationParts(item.durationSeconds)
+    : { hours: "", minutes: "", seconds: "" };
 
   return {
-    exerciseItemTypeId: exerciseMapping.eventItemTypeId,
-    setItemTypeId: setMapping.childEventItemTypeId,
-    setMetricMappings,
+    key: item.id,
+    id: item.id,
+    eventItemTypeId: item.eventItemTypeId,
+    label: item.label ?? "",
+    durationHours: durationParts.hours,
+    durationMinutes: durationParts.minutes,
+    durationSeconds: durationParts.seconds,
+    metricValues: metricValuesFromItem(typeNode?.metrics ?? [], item.metrics),
+    notes: item.notes ?? "",
+    startedAt: item.startedAt ?? "",
+    endedAt: item.endedAt ?? "",
+    structuredData: stringifyStructuredData(item.structuredData),
+    children: item.children.map((child) => eventItemToFormDraft(child, catalog)),
   };
 }
 
+export function eventItemsToFormDrafts(
+  items: EventItem[] | undefined,
+  catalog: EventItemFormCatalog,
+): EventItemFormDraft[] {
+  return (items ?? []).map((item) => eventItemToFormDraft(item, catalog));
+}
+
+async function loadItemFormTypeNode(
+  eventItemTypeId: string,
+  eventItemType: { name: string; slug: string },
+  required: boolean,
+  sortOrder: number,
+  depth: number,
+  cache: Map<string, EventItemFormTypeNode>,
+): Promise<EventItemFormTypeNode> {
+  const cached = cache.get(eventItemTypeId);
+  if (cached) {
+    return {
+      ...cached,
+      required,
+      sortOrder,
+    };
+  }
+
+  const [childMappings, metrics] = await Promise.all([
+    depth < EVENT_ITEMS_MAX_DEPTH
+      ? fetchEventItemTypeChildTypes(eventItemTypeId)
+      : Promise.resolve([]),
+    fetchEventItemTypeMetricDefinitions(eventItemTypeId),
+  ]);
+
+  const children = await Promise.all(
+    [...childMappings]
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((mapping) =>
+        loadItemFormTypeNode(
+          mapping.childEventItemTypeId,
+          mapping.childEventItemType,
+          false,
+          mapping.sortOrder,
+          depth + 1,
+          cache,
+        ),
+      ),
+  );
+
+  const node: EventItemFormTypeNode = {
+    eventItemTypeId,
+    name: eventItemType.name,
+    slug: eventItemType.slug,
+    required,
+    sortOrder,
+    metrics: [...metrics].sort((left, right) => left.sortOrder - right.sortOrder),
+    children,
+  };
+
+  cache.set(eventItemTypeId, node);
+  return node;
+}
+
+export async function loadEventItemFormCatalog(eventTypeId: string): Promise<EventItemFormCatalog> {
+  const rootMappings = await fetchEventTypeItemTypes(eventTypeId);
+  const cache = new Map<string, EventItemFormTypeNode>();
+  const roots = await Promise.all(
+    [...rootMappings]
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((mapping) =>
+        loadItemFormTypeNode(
+          mapping.eventItemTypeId,
+          mapping.eventItemType,
+          mapping.required,
+          mapping.sortOrder,
+          1,
+          cache,
+        ),
+      ),
+  );
+
+  return { roots };
+}
+
+/** Copy/create payload: omit item ids so the API creates new rows. */
 export function eventItemsToInputs(items: EventItem[]): EventItemInput[] {
   return items.map((item) => eventItemToInput(item));
 }

@@ -1,7 +1,11 @@
+import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
   Athlete,
   AthleteAccessRole,
   AthleteListResponse,
+  ChatMessageListResponse,
+  ChatThread,
+  ChatTurn,
   Event,
   EventIntensity,
   EventListResponse,
@@ -19,7 +23,12 @@ import type {
   SportStats,
   UserRole,
 } from "./types";
-import { athleteEventsCacheTag, eventCacheTag, EVENT_TYPES_CACHE_TAG } from "./cache-tags";
+import {
+  athleteEventsCacheTag,
+  chatMessagesCacheTag,
+  eventCacheTag,
+  EVENT_TYPES_CACHE_TAG,
+} from "./cache-tags";
 
 /** Event types are admin config; busted on admin writes via EVENT_TYPES_CACHE_TAG. */
 const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
@@ -139,6 +148,7 @@ export type EventMetricInput = {
 };
 
 export type EventItemInput = {
+  id?: string;
   eventItemTypeId: string;
   sortOrder?: number;
   label?: string;
@@ -337,7 +347,7 @@ export async function updateEvent(
     startedAt?: string;
     title?: string | null;
     description?: string | null;
-    endedAt?: string;
+    endedAt?: string | null;
     durationSeconds?: number | null;
     intensity?: EventIntensity | null;
     structuredData?: Record<string, unknown>;
@@ -568,5 +578,80 @@ export async function deleteEventMedia(
 ): Promise<void> {
   await apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`, {
     method: "DELETE",
+  });
+}
+
+export async function createChatThread(token: string): Promise<ChatThread> {
+  return apiFetch<ChatThread>(token, "/api/chat/threads", {
+    method: "POST",
+  });
+}
+
+async function fetchChatMessages(
+  token: string,
+  threadId: string,
+  options: { limit: number; before?: string; cache: RequestCache },
+): Promise<ChatMessageListResponse> {
+  const params = new URLSearchParams({
+    limit: String(options.limit),
+  });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: options.cache,
+      ...(options.cache === "force-cache"
+        ? {
+            next: {
+              tags: [chatMessagesCacheTag(threadId)],
+            },
+          }
+        : {}),
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<ChatMessageListResponse>;
+}
+
+export async function fetchLatestChatMessages(
+  token: string,
+  threadId: string,
+  limit: number = CHAT_MESSAGES_PAGE_SIZE,
+): Promise<ChatMessageListResponse> {
+  return fetchChatMessages(token, threadId, { limit, cache: "force-cache" });
+}
+
+export async function fetchOlderChatMessages(
+  token: string,
+  threadId: string,
+  before: string,
+  limit: number = CHAT_MESSAGES_PAGE_SIZE,
+): Promise<ChatMessageListResponse> {
+  return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
+}
+
+export async function submitChatMessage(
+  token: string,
+  threadId: string,
+  body: {
+    content: string;
+    clientRequestId: string;
+    timeZone: string;
+  },
+): Promise<ChatTurn> {
+  return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }

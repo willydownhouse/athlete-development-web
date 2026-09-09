@@ -2,9 +2,22 @@ import type { EventMetricInput } from "@/lib/api";
 import type { EventMetric, EventTypeMetricDefinition, MetricValueType } from "@/lib/types";
 
 const METRIC_FIELD_PREFIX = "metric.";
+const BOOLEAN_METRIC_SAVED_SUFFIX = "saved";
+
+export const BOOLEAN_METRIC_CHECKED_VALUE = "on";
+const BOOLEAN_METRIC_UNCHECKED_VALUE = "off";
+export const BOOLEAN_METRIC_SAVED_VALUE = "1";
 
 export function metricFieldName(metricDefinitionId: string): string {
   return `${METRIC_FIELD_PREFIX}${metricDefinitionId}`;
+}
+
+export function booleanMetricSavedFieldName(fieldName: string): string {
+  return `${fieldName}.${BOOLEAN_METRIC_SAVED_SUFFIX}`;
+}
+
+export function isSavedBooleanMetricFormValue(value: string): boolean {
+  return value === BOOLEAN_METRIC_CHECKED_VALUE || value === BOOLEAN_METRIC_UNCHECKED_VALUE;
 }
 
 export function metricDurationFieldName(
@@ -20,6 +33,10 @@ export function isSecondsMetric(canonicalUnit: string | null): boolean {
 
 export function isScale1To10Metric(canonicalUnit: string | null): boolean {
   return canonicalUnit === "scale_1_10";
+}
+
+function isCountMetric(canonicalUnit: string | null): boolean {
+  return canonicalUnit === "count";
 }
 
 export const EVENT_DURATION_FIELDS = {
@@ -133,7 +150,9 @@ export function eventMetricsToFormValues(
     } else if (valueType === "text" && saved.textValue !== null) {
       values[mapping.metricDefinitionId] = saved.textValue;
     } else if (valueType === "boolean" && saved.booleanValue !== null) {
-      values[mapping.metricDefinitionId] = saved.booleanValue ? "on" : "";
+      values[mapping.metricDefinitionId] = saved.booleanValue
+        ? BOOLEAN_METRIC_CHECKED_VALUE
+        : BOOLEAN_METRIC_UNCHECKED_VALUE;
     }
   }
 
@@ -197,11 +216,11 @@ export function parseMetricsFromFormData(
     const fieldName = metricFieldName(mapping.metricDefinitionId);
 
     if (mapping.metricDefinition.valueType === "boolean") {
-      const raw = formData.get(fieldName);
-      if (raw === "on") {
+      const parsed = parseBooleanMetricInput(formData, fieldName);
+      if (parsed !== undefined) {
         metrics.push({
           metricDefinitionId: mapping.metricDefinitionId,
-          booleanValue: true,
+          booleanValue: parsed,
         });
       }
 
@@ -252,6 +271,18 @@ export function parseMetricsFromFormData(
   return metrics;
 }
 
+function parseBooleanMetricInput(formData: FormData, fieldName: string): boolean | undefined {
+  if (formData.get(fieldName) === BOOLEAN_METRIC_CHECKED_VALUE) {
+    return true;
+  }
+
+  if (formData.get(booleanMetricSavedFieldName(fieldName)) === BOOLEAN_METRIC_SAVED_VALUE) {
+    return false;
+  }
+
+  return undefined;
+}
+
 function readDurationSecondsWithPrefix(
   formData: FormData,
   prefix: string,
@@ -284,6 +315,7 @@ export function parseMetricInputsWithPrefix(
 ): EventMetricInput[] {
   const metrics: EventMetricInput[] = [];
   const durationMetricIds = new Set<string>();
+  const savedBooleanMetricIds = new Set<string>();
 
   for (const key of formData.keys()) {
     if (!key.startsWith(prefix)) {
@@ -294,6 +326,11 @@ export function parseMetricInputsWithPrefix(
     const durationMatch = /^(.+)\.(hours|minutes|seconds)$/.exec(rest);
     if (durationMatch?.[1]) {
       durationMetricIds.add(durationMatch[1]);
+    }
+
+    const savedMatch = /^(.+)\.saved$/.exec(rest);
+    if (savedMatch?.[1] && formData.get(key) === BOOLEAN_METRIC_SAVED_VALUE) {
+      savedBooleanMetricIds.add(savedMatch[1]);
     }
   }
 
@@ -325,14 +362,15 @@ export function parseMetricInputsWithPrefix(
     const raw = formData.get(key);
     const valueType = valueTypes[metricDefinitionId];
 
-    if (valueType === "boolean" || raw === "on") {
-      if (raw !== "on") {
+    if (valueType === "boolean" || raw === BOOLEAN_METRIC_CHECKED_VALUE) {
+      const parsed = parseBooleanMetricInput(formData, key);
+      if (parsed === undefined) {
         continue;
       }
 
       metrics.push({
         metricDefinitionId,
-        booleanValue: true,
+        booleanValue: parsed,
       });
       continue;
     }
@@ -366,6 +404,18 @@ export function parseMetricInputsWithPrefix(
     metrics.push({
       metricDefinitionId,
       textValue: value,
+    });
+  }
+
+  const includedIds = new Set(metrics.map((metric) => metric.metricDefinitionId));
+  for (const metricDefinitionId of savedBooleanMetricIds) {
+    if (includedIds.has(metricDefinitionId)) {
+      continue;
+    }
+
+    metrics.push({
+      metricDefinitionId,
+      booleanValue: false,
     });
   }
 
@@ -550,7 +600,12 @@ export function validateEventMetricPayloadForm(
 }
 
 export function formatMetricUnit(canonicalUnit: string | null): string | null {
-  if (!canonicalUnit || isScale1To10Metric(canonicalUnit)) {
+  if (
+    !canonicalUnit ||
+    isScale1To10Metric(canonicalUnit) ||
+    isCountMetric(canonicalUnit) ||
+    isSecondsMetric(canonicalUnit)
+  ) {
     return null;
   }
 

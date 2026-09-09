@@ -25,6 +25,40 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+.scheme-dark {
+  color-scheme: dark;
+  scrollbar-color: rgb(255 255 255 / 0.18) #0b0d10;
+  scrollbar-width: thin;
+}
+
+.scheme-dark::-webkit-scrollbar,
+.scheme-dark *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scheme-dark::-webkit-scrollbar-track,
+.scheme-dark *::-webkit-scrollbar-track {
+  background: #0b0d10;
+}
+
+.scheme-dark::-webkit-scrollbar-thumb,
+.scheme-dark *::-webkit-scrollbar-thumb {
+  background-color: rgb(255 255 255 / 0.18);
+  border: 2px solid #0b0d10;
+  border-radius: 999px;
+}
+
+.scheme-dark::-webkit-scrollbar-thumb:hover,
+.scheme-dark *::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(255 255 255 / 0.3);
+}
+
+.scheme-dark::-webkit-scrollbar-corner,
+.scheme-dark *::-webkit-scrollbar-corner {
+  background: #0b0d10;
+}
+
 @keyframes landing-fade-up {
   from {
     opacity: 0;
@@ -74,4 +108,37 @@ body {
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent);
+}
+
+@keyframes chat-typing-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0) scale(0.92);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+.chat-typing-dot {
+  animation: chat-typing-dot 1.2s ease-in-out infinite;
+}
+
+.chat-typing-dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.chat-typing-dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-typing-dot {
+    animation: none;
+    opacity: 0.7;
+    transform: none;
+  }
 }

@@ -14,7 +14,6 @@ type CalendarDayEventsProps = {
   events: Event[];
   loading?: boolean;
   loadError?: string | null;
-  onAddClick?: () => void;
   onCopyClick?: () => void;
   copyDisabled?: boolean;
 };
@@ -26,7 +25,6 @@ export function CalendarDayEvents({
   events,
   loading = false,
   loadError,
-  onAddClick,
   onCopyClick,
   copyDisabled = false,
 }: CalendarDayEventsProps) {
@@ -36,11 +34,7 @@ export function CalendarDayEvents({
     <div className="border-t border-white/5 pt-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-white">{dayLabel}</h3>
-        <CalendarDayActionsMenu
-          onAddClick={onAddClick}
-          onCopyClick={onCopyClick}
-          copyDisabled={copyDisabled}
-        />
+        <CalendarDayActionsMenu onCopyClick={onCopyClick} copyDisabled={copyDisabled} />
       </div>
 
       {loadError ? (

@@ -76,5 +76,3 @@ export function EventFormModal({
     </Modal>
   );
 }
-
-export type { CreateEventModalState };

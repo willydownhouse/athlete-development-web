@@ -75,6 +75,52 @@ describe("copy-event helpers", () => {
     });
   });
 
+  it("omits saved item ids so copied events create new rows", () => {
+    const source: EventCopySource = {
+      ...baseSource,
+      title: "Strength session",
+      items: [
+        {
+          id: "exercise-1",
+          eventItemTypeId: "00000000-0000-4000-8000-000000000401",
+          label: "Curls",
+          children: [
+            {
+              id: "set-1",
+              eventItemTypeId: "00000000-0000-4000-8000-000000000402",
+              metrics: [
+                {
+                  metricDefinitionId: "00000000-0000-4000-8000-000000000501",
+                  numericValue: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const body = buildCopyForDatePreservingTime(source, "Europe/Oslo", "2026-08-15");
+
+    expect(body?.items).toEqual([
+      {
+        eventItemTypeId: "00000000-0000-4000-8000-000000000401",
+        label: "Curls",
+        children: [
+          {
+            eventItemTypeId: "00000000-0000-4000-8000-000000000402",
+            metrics: [
+              {
+                metricDefinitionId: "00000000-0000-4000-8000-000000000501",
+                numericValue: 10,
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
   it("moves nested item timestamps to the target event date", () => {
     const source: EventCopySource = {
       ...baseSource,

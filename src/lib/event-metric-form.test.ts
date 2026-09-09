@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BOOLEAN_METRIC_SAVED_VALUE,
+  booleanMetricSavedFieldName,
   durationPartsToSeconds,
   eventMetricsToFormValues,
   metricDurationFieldName,
@@ -108,6 +110,35 @@ describe("eventMetricsToFormValues", () => {
       "bool-metric": "on",
     });
   });
+
+  it("maps a saved false boolean to an explicit unchecked value", () => {
+    const booleanMapping = buildMapping(
+      { metricDefinitionId: "bool-metric" },
+      {
+        id: "bool-metric",
+        key: "completed",
+        name: "Completed",
+        valueType: "boolean",
+        canonicalUnit: null,
+        description: null,
+      },
+    );
+
+    expect(
+      eventMetricsToFormValues(
+        [booleanMapping],
+        [
+          buildSavedMetric(booleanMapping, {
+            metricDefinitionId: "bool-metric",
+            numericValue: null,
+            booleanValue: false,
+          }),
+        ],
+      ),
+    ).toEqual({
+      "bool-metric": "off",
+    });
+  });
 });
 
 describe("parseMetricsFromFormData", () => {
@@ -140,6 +171,45 @@ describe("parseMetricsFromFormData", () => {
     const formData = new FormData();
 
     expect(parseMetricsFromFormData(formData, [mapping])).toEqual([]);
+  });
+
+  it("keeps a saved false boolean that the checkbox does not post", () => {
+    const booleanMapping = buildMapping(
+      { metricDefinitionId: "bool-metric" },
+      {
+        id: "bool-metric",
+        key: "completed",
+        name: "Completed",
+        valueType: "boolean",
+        canonicalUnit: null,
+        description: null,
+      },
+    );
+    const formData = new FormData();
+    formData.set(
+      booleanMetricSavedFieldName(metricFieldName("bool-metric")),
+      BOOLEAN_METRIC_SAVED_VALUE,
+    );
+
+    expect(parseMetricsFromFormData(formData, [booleanMapping])).toEqual([
+      { metricDefinitionId: "bool-metric", booleanValue: false },
+    ]);
+  });
+
+  it("omits an optional boolean that was never saved", () => {
+    const booleanMapping = buildMapping(
+      { metricDefinitionId: "bool-metric" },
+      {
+        id: "bool-metric",
+        key: "completed",
+        name: "Completed",
+        valueType: "boolean",
+        canonicalUnit: null,
+        description: null,
+      },
+    );
+
+    expect(parseMetricsFromFormData(new FormData(), [booleanMapping])).toEqual([]);
   });
 });
 
@@ -293,6 +363,31 @@ describe("parseEventMetricsFromFormData", () => {
       { metricDefinitionId: "rep-metric-id", numericValue: 12 },
     ]);
   });
+
+  it("keeps a saved false boolean from a hidden marker", () => {
+    const formData = new FormData();
+    formData.set(
+      booleanMetricSavedFieldName(metricFieldName("bool-metric-id")),
+      BOOLEAN_METRIC_SAVED_VALUE,
+    );
+
+    expect(parseEventMetricsFromFormData(formData)).toEqual([
+      { metricDefinitionId: "bool-metric-id", booleanValue: false },
+    ]);
+  });
+
+  it("prefers a checked checkbox over the saved-false marker", () => {
+    const formData = new FormData();
+    formData.set(metricFieldName("bool-metric-id"), "on");
+    formData.set(
+      booleanMetricSavedFieldName(metricFieldName("bool-metric-id")),
+      BOOLEAN_METRIC_SAVED_VALUE,
+    );
+
+    expect(parseEventMetricsFromFormData(formData)).toEqual([
+      { metricDefinitionId: "bool-metric-id", booleanValue: true },
+    ]);
+  });
 });
 
 describe("validateEventMetricPayloadForm", () => {
@@ -311,5 +406,26 @@ describe("validateEventMetricPayloadForm", () => {
     formData.set(metricFieldName("team-name-metric"), "123");
 
     expect(validateEventMetricPayloadForm(formData, [mapping])).toBe("Team name must be text");
+  });
+
+  it("accepts a saved false boolean from both parsers", () => {
+    const mapping = buildMapping(
+      { metricDefinitionId: "bool-metric" },
+      {
+        id: "bool-metric",
+        key: "completed",
+        name: "Completed",
+        valueType: "boolean",
+        canonicalUnit: null,
+        description: null,
+      },
+    );
+    const formData = new FormData();
+    formData.set(
+      booleanMetricSavedFieldName(metricFieldName("bool-metric")),
+      BOOLEAN_METRIC_SAVED_VALUE,
+    );
+
+    expect(validateEventMetricPayloadForm(formData, [mapping])).toBeNull();
   });
 });
