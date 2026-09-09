@@ -9,7 +9,15 @@ import {
   shouldUseCompactItemMetricFields,
   type EventItemFormPath,
 } from "@/lib/event-item-form";
-import { formatMetricUnit, isScale1To10Metric, isSecondsMetric } from "@/lib/event-metric-form";
+import {
+  BOOLEAN_METRIC_CHECKED_VALUE,
+  BOOLEAN_METRIC_SAVED_VALUE,
+  booleanMetricSavedFieldName,
+  formatMetricUnit,
+  isSavedBooleanMetricFormValue,
+  isScale1To10Metric,
+  isSecondsMetric,
+} from "@/lib/event-metric-form";
 import type { EventItemTypeMetricDefinition } from "@/lib/types";
 
 const inputClassName =
@@ -49,11 +57,18 @@ export function ItemMetricFields({ path, mappings, defaultValues = {} }: ItemMet
                   name={valueTypeFieldName}
                   value={mapping.metricDefinition.valueType}
                 />
+                {isSavedBooleanMetricFormValue(defaultValue) ? (
+                  <input
+                    type="hidden"
+                    name={booleanMetricSavedFieldName(fieldName)}
+                    value={BOOLEAN_METRIC_SAVED_VALUE}
+                  />
+                ) : null}
                 <label className="flex items-start gap-3 text-sm text-zinc-300">
                   <input
                     type="checkbox"
                     name={fieldName}
-                    defaultChecked={defaultValue === "on"}
+                    defaultChecked={defaultValue === BOOLEAN_METRIC_CHECKED_VALUE}
                     className="mt-1 rounded border-white/20 bg-[#1c222c]"
                   />
                   <span className="font-medium text-zinc-300">{label}</span>

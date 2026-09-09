@@ -6,6 +6,7 @@ import {
 } from "@/lib/api";
 import { pluralizeItemTypeName } from "@/lib/event-item-display";
 import {
+  booleanMetricSavedFieldName,
   eventMetricsToFormValues,
   eventMetricsToInputs,
   parseMetricInputsWithPrefix,
@@ -346,6 +347,13 @@ function remapItemMetricsFormData(
       if (partValue !== null) {
         remapped.set(`metric.${metricDefinitionId}.${part}`, partValue);
       }
+    }
+
+    const savedValue = formData.get(
+      booleanMetricSavedFieldName(itemMetricFieldName(path, metricDefinitionId)),
+    );
+    if (savedValue !== null) {
+      remapped.set(booleanMetricSavedFieldName(`metric.${metricDefinitionId}`), savedValue);
     }
   }
 

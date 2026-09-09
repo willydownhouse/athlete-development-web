@@ -13,6 +13,7 @@ import {
   validateEventItemsForm,
   type EventItemFormCatalog,
 } from "./event-item-form";
+import { BOOLEAN_METRIC_SAVED_VALUE, booleanMetricSavedFieldName } from "./event-metric-form";
 import type { EventItem, EventItemTypeMetricDefinition } from "./types";
 
 const setMetrics: EventItemTypeMetricDefinition[] = [
@@ -270,6 +271,39 @@ describe("parseEventItemsFromFormData", () => {
     ]);
   });
 
+  it("keeps a saved false boolean metric on update", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "id"), "period-1");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "period-type-id");
+    formData.set(itemMetricValueTypeFieldName([0], "power-play-metric-id"), "boolean");
+    formData.set(
+      booleanMetricSavedFieldName(itemMetricFieldName([0], "power-play-metric-id")),
+      BOOLEAN_METRIC_SAVED_VALUE,
+    );
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        id: "period-1",
+        eventItemTypeId: "period-type-id",
+        metrics: [{ metricDefinitionId: "power-play-metric-id", booleanValue: false }],
+      },
+    ]);
+  });
+
+  it("omits an optional boolean item metric that was never saved", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "id"), "period-1");
+    formData.set(itemFieldName([0], "eventItemTypeId"), "period-type-id");
+    formData.set(itemMetricValueTypeFieldName([0], "power-play-metric-id"), "boolean");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        id: "period-1",
+        eventItemTypeId: "period-type-id",
+      },
+    ]);
+  });
+
   it("uses submitted value type metadata for text metrics", () => {
     const formData = new FormData();
     formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
@@ -319,6 +353,107 @@ describe("validateEventItemsForm", () => {
 });
 
 describe("eventItemsToFormDrafts", () => {
+  it("maps a saved false boolean item metric to an explicit unchecked value", () => {
+    const booleanCatalog: EventItemFormCatalog = {
+      roots: [
+        {
+          eventItemTypeId: "period-type-id",
+          name: "Period",
+          slug: "period",
+          required: false,
+          sortOrder: 10,
+          metrics: [
+            {
+              id: "mapping-power-play",
+              eventItemTypeId: "period-type-id",
+              metricDefinitionId: "power-play-metric-id",
+              required: false,
+              sortOrder: 10,
+              metricDefinition: {
+                id: "power-play-metric-id",
+                sportId: null,
+                key: "power_play",
+                name: "Power play",
+                description: null,
+                valueType: "boolean",
+                canonicalUnit: null,
+                active: true,
+                createdAt: "2026-08-05T10:00:00.000Z",
+                updatedAt: "2026-08-05T10:00:00.000Z",
+                sport: null,
+              },
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    expect(
+      eventItemsToFormDrafts(
+        [
+          {
+            id: "period-1",
+            eventId: "event-1",
+            eventItemTypeId: "period-type-id",
+            parentEventItemId: null,
+            sortOrder: 0,
+            label: "1st",
+            startedAt: null,
+            endedAt: null,
+            durationSeconds: null,
+            notes: null,
+            structuredData: null,
+            createdAt: "2026-08-05T10:00:00.000Z",
+            updatedAt: "2026-08-05T10:00:00.000Z",
+            eventItemType: {
+              id: "period-type-id",
+              sportId: null,
+              slug: "period",
+              name: "Period",
+              active: true,
+              createdAt: "2026-08-05T10:00:00.000Z",
+              updatedAt: "2026-08-05T10:00:00.000Z",
+              sport: null,
+            },
+            metrics: [
+              {
+                id: "metric-1",
+                eventItemId: "period-1",
+                metricDefinitionId: "power-play-metric-id",
+                numericValue: null,
+                textValue: null,
+                booleanValue: false,
+                unit: null,
+                createdAt: "2026-08-05T10:00:00.000Z",
+                updatedAt: "2026-08-05T10:00:00.000Z",
+                metricDefinition: booleanCatalog.roots[0]!.metrics[0]!.metricDefinition,
+              },
+            ],
+            children: [],
+          },
+        ],
+        booleanCatalog,
+      ),
+    ).toEqual([
+      {
+        key: "period-1",
+        id: "period-1",
+        eventItemTypeId: "period-type-id",
+        label: "1st",
+        durationHours: "",
+        durationMinutes: "",
+        durationSeconds: "",
+        metricValues: { "power-play-metric-id": "off" },
+        notes: "",
+        startedAt: "",
+        endedAt: "",
+        structuredData: "",
+        children: [],
+      },
+    ]);
+  });
+
   it("keeps saved exercise and set ids", () => {
     expect(
       eventItemsToFormDrafts(

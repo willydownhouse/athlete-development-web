@@ -7,8 +7,12 @@ import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSectionDetails } from "@/components/form/form-section-details";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import {
+  BOOLEAN_METRIC_CHECKED_VALUE,
+  BOOLEAN_METRIC_SAVED_VALUE,
+  booleanMetricSavedFieldName,
   eventMetricsToFormValues,
   formatMetricUnit,
+  isSavedBooleanMetricFormValue,
   isScale1To10Metric,
   isSecondsMetric,
   metricDurationFieldName,
@@ -65,22 +69,31 @@ function EventMetricFields({
 
             if (mapping.metricDefinition.valueType === "boolean") {
               return (
-                <label key={mapping.id} className="flex items-start gap-3 text-sm text-zinc-300">
-                  <input
-                    type="checkbox"
-                    name={fieldName}
-                    defaultChecked={defaultValue === "on"}
-                    className="mt-1 rounded border-white/20 bg-[#1c222c]"
-                  />
-                  <span>
-                    <span className="font-medium text-zinc-300">{label}</span>
-                    {mapping.metricDefinition.description ? (
-                      <span className="mt-1 block text-xs text-zinc-500">
-                        {mapping.metricDefinition.description}
-                      </span>
-                    ) : null}
-                  </span>
-                </label>
+                <div key={mapping.id}>
+                  {isSavedBooleanMetricFormValue(defaultValue) ? (
+                    <input
+                      type="hidden"
+                      name={booleanMetricSavedFieldName(fieldName)}
+                      value={BOOLEAN_METRIC_SAVED_VALUE}
+                    />
+                  ) : null}
+                  <label className="flex items-start gap-3 text-sm text-zinc-300">
+                    <input
+                      type="checkbox"
+                      name={fieldName}
+                      defaultChecked={defaultValue === BOOLEAN_METRIC_CHECKED_VALUE}
+                      className="mt-1 rounded border-white/20 bg-[#1c222c]"
+                    />
+                    <span>
+                      <span className="font-medium text-zinc-300">{label}</span>
+                      {mapping.metricDefinition.description ? (
+                        <span className="mt-1 block text-xs text-zinc-500">
+                          {mapping.metricDefinition.description}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                </div>
               );
             }
 
