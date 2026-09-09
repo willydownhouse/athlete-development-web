@@ -94,9 +94,23 @@ function MessageBubble({
 function WaitingBubble() {
   return (
     <div className="flex justify-start" aria-live="polite">
-      <div className="inline-flex max-w-[85%] items-center gap-3 py-1">
-        <span className="inline-flex h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]" />
-        <p className="text-sm text-zinc-400">Thinking…</p>
+      <div
+        className="inline-flex max-w-[85%] items-center gap-1.5 py-3"
+        role="status"
+        aria-label="Thinking"
+      >
+        <span
+          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
+          aria-hidden="true"
+        />
+        <span
+          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
+          aria-hidden="true"
+        />
+        <span
+          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
+          aria-hidden="true"
+        />
       </div>
     </div>
   );
