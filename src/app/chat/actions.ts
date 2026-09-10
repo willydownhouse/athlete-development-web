@@ -4,7 +4,7 @@ import { updateTag } from "next/cache";
 
 import { ApiError, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { chatMessagesCacheTag } from "@/lib/cache-tags";
+import { athleteEventsCacheTag, chatMessagesCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { ChatMessage, ChatTurn } from "@/lib/types";
@@ -46,6 +46,8 @@ export async function sendChatMessageAction(
   const threadId = readString(formData, "threadId");
   const clientRequestId = readString(formData, "clientRequestId");
   const content = readString(formData, "content");
+  const eventId = readString(formData, "eventId");
+  const athleteId = readString(formData, "athleteId");
 
   if (!threadId || !UUID_PATTERN.test(threadId)) {
     return { error: "Chat thread is missing" };
@@ -63,6 +65,14 @@ export async function sendChatMessageAction(
     return { error: `Keep messages under ${CHAT_MESSAGE_CONTENT_MAX_LENGTH} characters` };
   }
 
+  if (eventId && !UUID_PATTERN.test(eventId)) {
+    return { error: "Could not send that message" };
+  }
+
+  if (athleteId && !UUID_PATTERN.test(athleteId)) {
+    return { error: "Could not send that message" };
+  }
+
   const timeZone = await getRequestTimeZone();
 
   try {
@@ -70,9 +80,16 @@ export async function sendChatMessageAction(
       content,
       clientRequestId,
       timeZone,
+      ...(eventId ? { eventId } : {}),
     });
 
     updateTag(chatMessagesCacheTag(threadId));
+    if (eventId) {
+      updateTag(eventCacheTag(eventId));
+    }
+    if (athleteId) {
+      updateTag(athleteEventsCacheTag(athleteId));
+    }
 
     if (turn.status === "failed") {
       return { turn, error: turn.failureMessage ?? "Could not complete that reply" };

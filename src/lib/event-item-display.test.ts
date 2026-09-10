@@ -349,4 +349,16 @@ describe("formatEventItemTimeRange", () => {
   it("returns null when no times are set", () => {
     expect(formatEventItemTimeRange(buildItem(), "Europe/Helsinki")).toBeNull();
   });
+
+  it("includes dates when start and end are on different local days", () => {
+    expect(
+      formatEventItemTimeRange(
+        buildItem({
+          startedAt: "2026-08-05T20:00:00.000Z",
+          endedAt: "2026-08-05T22:00:00.000Z",
+        }),
+        "Europe/Helsinki",
+      ),
+    ).toBe("Wed 5 Aug 23:00 – Thu 6 Aug 01:00");
+  });
 });

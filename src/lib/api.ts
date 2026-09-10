@@ -594,6 +594,7 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
+    excludeFocused: "true",
   });
 
   if (options.before) {
@@ -648,6 +649,7 @@ export async function submitChatMessage(
     content: string;
     clientRequestId: string;
     timeZone: string;
+    eventId?: string;
   },
 ): Promise<ChatTurn> {
   return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
