@@ -1,5 +1,6 @@
 import { createChatThread } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
 
 import { EventTobyDock } from "./event-toby-dock";
 
@@ -9,7 +10,8 @@ type EventTobySectionProps = {
 };
 
 export async function EventTobySection({ athleteId, eventId }: EventTobySectionProps) {
-  const token = await getAuthBearerToken();
+  const [token, timeZone] = await Promise.all([getAuthBearerToken(), getRequestTimeZone()]);
+  const nowIso = new Date().toISOString();
 
   if (!token) {
     return (
@@ -17,6 +19,8 @@ export async function EventTobySection({ athleteId, eventId }: EventTobySectionP
         threadId={null}
         athleteId={athleteId}
         eventId={eventId}
+        timeZone={timeZone}
+        nowIso={nowIso}
         loadError="You need to sign in again"
       />
     );
@@ -37,6 +41,8 @@ export async function EventTobySection({ athleteId, eventId }: EventTobySectionP
       threadId={threadId}
       athleteId={athleteId}
       eventId={eventId}
+      timeZone={timeZone}
+      nowIso={nowIso}
       loadError={loadError}
     />
   );

@@ -1,8 +1,11 @@
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
+import { formatChatTimestamp } from "@/lib/chat-time";
 import type { ChatMessage } from "@/lib/types";
 
 type EventTobyHistoryProps = {
   messages: ChatMessage[];
+  timeZone: string;
+  nowIso: string;
   hasMore: boolean;
   loading: boolean;
   loadingOlder: boolean;
@@ -10,7 +13,15 @@ type EventTobyHistoryProps = {
   onLoadOlder: () => void;
 };
 
-function HistoryMessage({ message }: { message: ChatMessage }) {
+function HistoryMessage({
+  message,
+  timeZone,
+  nowIso,
+}: {
+  message: ChatMessage;
+  timeZone: string;
+  nowIso: string;
+}) {
   const isUser = message.role === "user";
 
   return (
@@ -27,6 +38,9 @@ function HistoryMessage({ message }: { message: ChatMessage }) {
         ) : (
           <ChatMarkdown content={message.content} />
         )}
+        <p className={`mt-1.5 text-xs text-zinc-500 ${isUser ? "text-right" : "text-left"}`}>
+          {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso))}
+        </p>
       </div>
     </article>
   );
@@ -34,6 +48,8 @@ function HistoryMessage({ message }: { message: ChatMessage }) {
 
 export function EventTobyHistory({
   messages,
+  timeZone,
+  nowIso,
   hasMore,
   loading,
   loadingOlder,
@@ -64,7 +80,12 @@ export function EventTobyHistory({
       ) : (
         <div className="max-h-[min(12rem,30dvh)] space-y-2 overflow-y-auto overscroll-contain">
           {messages.map((message) => (
-            <HistoryMessage key={message.id} message={message} />
+            <HistoryMessage
+              key={message.id}
+              message={message}
+              timeZone={timeZone}
+              nowIso={nowIso}
+            />
           ))}
         </div>
       )}

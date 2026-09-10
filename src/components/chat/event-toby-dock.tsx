@@ -10,18 +10,28 @@ import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content
 import { ChatWaitingBubble } from "@/components/chat/chat-waiting-bubble";
 import { EventTobyHistory } from "@/components/chat/event-toby-history";
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
-import { chatEventUpdateExample } from "@/lib/chat-intro";
 import { mergeMessages } from "@/lib/chat-display";
+import { chatEventUpdateExample } from "@/lib/chat-intro";
+import { formatChatTimestamp } from "@/lib/chat-time";
 import type { ChatMessage } from "@/lib/types";
 
 type EventTobyDockProps = {
   threadId: string | null;
   athleteId: string;
   eventId: string;
+  timeZone: string;
+  nowIso: string;
   loadError?: string | null;
 };
 
-export function EventTobyDock({ threadId, athleteId, eventId, loadError }: EventTobyDockProps) {
+export function EventTobyDock({
+  threadId,
+  athleteId,
+  eventId,
+  timeZone,
+  nowIso,
+  loadError,
+}: EventTobyDockProps) {
   const [state, formAction, isPending] = useActionState(sendChatMessageAction, {});
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -133,6 +143,8 @@ export function EventTobyDock({ threadId, athleteId, eventId, loadError }: Event
         {historyOpen ? (
           <EventTobyHistory
             messages={displayedHistoryMessages}
+            timeZone={timeZone}
+            nowIso={nowIso}
             hasMore={historyHasMore}
             loading={historyLoading}
             loadingOlder={historyLoadingOlder}
@@ -152,16 +164,19 @@ export function EventTobyDock({ threadId, athleteId, eventId, loadError }: Event
           </div>
         ) : null}
 
-        {showLatestReply && assistantContent ? (
+        {showLatestReply && assistantContent && assistantMessage ? (
           <div
             className="mb-3 max-h-[min(8rem,22dvh)] overflow-y-auto overscroll-contain"
             aria-live="polite"
           >
-            {animateReply && assistantMessage ? (
+            {animateReply ? (
               <ChatTypewriterContent key={assistantMessage.id} content={assistantContent} />
             ) : (
               <ChatMarkdown content={assistantContent} />
             )}
+            <p className="mt-1.5 text-xs text-zinc-500">
+              {formatChatTimestamp(timeZone, assistantMessage.createdAt, new Date(nowIso))}
+            </p>
           </div>
         ) : null}
 
