@@ -2,7 +2,12 @@
 
 import { updateTag } from "next/cache";
 
-import { ApiError, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
+import {
+  ApiError,
+  fetchFocusedEventChatMessages,
+  fetchOlderChatMessages,
+  submitChatMessage,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, chatMessagesCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
@@ -123,6 +128,38 @@ export async function loadOlderChatMessagesAction(
 
   try {
     const result = await fetchOlderChatMessages(token, threadId, before);
+    return {
+      items: result.items,
+      hasMore: result.pagination.hasMore,
+    };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function loadFocusedEventChatMessagesAction(
+  threadId: string,
+  focusedEventId: string,
+  before?: string,
+): Promise<LoadOlderChatMessagesResult> {
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: "Missing Auth.js session token" };
+  }
+
+  if (!UUID_PATTERN.test(threadId) || !UUID_PATTERN.test(focusedEventId)) {
+    return { error: "Could not load earlier updates" };
+  }
+
+  if (before && !UUID_PATTERN.test(before)) {
+    return { error: "Could not load earlier updates" };
+  }
+
+  try {
+    const result = await fetchFocusedEventChatMessages(token, threadId, focusedEventId, {
+      ...(before ? { before } : {}),
+    });
     return {
       items: result.items,
       hasMore: result.pagination.hasMore,

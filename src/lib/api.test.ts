@@ -7,6 +7,7 @@ import {
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
+  fetchFocusedEventChatMessages,
   fetchLatestChatMessages,
   fetchOlderChatMessages,
   fetchSports,
@@ -322,6 +323,31 @@ describe("api client", () => {
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
     expect(result.items[0]?.id).toBe("msg-0");
+  });
+
+  it("fetches focused event chat messages", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const focusedEventId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-focus" }],
+        pagination: { limit: 20, total: 1, hasMore: false },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchFocusedEventChatMessages("test-token", threadId, focusedEventId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&focusedEventId=${focusedEventId}`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(result.items[0]?.id).toBe("msg-focus");
   });
 
   it("submits a chat message with timezone", async () => {
