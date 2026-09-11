@@ -53,14 +53,24 @@ export function eventItemSameTypeIndex(siblings: EventItem[], index: number): nu
   return count;
 }
 
-export function eventItemTitle(item: EventItem, sameTypeIndex: number): string {
+export function eventItemLabel(item: EventItem): string | null {
   const label = item.label?.trim();
 
-  if (label) {
-    return label;
+  return label ? label : null;
+}
+
+export function eventItemTypeHeading(item: EventItem, sameTypeIndex: number): string {
+  if (eventItemLabel(item)) {
+    return item.eventItemType.name;
   }
 
   return `${item.eventItemType.name} ${sameTypeIndex}`;
+}
+
+const LABEL_WITH_DURATION_ITEM_TYPE_SLUGS = new Set(["warm_up", "cool_down"]);
+
+export function eventItemShowsLabelWithDuration(item: EventItem): boolean {
+  return LABEL_WITH_DURATION_ITEM_TYPE_SLUGS.has(item.eventItemType.slug);
 }
 
 function itemMetricIsCompactFriendly(metric: EventItemMetric): boolean {
@@ -70,6 +80,10 @@ function itemMetricIsCompactFriendly(metric: EventItemMetric): boolean {
 }
 
 export function shouldUseCompactItemMetrics(item: EventItem): boolean {
+  if (eventItemShowsLabelWithDuration(item)) {
+    return false;
+  }
+
   return (
     item.children.length === 0 &&
     item.metrics.length > 0 &&
@@ -85,6 +99,7 @@ export function eventItemIsCollapsible(item: EventItem): boolean {
     Boolean(item.startedAt) ||
     Boolean(item.endedAt) ||
     item.durationSeconds != null ||
+    (eventItemShowsLabelWithDuration(item) && eventItemLabel(item) != null) ||
     (item.metrics.length > 0 && !shouldUseCompactItemMetrics(item))
   );
 }

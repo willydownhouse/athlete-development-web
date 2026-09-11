@@ -11,6 +11,8 @@ import {
   EVENT_ITEMS_MAX_TOTAL,
   eventItemFormSectionTitle,
   eventItemsToFormDrafts,
+  eventItemTypeAllowsMultiple,
+  filterAddableItemTypes,
   findItemFormTypeNode,
   itemDurationFieldNames,
   itemFieldName,
@@ -89,20 +91,24 @@ function updateDraftsAt(
 
 function AddTypeButtons({
   types,
+  siblings,
   disabled,
   onAdd,
 }: {
   types: EventItemFormTypeNode[];
+  siblings: Array<{ eventItemTypeId: string }>;
   disabled: boolean;
   onAdd: (typeNode: EventItemFormTypeNode) => void;
 }) {
-  if (types.length === 0) {
+  const addableTypes = filterAddableItemTypes(types, siblings);
+
+  if (addableTypes.length === 0) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-3">
-      {types.map((typeNode) => (
+      {addableTypes.map((typeNode) => (
         <button
           key={typeNode.eventItemTypeId}
           type="button"
@@ -140,6 +146,10 @@ function EventItemNode({
     allowedTypes.find((node) => node.eventItemTypeId === item.eventItemTypeId) ??
     findItemFormTypeNode(catalog.roots, item.eventItemTypeId);
   const typeName = typeNode?.name ?? "Item";
+  const typeHeading =
+    typeNode && eventItemTypeAllowsMultiple(typeNode.slug)
+      ? `${typeName} ${sameTypeIndex(siblings, index)}`
+      : typeName;
   const durationFields = itemDurationFieldNames(path);
   const childTypes = typeNode?.children ?? [];
   const parentPath = path.slice(0, -1);
@@ -148,9 +158,7 @@ function EventItemNode({
     <div className="space-y-3 rounded-xl border border-white/10 bg-[#12161d] p-4">
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <label className="flex min-w-0 w-full flex-col gap-1 text-sm sm:w-auto sm:flex-1">
-          <span className="mb-1 block font-medium text-zinc-300">
-            {typeName} {sameTypeIndex(siblings, index)}
-          </span>
+          <span className="mb-1 block font-medium text-zinc-300">{typeHeading}</span>
           {item.id ? (
             <input type="hidden" name={itemFieldName(path, "id")} value={item.id} />
           ) : null}
@@ -239,6 +247,7 @@ function EventItemNode({
 
       <AddTypeButtons
         types={childTypes}
+        siblings={item.children}
         disabled={!canAddMore}
         onAdd={(childType) =>
           onItemsChange((current) =>
@@ -347,6 +356,7 @@ export function EventItemsSection({
               <p className="text-sm text-zinc-500">No {sectionTitle.toLowerCase()} added yet.</p>
               <AddTypeButtons
                 types={catalog.roots}
+                siblings={items}
                 disabled={!canAddMore}
                 onAdd={(typeNode) => {
                   setItems((current) => [...current, createItemDraft(typeNode)]);
@@ -372,6 +382,7 @@ export function EventItemsSection({
               </div>
               <AddTypeButtons
                 types={catalog.roots}
+                siblings={items}
                 disabled={!canAddMore}
                 onAdd={(typeNode) => {
                   setItems((current) => [...current, createItemDraft(typeNode)]);

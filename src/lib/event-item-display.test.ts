@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   eventItemIsCollapsible,
+  eventItemLabel,
   eventItemSameTypeIndex,
-  eventItemTitle,
+  eventItemShowsLabelWithDuration,
+  eventItemTypeHeading,
   eventItemsSectionTitle,
   formatEventItemCollapsedCounts,
   formatEventItemMetricSummary,
@@ -136,7 +138,7 @@ describe("eventItemsSectionTitle", () => {
   });
 });
 
-describe("eventItemSameTypeIndex and eventItemTitle", () => {
+describe("eventItemSameTypeIndex, eventItemTypeHeading, and eventItemLabel", () => {
   it("numbers unlabeled items among siblings of the same type", () => {
     const periodType = buildItemType({
       id: "period-type-id",
@@ -157,11 +159,33 @@ describe("eventItemSameTypeIndex and eventItemTitle", () => {
     expect(eventItemSameTypeIndex(siblings, 0)).toBe(1);
     expect(eventItemSameTypeIndex(siblings, 1)).toBe(1);
     expect(eventItemSameTypeIndex(siblings, 2)).toBe(2);
-    expect(eventItemTitle(siblings[2]!, 2)).toBe("Period 2");
+    expect(eventItemTypeHeading(siblings[2]!, 2)).toBe("Period 2");
+    expect(eventItemLabel(siblings[2]!)).toBeNull();
   });
 
-  it("uses a trimmed label when present", () => {
-    expect(eventItemTitle(buildItem({ label: "  Curls  " }), 1)).toBe("Curls");
+  it("keeps the type heading and a trimmed label when a label is present", () => {
+    const item = buildItem({ label: "  Treadmill  " });
+
+    expect(eventItemTypeHeading(item, 1)).toBe("Exercise");
+    expect(eventItemLabel(item)).toBe("Treadmill");
+    expect(eventItemShowsLabelWithDuration(item)).toBe(false);
+  });
+
+  it("shows warm-up and cool-down labels with duration instead of in the heading", () => {
+    const warmUp = buildItem({
+      label: "Treadmill",
+      eventItemTypeId: "warm-up-type-id",
+      eventItemType: buildItemType({
+        id: "warm-up-type-id",
+        slug: "warm_up",
+        name: "Warm-up",
+      }),
+    });
+
+    expect(eventItemTypeHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemLabel(warmUp)).toBe("Treadmill");
+    expect(eventItemShowsLabelWithDuration(warmUp)).toBe(true);
+    expect(eventItemIsCollapsible(warmUp)).toBe(true);
   });
 });
 
@@ -173,6 +197,42 @@ describe("shouldUseCompactItemMetrics and eventItemIsCollapsible", () => {
 
     expect(shouldUseCompactItemMetrics(item)).toBe(true);
     expect(eventItemIsCollapsible(item)).toBe(false);
+  });
+
+  it("stacks warm-up and cool-down metrics like periods instead of a compact line", () => {
+    const item = buildItem({
+      durationSeconds: 1200,
+      eventItemTypeId: "warm-up-type-id",
+      eventItemType: buildItemType({
+        id: "warm-up-type-id",
+        slug: "warm_up",
+        name: "Warm-up",
+      }),
+      metrics: [
+        buildMetric({
+          numericValue: "6",
+          metricDefinition: buildMetricDefinition({
+            id: "rpe-def-id",
+            key: "rpe",
+            name: "RPE",
+            canonicalUnit: "scale_1_10",
+          }),
+        }),
+        buildMetric({
+          id: "metric-2",
+          numericValue: "2000",
+          metricDefinition: buildMetricDefinition({
+            id: "distance-def-id",
+            key: "distance_meters",
+            name: "Distance",
+            canonicalUnit: "m",
+          }),
+        }),
+      ],
+    });
+
+    expect(shouldUseCompactItemMetrics(item)).toBe(false);
+    expect(eventItemIsCollapsible(item)).toBe(true);
   });
 
   it("stacks and collapses items with more than three metrics", () => {
