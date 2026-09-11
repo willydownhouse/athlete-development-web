@@ -594,6 +594,7 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
+    excludeFocused: "true",
   });
 
   if (options.before) {
@@ -641,6 +642,38 @@ export async function fetchOlderChatMessages(
   return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
 }
 
+export async function fetchFocusedEventChatMessages(
+  token: string,
+  threadId: string,
+  focusedEventId: string,
+  options: { limit?: number; before?: string } = {},
+): Promise<ChatMessageListResponse> {
+  const params = new URLSearchParams({
+    limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
+    focusedEventId,
+  });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<ChatMessageListResponse>;
+}
+
 export async function submitChatMessage(
   token: string,
   threadId: string,
@@ -648,6 +681,7 @@ export async function submitChatMessage(
     content: string;
     clientRequestId: string;
     timeZone: string;
+    eventId?: string;
   },
 ): Promise<ChatTurn> {
   return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {

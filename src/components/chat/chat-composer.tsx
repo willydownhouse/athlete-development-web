@@ -26,6 +26,11 @@ type ChatComposerProps = {
   isPending: boolean;
   disabled?: boolean;
   examplePlaceholder?: string;
+  eventId?: string;
+  athleteId?: string;
+  messageFieldId?: string;
+  hideFieldLabel?: boolean;
+  formClassName?: string;
   onSend?: (payload: { content: string; clientRequestId: string }) => void;
 };
 
@@ -40,6 +45,11 @@ export function ChatComposer({
   isPending,
   disabled = false,
   examplePlaceholder = chatEventLoggingExample(""),
+  eventId,
+  athleteId,
+  messageFieldId = "chat-message",
+  hideFieldLabel = false,
+  formClassName = "shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
   onSend,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -83,20 +93,20 @@ export function ChatComposer({
   }
 
   return (
-    <form
-      action={formAction}
-      onSubmit={handleSubmit}
-      className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-    >
+    <form action={formAction} onSubmit={handleSubmit} className={formClassName}>
       <input type="hidden" name="threadId" value={threadId} />
+      {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
+      {athleteId ? <input type="hidden" name="athleteId" value={athleteId} /> : null}
       <input type="hidden" name="clientRequestId" defaultValue="" />
-      <label htmlFor="chat-message" className="sr-only">
-        Message
-      </label>
+      {hideFieldLabel ? null : (
+        <label htmlFor={messageFieldId} className="sr-only">
+          Message
+        </label>
+      )}
       <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-[#1c222c] px-2 py-2 focus-within:border-[#9ec9e8] focus-within:ring-2 focus-within:ring-[#9ec9e8]/20">
         <textarea
           ref={textareaRef}
-          id="chat-message"
+          id={messageFieldId}
           name="content"
           rows={1}
           maxLength={CHAT_MESSAGE_CONTENT_MAX_LENGTH}

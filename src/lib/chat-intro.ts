@@ -6,6 +6,10 @@ export function chatEventLoggingExample(athleteName: string): string {
   return `${chatExampleAthleteName(athleteName)} had ice practice today at 2pm`;
 }
 
+export function chatEventUpdateExample(): string {
+  return "Move this to 6pm, add RPE 7…";
+}
+
 export function chatEmptyIntro(athleteName: string): string {
   return [
     "Hey — I'm Toby, your event logging agent. 🙂",

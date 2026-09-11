@@ -4,7 +4,7 @@ import { EventItemsDisplay } from "@/components/dashboard/event-items/event-item
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
-import { formatZonedTime } from "@/lib/time-zone";
+import { formatZonedTimeRange } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 function formatIntensity(intensity: EventIntensity): string {
@@ -12,14 +12,11 @@ function formatIntensity(intensity: EventIntensity): string {
 }
 
 function formatTimeRange(event: Event, timeZone: string): string {
-  const start = formatZonedTime(timeZone, new Date(event.startedAt));
-
-  if (event.endedAt) {
-    const end = formatZonedTime(timeZone, new Date(event.endedAt));
-    return `${start} – ${end}`;
-  }
-
-  return start;
+  return formatZonedTimeRange(
+    timeZone,
+    new Date(event.startedAt),
+    event.endedAt ? new Date(event.endedAt) : null,
+  );
 }
 
 function formatCategory(category: Event["category"]): string {

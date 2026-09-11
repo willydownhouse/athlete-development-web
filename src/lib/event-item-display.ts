@@ -1,6 +1,6 @@
 import { formatEventMetricValue } from "@/lib/event-metric-display";
 import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
-import { formatZonedTime } from "@/lib/time-zone";
+import { formatZonedTime, formatZonedTimeRange } from "@/lib/time-zone";
 import type { EventItem, EventItemMetric } from "@/lib/types";
 
 const COMPACT_ITEM_METRIC_LIMIT = 3;
@@ -147,7 +147,7 @@ export function formatEventItemCollapsedCounts(item: EventItem): string {
 
 export function formatEventItemTimeRange(item: EventItem, timeZone: string): string | null {
   if (item.startedAt && item.endedAt) {
-    return `${formatZonedTime(timeZone, new Date(item.startedAt))} – ${formatZonedTime(timeZone, new Date(item.endedAt))}`;
+    return formatZonedTimeRange(timeZone, new Date(item.startedAt), new Date(item.endedAt));
   }
 
   if (item.startedAt) {

@@ -7,6 +7,7 @@ import {
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
+  fetchFocusedEventChatMessages,
   fetchLatestChatMessages,
   fetchOlderChatMessages,
   fetchSports,
@@ -289,7 +290,7 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeFocused=true`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("force-cache");
@@ -317,11 +318,36 @@ describe("api client", () => {
     const result = await fetchOlderChatMessages("test-token", threadId, before);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&before=${before}`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeFocused=true&before=${before}`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
     expect(result.items[0]?.id).toBe("msg-0");
+  });
+
+  it("fetches focused event chat messages", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const focusedEventId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-focus" }],
+        pagination: { limit: 20, total: 1, hasMore: false },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchFocusedEventChatMessages("test-token", threadId, focusedEventId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&focusedEventId=${focusedEventId}`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(result.items[0]?.id).toBe("msg-focus");
   });
 
   it("submits a chat message with timezone", async () => {
@@ -359,6 +385,39 @@ describe("api client", () => {
     expect(options.method).toBe("POST");
     expect(JSON.parse(String(options.body))).toEqual(body);
     expect(turn.status).toBe("completed");
+  });
+
+  it("submits a focused event update message", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const eventId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: "run-2",
+        chatThreadId: threadId,
+        status: "completed",
+        failureCode: null,
+        failureMessage: null,
+        userMessage: { id: "msg-1", role: "user", content: "Move this to 6pm." },
+        assistantMessage: { id: "msg-2", role: "assistant", content: "Moved it." },
+        toolCalls: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = {
+      content: "Move this to 6pm.",
+      clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      timeZone: "Europe/Helsinki",
+      eventId,
+    };
+    await submitChatMessage("test-token", threadId, body);
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual(body);
   });
 
   it("throws when the API responds with an error", async () => {

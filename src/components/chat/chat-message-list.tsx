@@ -2,6 +2,7 @@
 
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
+import { ChatWaitingBubble } from "@/components/chat/chat-waiting-bubble";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatChatTimestamp } from "@/lib/chat-time";
 import type { ChatMessage } from "@/lib/types";
@@ -91,31 +92,6 @@ function MessageBubble({
   );
 }
 
-function WaitingBubble() {
-  return (
-    <div className="flex justify-start" aria-live="polite">
-      <div
-        className="inline-flex max-w-[85%] items-center gap-1.5 py-3"
-        role="status"
-        aria-label="Thinking"
-      >
-        <span
-          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
-          aria-hidden="true"
-        />
-        <span
-          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
-          aria-hidden="true"
-        />
-        <span
-          className="chat-typing-dot h-1.5 w-1.5 rounded-full bg-[#9ec9e8]"
-          aria-hidden="true"
-        />
-      </div>
-    </div>
-  );
-}
-
 export function ChatMessageList({
   messages,
   timeZone,
@@ -136,7 +112,7 @@ export function ChatMessageList({
           onTypewriterTick={onTypewriterTick}
         />
       ))}
-      {waiting ? <WaitingBubble /> : null}
+      {waiting ? <ChatWaitingBubble /> : null}
     </div>
   );
 }
