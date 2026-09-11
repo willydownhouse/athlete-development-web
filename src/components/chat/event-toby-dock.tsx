@@ -114,7 +114,7 @@ export function EventTobyDock({
   }
 
   return (
-    <div className="border-t border-white/5 bg-[#0b0d10] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 lg:px-10">
+    <div className="bg-[#0b0d10] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 lg:px-10">
       <div className="mx-auto w-full max-w-md lg:max-w-3xl">
         <div className="mb-2 flex items-center justify-between gap-3">
           <label htmlFor="event-toby-message" className="text-sm font-medium text-zinc-300">
