@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ChatView } from "@/components/chat/chat-view";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
 import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
@@ -60,7 +61,7 @@ export default async function ChatPage() {
       athletes={athletes}
       selectedAthlete={null}
     >
-      <div className="relative mx-auto flex h-[calc(100dvh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-dvh lg:max-w-3xl lg:px-10">
+      <VisibleViewportFrame className="relative mx-auto flex h-[calc(100svh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-svh lg:max-w-3xl lg:px-10">
         <ChatView
           threadId={threadId}
           messages={messages}
@@ -71,7 +72,7 @@ export default async function ChatPage() {
           canSend={athletes.length > 0}
           loadError={loadError}
         />
-      </div>
+      </VisibleViewportFrame>
     </DashboardShell>
   );
 }

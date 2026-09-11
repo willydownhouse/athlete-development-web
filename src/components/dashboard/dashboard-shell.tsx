@@ -72,7 +72,7 @@ export function DashboardShell({
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="scheme-dark flex min-h-screen bg-[#0b0d10] text-white">
+    <div className="scheme-dark flex min-h-svh bg-[#0b0d10] text-white">
       {mobileOpen ? (
         <button
           type="button"
@@ -116,7 +116,7 @@ export function DashboardShell({
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/5 bg-[#0b0d10]/95 px-4 py-3 backdrop-blur lg:hidden">
           <button
             type="button"
