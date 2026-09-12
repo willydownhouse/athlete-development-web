@@ -60,17 +60,33 @@ export function eventItemLabel(item: EventItem): string | null {
 }
 
 export function eventItemTypeHeading(item: EventItem, sameTypeIndex: number): string {
-  if (eventItemLabel(item)) {
+  if (eventItemLabel(item) || !eventItemTypeIsNumbered(item)) {
     return item.eventItemType.name;
   }
 
   return `${item.eventItemType.name} ${sameTypeIndex}`;
 }
 
-const LABEL_WITH_DURATION_ITEM_TYPE_SLUGS = new Set(["warm_up", "cool_down"]);
+function eventItemTypeIsNumbered(item: EventItem): boolean {
+  const slug = item.eventItemType.slug;
 
-export function eventItemShowsLabelWithDuration(item: EventItem): boolean {
-  return LABEL_WITH_DURATION_ITEM_TYPE_SLUGS.has(item.eventItemType.slug);
+  return slug !== "warm_up" && slug !== "cool_down";
+}
+
+export function eventItemUsesLabelAsHeading(item: EventItem): boolean {
+  return item.eventItemType.slug === "exercise" && eventItemLabel(item) != null;
+}
+
+export function eventItemShowsDurationOnHeading(item: EventItem): boolean {
+  return eventItemUsesLabelAsHeading(item) || eventItemLabel(item) == null;
+}
+
+export function eventItemHeading(item: EventItem, sameTypeIndex: number): string {
+  if (eventItemUsesLabelAsHeading(item)) {
+    return eventItemLabel(item) ?? item.eventItemType.name;
+  }
+
+  return eventItemTypeHeading(item, sameTypeIndex);
 }
 
 function itemMetricIsCompactFriendly(metric: EventItemMetric): boolean {
@@ -80,10 +96,6 @@ function itemMetricIsCompactFriendly(metric: EventItemMetric): boolean {
 }
 
 export function shouldUseCompactItemMetrics(item: EventItem): boolean {
-  if (eventItemShowsLabelWithDuration(item)) {
-    return false;
-  }
-
   return (
     item.children.length === 0 &&
     item.metrics.length > 0 &&
@@ -94,13 +106,7 @@ export function shouldUseCompactItemMetrics(item: EventItem): boolean {
 
 export function eventItemIsCollapsible(item: EventItem): boolean {
   return (
-    item.children.length > 0 ||
-    Boolean(item.notes?.trim()) ||
-    Boolean(item.startedAt) ||
-    Boolean(item.endedAt) ||
-    item.durationSeconds != null ||
-    (eventItemShowsLabelWithDuration(item) && eventItemLabel(item) != null) ||
-    (item.metrics.length > 0 && !shouldUseCompactItemMetrics(item))
+    item.children.length > 0 || (item.metrics.length > 0 && !shouldUseCompactItemMetrics(item))
   );
 }
 
