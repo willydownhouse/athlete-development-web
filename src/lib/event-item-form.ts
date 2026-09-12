@@ -153,6 +153,23 @@ export function eventItemFormSectionTitle(roots: EventItemFormTypeNode[]): strin
   return pluralizeItemTypeName(firstRoot.name);
 }
 
+export function eventItemTypeAllowsMultiple(slug: string): boolean {
+  return slug !== "warm_up" && slug !== "cool_down";
+}
+
+export function filterAddableItemTypes(
+  types: EventItemFormTypeNode[],
+  siblings: Array<{ eventItemTypeId: string }>,
+): EventItemFormTypeNode[] {
+  return types.filter((typeNode) => {
+    if (eventItemTypeAllowsMultiple(typeNode.slug)) {
+      return true;
+    }
+
+    return !siblings.some((item) => item.eventItemTypeId === typeNode.eventItemTypeId);
+  });
+}
+
 export function findItemFormTypeNode(
   nodes: EventItemFormTypeNode[],
   eventItemTypeId: string,

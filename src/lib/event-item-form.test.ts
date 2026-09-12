@@ -5,6 +5,8 @@ import {
   eventItemFormSectionTitle,
   eventItemsToFormDrafts,
   eventItemsToInputs,
+  eventItemTypeAllowsMultiple,
+  filterAddableItemTypes,
   itemFieldName,
   itemMetricFieldName,
   itemMetricValueTypeFieldName,
@@ -548,6 +550,48 @@ describe("eventItemFormSectionTitle", () => {
 
   it("uses Details when root types differ", () => {
     expect(eventItemFormSectionTitle(gameCatalog.roots)).toBe("Details");
+  });
+});
+
+describe("filterAddableItemTypes", () => {
+  const warmUpType = {
+    eventItemTypeId: "warm-up-type-id",
+    name: "Warm-up",
+    slug: "warm_up",
+    required: false,
+    sortOrder: 5,
+    metrics: [],
+    children: [],
+  };
+  const coolDownType = {
+    eventItemTypeId: "cool-down-type-id",
+    name: "Cool-down",
+    slug: "cool_down",
+    required: false,
+    sortOrder: 20,
+    metrics: [],
+    children: [],
+  };
+  const exerciseType = catalog.roots[0]!;
+
+  it("hides warm-up and cool-down after one of that type exists", () => {
+    expect(eventItemTypeAllowsMultiple("warm_up")).toBe(false);
+    expect(eventItemTypeAllowsMultiple("exercise")).toBe(true);
+    expect(
+      filterAddableItemTypes(
+        [warmUpType, exerciseType, coolDownType],
+        [{ eventItemTypeId: warmUpType.eventItemTypeId }],
+      ).map((typeNode) => typeNode.slug),
+    ).toEqual(["exercise", "cool_down"]);
+  });
+
+  it("still offers types that allow multiple copies", () => {
+    expect(
+      filterAddableItemTypes(
+        [exerciseType],
+        [{ eventItemTypeId: exerciseType.eventItemTypeId }],
+      ).map((typeNode) => typeNode.slug),
+    ).toEqual(["exercise"]);
   });
 });
 

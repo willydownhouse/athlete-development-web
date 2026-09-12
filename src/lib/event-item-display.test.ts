@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   eventItemIsCollapsible,
+  eventItemHeading,
+  eventItemShowsDurationOnHeading,
+  eventItemLabel,
   eventItemSameTypeIndex,
-  eventItemTitle,
+  eventItemTypeHeading,
+  eventItemUsesLabelAsHeading,
   eventItemsSectionTitle,
   formatEventItemCollapsedCounts,
   formatEventItemMetricSummary,
@@ -136,7 +140,7 @@ describe("eventItemsSectionTitle", () => {
   });
 });
 
-describe("eventItemSameTypeIndex and eventItemTitle", () => {
+describe("eventItemSameTypeIndex, eventItemTypeHeading, and eventItemLabel", () => {
   it("numbers unlabeled items among siblings of the same type", () => {
     const periodType = buildItemType({
       id: "period-type-id",
@@ -157,11 +161,73 @@ describe("eventItemSameTypeIndex and eventItemTitle", () => {
     expect(eventItemSameTypeIndex(siblings, 0)).toBe(1);
     expect(eventItemSameTypeIndex(siblings, 1)).toBe(1);
     expect(eventItemSameTypeIndex(siblings, 2)).toBe(2);
-    expect(eventItemTitle(siblings[2]!, 2)).toBe("Period 2");
+    expect(eventItemTypeHeading(siblings[2]!, 2)).toBe("Period 2");
+    expect(eventItemLabel(siblings[2]!)).toBeNull();
   });
 
-  it("uses a trimmed label when present", () => {
-    expect(eventItemTitle(buildItem({ label: "  Curls  " }), 1)).toBe("Curls");
+  it("uses the exercise label as the heading and hides the type name", () => {
+    const item = buildItem({ label: "  Treadmill  " });
+
+    expect(eventItemTypeHeading(item, 1)).toBe("Exercise");
+    expect(eventItemLabel(item)).toBe("Treadmill");
+    expect(eventItemUsesLabelAsHeading(item)).toBe(true);
+    expect(eventItemHeading(item, 1)).toBe("Treadmill");
+  });
+
+  it("keeps the type heading and label for warm-up, cool-down, period, and set", () => {
+    const warmUp = buildItem({
+      label: "Treadmill",
+      eventItemTypeId: "warm-up-type-id",
+      eventItemType: buildItemType({
+        id: "warm-up-type-id",
+        slug: "warm_up",
+        name: "Warm-up",
+      }),
+    });
+
+    expect(eventItemTypeHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemLabel(warmUp)).toBe("Treadmill");
+    expect(eventItemUsesLabelAsHeading(warmUp)).toBe(false);
+    expect(eventItemHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemIsCollapsible(warmUp)).toBe(false);
+  });
+
+  it("does not number unlabeled warm-up or cool-down", () => {
+    const warmUp = buildItem({
+      eventItemTypeId: "warm-up-type-id",
+      eventItemType: buildItemType({
+        id: "warm-up-type-id",
+        slug: "warm_up",
+        name: "Warm-up",
+      }),
+    });
+    const coolDown = buildItem({
+      id: "cool-down-1",
+      eventItemTypeId: "cool-down-type-id",
+      eventItemType: buildItemType({
+        id: "cool-down-type-id",
+        slug: "cool_down",
+        name: "Cool-down",
+      }),
+    });
+
+    expect(eventItemTypeHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemTypeHeading(coolDown, 1)).toBe("Cool-down");
+    expect(eventItemShowsDurationOnHeading(warmUp)).toBe(true);
+    expect(
+      eventItemShowsDurationOnHeading(
+        buildItem({
+          label: "Treadmill",
+          eventItemTypeId: "warm-up-type-id",
+          eventItemType: buildItemType({
+            id: "warm-up-type-id",
+            slug: "warm_up",
+            name: "Warm-up",
+          }),
+        }),
+      ),
+    ).toBe(false);
   });
 });
 
@@ -169,6 +235,42 @@ describe("shouldUseCompactItemMetrics and eventItemIsCollapsible", () => {
   it("uses a compact line for leaf items with up to three metrics", () => {
     const item = buildItem({
       metrics: [buildMetric(), buildMetric({ id: "metric-2" }), buildMetric({ id: "metric-3" })],
+    });
+
+    expect(shouldUseCompactItemMetrics(item)).toBe(true);
+    expect(eventItemIsCollapsible(item)).toBe(false);
+  });
+
+  it("does not collapse warm-up or cool-down when they only have duration and compact metrics", () => {
+    const item = buildItem({
+      durationSeconds: 1200,
+      eventItemTypeId: "warm-up-type-id",
+      eventItemType: buildItemType({
+        id: "warm-up-type-id",
+        slug: "warm_up",
+        name: "Warm-up",
+      }),
+      metrics: [
+        buildMetric({
+          numericValue: "6",
+          metricDefinition: buildMetricDefinition({
+            id: "rpe-def-id",
+            key: "rpe",
+            name: "RPE",
+            canonicalUnit: "scale_1_10",
+          }),
+        }),
+        buildMetric({
+          id: "metric-2",
+          numericValue: "2000",
+          metricDefinition: buildMetricDefinition({
+            id: "distance-def-id",
+            key: "distance_meters",
+            name: "Distance",
+            canonicalUnit: "m",
+          }),
+        }),
+      ],
     });
 
     expect(shouldUseCompactItemMetrics(item)).toBe(true);
@@ -189,13 +291,13 @@ describe("shouldUseCompactItemMetrics and eventItemIsCollapsible", () => {
     expect(eventItemIsCollapsible(item)).toBe(true);
   });
 
-  it("collapses items that have children, notes, or times", () => {
+  it("collapses items that have children, not notes, times, or duration alone", () => {
     expect(eventItemIsCollapsible(buildItem({ children: [buildItem({ id: "child-1" })] }))).toBe(
       true,
     );
-    expect(eventItemIsCollapsible(buildItem({ notes: "Felt strong" }))).toBe(true);
-    expect(eventItemIsCollapsible(buildItem({ startedAt: timestamp }))).toBe(true);
-    expect(eventItemIsCollapsible(buildItem({ durationSeconds: 60 }))).toBe(true);
+    expect(eventItemIsCollapsible(buildItem({ notes: "Felt strong" }))).toBe(false);
+    expect(eventItemIsCollapsible(buildItem({ startedAt: timestamp }))).toBe(false);
+    expect(eventItemIsCollapsible(buildItem({ durationSeconds: 60 }))).toBe(false);
   });
 
   it("stacks duration metrics so the name stays visible", () => {
