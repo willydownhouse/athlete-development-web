@@ -1,7 +1,10 @@
 import {
+  eventItemHeading,
   eventItemIsCollapsible,
+  eventItemLabel,
   eventItemSameTypeIndex,
-  eventItemTitle,
+  eventItemShowsDurationOnHeading,
+  eventItemUsesLabelAsHeading,
   formatEventItemCollapsedCounts,
   formatEventItemMetricSummary,
   formatEventItemTimeRange,
@@ -33,6 +36,17 @@ function ItemChevron() {
   );
 }
 
+function ItemScalarField({ caption, value }: { caption: string; value: string }) {
+  return (
+    <p className="text-sm text-zinc-300">
+      <span className="mr-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
+        {caption}
+      </span>
+      {value}
+    </p>
+  );
+}
+
 function ItemMetricRows({ metrics }: { metrics: EventItemMetric[] }) {
   if (metrics.length === 0) {
     return null;
@@ -55,32 +69,34 @@ function ItemMetricRows({ metrics }: { metrics: EventItemMetric[] }) {
   );
 }
 
+function ItemLabelAndDuration({ item }: { item: EventItem }) {
+  const label = eventItemLabel(item);
+  const duration =
+    item.durationSeconds != null ? formatDurationSeconds(item.durationSeconds) : null;
+
+  if (!label || eventItemUsesLabelAsHeading(item)) {
+    return null;
+  }
+
+  return (
+    <p className="mt-2 flex items-start justify-between gap-4 text-sm text-zinc-300">
+      <span className="min-w-0">{label}</span>
+      {duration ? <span className="shrink-0 font-medium text-zinc-200">{duration}</span> : null}
+    </p>
+  );
+}
+
 function ItemScalars({ item, timeZone }: { item: EventItem; timeZone: string }) {
   const timeRange = formatEventItemTimeRange(item, timeZone);
   const notes = item.notes?.trim();
 
-  if (!timeRange && item.durationSeconds == null && !notes) {
+  if (!timeRange && !notes) {
     return null;
   }
 
   return (
     <div className="mt-2 space-y-2">
-      {timeRange ? (
-        <p className="text-sm text-zinc-300">
-          <span className="mr-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Time
-          </span>
-          {timeRange}
-        </p>
-      ) : null}
-      {item.durationSeconds != null ? (
-        <p className="text-sm text-zinc-300">
-          <span className="mr-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Duration
-          </span>
-          {formatDurationSeconds(item.durationSeconds)}
-        </p>
-      ) : null}
+      {timeRange ? <ItemScalarField caption="Time" value={timeRange} /> : null}
       {notes ? (
         <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-200">{notes}</p>
       ) : null}
@@ -109,23 +125,12 @@ function ItemChildren({ items, timeZone }: { items: EventItem[]; timeZone: strin
   );
 }
 
-function ItemBody({
-  item,
-  timeZone,
-  compactSummary,
-}: {
-  item: EventItem;
-  timeZone: string;
-  compactSummary: string | null;
-}) {
+function ItemBody({ item, timeZone }: { item: EventItem; timeZone: string }) {
   return (
     <>
+      <ItemLabelAndDuration item={item} />
       <ItemScalars item={item} timeZone={timeZone} />
-      {compactSummary ? (
-        <p className="mt-2 text-sm text-zinc-200">{compactSummary}</p>
-      ) : (
-        <ItemMetricRows metrics={item.metrics} />
-      )}
+      <ItemMetricRows metrics={item.metrics} />
       <ItemChildren items={item.children} timeZone={timeZone} />
     </>
   );
@@ -137,47 +142,69 @@ export function EventItemDisplay({
   timeZone,
   nested = false,
 }: EventItemDisplayProps) {
-  const title = eventItemTitle(item, sameTypeIndex);
-  const titleClassName = nested
+  const heading = eventItemHeading(item, sameTypeIndex);
+  const label = eventItemLabel(item);
+  const usesLabelAsHeading = eventItemUsesLabelAsHeading(item);
+  const duration =
+    item.durationSeconds != null ? formatDurationSeconds(item.durationSeconds) : null;
+  const headingDuration = eventItemShowsDurationOnHeading(item) ? duration : null;
+  const typeClassName = nested
     ? "text-xs font-medium uppercase tracking-[0.12em] text-zinc-500"
     : "text-sm font-medium text-white";
+  const labelClassName = "shrink-0 text-sm font-medium text-zinc-200";
+  const headingDurationClassName = "shrink-0 text-sm text-zinc-200";
   const compact = shouldUseCompactItemMetrics(item);
   const compactSummary = compact ? formatEventItemMetricSummary(item.metrics) : null;
   const collapsible = eventItemIsCollapsible(item);
   const collapsedCounts = formatEventItemCollapsedCounts(item);
+  const summaryLabel = usesLabelAsHeading ? null : label;
 
   if (!collapsible) {
-    if (compactSummary) {
-      return (
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-          <p className={titleClassName}>{title}</p>
-          <p className="text-sm text-zinc-200 sm:text-right">{compactSummary}</p>
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-start justify-between gap-4">
+          <span className={`min-w-0 flex-1 ${typeClassName}`}>{heading}</span>
+          {headingDuration ? (
+            <span className={headingDurationClassName}>{headingDuration}</span>
+          ) : null}
+          {!label && compactSummary ? (
+            <p className="shrink-0 text-sm text-zinc-200 sm:text-right">{compactSummary}</p>
+          ) : null}
         </div>
-      );
-    }
-
-    return <p className={titleClassName}>{title}</p>;
+        <ItemLabelAndDuration item={item} />
+        {label && compactSummary ? (
+          <p className="text-sm text-zinc-200 sm:text-right">{compactSummary}</p>
+        ) : null}
+        <ItemScalars item={item} timeZone={timeZone} />
+      </div>
+    );
   }
 
   return (
     <details
-      className="open:[&>summary_[data-item-chevron]]:rotate-180 open:[&>summary_[data-item-collapsed-counts]]:hidden"
+      className="open:[&>summary_[data-item-chevron]]:rotate-180 open:[&>summary_[data-item-collapsed-counts]]:hidden open:[&>summary_[data-item-summary-label]]:hidden [&:not([open])>summary_[data-item-open-duration]]:hidden"
       open
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
         <ItemChevron />
-        <span className={`min-w-0 flex-1 ${titleClassName}`}>{title}</span>
+        <span className={`min-w-0 flex-1 ${typeClassName}`}>{heading}</span>
+        {summaryLabel ? (
+          <span data-item-summary-label className={labelClassName}>
+            {summaryLabel}
+          </span>
+        ) : null}
+        {headingDuration ? (
+          <span data-item-open-duration className={headingDurationClassName}>
+            {headingDuration}
+          </span>
+        ) : null}
         {collapsedCounts ? (
           <span data-item-collapsed-counts className="shrink-0 text-sm text-zinc-500">
             {collapsedCounts}
           </span>
         ) : null}
       </summary>
-      <ItemBody
-        item={item}
-        timeZone={timeZone}
-        compactSummary={compact && compactSummary ? compactSummary : null}
-      />
+      <ItemBody item={item} timeZone={timeZone} />
     </details>
   );
 }
