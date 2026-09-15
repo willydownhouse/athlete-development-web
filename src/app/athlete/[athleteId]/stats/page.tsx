@@ -3,21 +3,32 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { auth } from "@/auth";
+import { ActivitySummary } from "@/components/dashboard/activity-summary";
+import { ActivitySummarySection } from "@/components/dashboard/activity-summary-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { HockeyStats } from "@/components/dashboard/hockey-stats";
 import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
-import { HockeyStatsGridSkeleton } from "@/components/dashboard/dashboard-skeletons";
+import {
+  ActivitySummarySkeleton,
+  HockeyStatsGridSkeleton,
+} from "@/components/dashboard/dashboard-skeletons";
+import { StatsPeriodControls } from "@/components/dashboard/stats-period-controls";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
-import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import {
+  getStatsTimeRange,
+  parseStatsSearchParams,
+  statsRangeLocalDates,
+  statsSuspenseKey,
+} from "@/lib/stats-params";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
 type AthleteStatsPageProps = {
   params: Promise<{ athleteId: string }>;
-  searchParams: Promise<{ statsPeriod?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function AthleteStatsPage({ params, searchParams }: AthleteStatsPageProps) {
@@ -28,7 +39,7 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
   }
 
   const { athleteId } = await params;
-  const { statsPeriod } = await searchParams;
+  const rawSearchParams = await searchParams;
   const normalizedAthleteId = athleteId.trim();
 
   if (!normalizedAthleteId) {
@@ -53,11 +64,10 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
     redirect("/dashboard");
   }
 
-  if (selectedAthlete.focusSport.slug !== HOCKEY_SPORT_SLUG) {
-    redirect(dashboardHref(selectedAthlete.id));
-  }
-
-  const period = parseHockeyStatsPeriod(statsPeriod);
+  const listParams = parseStatsSearchParams(rawSearchParams);
+  const range = getStatsTimeRange(listParams, timeZone);
+  const localDates = statsRangeLocalDates(range, timeZone);
+  const showHockeyStats = selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG;
 
   return (
     <DashboardShell
@@ -74,23 +84,35 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Stats</h1>
-
-        <div className="mt-6">
-          <HockeyStatsSection
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Stats</h1>
+          <StatsPeriodControls
+            key={statsSuspenseKey(range)}
             athleteId={selectedAthlete.id}
-            sportName={selectedAthlete.focusSport.name}
-            period={period}
-          >
-            <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
-              <HockeyStats
-                athleteId={selectedAthlete.id}
-                sportId={selectedAthlete.focusSportId}
-                period={period}
-                timeZone={timeZone}
-              />
+            params={listParams}
+            rangeFrom={localDates.from}
+            rangeTo={localDates.to}
+          />
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <ActivitySummarySection>
+            <Suspense key={statsSuspenseKey(range)} fallback={<ActivitySummarySkeleton />}>
+              <ActivitySummary athleteId={selectedAthlete.id} range={range} timeZone={timeZone} />
             </Suspense>
-          </HockeyStatsSection>
+          </ActivitySummarySection>
+
+          {showHockeyStats ? (
+            <HockeyStatsSection sportName={selectedAthlete.focusSport.name}>
+              <Suspense key={statsSuspenseKey(range)} fallback={<HockeyStatsGridSkeleton />}>
+                <HockeyStats
+                  athleteId={selectedAthlete.id}
+                  sportId={selectedAthlete.focusSportId}
+                  range={range}
+                />
+              </Suspense>
+            </HockeyStatsSection>
+          ) : null}
         </div>
       </div>
     </DashboardShell>

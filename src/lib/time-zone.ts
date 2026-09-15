@@ -315,6 +315,26 @@ export function getZonedMonthRange(timeZone: string, date = new Date()): TimeRan
   };
 }
 
+export function getZonedYearRange(timeZone: string, date = new Date()): TimeRange {
+  const normalizedTimeZone = normalizeTimeZone(timeZone);
+  const zonedDate = getZonedParts(date, normalizedTimeZone);
+  const start = {
+    year: zonedDate.year,
+    month: 1,
+    day: 1,
+  };
+  const end = {
+    year: zonedDate.year + 1,
+    month: 1,
+    day: 1,
+  };
+
+  return {
+    startedAtFrom: localMidnightDate(start, normalizedTimeZone).toISOString(),
+    startedAtTo: localMidnightDate(end, normalizedTimeZone).toISOString(),
+  };
+}
+
 export function mergeTimeRanges(...ranges: TimeRange[]): TimeRange {
   const first = ranges[0];
 

@@ -5,6 +5,7 @@ import {
   createEventsBatch,
   fetchAllEvents,
   fetchAthletes,
+  fetchActivitySummary,
   fetchCurrentAppUser,
   fetchEventTypes,
   fetchFocusedEventChatMessages,
@@ -226,6 +227,44 @@ describe("api client", () => {
       `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
     );
     expect(events).toHaveLength(101);
+  });
+
+  it("fetches an activity summary with the requested range", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        athleteId,
+        timeZone: "Europe/Helsinki",
+        startedAtFrom: "2026-08-02T21:00:00.000Z",
+        startedAtTo: "2026-08-09T21:00:00.000Z",
+        calendarDays: 7,
+        trainingDays: 3,
+        restDays: 4,
+        games: 1,
+        load: { eventCount: 3, durationSeconds: 10800, eventsWithDuration: 2 },
+        categories: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const summary = await fetchActivitySummary("test-token", athleteId, {
+      startedAtFrom: "2026-08-02T21:00:00.000Z",
+      startedAtTo: "2026-08-09T21:00:00.000Z",
+      timeZone: "Europe/Helsinki",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/activity-summary?startedAtFrom=2026-08-02T21%3A00%3A00.000Z&startedAtTo=2026-08-09T21%3A00%3A00.000Z&timeZone=Europe%2FHelsinki`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(summary.trainingDays).toBe(3);
+    expect(summary.restDays).toBe(4);
   });
 
   it("creates events in batch", async () => {

@@ -1,5 +1,6 @@
 import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
+  ActivitySummary,
   Athlete,
   AthleteAccessRole,
   AthleteListResponse,
@@ -415,6 +416,41 @@ export async function fetchSportStats(
   }
 
   return (await response.json()) as SportStats;
+}
+
+export async function fetchActivitySummary(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    timeZone: string;
+  },
+): Promise<ActivitySummary> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    timeZone: query.timeZone,
+  });
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/activity-summary?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as ActivitySummary;
 }
 
 export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {

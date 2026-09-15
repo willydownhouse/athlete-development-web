@@ -3,7 +3,6 @@ import { Suspense } from "react";
 
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
@@ -74,10 +73,7 @@ export async function DashboardAthleteContent({
   eventTypesError,
 }: DashboardAthleteContentProps) {
   const timeZone = await getRequestTimeZone();
-  const statsHref =
-    selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG
-      ? athleteStatsHref(selectedAthlete.id)
-      : undefined;
+  const statsHref = athleteStatsHref(selectedAthlete.id);
 
   return (
     <DashboardInteractionsProvider

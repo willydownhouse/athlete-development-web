@@ -5,7 +5,7 @@ import {
   getDefaultEventsListWeekDates,
   getEventsListDayDates,
 } from "@/lib/events-list-params";
-import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
+import type { StatsPeriod } from "@/lib/stats-params";
 
 export const TODAY_NAV_LABEL = "Today";
 export const CHAT_NAV_LABEL = "Event Agent";
@@ -29,8 +29,20 @@ export function athleteCalendarHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/calendar`;
 }
 
-export function athleteStatsHref(athleteId: string, period: HockeyStatsPeriod = "week"): string {
+export function athleteStatsHref(athleteId: string, period: StatsPeriod = "week"): string {
+  const base = `/athlete/${encodeURIComponent(athleteId)}/stats`;
+
+  if (period === "week") {
+    return base;
+  }
+
   const params = new URLSearchParams({ statsPeriod: period });
+
+  return `${base}?${params.toString()}`;
+}
+
+export function athleteStatsCustomHref(athleteId: string, from: string, to: string): string {
+  const params = new URLSearchParams({ from, to });
 
   return `/athlete/${encodeURIComponent(athleteId)}/stats?${params.toString()}`;
 }

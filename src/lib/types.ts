@@ -186,6 +186,28 @@ export type SportStats = {
   eventTypes: Record<string, SportStatsEventTypeStats>;
 };
 
+export type ActivitySummary = {
+  athleteId: string;
+  timeZone: string;
+  startedAtFrom: string;
+  startedAtTo: string;
+  calendarDays: number;
+  trainingDays: number;
+  restDays: number;
+  games: number;
+  load: {
+    eventCount: number;
+    durationSeconds: number;
+    eventsWithDuration: number;
+  };
+  categories: Array<{
+    category: EventCategory;
+    eventCount: number;
+    durationSeconds: number;
+    eventsWithDuration: number;
+  }>;
+};
+
 export type MetricDefinition = {
   id: string;
   sportId: string | null;

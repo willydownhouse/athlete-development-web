@@ -5,6 +5,7 @@ import {
   getZonedDayRange,
   getZonedMonthRange,
   getZonedWeekRange,
+  getZonedYearRange,
   isTimeRangeWithin,
   mergeTimeRanges,
   zonedDateTimeToUtcIso,
@@ -62,6 +63,13 @@ describe("zoned ranges", () => {
     expect(getZonedMonthRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"))).toEqual({
       startedAtFrom: "2026-07-31T22:00:00.000Z",
       startedAtTo: "2026-08-31T22:00:00.000Z",
+    });
+  });
+
+  it("builds a Norway local year range as UTC boundaries", () => {
+    expect(getZonedYearRange("Europe/Oslo", new Date("2026-08-05T12:00:00.000Z"))).toEqual({
+      startedAtFrom: "2025-12-31T23:00:00.000Z",
+      startedAtTo: "2026-12-31T23:00:00.000Z",
     });
   });
 

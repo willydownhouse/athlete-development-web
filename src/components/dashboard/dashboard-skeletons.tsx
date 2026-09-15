@@ -52,6 +52,19 @@ export function HockeyStatsGridSkeleton() {
   );
 }
 
+export function ActivitySummarySkeleton() {
+  return (
+    <div className="space-y-4">
+      <HockeyStatsGridSkeleton />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-full rounded-xl" />
+        <Skeleton className="h-10 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 export function CalendarDayEventsSkeleton() {
   return (
     <div className="mt-4 space-y-3">
