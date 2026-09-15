@@ -9,6 +9,7 @@ import {
   fetchEventTypes,
   fetchFocusedEventChatMessages,
   fetchLatestChatMessages,
+  fetchMonthlyUsage,
   fetchOlderChatMessages,
   fetchSports,
   getApiBaseUrl,
@@ -51,6 +52,40 @@ describe("api client", () => {
     expect(options.cache).toBe("no-store");
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(appUser.email).toBe("parent@example.com");
+  });
+
+  it("fetches monthly usage with a bearer token", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        periodStart: "2026-09-01T00:00:00.000Z",
+        periodEnd: "2026-10-01T00:00:00.000Z",
+        limitReached: false,
+        inputTokens: { used: 50, limit: 500000, remaining: 499950 },
+        outputTokens: { used: 7, limit: 30000, remaining: 29993 },
+        features: [
+          {
+            feature: "event_logging",
+            inputTokens: 50,
+            outputTokens: 7,
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const usage = await fetchMonthlyUsage("test-token");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/usage");
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(usage.inputTokens.used).toBe(50);
+    expect(usage.features[0]?.feature).toBe("event_logging");
   });
 
   it("fetches athletes for the logged-in user", async () => {

@@ -19,6 +19,7 @@ import type {
   MediaKind,
   MediaReadUrlResponse,
   MediaUploadIntentResponse,
+  MonthlyUsage,
   Sport,
   SportStats,
   UserRole,
@@ -100,6 +101,10 @@ async function apiFetch<T>(token: string, path: string, options: RequestInit = {
 
 export async function fetchCurrentAppUser(token: string): Promise<AppUser> {
   return apiFetch<AppUser>(token, "/api/auth/me");
+}
+
+export async function fetchMonthlyUsage(token: string): Promise<MonthlyUsage> {
+  return apiFetch<MonthlyUsage>(token, "/api/usage");
 }
 
 export async function fetchAthletes(token: string): Promise<Athlete[]> {

@@ -13,7 +13,10 @@ import {
   defaultDashboardHref,
   isAthleteDashboardPath,
   isChatPath,
+  isUsagePath,
   TODAY_NAV_LABEL,
+  USAGE_HREF,
+  USAGE_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
 import type { Athlete } from "@/lib/types";
 
@@ -104,6 +107,10 @@ export function AppShellNav({
 
       <Link href={CHAT_HREF} onClick={onNavigate} className={navLinkClass(isChatPath(pathname))}>
         {CHAT_NAV_LABEL}
+      </Link>
+
+      <Link href={USAGE_HREF} onClick={onNavigate} className={navLinkClass(isUsagePath(pathname))}>
+        {USAGE_NAV_LABEL}
       </Link>
 
       <Link

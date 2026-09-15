@@ -1,5 +1,28 @@
 export type UserRole = "user" | "maintainer" | "admin";
 
+type UsageFeature = "event_logging";
+
+type UsageUnitTotals = {
+  used: number;
+  limit: number;
+  remaining: number;
+};
+
+type FeatureUsageTotals = {
+  feature: UsageFeature;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+export type MonthlyUsage = {
+  periodStart: string;
+  periodEnd: string;
+  limitReached: boolean;
+  inputTokens: UsageUnitTotals;
+  outputTokens: UsageUnitTotals;
+  features: FeatureUsageTotals[];
+};
+
 export type AthleteAccessRole = "parent" | "athlete";
 
 type AthleteProfile = {

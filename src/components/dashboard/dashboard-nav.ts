@@ -10,6 +10,8 @@ import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 export const TODAY_NAV_LABEL = "Today";
 export const CHAT_NAV_LABEL = "Event Agent";
 export const CHAT_HREF = "/chat";
+export const USAGE_NAV_LABEL = "Usage";
+export const USAGE_HREF = "/usage";
 
 export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
@@ -113,9 +115,17 @@ export function isChatPath(pathname: string): boolean {
   return pathname === CHAT_HREF || pathname.startsWith(`${CHAT_HREF}/`);
 }
 
+export function isUsagePath(pathname: string): boolean {
+  return pathname === USAGE_HREF || pathname.startsWith(`${USAGE_HREF}/`);
+}
+
 export function appShellMobileTitle(pathname: string): string {
   if (isChatPath(pathname)) {
     return CHAT_NAV_LABEL;
+  }
+
+  if (isUsagePath(pathname)) {
+    return USAGE_NAV_LABEL;
   }
 
   if (isAthleteDashboardPath(pathname) || pathname === "/dashboard") {

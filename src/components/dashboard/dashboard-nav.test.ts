@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { athleteEventIdFromPath, appShellMobileTitle, isChatPath } from "./dashboard-nav";
+import {
+  athleteEventIdFromPath,
+  appShellMobileTitle,
+  isChatPath,
+  isUsagePath,
+} from "./dashboard-nav";
 
 describe("athleteEventIdFromPath", () => {
   it("reads the event id from the event page", () => {
@@ -32,5 +37,17 @@ describe("chat nav", () => {
 
   it("uses Event Agent as the mobile title", () => {
     expect(appShellMobileTitle("/chat")).toBe("Event Agent");
+  });
+});
+
+describe("usage nav", () => {
+  it("treats /usage as the usage path", () => {
+    expect(isUsagePath("/usage")).toBe(true);
+    expect(isUsagePath("/usage/")).toBe(true);
+    expect(isUsagePath("/dashboard")).toBe(false);
+  });
+
+  it("uses Usage as the mobile title", () => {
+    expect(appShellMobileTitle("/usage")).toBe("Usage");
   });
 });
