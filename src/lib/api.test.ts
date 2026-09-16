@@ -7,6 +7,9 @@ import {
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
+  fetchEventTypesMetricDefinitions,
+  fetchEventAggregate,
+  fetchEvents,
   fetchFocusedEventChatMessages,
   fetchLatestChatMessages,
   fetchMonthlyUsage,
@@ -189,6 +192,48 @@ describe("api client", () => {
     expect(eventTypes[0]?.name).toBe("Ice practice");
   });
 
+  it("fetches event type metric mappings for a sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            eventTypeId: "33333333-3333-4333-8333-333333333333",
+            metricDefinitionId: "66666666-6666-4666-8666-666666666666",
+            required: false,
+            sortOrder: 10,
+            metricDefinition: {
+              id: "66666666-6666-4666-8666-666666666666",
+              key: "shot_count",
+              name: "Shot count",
+              valueType: "number",
+            },
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const sportId = "44444444-4444-4444-8444-444444444444";
+    const mappings = await fetchEventTypesMetricDefinitions(sportId);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/api/event-types/metric-definitions?sportId=${sportId}`,
+      {
+        next: {
+          revalidate: 3600,
+          tags: ["event-types"],
+        },
+      },
+    );
+    expect(mappings).toHaveLength(1);
+    expect(mappings[0]?.metricDefinition.key).toBe("shot_count");
+  });
+
   it("fetches all events in a range across paginated responses", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
 
@@ -226,6 +271,98 @@ describe("api client", () => {
       `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
     );
     expect(events).toHaveLength(101);
+  });
+
+  it("fetches events with repeated event type ids", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [],
+        pagination: { limit: 10, offset: 0, total: 0 },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchEvents("test-token", athleteId, {
+      limit: 10,
+      offset: 0,
+      eventTypeIds: [
+        "00000000-0000-4000-8000-000000000201",
+        "00000000-0000-4000-8000-000000000209",
+      ],
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events?limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&eventTypeIds=00000000-0000-4000-8000-000000000209`,
+    );
+  });
+
+  it("fetches events with repeated categories", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [],
+        pagination: { limit: 10, offset: 0, total: 0 },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchEvents("test-token", athleteId, {
+      limit: 10,
+      offset: 0,
+      categories: ["training", "competition"],
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events?limit=10&offset=0&categories=training&categories=competition`,
+    );
+  });
+
+  it("fetches an event aggregate with repeated filters", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        athleteId,
+        aggregation: "metric",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000402",
+        canonicalUnit: "goals",
+        total: 4,
+        matchingEventCount: 3,
+        eventsWithValue: 2,
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchEventAggregate("test-token", athleteId, {
+      startedAtFrom: "2026-08-01T00:00:00.000Z",
+      startedAtTo: "2026-09-01T00:00:00.000Z",
+      aggregation: "metric",
+      eventTypeIds: [
+        "00000000-0000-4000-8000-000000000201",
+        "00000000-0000-4000-8000-000000000209",
+      ],
+      categories: ["competition"],
+      metricDefinitionId: "00000000-0000-4000-8000-000000000402",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/events/aggregate?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&aggregation=metric&eventTypeIds=00000000-0000-4000-8000-000000000201&eventTypeIds=00000000-0000-4000-8000-000000000209&categories=competition&metricDefinitionId=00000000-0000-4000-8000-000000000402`,
+    );
+    expect(result.total).toBe(4);
+    expect(result.eventsWithValue).toBe(2);
   });
 
   it("creates events in batch", async () => {

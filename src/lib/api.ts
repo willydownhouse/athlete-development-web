@@ -7,6 +7,9 @@ import type {
   ChatThread,
   ChatTurn,
   Event,
+  EventAggregate,
+  EventAggregateKind,
+  EventCategory,
   EventIntensity,
   EventListResponse,
   EventItemTypeChildType,
@@ -213,6 +216,8 @@ export async function fetchEvents(
     startedAtTo?: string;
     sportId?: string;
     eventTypeId?: string;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
     include?: "metrics" | "items" | "metrics,items";
   } = {},
 ): Promise<EventListResponse> {
@@ -242,6 +247,14 @@ export async function fetchEvents(
     params.set("eventTypeId", query.eventTypeId);
   }
 
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
   if (query.include) {
     params.set("include", query.include);
   }
@@ -267,6 +280,56 @@ export async function fetchEvents(
 
   const result = (await response.json()) as EventListResponse;
   return result;
+}
+
+export async function fetchEventAggregate(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    aggregation: EventAggregateKind;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    metricDefinitionId?: string;
+  },
+): Promise<EventAggregate> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    aggregation: query.aggregation,
+  });
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.metricDefinitionId) {
+    params.set("metricDefinitionId", query.metricDefinitionId);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/events/aggregate?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventAggregate;
 }
 
 const EVENTS_PAGE_SIZE = 100;
@@ -431,6 +494,25 @@ export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
   }
 
   const result = (await response.json()) as { items: EventType[] };
+  return result.items;
+}
+
+export async function fetchEventTypesMetricDefinitions(
+  sportId?: string,
+): Promise<EventTypeMetricDefinition[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-types/metric-definitions${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
   return result.items;
 }
 

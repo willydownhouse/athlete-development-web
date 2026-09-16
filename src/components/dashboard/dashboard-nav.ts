@@ -2,6 +2,7 @@ import {
   buildEventsListQueryString,
   EVENTS_LIST_DEFAULT_LIMIT,
   EVENTS_LIST_DEFAULT_PAGE,
+  EVENTS_LIST_DEFAULT_SHOW,
   getDefaultEventsListWeekDates,
   getEventsListDayDates,
 } from "@/lib/events-list-params";
@@ -64,6 +65,9 @@ function athleteEventsHrefWithDateRange(athleteId: string, from: string, to: str
     offset: 0,
     from,
     to,
+    eventTypeIds: [],
+    categories: [],
+    show: EVENTS_LIST_DEFAULT_SHOW,
     explicitDateRange: true,
   });
   const base = athleteEventsHref(athleteId);

@@ -5,6 +5,7 @@ import {
   isValidElement,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -13,6 +14,36 @@ import {
   type SelectHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
+
+import { CheckIcon } from "@/components/check-icon";
+
+const HIDDEN_MENU_STYLE: CSSProperties = {
+  position: "fixed",
+  left: 0,
+  top: 0,
+  width: 0,
+  visibility: "hidden",
+  zIndex: 70,
+};
+
+function overlayMenuStyle(trigger: HTMLElement): CSSProperties {
+  const rect = trigger.getBoundingClientRect();
+  const menuMaxHeight = 240;
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+  const spaceAbove = rect.top - 12;
+  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+  const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
+
+  return {
+    position: "fixed",
+    left: rect.left,
+    width: rect.width,
+    top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
+    maxHeight,
+    visibility: "visible",
+    zIndex: 70,
+  };
+}
 
 export function isPickerOverlayTarget(target: Node) {
   return target instanceof Element && target.closest("[data-picker-overlay]") !== null;
@@ -29,6 +60,7 @@ type PickerMenuProps = {
   options: PickerMenuOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
+  placeholder?: string;
   className?: string;
   "aria-label"?: string;
 };
@@ -55,6 +87,7 @@ export function PickerMenu({
   options,
   onChange,
   disabled = false,
+  placeholder = "",
   className = "",
   "aria-label": ariaLabel,
 }: PickerMenuProps) {
@@ -62,13 +95,14 @@ export function PickerMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>(HIDDEN_MENU_STYLE);
 
   const selectedOption = options.find((option) => option.value === value);
-  const displayLabel = selectedOption?.label ?? value;
+  const displayLabel = selectedOption?.label ?? (value || placeholder);
+  const isOpen = open && !disabled;
 
-  useEffect(() => {
-    if (!open || !triggerRef.current) {
+  useLayoutEffect(() => {
+    if (!isOpen) {
       return;
     }
 
@@ -78,21 +112,7 @@ export function PickerMenu({
         return;
       }
 
-      const rect = trigger.getBoundingClientRect();
-      const menuMaxHeight = 240;
-      const spaceBelow = window.innerHeight - rect.bottom - 12;
-      const spaceAbove = rect.top - 12;
-      const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
-      const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
-
-      setMenuStyle({
-        position: "fixed",
-        left: rect.left,
-        width: rect.width,
-        top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
-        maxHeight,
-        zIndex: 70,
-      });
+      setMenuStyle(overlayMenuStyle(trigger));
     }
 
     updatePosition();
@@ -103,10 +123,10 @@ export function PickerMenu({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open]);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (!open) {
+    if (!isOpen) {
       return;
     }
 
@@ -140,10 +160,10 @@ export function PickerMenu({
       document.removeEventListener("touchstart", handlePointerDown);
       document.removeEventListener("keydown", handleEscape, true);
     };
-  }, [open]);
+  }, [isOpen]);
 
   const menu =
-    open && typeof document !== "undefined"
+    isOpen && typeof document !== "undefined"
       ? createPortal(
           <div
             ref={listRef}
@@ -151,7 +171,7 @@ export function PickerMenu({
             role="listbox"
             data-picker-overlay=""
             style={menuStyle}
-            className="overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+            className="scheme-dark fixed overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             {options.map((option) => {
               const selected = option.value === value;
@@ -167,11 +187,12 @@ export function PickerMenu({
                     onChange(option.value);
                     setOpen(false);
                   }}
-                  className={`flex w-full px-3 py-2.5 text-left text-sm transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 ${
+                  className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected ? "bg-white/5 text-white" : "text-zinc-300"
                   }`}
                 >
                   <span>{option.label}</span>
+                  {selected ? <CheckIcon /> : null}
                 </button>
               );
             })}
@@ -186,19 +207,30 @@ export function PickerMenu({
         ref={triggerRef}
         type="button"
         aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listboxId : undefined}
         aria-label={ariaLabel}
         disabled={disabled}
         onClick={() => {
-          if (!disabled) {
-            setOpen((current) => !current);
+          if (disabled) {
+            return;
           }
+
+          if (open) {
+            setOpen(false);
+            return;
+          }
+
+          if (triggerRef.current) {
+            setMenuStyle(overlayMenuStyle(triggerRef.current));
+          }
+
+          setOpen(true);
         }}
-        className={`relative flex w-full items-center text-left ${className}`}
+        className={`relative flex w-full items-center text-left disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       >
         <span className="truncate pr-6">{displayLabel}</span>
-        <ChevronIcon open={open} />
+        <ChevronIcon open={isOpen} />
       </button>
       {menu}
     </>

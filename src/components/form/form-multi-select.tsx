@@ -1,31 +1,48 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties, type ChangeEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import { CheckIcon } from "@/components/check-icon";
+import type { FormSelectGroup, FormSelectOption } from "@/components/form/form-select";
 
-export type FormSelectOption = {
-  value: string;
-  label: string;
+const HIDDEN_MENU_STYLE: CSSProperties = {
+  position: "fixed",
+  left: 0,
+  top: 0,
+  width: 0,
+  visibility: "hidden",
+  zIndex: 60,
 };
 
-export type FormSelectGroup = {
-  label: string;
-  options: FormSelectOption[];
-};
+function overlayMenuStyle(trigger: HTMLElement): CSSProperties {
+  const rect = trigger.getBoundingClientRect();
+  const menuMaxHeight = 240;
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+  const spaceAbove = rect.top - 12;
+  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+  const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
 
-type FormSelectProps = {
-  name?: string;
+  return {
+    position: "fixed",
+    left: rect.left,
+    width: rect.width,
+    top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
+    maxHeight,
+    visibility: "visible",
+    zIndex: 60,
+  };
+}
+
+type FormMultiSelectProps = {
+  values: string[];
   options?: FormSelectOption[];
   groups?: FormSelectGroup[];
-  value?: string;
-  defaultValue?: string;
   placeholder?: string;
+  emptyLabel?: string;
   className?: string;
-  required?: boolean;
-  onChange?: (value: string) => void;
-  onValueChange?: (value: string) => void;
+  onChange: (values: string[]) => void;
+  "aria-label"?: string;
 };
 
 function flattenOptions(
@@ -39,47 +56,57 @@ function flattenOptions(
   return groups?.flatMap((group) => group.options) ?? [];
 }
 
-export function FormSelect({
-  name,
+function displayLabel(
+  selected: FormSelectOption[],
+  placeholder: string,
+  emptyLabel: string,
+): string {
+  if (selected.length === 0) {
+    return emptyLabel || placeholder;
+  }
+
+  if (selected.length === 1) {
+    return selected[0]?.label ?? placeholder;
+  }
+
+  if (selected.length === 2) {
+    return selected.map((option) => option.label).join(", ");
+  }
+
+  return `${selected.length} selected`;
+}
+
+export function FormMultiSelect({
+  values,
   options,
   groups,
-  value,
-  defaultValue = "",
   placeholder = "Select",
+  emptyLabel = "All",
   className = "",
-  required = false,
   onChange,
-  onValueChange,
-}: FormSelectProps) {
+  "aria-label": ariaLabel,
+}: FormMultiSelectProps) {
   const listboxId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const isControlled = value !== undefined;
-  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
-  const currentValue = isControlled ? value : uncontrolledValue;
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>(HIDDEN_MENU_STYLE);
 
   const allOptions = flattenOptions(options, groups);
-  const selectedOption = allOptions.find((option) => option.value === currentValue);
-  const displayLabel = selectedOption?.label ?? placeholder;
+  const selectedOptions = allOptions.filter((option) => values.includes(option.value));
+  const label = displayLabel(selectedOptions, placeholder, emptyLabel);
 
-  function selectOption(nextValue: string) {
-    if (!isControlled) {
-      setUncontrolledValue(nextValue);
+  function toggleValue(value: string) {
+    if (values.includes(value)) {
+      onChange(values.filter((item) => item !== value));
+      return;
     }
 
-    onChange?.(nextValue);
-    onValueChange?.(nextValue);
-    setOpen(false);
+    onChange([...values, value]);
   }
 
-  function handleNativeSelectChange(event: ChangeEvent<HTMLSelectElement>) {
-    selectOption(event.currentTarget.value);
-  }
-
-  useEffect(() => {
-    if (!open || !triggerRef.current) {
+  useLayoutEffect(() => {
+    if (!open) {
       return;
     }
 
@@ -89,21 +116,7 @@ export function FormSelect({
         return;
       }
 
-      const rect = trigger.getBoundingClientRect();
-      const menuMaxHeight = 240;
-      const spaceBelow = window.innerHeight - rect.bottom - 12;
-      const spaceAbove = rect.top - 12;
-      const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
-      const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
-
-      setMenuStyle({
-        position: "fixed",
-        left: rect.left,
-        width: rect.width,
-        top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
-        maxHeight,
-        zIndex: 60,
-      });
+      setMenuStyle(overlayMenuStyle(trigger));
     }
 
     updatePosition();
@@ -151,7 +164,7 @@ export function FormSelect({
   }, [open]);
 
   function renderOption(option: FormSelectOption) {
-    const selected = option.value === currentValue;
+    const selected = values.includes(option.value);
 
     return (
       <button
@@ -160,7 +173,7 @@ export function FormSelect({
         role="option"
         aria-selected={selected}
         onClick={() => {
-          selectOption(option.value);
+          toggleValue(option.value);
         }}
         className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 ${
           selected ? "bg-white/5 text-white" : "text-zinc-300"
@@ -179,9 +192,24 @@ export function FormSelect({
             ref={listRef}
             id={listboxId}
             role="listbox"
+            aria-multiselectable="true"
             style={menuStyle}
-            className="scheme-dark overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+            className="scheme-dark fixed overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
+            <button
+              type="button"
+              role="option"
+              aria-selected={values.length === 0}
+              onClick={() => {
+                onChange([]);
+              }}
+              className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 ${
+                values.length === 0 ? "bg-white/5 text-white" : "text-zinc-300"
+              }`}
+            >
+              <span>{emptyLabel}</span>
+              {values.length === 0 ? <CheckIcon /> : null}
+            </button>
             {groups
               ? groups.map((group) => (
                   <div key={group.label}>
@@ -199,41 +227,32 @@ export function FormSelect({
 
   return (
     <>
-      <span className="relative block">
-        {name ? (
-          <select
-            name={name}
-            value={currentValue}
-            required={required}
-            onChange={handleNativeSelectChange}
-            onInvalid={() => {
-              triggerRef.current?.focus();
-            }}
-            tabIndex={-1}
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-          >
-            <option value="">{placeholder}</option>
-            {allOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        <button
-          ref={triggerRef}
-          type="button"
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-controls={open ? listboxId : undefined}
-          onClick={() => setOpen((current) => !current)}
-          className={`flex w-full items-center justify-between gap-3 text-left ${className}`}
-        >
-          <span className={selectedOption ? "text-white" : "text-zinc-500"}>{displayLabel}</span>
-          <ChevronIcon open={open} />
-        </button>
-      </span>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+
+          if (triggerRef.current) {
+            setMenuStyle(overlayMenuStyle(triggerRef.current));
+          }
+
+          setOpen(true);
+        }}
+        className={`flex w-full items-center justify-between gap-3 text-left ${className}`}
+      >
+        <span className={`truncate ${selectedOptions.length > 0 ? "text-white" : "text-zinc-500"}`}>
+          {label}
+        </span>
+        <ChevronIcon open={open} />
+      </button>
       {menu}
     </>
   );
