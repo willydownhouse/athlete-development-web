@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   athleteEventIdFromPath,
   appShellMobileTitle,
+  HISTORY_NAV_LABEL,
   isChatPath,
   isUsagePath,
 } from "./dashboard-nav";
@@ -49,5 +50,11 @@ describe("usage nav", () => {
 
   it("uses Usage as the mobile title", () => {
     expect(appShellMobileTitle("/usage")).toBe("Usage");
+  });
+});
+
+describe("history nav", () => {
+  it("uses History as the mobile title", () => {
+    expect(appShellMobileTitle("/athlete/ath-1/events")).toBe(HISTORY_NAV_LABEL);
   });
 });

@@ -3,7 +3,11 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
+import {
+  dashboardHref,
+  backToTodayLabel,
+  HISTORY_NAV_LABEL,
+} from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventsListFilters } from "@/components/dashboard/events-list-filters";
@@ -83,7 +87,9 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Events</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {HISTORY_NAV_LABEL}
+        </h1>
 
         <div className="mt-6 space-y-4">
           <EventsListFilters

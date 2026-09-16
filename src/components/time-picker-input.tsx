@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import { PickerMenu, isPickerOverlayTarget } from "@/components/picker-menu";
@@ -68,6 +68,32 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => ({
   label: String(minute).padStart(2, "0"),
 }));
 
+const HIDDEN_PANEL_STYLE: CSSProperties = {
+  position: "fixed",
+  left: 0,
+  top: 0,
+  width: 0,
+  visibility: "hidden",
+  zIndex: 60,
+};
+
+function overlayPanelStyle(trigger: HTMLElement): CSSProperties {
+  const rect = trigger.getBoundingClientRect();
+  const panelHeight = 132;
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+  const spaceAbove = rect.top - 12;
+  const openUp = spaceBelow < panelHeight && spaceAbove > spaceBelow;
+
+  return {
+    position: "fixed",
+    left: rect.left,
+    width: Math.min(rect.width, window.innerWidth - 24),
+    top: openUp ? rect.top - panelHeight - 8 : rect.bottom + 8,
+    visibility: "visible",
+    zIndex: 60,
+  };
+}
+
 export function TimePickerInput({
   name,
   id,
@@ -84,9 +110,17 @@ export function TimePickerInput({
   const [selected, setSelected] = useState<TimeParts | undefined>(() =>
     parseTimeValue(defaultValue),
   );
-  const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>(HIDDEN_PANEL_STYLE);
 
-  useEffect(() => {
+  function openPanel() {
+    if (triggerRef.current) {
+      setPanelStyle(overlayPanelStyle(triggerRef.current));
+    }
+
+    setOpen(true);
+  }
+
+  useLayoutEffect(() => {
     if (!open || !triggerRef.current) {
       return;
     }
@@ -97,19 +131,7 @@ export function TimePickerInput({
         return;
       }
 
-      const rect = trigger.getBoundingClientRect();
-      const panelHeight = 132;
-      const spaceBelow = window.innerHeight - rect.bottom - 12;
-      const spaceAbove = rect.top - 12;
-      const openUp = spaceBelow < panelHeight && spaceAbove > spaceBelow;
-
-      setPanelStyle({
-        position: "fixed",
-        left: rect.left,
-        width: Math.min(rect.width, window.innerWidth - 24),
-        top: openUp ? rect.top - panelHeight - 8 : rect.bottom + 8,
-        zIndex: 60,
-      });
+      setPanelStyle(overlayPanelStyle(trigger));
     }
 
     updatePosition();
@@ -229,7 +251,14 @@ export function TimePickerInput({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+
+          openPanel();
+        }}
         className={`flex w-full items-center justify-between gap-3 text-left ${className ?? ""}`}
       >
         <span className={selected ? "text-white" : "text-zinc-500"}>{displayValue}</span>
