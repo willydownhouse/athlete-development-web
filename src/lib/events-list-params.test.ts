@@ -20,7 +20,10 @@ describe("parseEventsListSearchParams", () => {
       offset: 0,
       from: undefined,
       to: undefined,
-      eventTypeId: undefined,
+      eventTypeIds: [],
+      categories: [],
+      show: "events",
+      metricDefinitionId: undefined,
       explicitDateRange: false,
     });
   });
@@ -32,7 +35,10 @@ describe("parseEventsListSearchParams", () => {
         page: "3",
         from: "2026-08-01",
         to: "2026-08-07",
-        eventTypeId: "00000000-0000-4000-8000-000000000201",
+        eventTypeIds: [
+          "00000000-0000-4000-8000-000000000201",
+          "00000000-0000-4000-8000-000000000209",
+        ],
       }),
     ).toEqual({
       limit: 20,
@@ -40,9 +46,58 @@ describe("parseEventsListSearchParams", () => {
       offset: 40,
       from: "2026-08-01",
       to: "2026-08-07",
-      eventTypeId: "00000000-0000-4000-8000-000000000201",
+      eventTypeIds: [
+        "00000000-0000-4000-8000-000000000201",
+        "00000000-0000-4000-8000-000000000209",
+      ],
+      categories: [],
+      show: "events",
+      metricDefinitionId: undefined,
       explicitDateRange: true,
     });
+  });
+
+  it("parses comma-separated event type ids", () => {
+    expect(
+      parseEventsListSearchParams({
+        eventTypeIds: "00000000-0000-4000-8000-000000000201,00000000-0000-4000-8000-000000000209",
+      }).eventTypeIds,
+    ).toEqual(["00000000-0000-4000-8000-000000000201", "00000000-0000-4000-8000-000000000209"]);
+  });
+
+  it("keeps a legacy single eventTypeId", () => {
+    expect(
+      parseEventsListSearchParams({
+        eventTypeId: "00000000-0000-4000-8000-000000000201",
+      }),
+    ).toEqual({
+      limit: EVENTS_LIST_DEFAULT_LIMIT,
+      page: EVENTS_LIST_DEFAULT_PAGE,
+      offset: 0,
+      from: undefined,
+      to: undefined,
+      eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
+      categories: [],
+      show: "events",
+      metricDefinitionId: undefined,
+      explicitDateRange: false,
+    });
+  });
+
+  it("parses comma-separated categories", () => {
+    expect(
+      parseEventsListSearchParams({
+        categories: "training,competition",
+      }).categories,
+    ).toEqual(["training", "competition"]);
+  });
+
+  it("ignores invalid categories", () => {
+    expect(
+      parseEventsListSearchParams({
+        categories: "training,not-a-category",
+      }).categories,
+    ).toEqual(["training"]);
   });
 
   it("ignores invalid values", () => {
@@ -52,6 +107,7 @@ describe("parseEventsListSearchParams", () => {
         page: "-1",
         from: "not-a-date",
         eventTypeId: "bad-id",
+        show: "not-a-show",
       }),
     ).toEqual({
       limit: EVENTS_LIST_DEFAULT_LIMIT,
@@ -59,9 +115,28 @@ describe("parseEventsListSearchParams", () => {
       offset: 0,
       from: undefined,
       to: undefined,
-      eventTypeId: undefined,
+      eventTypeIds: [],
+      categories: [],
+      show: "events",
+      metricDefinitionId: undefined,
       explicitDateRange: false,
     });
+  });
+
+  it("parses show", () => {
+    expect(parseEventsListSearchParams({ show: "count" }).show).toBe("count");
+    expect(parseEventsListSearchParams({ show: "durationSeconds" }).show).toBe("durationSeconds");
+    expect(parseEventsListSearchParams({ show: "metric" }).show).toBe("metric");
+    expect(parseEventsListSearchParams({ show: "metricAverage" }).show).toBe("metricAverage");
+  });
+
+  it("parses a metric definition id", () => {
+    expect(
+      parseEventsListSearchParams({
+        show: "metric",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+      }).metricDefinitionId,
+    ).toBe("00000000-0000-4000-8000-000000000401");
   });
 });
 
@@ -75,8 +150,31 @@ describe("buildEventsListQueryString", () => {
         explicitDateRange: false,
         from: "2026-08-04",
         to: "2026-08-10",
+        eventTypeIds: [],
+        categories: [],
+        show: "events",
       }),
     ).toBe("");
+  });
+
+  it("serializes multiple event type ids as one comma-separated param", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        from: "2026-08-01",
+        eventTypeIds: [
+          "00000000-0000-4000-8000-000000000209",
+          "00000000-0000-4000-8000-000000000201",
+        ],
+        categories: [],
+        show: "events",
+        explicitDateRange: true,
+      }),
+    ).toBe(
+      "from=2026-08-01&eventTypeIds=00000000-0000-4000-8000-000000000209,00000000-0000-4000-8000-000000000201",
+    );
   });
 
   it("serializes active filters", () => {
@@ -86,10 +184,70 @@ describe("buildEventsListQueryString", () => {
         page: 2,
         offset: 20,
         from: "2026-08-01",
-        eventTypeId: "00000000-0000-4000-8000-000000000201",
+        eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
+        categories: [],
+        show: "events",
         explicitDateRange: true,
       }),
-    ).toBe("limit=20&page=2&from=2026-08-01&eventTypeId=00000000-0000-4000-8000-000000000201");
+    ).toBe("limit=20&page=2&from=2026-08-01&eventTypeIds=00000000-0000-4000-8000-000000000201");
+  });
+
+  it("serializes multiple categories as one comma-separated param", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: ["training", "competition"],
+        show: "events",
+        explicitDateRange: false,
+      }),
+    ).toBe("categories=training,competition");
+  });
+
+  it("serializes a non-default show and omits list pagination", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: 20,
+        page: 2,
+        offset: 20,
+        eventTypeIds: [],
+        categories: [],
+        show: "count",
+        explicitDateRange: false,
+      }),
+    ).toBe("show=count");
+  });
+
+  it("serializes metric total with a metric definition id", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        show: "metric",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+        explicitDateRange: false,
+      }),
+    ).toBe("show=metric&metricDefinitionId=00000000-0000-4000-8000-000000000401");
+  });
+
+  it("serializes metric average with a metric definition id", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        show: "metricAverage",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+        explicitDateRange: false,
+      }),
+    ).toBe("show=metricAverage&metricDefinitionId=00000000-0000-4000-8000-000000000401");
   });
 });
 
@@ -127,8 +285,10 @@ describe("resolveEventsListSearchParams", () => {
       offset: 0,
       from: "2026-08-03",
       to: "2026-08-09",
-      sportId: undefined,
-      eventTypeId: undefined,
+      eventTypeIds: [],
+      categories: [],
+      show: "events",
+      metricDefinitionId: undefined,
       explicitDateRange: false,
     });
   });

@@ -167,6 +167,18 @@ export type EventListResponse = {
   };
 };
 
+export type EventAggregateKind = "count" | "durationSeconds" | "metric" | "metricAverage";
+
+export type EventAggregate = {
+  athleteId: string;
+  aggregation: EventAggregateKind;
+  metricDefinitionId: string | null;
+  canonicalUnit: string | null;
+  total: number;
+  matchingEventCount: number;
+  eventsWithValue: number;
+};
+
 type SportStatsEventTypeStats = {
   name: string;
   durationSeconds: number;

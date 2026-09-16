@@ -1,7 +1,7 @@
 "use client";
 
 import { format, isValid, parseISO } from "date-fns";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { DayPicker, type Matcher } from "react-day-picker";
 
@@ -23,6 +23,33 @@ const datePickerClassNames = {
   day: "relative flex-1 p-0 text-center text-sm",
 };
 
+const HIDDEN_PANEL_STYLE: CSSProperties = {
+  position: "fixed",
+  left: 0,
+  top: 0,
+  width: 0,
+  visibility: "hidden",
+  zIndex: 60,
+};
+
+function overlayPanelStyle(trigger: HTMLElement): CSSProperties {
+  const rect = trigger.getBoundingClientRect();
+  const panelWidth = Math.min(window.innerWidth - 24, 320);
+  const panelHeight = 360;
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+  const spaceAbove = rect.top - 12;
+  const openUp = spaceBelow < panelHeight && spaceAbove > spaceBelow;
+
+  return {
+    position: "fixed",
+    left: Math.max(12, Math.min(rect.left, window.innerWidth - panelWidth - 12)),
+    width: panelWidth,
+    top: openUp ? rect.top - panelHeight - 8 : rect.bottom + 8,
+    visibility: "visible",
+    zIndex: 60,
+  };
+}
+
 type DatePickerInputProps = {
   name?: string;
   id?: string;
@@ -31,6 +58,7 @@ type DatePickerInputProps = {
   onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
+  compact?: boolean;
   disabledDates?: Matcher | Matcher[];
   fromYear?: number;
   toYear?: number;
@@ -54,6 +82,7 @@ export function DatePickerInput({
   onChange,
   placeholder = "Select date",
   className,
+  compact = false,
   disabledDates,
   fromYear = 1920,
   toYear = new Date().getFullYear(),
@@ -69,9 +98,17 @@ export function DatePickerInput({
     parseDateValue(defaultValue),
   );
   const selected = isControlled ? parseDateValue(value) : uncontrolledSelected;
-  const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>(HIDDEN_PANEL_STYLE);
 
-  useEffect(() => {
+  function openPanel() {
+    if (triggerRef.current) {
+      setPanelStyle(overlayPanelStyle(triggerRef.current));
+    }
+
+    setOpen(true);
+  }
+
+  useLayoutEffect(() => {
     if (!open || !triggerRef.current) {
       return;
     }
@@ -82,20 +119,7 @@ export function DatePickerInput({
         return;
       }
 
-      const rect = trigger.getBoundingClientRect();
-      const panelWidth = Math.min(window.innerWidth - 24, 320);
-      const panelHeight = 360;
-      const spaceBelow = window.innerHeight - rect.bottom - 12;
-      const spaceAbove = rect.top - 12;
-      const openUp = spaceBelow < panelHeight && spaceAbove > spaceBelow;
-
-      setPanelStyle({
-        position: "fixed",
-        left: Math.max(12, Math.min(rect.left, window.innerWidth - panelWidth - 12)),
-        width: panelWidth,
-        top: openUp ? rect.top - panelHeight - 8 : rect.bottom + 8,
-        zIndex: 60,
-      });
+      setPanelStyle(overlayPanelStyle(trigger));
     }
 
     updatePosition();
@@ -150,7 +174,9 @@ export function DatePickerInput({
   }, [open]);
 
   const formattedValue = selected ? format(selected, "yyyy-MM-dd") : "";
-  const displayValue = selected ? format(selected, "MMM d, yyyy") : placeholder;
+  const displayValue = selected
+    ? format(selected, compact ? "d MMM yy" : "MMM d, yyyy")
+    : placeholder;
 
   const panel =
     open && typeof document !== "undefined"
@@ -199,23 +225,34 @@ export function DatePickerInput({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-        className={`flex w-full items-center justify-between gap-3 text-left ${className ?? ""}`}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+
+          openPanel();
+        }}
+        className={`flex w-full items-center justify-between text-left ${compact ? "gap-1.5" : "gap-3"} ${className ?? ""}`}
       >
-        <span className={selected ? "text-white" : "text-zinc-500"}>{displayValue}</span>
-        <CalendarIcon />
+        <span
+          className={`min-w-0 truncate whitespace-nowrap ${selected ? "text-white" : "text-zinc-500"}`}
+        >
+          {displayValue}
+        </span>
+        <CalendarIcon compact={compact} />
       </button>
       {panel}
     </div>
   );
 }
 
-function CalendarIcon() {
+function CalendarIcon({ compact }: { compact?: boolean }) {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-4 w-4 shrink-0 text-zinc-400"
+      className={`shrink-0 text-zinc-400 ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.75"
