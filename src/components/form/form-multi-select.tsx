@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { createPortal } from "react-dom";
 
 import { CheckIcon } from "@/components/check-icon";
 import type { FormSelectGroup, FormSelectOption } from "@/components/form/form-select";
+import { useListboxKeyboard } from "@/components/listbox-keyboard";
 
 const HIDDEN_MENU_STYLE: CSSProperties = {
   position: "fixed",
@@ -91,6 +100,7 @@ export function FormMultiSelect({
   const listRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>(HIDDEN_MENU_STYLE);
+  const closeListbox = useCallback(() => setOpen(false), []);
 
   const allOptions = flattenOptions(options, groups);
   const selectedOptions = allOptions.filter((option) => values.includes(option.value));
@@ -104,6 +114,21 @@ export function FormMultiSelect({
 
     onChange([...values, value]);
   }
+
+  function openListbox() {
+    if (triggerRef.current) {
+      setMenuStyle(overlayMenuStyle(triggerRef.current));
+    }
+
+    setOpen(true);
+  }
+
+  useListboxKeyboard({
+    open,
+    listRef,
+    triggerRef,
+    onClose: closeListbox,
+  });
 
   useLayoutEffect(() => {
     if (!open) {
@@ -148,18 +173,10 @@ export function FormMultiSelect({
       setOpen(false);
     }
 
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    }
-
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
 
@@ -172,6 +189,7 @@ export function FormMultiSelect({
         type="button"
         role="option"
         aria-selected={selected}
+        tabIndex={-1}
         onClick={() => {
           toggleValue(option.value);
         }}
@@ -200,6 +218,7 @@ export function FormMultiSelect({
               type="button"
               role="option"
               aria-selected={values.length === 0}
+              tabIndex={-1}
               onClick={() => {
                 onChange([]);
               }}
@@ -236,15 +255,22 @@ export function FormMultiSelect({
         aria-controls={open ? listboxId : undefined}
         onClick={() => {
           if (open) {
-            setOpen(false);
+            closeListbox();
             return;
           }
 
-          if (triggerRef.current) {
-            setMenuStyle(overlayMenuStyle(triggerRef.current));
+          openListbox();
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+            return;
           }
 
-          setOpen(true);
+          event.preventDefault();
+
+          if (!open) {
+            openListbox();
+          }
         }}
         className={`flex w-full items-center justify-between gap-3 text-left ${className}`}
       >

@@ -3,6 +3,7 @@
 import {
   Children,
   isValidElement,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -16,6 +17,7 @@ import {
 import { createPortal } from "react-dom";
 
 import { CheckIcon } from "@/components/check-icon";
+import { useListboxKeyboard } from "@/components/listbox-keyboard";
 
 const HIDDEN_MENU_STYLE: CSSProperties = {
   position: "fixed",
@@ -96,10 +98,26 @@ export function PickerMenu({
   const listRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>(HIDDEN_MENU_STYLE);
+  const closeListbox = useCallback(() => setOpen(false), []);
 
   const selectedOption = options.find((option) => option.value === value);
   const displayLabel = selectedOption?.label ?? (value || placeholder);
   const isOpen = open && !disabled;
+
+  function openListbox() {
+    if (triggerRef.current) {
+      setMenuStyle(overlayMenuStyle(triggerRef.current));
+    }
+
+    setOpen(true);
+  }
+
+  useListboxKeyboard({
+    open: isOpen,
+    listRef,
+    triggerRef,
+    onClose: closeListbox,
+  });
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -144,21 +162,12 @@ export function PickerMenu({
       setOpen(false);
     }
 
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        setOpen(false);
-      }
-    }
-
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("touchstart", handlePointerDown);
-    document.addEventListener("keydown", handleEscape, true);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape, true);
     };
   }, [isOpen]);
 
@@ -182,10 +191,12 @@ export function PickerMenu({
                   type="button"
                   role="option"
                   aria-selected={selected}
+                  tabIndex={-1}
                   disabled={option.disabled}
                   onClick={() => {
                     onChange(option.value);
                     setOpen(false);
+                    triggerRef.current?.focus();
                   }}
                   className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected ? "bg-white/5 text-white" : "text-zinc-300"
@@ -217,15 +228,22 @@ export function PickerMenu({
           }
 
           if (open) {
-            setOpen(false);
+            closeListbox();
             return;
           }
 
-          if (triggerRef.current) {
-            setMenuStyle(overlayMenuStyle(triggerRef.current));
+          openListbox();
+        }}
+        onKeyDown={(event) => {
+          if (disabled || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) {
+            return;
           }
 
-          setOpen(true);
+          event.preventDefault();
+
+          if (!open) {
+            openListbox();
+          }
         }}
         className={`relative flex w-full items-center text-left disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       >
