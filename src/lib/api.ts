@@ -352,6 +352,47 @@ export async function fetchEventItemTypes(sportId?: string): Promise<EventItemTy
   return result.items;
 }
 
+export async function fetchEventItemTypesMetricDefinitions(
+  sportId?: string,
+): Promise<EventItemTypeMetricDefinition[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/metric-definitions${query}`,
+    {
+      next: {
+        revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+        tags: [EVENT_TYPES_CACHE_TAG],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeMetricDefinition[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypesChildTypes(
+  sportId?: string,
+): Promise<EventItemTypeChildType[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-item-types/child-types${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeChildType[] };
+  return result.items;
+}
+
 export async function fetchEventItemAggregate(
   token: string,
   athleteId: string,
@@ -363,6 +404,7 @@ export async function fetchEventItemAggregate(
     eventTypeIds?: string[];
     categories?: EventCategory[];
     label?: string;
+    metricDefinitionId?: string;
   },
 ): Promise<EventItemAggregate> {
   const params = new URLSearchParams({
@@ -382,6 +424,10 @@ export async function fetchEventItemAggregate(
 
   if (query.label) {
     params.set("label", query.label);
+  }
+
+  if (query.metricDefinitionId) {
+    params.set("metricDefinitionId", query.metricDefinitionId);
   }
 
   const response = await fetch(

@@ -36,6 +36,8 @@ export const EVENTS_LIST_DEFAULT_ITEM_SHOW: EventsListShow = "count";
 export const EVENTS_LIST_ITEM_SHOW_OPTIONS: { value: EventsListShow; label: string }[] = [
   { value: "count", label: "Item count" },
   { value: "durationSeconds", label: "Total duration" },
+  { value: "metric", label: "Metric total" },
+  { value: "metricAverage", label: "Metric average" },
 ];
 
 /** Keep in sync with athlete-development-service EVENT_ITEM_LABEL_MAX_LENGTH. */
@@ -85,8 +87,10 @@ export function normalizeEventsListLabel(value: string | undefined): string | un
   return normalized;
 }
 
-export function isEventsListItemShow(show: EventsListShow): show is "count" | "durationSeconds" {
-  return show === "count" || show === "durationSeconds";
+export function isEventsListItemShow(
+  show: EventsListShow,
+): show is "count" | "durationSeconds" | "metric" | "metricAverage" {
+  return show !== "events";
 }
 
 export function isEventsListAggregateShow(
@@ -273,9 +277,7 @@ export function parseEventsListSearchParams(raw: RawSearchParams): EventsListSea
     categories: parseCategories(raw),
     measure,
     show,
-    metricDefinitionId: isEventsListItemMeasure(measure)
-      ? undefined
-      : parseUuid(readSingleValue(raw["metricDefinitionId"])),
+    metricDefinitionId: parseUuid(readSingleValue(raw["metricDefinitionId"])),
     label,
     explicitDateRange: from !== undefined || to !== undefined,
   };
@@ -416,7 +418,7 @@ export function buildEventsListQueryString(params: EventsListSearchParams): stri
     search.set("show", show);
   }
 
-  if (!itemMeasure && isEventsListMetricShow(show) && params.metricDefinitionId) {
+  if (isEventsListMetricShow(show) && params.metricDefinitionId) {
     search.set("metricDefinitionId", params.metricDefinitionId);
   }
 

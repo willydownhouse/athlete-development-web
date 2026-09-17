@@ -1,10 +1,4 @@
-import {
-  ApiError,
-  fetchEventAggregate,
-  fetchEventItemAggregate,
-  fetchEventItemTypes,
-  fetchEvents,
-} from "@/lib/api";
+import { ApiError, fetchEventAggregate, fetchEventItemAggregate, fetchEvents } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import {
   eventsListDateRange,
@@ -18,7 +12,12 @@ import {
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import type { EventAggregate, EventItemAggregate, EventListResponse } from "@/lib/types";
+import type {
+  EventAggregate,
+  EventItemAggregate,
+  EventItemType,
+  EventListResponse,
+} from "@/lib/types";
 
 type EventsListResult =
   { data: EventListResponse; error?: undefined } | { data?: undefined; error: string };
@@ -115,6 +114,7 @@ export async function fetchAthleteEventsAggregate(
 export async function fetchAthleteEventItemsAggregate(
   athleteId: string,
   params: EventsListSearchParams,
+  itemTypes: EventItemType[],
 ): Promise<EventItemsAggregateResult> {
   if (!isEventsListItemMeasure(params.measure) || !isEventsListItemShow(params.show)) {
     return { error: "Choose a total to show" };
@@ -122,6 +122,10 @@ export async function fetchAthleteEventItemsAggregate(
 
   if (isEventsListExerciseMeasure(params.measure) && !params.label) {
     return { error: "Enter an exercise name" };
+  }
+
+  if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
+    return { error: "Select a metric" };
   }
 
   const token = await getAuthBearerToken();
@@ -138,7 +142,6 @@ export async function fetchAthleteEventItemsAggregate(
   }
 
   try {
-    const itemTypes = await fetchEventItemTypes();
     const eventItemTypeId = resolveEventsListItemTypeId(itemTypes, params.measure);
 
     if (!eventItemTypeId) {
@@ -156,6 +159,9 @@ export async function fetchAthleteEventItemsAggregate(
       ...(params.categories.length > 0 ? { categories: params.categories } : {}),
       ...(isEventsListExerciseMeasure(params.measure) && params.label
         ? { label: params.label }
+        : {}),
+      ...(isEventsListMetricShow(params.show) && params.metricDefinitionId
+        ? { metricDefinitionId: params.metricDefinitionId }
         : {}),
     });
 

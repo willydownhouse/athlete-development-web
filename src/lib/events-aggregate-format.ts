@@ -2,11 +2,23 @@ import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
 import type { EventAggregate, EventAggregateKind, EventItemAggregate } from "@/lib/types";
 
+export type EventsAggregateSubject = "event" | "item" | "exercise";
+
+const COVERAGE_NOUNS: Record<EventsAggregateSubject, { singular: string; plural: string }> = {
+  event: { singular: "event", plural: "events" },
+  item: { singular: "item", plural: "items" },
+  exercise: { singular: "exercise", plural: "exercises" },
+};
+
 export function eventsAggregateHeading(
   aggregation: EventAggregateKind,
-  subject: "event" | "item" = "event",
+  subject: EventsAggregateSubject = "event",
 ): string {
   if (aggregation === "count") {
+    if (subject === "exercise") {
+      return "Exercise count";
+    }
+
     return subject === "item" ? "Item count" : "Event count";
   }
 
@@ -42,23 +54,36 @@ function isEventItemAggregate(
   return "matchingItemCount" in result;
 }
 
-export function formatEventsAggregateCoverage(result: EventAggregate | EventItemAggregate): string {
-  const subject = isEventItemAggregate(result) ? "item" : "event";
+export function formatEventsAggregateCoverage(
+  result: EventAggregate | EventItemAggregate,
+  subject?: EventsAggregateSubject,
+  descendantNoun?: string,
+): string {
+  const resolvedSubject = subject ?? (isEventItemAggregate(result) ? "item" : "event");
   const matchingCount = isEventItemAggregate(result)
     ? result.matchingItemCount
     : result.matchingEventCount;
   const withValue = isEventItemAggregate(result) ? result.itemsWithValue : result.eventsWithValue;
-  const noun = subject === "item" ? "item" : "event";
-  const nouns = subject === "item" ? "items" : "events";
-
-  if (result.aggregation === "count") {
-    return matchingCount === 1 ? `1 ${noun}` : `${matchingCount} ${nouns}`;
-  }
-
-  if (withValue === matchingCount) {
-    return matchingCount === 1 ? `1 ${noun}` : `${matchingCount} ${nouns}`;
-  }
+  const { singular: noun, plural: nouns } = COVERAGE_NOUNS[resolvedSubject];
 
   const valueLabel = result.aggregation === "durationSeconds" ? "a duration" : "a value";
-  return `${withValue} of ${matchingCount} ${nouns} had ${valueLabel}`;
+  const coverage =
+    result.aggregation === "count" || withValue === matchingCount
+      ? matchingCount === 1
+        ? `1 ${noun}`
+        : `${matchingCount} ${nouns}`
+      : `${withValue} of ${matchingCount} ${nouns} had ${valueLabel}`;
+
+  if (!isEventItemAggregate(result) || !descendantNoun || result.descendantItemsWithValue === 0) {
+    return coverage;
+  }
+
+  const descendantLabel =
+    result.descendantItemsWithValue === 1
+      ? descendantNoun
+      : descendantNoun.endsWith("s")
+        ? descendantNoun
+        : `${descendantNoun}s`;
+
+  return `${coverage}, ${result.descendantItemsWithValue} ${descendantLabel}`;
 }

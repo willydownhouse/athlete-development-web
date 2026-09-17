@@ -179,16 +179,18 @@ export type EventAggregate = {
   eventsWithValue: number;
 };
 
-export type EventItemAggregateKind = "count" | "durationSeconds";
+export type EventItemAggregateKind = "count" | "durationSeconds" | "metric" | "metricAverage";
 
 export type EventItemAggregate = {
   athleteId: string;
   aggregation: EventItemAggregateKind;
   eventItemTypeId: string;
+  metricDefinitionId: string | null;
   canonicalUnit: string | null;
   total: number;
   matchingItemCount: number;
   itemsWithValue: number;
+  descendantItemsWithValue: number;
 };
 
 type SportStatsEventTypeStats = {

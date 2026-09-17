@@ -9,7 +9,10 @@ import type { FormSelectGroup } from "@/components/form/form-select";
 import { PickerMenu } from "@/components/picker-menu";
 import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
 import { groupEventTypes } from "@/lib/event-type-groups";
-import { numericMetricsForSelectedEventTypes } from "@/lib/events-list-metrics";
+import {
+  numericMetricsForSelectedEventTypes,
+  type ItemMeasureNumericMetrics,
+} from "@/lib/events-list-metrics";
 import {
   buildEventsListQueryString,
   EVENTS_LIST_DEFAULT_ITEM_SHOW,
@@ -41,6 +44,7 @@ import {
 type EventsListFiltersProps = {
   eventTypes: EventType[];
   eventTypeMetrics: EventTypeMetricDefinition[];
+  itemMeasureMetrics: ItemMeasureNumericMetrics;
   focusSportName: string;
   params: EventsListSearchParams;
 };
@@ -53,6 +57,7 @@ const datePickerClassName =
 export function EventsListFilters({
   eventTypes,
   eventTypeMetrics,
+  itemMeasureMetrics,
   focusSportName,
   params,
 }: EventsListFiltersProps) {
@@ -80,14 +85,16 @@ export function EventsListFilters({
     [eventTypes, focusSportName],
   );
 
-  const metricOptions = useMemo(
-    () =>
-      numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds).map((metric) => ({
-        value: metric.id,
-        label: metric.name,
-      })),
-    [eventTypeIds, eventTypeMetrics],
-  );
+  const metricOptions = useMemo(() => {
+    const metrics = isEventsListItemMeasure(measure)
+      ? itemMeasureMetrics[measure]
+      : numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds);
+
+    return metrics.map((metric) => ({
+      value: metric.id,
+      label: metric.name,
+    }));
+  }, [eventTypeIds, eventTypeMetrics, itemMeasureMetrics, measure]);
 
   function setSelectedEventTypeIds(nextEventTypeIds: string[]) {
     setEventTypeIds(nextEventTypeIds);
@@ -107,11 +114,21 @@ export function EventsListFilters({
 
     if (isEventsListItemMeasure(nextMeasure) && !isEventsListItemShow(show)) {
       setShow(EVENTS_LIST_DEFAULT_ITEM_SHOW);
-      setMetricDefinitionId("");
     }
 
     if (!isEventsListExerciseMeasure(nextMeasure)) {
       setLabel("");
+    }
+
+    const nextMetricIds = new Set(
+      (isEventsListItemMeasure(nextMeasure)
+        ? itemMeasureMetrics[nextMeasure]
+        : numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds)
+      ).map((metric) => metric.id),
+    );
+
+    if (metricDefinitionId && !nextMetricIds.has(metricDefinitionId)) {
+      setMetricDefinitionId("");
     }
   }
 
@@ -140,7 +157,9 @@ export function EventsListFilters({
       categories: next.categories,
       measure: next.measure,
       show: nextShow,
-      metricDefinitionId: itemMeasure ? undefined : next.metricDefinitionId || undefined,
+      metricDefinitionId: isEventsListMetricShow(nextShow)
+        ? next.metricDefinitionId || undefined
+        : undefined,
       label: isEventsListExerciseMeasure(next.measure)
         ? normalizeEventsListLabel(next.label)
         : undefined,
@@ -299,24 +318,22 @@ export function EventsListFilters({
           />
         </label>
 
-        {isEventsListItemMeasure(measure) ? null : (
-          <label className="flex flex-col gap-1 text-sm">
-            <span
-              className={`font-medium ${isEventsListMetricShow(show) ? "text-zinc-300" : "text-zinc-500"}`}
-            >
-              Metric
-            </span>
-            <PickerMenu
-              value={metricDefinitionId}
-              options={metricOptions}
-              placeholder="Select a metric"
-              disabled={!isEventsListMetricShow(show)}
-              onChange={setMetricDefinitionId}
-              className={inputClassName}
-              aria-label="Metric"
-            />
-          </label>
-        )}
+        <label className="flex flex-col gap-1 text-sm">
+          <span
+            className={`font-medium ${isEventsListMetricShow(show) ? "text-zinc-300" : "text-zinc-500"}`}
+          >
+            Metric
+          </span>
+          <PickerMenu
+            value={metricDefinitionId}
+            options={metricOptions}
+            placeholder="Select a metric"
+            disabled={!isEventsListMetricShow(show)}
+            onChange={setMetricDefinitionId}
+            className={inputClassName}
+            aria-label="Metric"
+          />
+        </label>
 
         {measure === "events" && show === "events" ? (
           <label className="flex flex-col gap-1 text-sm">

@@ -160,7 +160,7 @@ describe("parseEventsListSearchParams", () => {
     ).toBe("durationSeconds");
   });
 
-  it("coerces list and metric shows to item count for item measures", () => {
+  it("coerces list shows to item count for item measures and keeps metric shows", () => {
     expect(parseEventsListSearchParams({ measure: "warm_up", show: "events" }).show).toBe("count");
     expect(
       parseEventsListSearchParams({
@@ -170,8 +170,8 @@ describe("parseEventsListSearchParams", () => {
       }),
     ).toMatchObject({
       measure: "cool_down",
-      show: "count",
-      metricDefinitionId: undefined,
+      show: "metric",
+      metricDefinitionId: "00000000-0000-4000-8000-000000000401",
       label: undefined,
     });
   });
@@ -197,6 +197,19 @@ describe("parseEventsListSearchParams", () => {
       show: "durationSeconds",
       metricDefinitionId: undefined,
       label: "BACK SQUAT",
+    });
+    expect(
+      parseEventsListSearchParams({
+        measure: "exercise",
+        label: "Back squat",
+        show: "metricAverage",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+      }),
+    ).toMatchObject({
+      measure: "exercise",
+      show: "metricAverage",
+      metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+      label: "Back squat",
     });
     expect(
       parseEventsListSearchParams({
@@ -397,6 +410,22 @@ describe("buildEventsListQueryString", () => {
         explicitDateRange: false,
       }),
     ).toBe("measure=exercise");
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        measure: "exercise",
+        show: "metric",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+        label: "Back squat",
+        explicitDateRange: false,
+      }),
+    ).toBe(
+      "measure=exercise&show=metric&metricDefinitionId=00000000-0000-4000-8000-000000000401&label=Back+squat",
+    );
     expect(
       buildEventsListQueryString({
         limit: EVENTS_LIST_DEFAULT_LIMIT,
