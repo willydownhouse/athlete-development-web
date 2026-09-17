@@ -1,4 +1,8 @@
-import { resolveEventsListItemTypeId, type EventsListMeasure } from "@/lib/events-list-params";
+import {
+  isEventsListItemMeasure,
+  resolveEventsListItemTypeId,
+  type EventsListMeasure,
+} from "@/lib/events-list-params";
 import type {
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
@@ -39,6 +43,19 @@ export function numericMetricsForSelectedEventTypes(
       : mappings.filter((mapping) => eventTypeIds.includes(mapping.eventTypeId));
 
   return uniqueNumericMetrics(scoped.map((mapping) => mapping.metricDefinition));
+}
+
+export function numericMetricsForEventsListMeasure(
+  measure: EventsListMeasure,
+  itemMeasureMetrics: ItemMeasureNumericMetrics,
+  eventTypeMetrics: EventTypeMetricDefinition[],
+  eventTypeIds: string[],
+): MetricDefinition[] {
+  if (isEventsListItemMeasure(measure)) {
+    return itemMeasureMetrics[measure];
+  }
+
+  return numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds);
 }
 
 export function numericMetricsFromItemTypeMappings(

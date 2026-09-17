@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   itemMeasureChildNoun,
   itemMeasureNumericMetricsFromCatalog,
+  numericMetricsForEventsListMeasure,
   numericMetricsForSelectedEventTypes,
   numericMetricsFromItemTypeMappings,
 } from "./events-list-metrics";
@@ -88,6 +89,37 @@ describe("numericMetricsForSelectedEventTypes", () => {
         (item) => item.key,
       ),
     ).toEqual(["plus_minus", "shot_count"]);
+  });
+});
+
+describe("numericMetricsForEventsListMeasure", () => {
+  const mappings = [mapping(icePracticeId, shotCount), mapping(gameId, plusMinus)];
+  const repCount = metric({
+    id: "00000000-0000-4000-8000-000000000417",
+    key: "rep_count",
+    name: "Rep count",
+    canonicalUnit: "reps",
+  });
+  const itemMeasureMetrics = {
+    warm_up: [],
+    cool_down: [],
+    exercise: [repCount],
+  };
+
+  it("keeps item metrics when event types change", () => {
+    expect(
+      numericMetricsForEventsListMeasure("exercise", itemMeasureMetrics, mappings, [
+        icePracticeId,
+      ]).map((item) => item.id),
+    ).toEqual([repCount.id]);
+  });
+
+  it("scopes event metrics to the selected event types", () => {
+    expect(
+      numericMetricsForEventsListMeasure("events", itemMeasureMetrics, mappings, [
+        icePracticeId,
+      ]).map((item) => item.key),
+    ).toEqual(["shot_count"]);
   });
 });
 

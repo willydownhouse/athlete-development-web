@@ -11,7 +11,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import {
-  numericMetricsForSelectedEventTypes,
+  numericMetricsForEventsListMeasure,
   type ItemMeasureNumericMetrics,
 } from "@/lib/events-list-metrics";
 import {
@@ -101,11 +101,12 @@ export function EventsListFilters({
   );
 
   const metricOptions = useMemo(() => {
-    const metrics = isEventsListItemMeasure(measure)
-      ? itemMeasureMetrics[measure]
-      : numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds);
-
-    return metrics.map((metric) => ({
+    return numericMetricsForEventsListMeasure(
+      measure,
+      itemMeasureMetrics,
+      eventTypeMetrics,
+      eventTypeIds,
+    ).map((metric) => ({
       value: metric.id,
       label: metric.name,
     }));
@@ -114,9 +115,12 @@ export function EventsListFilters({
   function setSelectedEventTypeIds(nextEventTypeIds: string[]) {
     setEventTypeIds(nextEventTypeIds);
     const nextMetricIds = new Set(
-      numericMetricsForSelectedEventTypes(eventTypeMetrics, nextEventTypeIds).map(
-        (metric) => metric.id,
-      ),
+      numericMetricsForEventsListMeasure(
+        measure,
+        itemMeasureMetrics,
+        eventTypeMetrics,
+        nextEventTypeIds,
+      ).map((metric) => metric.id),
     );
 
     if (metricDefinitionId && !nextMetricIds.has(metricDefinitionId)) {
@@ -140,9 +144,11 @@ export function EventsListFilters({
     }
 
     const nextMetricIds = new Set(
-      (isEventsListItemMeasure(nextMeasure)
-        ? itemMeasureMetrics[nextMeasure]
-        : numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds)
+      numericMetricsForEventsListMeasure(
+        nextMeasure,
+        itemMeasureMetrics,
+        eventTypeMetrics,
+        eventTypeIds,
       ).map((metric) => metric.id),
     );
 
