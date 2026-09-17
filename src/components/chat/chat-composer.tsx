@@ -8,15 +8,47 @@ import { chatEventLoggingExample } from "@/lib/chat-intro";
 
 function ChatSendButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
+  const isDisabled = pending || disabled;
 
   return (
     <button
       type="submit"
-      disabled={pending || disabled}
-      className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#b7d7ec] px-3 py-2 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] disabled:cursor-not-allowed disabled:opacity-50"
+      disabled={isDisabled}
+      aria-label={pending ? "Sending" : "Send"}
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#b7d7ec] text-[#1a2430] transition hover:bg-[#c5dff0] disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Sending…" : "Send"}
+      {pending ? <SendPendingIcon /> : <SendIcon />}
     </button>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+    </svg>
+  );
+}
+
+function SendPendingIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-4 animate-spin"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path strokeLinecap="round" d="M12 3.5a8.5 8.5 0 1 1-7.4 4.3" />
+    </svg>
   );
 }
 
@@ -103,7 +135,7 @@ export function ChatComposer({
           Message
         </label>
       )}
-      <div className="flex items-end gap-2 rounded-2xl bg-[#1c222c] px-2 py-2 focus-within:ring-2 focus-within:ring-[#9ec9e8]/20">
+      <div className="flex items-end gap-2 rounded-2xl bg-[#1c222c] px-2 py-2 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#9ec9e8]/20">
         <textarea
           ref={textareaRef}
           id={messageFieldId}
