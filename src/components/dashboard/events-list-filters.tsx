@@ -7,19 +7,29 @@ import { DatePickerInput } from "@/components/date-picker-input";
 import { FormMultiSelect } from "@/components/form/form-multi-select";
 import type { FormSelectGroup } from "@/components/form/form-select";
 import { PickerMenu } from "@/components/picker-menu";
+import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
+import { groupEventTypes } from "@/lib/event-type-groups";
+import { numericMetricsForSelectedEventTypes } from "@/lib/events-list-metrics";
 import {
   buildEventsListQueryString,
+  EVENTS_LIST_DEFAULT_ITEM_SHOW,
   EVENTS_LIST_DEFAULT_LIMIT,
+  EVENTS_LIST_DEFAULT_MEASURE,
   EVENTS_LIST_DEFAULT_PAGE,
   EVENTS_LIST_DEFAULT_SHOW,
+  EVENTS_LIST_ITEM_SHOW_OPTIONS,
+  EVENTS_LIST_MEASURE_OPTIONS,
   EVENTS_LIST_PAGE_SIZE_OPTIONS,
   EVENTS_LIST_SHOW_OPTIONS,
+  isEventsListExerciseMeasure,
+  isEventsListItemMeasure,
+  isEventsListItemShow,
   isEventsListMetricShow,
+  normalizeEventsListLabel,
+  type EventsListMeasure,
   type EventsListSearchParams,
   type EventsListShow,
 } from "@/lib/events-list-params";
-import { groupEventTypes } from "@/lib/event-type-groups";
-import { numericMetricsForSelectedEventTypes } from "@/lib/events-list-metrics";
 import {
   EVENT_CATEGORIES,
   formatCategoryLabel,
@@ -52,8 +62,10 @@ export function EventsListFilters({
   const [to, setTo] = useState(params.to ?? "");
   const [eventTypeIds, setEventTypeIds] = useState(params.eventTypeIds);
   const [categories, setCategories] = useState<EventCategory[]>(params.categories);
+  const [measure, setMeasure] = useState<EventsListMeasure>(params.measure);
   const [show, setShow] = useState<EventsListShow>(params.show);
   const [metricDefinitionId, setMetricDefinitionId] = useState(params.metricDefinitionId ?? "");
+  const [label, setLabel] = useState(params.label ?? "");
   const [limit, setLimit] = useState(String(params.limit));
 
   const eventTypeGroups = useMemo<FormSelectGroup[]>(
@@ -90,16 +102,34 @@ export function EventsListFilters({
     }
   }
 
+  function setSelectedMeasure(nextMeasure: EventsListMeasure) {
+    setMeasure(nextMeasure);
+
+    if (isEventsListItemMeasure(nextMeasure) && !isEventsListItemShow(show)) {
+      setShow(EVENTS_LIST_DEFAULT_ITEM_SHOW);
+      setMetricDefinitionId("");
+    }
+
+    if (!isEventsListExerciseMeasure(nextMeasure)) {
+      setLabel("");
+    }
+  }
+
   function applyFilters(next: {
     from: string;
     to: string;
     eventTypeIds: string[];
     categories: EventCategory[];
+    measure: EventsListMeasure;
     show: EventsListShow;
     metricDefinitionId: string;
+    label: string;
     limit: string;
   }) {
     const parsedLimit = Number.parseInt(next.limit, 10);
+    const itemMeasure = isEventsListItemMeasure(next.measure);
+    const nextShow =
+      itemMeasure && !isEventsListItemShow(next.show) ? EVENTS_LIST_DEFAULT_ITEM_SHOW : next.show;
     const query = buildEventsListQueryString({
       limit: Number.isFinite(parsedLimit) ? parsedLimit : EVENTS_LIST_DEFAULT_LIMIT,
       page: EVENTS_LIST_DEFAULT_PAGE,
@@ -108,8 +138,12 @@ export function EventsListFilters({
       to: next.to || undefined,
       eventTypeIds: next.eventTypeIds,
       categories: next.categories,
-      show: next.show,
-      metricDefinitionId: next.metricDefinitionId || undefined,
+      measure: next.measure,
+      show: nextShow,
+      metricDefinitionId: itemMeasure ? undefined : next.metricDefinitionId || undefined,
+      label: isEventsListExerciseMeasure(next.measure)
+        ? normalizeEventsListLabel(next.label)
+        : undefined,
       explicitDateRange: Boolean(next.from || next.to),
     });
 
@@ -118,7 +152,17 @@ export function EventsListFilters({
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    applyFilters({ from, to, eventTypeIds, categories, show, metricDefinitionId, limit });
+    applyFilters({
+      from,
+      to,
+      eventTypeIds,
+      categories,
+      measure,
+      show,
+      metricDefinitionId,
+      label,
+      limit,
+    });
   }
 
   function handleClear() {
@@ -126,8 +170,10 @@ export function EventsListFilters({
     setTo("");
     setEventTypeIds([]);
     setCategories([]);
+    setMeasure(EVENTS_LIST_DEFAULT_MEASURE);
     setShow(EVENTS_LIST_DEFAULT_SHOW);
     setMetricDefinitionId("");
+    setLabel("");
     setLimit(String(EVENTS_LIST_DEFAULT_LIMIT));
     router.replace(pathname, { scroll: false });
   }
@@ -196,40 +242,83 @@ export function EventsListFilters({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium text-zinc-300">Measure</span>
+          <PickerMenu
+            value={measure}
+            onChange={(value) =>
+              setSelectedMeasure(
+                EVENTS_LIST_MEASURE_OPTIONS.some((option) => option.value === value)
+                  ? (value as EventsListMeasure)
+                  : EVENTS_LIST_DEFAULT_MEASURE,
+              )
+            }
+            options={EVENTS_LIST_MEASURE_OPTIONS}
+            className={inputClassName}
+            aria-label="Measure"
+          />
+        </label>
+
+        {isEventsListExerciseMeasure(measure) ? (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-medium text-zinc-300">Name</span>
+            <input
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              maxLength={EVENT_ITEM_LABEL_MAX_LENGTH}
+              required
+              placeholder="Back squat"
+              className={inputClassName}
+              aria-label="Exercise name"
+            />
+          </label>
+        ) : null}
+
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">Show</span>
           <PickerMenu
             value={show}
-            onChange={(value) =>
+            onChange={(value) => {
+              const options = isEventsListItemMeasure(measure)
+                ? EVENTS_LIST_ITEM_SHOW_OPTIONS
+                : EVENTS_LIST_SHOW_OPTIONS;
               setShow(
-                EVENTS_LIST_SHOW_OPTIONS.some((option) => option.value === value)
+                options.some((option) => option.value === value)
                   ? (value as EventsListShow)
-                  : EVENTS_LIST_DEFAULT_SHOW,
-              )
+                  : isEventsListItemMeasure(measure)
+                    ? EVENTS_LIST_DEFAULT_ITEM_SHOW
+                    : EVENTS_LIST_DEFAULT_SHOW,
+              );
+            }}
+            options={
+              isEventsListItemMeasure(measure)
+                ? EVENTS_LIST_ITEM_SHOW_OPTIONS
+                : EVENTS_LIST_SHOW_OPTIONS
             }
-            options={EVENTS_LIST_SHOW_OPTIONS}
             className={inputClassName}
             aria-label="Show"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span
-            className={`font-medium ${isEventsListMetricShow(show) ? "text-zinc-300" : "text-zinc-500"}`}
-          >
-            Metric
-          </span>
-          <PickerMenu
-            value={metricDefinitionId}
-            options={metricOptions}
-            placeholder="Select a metric"
-            disabled={!isEventsListMetricShow(show)}
-            onChange={setMetricDefinitionId}
-            className={inputClassName}
-            aria-label="Metric"
-          />
-        </label>
+        {isEventsListItemMeasure(measure) ? null : (
+          <label className="flex flex-col gap-1 text-sm">
+            <span
+              className={`font-medium ${isEventsListMetricShow(show) ? "text-zinc-300" : "text-zinc-500"}`}
+            >
+              Metric
+            </span>
+            <PickerMenu
+              value={metricDefinitionId}
+              options={metricOptions}
+              placeholder="Select a metric"
+              disabled={!isEventsListMetricShow(show)}
+              onChange={setMetricDefinitionId}
+              className={inputClassName}
+              aria-label="Metric"
+            />
+          </label>
+        )}
 
-        {show === "events" ? (
+        {measure === "events" && show === "events" ? (
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-zinc-300">Page size</span>
             <PickerMenu

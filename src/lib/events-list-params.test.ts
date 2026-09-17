@@ -9,6 +9,7 @@ import {
   getDefaultEventsListWeekDates,
   getEventsListDayDates,
   parseEventsListSearchParams,
+  resolveEventsListItemTypeId,
   resolveEventsListSearchParams,
 } from "./events-list-params";
 
@@ -22,8 +23,10 @@ describe("parseEventsListSearchParams", () => {
       to: undefined,
       eventTypeIds: [],
       categories: [],
+      measure: "events",
       show: "events",
       metricDefinitionId: undefined,
+      label: undefined,
       explicitDateRange: false,
     });
   });
@@ -51,8 +54,10 @@ describe("parseEventsListSearchParams", () => {
         "00000000-0000-4000-8000-000000000209",
       ],
       categories: [],
+      measure: "events",
       show: "events",
       metricDefinitionId: undefined,
+      label: undefined,
       explicitDateRange: true,
     });
   });
@@ -78,8 +83,10 @@ describe("parseEventsListSearchParams", () => {
       to: undefined,
       eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
       categories: [],
+      measure: "events",
       show: "events",
       metricDefinitionId: undefined,
+      label: undefined,
       explicitDateRange: false,
     });
   });
@@ -117,8 +124,10 @@ describe("parseEventsListSearchParams", () => {
       to: undefined,
       eventTypeIds: [],
       categories: [],
+      measure: "events",
       show: "events",
       metricDefinitionId: undefined,
+      label: undefined,
       explicitDateRange: false,
     });
   });
@@ -138,6 +147,76 @@ describe("parseEventsListSearchParams", () => {
       }).metricDefinitionId,
     ).toBe("00000000-0000-4000-8000-000000000401");
   });
+
+  it("parses item measures and defaults their show to count", () => {
+    expect(parseEventsListSearchParams({ measure: "warm_up" })).toMatchObject({
+      measure: "warm_up",
+      show: "count",
+      metricDefinitionId: undefined,
+      label: undefined,
+    });
+    expect(
+      parseEventsListSearchParams({ measure: "cool_down", show: "durationSeconds" }).show,
+    ).toBe("durationSeconds");
+  });
+
+  it("coerces list and metric shows to item count for item measures", () => {
+    expect(parseEventsListSearchParams({ measure: "warm_up", show: "events" }).show).toBe("count");
+    expect(
+      parseEventsListSearchParams({
+        measure: "cool_down",
+        show: "metric",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+      }),
+    ).toMatchObject({
+      measure: "cool_down",
+      show: "count",
+      metricDefinitionId: undefined,
+      label: undefined,
+    });
+  });
+
+  it("parses an exercise measure and normalizes its name", () => {
+    expect(
+      parseEventsListSearchParams({
+        measure: "exercise",
+      }),
+    ).toMatchObject({
+      measure: "exercise",
+      show: "count",
+      label: undefined,
+    });
+    expect(
+      parseEventsListSearchParams({
+        measure: "exercise",
+        label: "  BACK   SQUAT ",
+        show: "durationSeconds",
+      }),
+    ).toMatchObject({
+      measure: "exercise",
+      show: "durationSeconds",
+      metricDefinitionId: undefined,
+      label: "BACK SQUAT",
+    });
+    expect(
+      parseEventsListSearchParams({
+        measure: "exercise",
+        label: "   ",
+      }).label,
+    ).toBeUndefined();
+    expect(
+      parseEventsListSearchParams({
+        measure: "warm_up",
+        label: "Treadmill",
+      }).label,
+    ).toBeUndefined();
+    expect(
+      parseEventsListSearchParams({
+        measure: "exercise",
+        label: "x".repeat(101),
+      }).label,
+    ).toBeUndefined();
+  });
 });
 
 describe("buildEventsListQueryString", () => {
@@ -152,6 +231,7 @@ describe("buildEventsListQueryString", () => {
         to: "2026-08-10",
         eventTypeIds: [],
         categories: [],
+        measure: "events",
         show: "events",
       }),
     ).toBe("");
@@ -169,6 +249,7 @@ describe("buildEventsListQueryString", () => {
           "00000000-0000-4000-8000-000000000201",
         ],
         categories: [],
+        measure: "events",
         show: "events",
         explicitDateRange: true,
       }),
@@ -186,6 +267,7 @@ describe("buildEventsListQueryString", () => {
         from: "2026-08-01",
         eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
         categories: [],
+        measure: "events",
         show: "events",
         explicitDateRange: true,
       }),
@@ -200,6 +282,7 @@ describe("buildEventsListQueryString", () => {
         offset: 0,
         eventTypeIds: [],
         categories: ["training", "competition"],
+        measure: "events",
         show: "events",
         explicitDateRange: false,
       }),
@@ -214,6 +297,7 @@ describe("buildEventsListQueryString", () => {
         offset: 20,
         eventTypeIds: [],
         categories: [],
+        measure: "events",
         show: "count",
         explicitDateRange: false,
       }),
@@ -228,6 +312,7 @@ describe("buildEventsListQueryString", () => {
         offset: 0,
         eventTypeIds: [],
         categories: [],
+        measure: "events",
         show: "metric",
         metricDefinitionId: "00000000-0000-4000-8000-000000000401",
         explicitDateRange: false,
@@ -243,11 +328,88 @@ describe("buildEventsListQueryString", () => {
         offset: 0,
         eventTypeIds: [],
         categories: [],
+        measure: "events",
         show: "metricAverage",
         metricDefinitionId: "00000000-0000-4000-8000-000000000401",
         explicitDateRange: false,
       }),
     ).toBe("show=metricAverage&metricDefinitionId=00000000-0000-4000-8000-000000000401");
+  });
+
+  it("serializes a warm-up item count without a show param", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: 20,
+        page: 2,
+        offset: 20,
+        eventTypeIds: [],
+        categories: [],
+        measure: "warm_up",
+        show: "count",
+        metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+        explicitDateRange: false,
+      }),
+    ).toBe("measure=warm_up");
+  });
+
+  it("serializes cool-down duration", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        from: "2026-08-01",
+        to: "2026-08-07",
+        eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
+        categories: ["training"],
+        measure: "cool_down",
+        show: "durationSeconds",
+        explicitDateRange: true,
+      }),
+    ).toBe(
+      "from=2026-08-01&to=2026-08-07&eventTypeIds=00000000-0000-4000-8000-000000000201&categories=training&measure=cool_down&show=durationSeconds",
+    );
+  });
+
+  it("serializes an exercise name and omits a blank label", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        measure: "exercise",
+        show: "count",
+        label: "Back squat",
+        explicitDateRange: false,
+      }),
+    ).toBe("measure=exercise&label=Back+squat");
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        measure: "exercise",
+        show: "count",
+        explicitDateRange: false,
+      }),
+    ).toBe("measure=exercise");
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        measure: "warm_up",
+        show: "count",
+        label: "Treadmill",
+        explicitDateRange: false,
+      }),
+    ).toBe("measure=warm_up");
   });
 });
 
@@ -287,8 +449,10 @@ describe("resolveEventsListSearchParams", () => {
       to: "2026-08-09",
       eventTypeIds: [],
       categories: [],
+      measure: "events",
       show: "events",
       metricDefinitionId: undefined,
+      label: undefined,
       explicitDateRange: false,
     });
   });
@@ -316,5 +480,28 @@ describe("eventsListPageCount", () => {
   it("returns at least one page", () => {
     expect(eventsListPageCount(0, 10)).toBe(1);
     expect(eventsListPageCount(25, 10)).toBe(3);
+  });
+});
+
+describe("resolveEventsListItemTypeId", () => {
+  it("prefers a general item type over a sport-specific match", () => {
+    expect(
+      resolveEventsListItemTypeId(
+        [
+          {
+            id: "00000000-0000-4000-8000-000000000701",
+            slug: "warm_up",
+            sportId: "00000000-0000-4000-8000-000000000001",
+          },
+          {
+            id: "00000000-0000-4000-8000-000000000605",
+            slug: "warm_up",
+            sportId: null,
+          },
+        ],
+        "warm_up",
+        "00000000-0000-4000-8000-000000000001",
+      ),
+    ).toBe("00000000-0000-4000-8000-000000000605");
   });
 });

@@ -179,6 +179,18 @@ export type EventAggregate = {
   eventsWithValue: number;
 };
 
+export type EventItemAggregateKind = "count" | "durationSeconds";
+
+export type EventItemAggregate = {
+  athleteId: string;
+  aggregation: EventItemAggregateKind;
+  eventItemTypeId: string;
+  canonicalUnit: string | null;
+  total: number;
+  matchingItemCount: number;
+  itemsWithValue: number;
+};
+
 type SportStatsEventTypeStats = {
   name: string;
   durationSeconds: number;

@@ -5,7 +5,7 @@ import {
   formatEventsAggregateCoverage,
   formatEventsAggregateTotal,
 } from "./events-aggregate-format";
-import type { EventAggregate } from "./types";
+import type { EventAggregate, EventItemAggregate } from "./types";
 
 function aggregate(overrides: Partial<EventAggregate>): EventAggregate {
   return {
@@ -23,6 +23,7 @@ function aggregate(overrides: Partial<EventAggregate>): EventAggregate {
 describe("eventsAggregateHeading", () => {
   it("labels count and duration totals", () => {
     expect(eventsAggregateHeading("count")).toBe("Event count");
+    expect(eventsAggregateHeading("count", "item")).toBe("Item count");
     expect(eventsAggregateHeading("durationSeconds")).toBe("Total duration");
     expect(eventsAggregateHeading("metric")).toBe("Metric total");
     expect(eventsAggregateHeading("metricAverage")).toBe("Metric average");
@@ -125,5 +126,33 @@ describe("formatEventsAggregateCoverage", () => {
         }),
       ),
     ).toBe("6 of 8 events had a value");
+  });
+
+  it("reports matching items for an item count", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "count",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000605",
+      canonicalUnit: null,
+      total: 3,
+      matchingItemCount: 3,
+      itemsWithValue: 3,
+    };
+
+    expect(formatEventsAggregateCoverage(result)).toBe("3 items");
+  });
+
+  it("reports incomplete item duration coverage", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "durationSeconds",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000605",
+      canonicalUnit: "s",
+      total: 1080,
+      matchingItemCount: 3,
+      itemsWithValue: 2,
+    };
+
+    expect(formatEventsAggregateCoverage(result)).toBe("2 of 3 items had a duration");
   });
 });

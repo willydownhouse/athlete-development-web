@@ -1,10 +1,13 @@
 import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
-import type { EventAggregate, EventAggregateKind } from "@/lib/types";
+import type { EventAggregate, EventAggregateKind, EventItemAggregate } from "@/lib/types";
 
-export function eventsAggregateHeading(aggregation: EventAggregateKind): string {
+export function eventsAggregateHeading(
+  aggregation: EventAggregateKind,
+  subject: "event" | "item" = "event",
+): string {
   if (aggregation === "count") {
-    return "Event count";
+    return subject === "item" ? "Item count" : "Event count";
   }
 
   if (aggregation === "durationSeconds") {
@@ -18,7 +21,9 @@ export function eventsAggregateHeading(aggregation: EventAggregateKind): string 
   return "Metric total";
 }
 
-export function formatEventsAggregateTotal(result: EventAggregate): string {
+export function formatEventsAggregateTotal(
+  result: Pick<EventAggregate, "aggregation" | "canonicalUnit" | "total">,
+): string {
   if (result.aggregation === "durationSeconds" || isSecondsMetric(result.canonicalUnit)) {
     return formatDurationSeconds(result.total);
   }
@@ -31,15 +36,29 @@ export function formatEventsAggregateTotal(result: EventAggregate): string {
   return unit ? `${formattedTotal} ${unit}` : formattedTotal;
 }
 
-export function formatEventsAggregateCoverage(result: EventAggregate): string {
+function isEventItemAggregate(
+  result: EventAggregate | EventItemAggregate,
+): result is EventItemAggregate {
+  return "matchingItemCount" in result;
+}
+
+export function formatEventsAggregateCoverage(result: EventAggregate | EventItemAggregate): string {
+  const subject = isEventItemAggregate(result) ? "item" : "event";
+  const matchingCount = isEventItemAggregate(result)
+    ? result.matchingItemCount
+    : result.matchingEventCount;
+  const withValue = isEventItemAggregate(result) ? result.itemsWithValue : result.eventsWithValue;
+  const noun = subject === "item" ? "item" : "event";
+  const nouns = subject === "item" ? "items" : "events";
+
   if (result.aggregation === "count") {
-    return result.matchingEventCount === 1 ? "1 event" : `${result.matchingEventCount} events`;
+    return matchingCount === 1 ? `1 ${noun}` : `${matchingCount} ${nouns}`;
   }
 
-  if (result.eventsWithValue === result.matchingEventCount) {
-    return result.matchingEventCount === 1 ? "1 event" : `${result.matchingEventCount} events`;
+  if (withValue === matchingCount) {
+    return matchingCount === 1 ? `1 ${noun}` : `${matchingCount} ${nouns}`;
   }
 
   const valueLabel = result.aggregation === "durationSeconds" ? "a duration" : "a value";
-  return `${result.eventsWithValue} of ${result.matchingEventCount} events had ${valueLabel}`;
+  return `${withValue} of ${matchingCount} ${nouns} had ${valueLabel}`;
 }

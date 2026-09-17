@@ -9,6 +9,8 @@ import {
   fetchEventTypes,
   fetchEventTypesMetricDefinitions,
   fetchEventAggregate,
+  fetchEventItemAggregate,
+  fetchEventItemTypes,
   fetchEvents,
   fetchFocusedEventChatMessages,
   fetchLatestChatMessages,
@@ -363,6 +365,116 @@ describe("api client", () => {
     );
     expect(result.total).toBe(4);
     expect(result.eventsWithValue).toBe(2);
+  });
+
+  it("fetches public event item types, optionally filtered by sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "00000000-0000-4000-8000-000000000605",
+            sportId: null,
+            slug: "warm_up",
+            name: "Warm-up",
+            active: true,
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const sportId = "44444444-4444-4444-8444-444444444444";
+    const itemTypes = await fetchEventItemTypes(sportId);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/api/event-item-types?sportId=${sportId}`,
+      {
+        next: {
+          revalidate: 3600,
+          tags: ["event-types"],
+        },
+      },
+    );
+    expect(itemTypes).toHaveLength(1);
+    expect(itemTypes[0]?.slug).toBe("warm_up");
+  });
+
+  it("fetches an event item aggregate with repeated filters", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const eventItemTypeId = "00000000-0000-4000-8000-000000000605";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        athleteId,
+        aggregation: "durationSeconds",
+        eventItemTypeId,
+        canonicalUnit: "s",
+        total: 1080,
+        matchingItemCount: 3,
+        itemsWithValue: 2,
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchEventItemAggregate("test-token", athleteId, {
+      startedAtFrom: "2026-08-01T00:00:00.000Z",
+      startedAtTo: "2026-09-01T00:00:00.000Z",
+      eventItemTypeId,
+      aggregation: "durationSeconds",
+      eventTypeIds: [
+        "00000000-0000-4000-8000-000000000201",
+        "00000000-0000-4000-8000-000000000209",
+      ],
+      categories: ["training"],
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/event-items/aggregate?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&eventItemTypeId=${eventItemTypeId}&aggregation=durationSeconds&eventTypeIds=00000000-0000-4000-8000-000000000201&eventTypeIds=00000000-0000-4000-8000-000000000209&categories=training`,
+    );
+    expect(result.total).toBe(1080);
+    expect(result.itemsWithValue).toBe(2);
+  });
+
+  it("fetches an event item aggregate with a label", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const eventItemTypeId = "00000000-0000-4000-8000-000000000601";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        athleteId,
+        aggregation: "count",
+        eventItemTypeId,
+        canonicalUnit: null,
+        total: 2,
+        matchingItemCount: 2,
+        itemsWithValue: 2,
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchEventItemAggregate("test-token", athleteId, {
+      startedAtFrom: "2026-08-01T00:00:00.000Z",
+      startedAtTo: "2026-09-01T00:00:00.000Z",
+      eventItemTypeId,
+      aggregation: "count",
+      label: "Back squat",
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/event-items/aggregate?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&eventItemTypeId=${eventItemTypeId}&aggregation=count&label=Back+squat`,
+    );
+    expect(result.total).toBe(2);
   });
 
   it("creates events in batch", async () => {

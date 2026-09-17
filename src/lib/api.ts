@@ -12,6 +12,9 @@ import type {
   EventCategory,
   EventIntensity,
   EventListResponse,
+  EventItemAggregate,
+  EventItemAggregateKind,
+  EventItemType,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
   EventMediaItem,
@@ -330,6 +333,75 @@ export async function fetchEventAggregate(
   }
 
   return (await response.json()) as EventAggregate;
+}
+
+export async function fetchEventItemTypes(sportId?: string): Promise<EventItemType[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-item-types${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemType[] };
+  return result.items;
+}
+
+export async function fetchEventItemAggregate(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    eventItemTypeId: string;
+    aggregation: EventItemAggregateKind;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    label?: string;
+  },
+): Promise<EventItemAggregate> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    eventItemTypeId: query.eventItemTypeId,
+    aggregation: query.aggregation,
+  });
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.label) {
+    params.set("label", query.label);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/event-items/aggregate?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventItemAggregate;
 }
 
 const EVENTS_PAGE_SIZE = 100;
