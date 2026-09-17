@@ -14,6 +14,7 @@ import type {
   EventListResponse,
   EventItemAggregate,
   EventItemAggregateKind,
+  EventItemListResponse,
   EventItemType,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
@@ -448,6 +449,66 @@ export async function fetchEventItemAggregate(
   }
 
   return (await response.json()) as EventItemAggregate;
+}
+
+export async function fetchEventItems(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    eventItemTypeId: string;
+    limit?: number;
+    offset?: number;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    label?: string;
+  },
+): Promise<EventItemListResponse> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    eventItemTypeId: query.eventItemTypeId,
+  });
+
+  if (query.limit !== undefined) {
+    params.set("limit", String(query.limit));
+  }
+
+  if (query.offset !== undefined) {
+    params.set("offset", String(query.offset));
+  }
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.label) {
+    params.set("label", query.label);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/event-items?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventItemListResponse;
 }
 
 const EVENTS_PAGE_SIZE = 100;

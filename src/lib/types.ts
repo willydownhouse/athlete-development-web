@@ -193,6 +193,40 @@ export type EventItemAggregate = {
   descendantItemsWithValue: number;
 };
 
+type EventItemListEvent = {
+  id: string;
+  startedAt: string;
+  title: string | null;
+  eventType: EventType;
+};
+
+export type EventItemListItem = {
+  id: string;
+  eventId: string;
+  eventItemTypeId: string;
+  parentEventItemId: string | null;
+  sortOrder: number;
+  label: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  notes: string | null;
+  structuredData: unknown | null;
+  createdAt: string;
+  updatedAt: string;
+  eventItemType: EventItemType;
+  event: EventItemListEvent;
+};
+
+export type EventItemListResponse = {
+  items: EventItemListItem[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
 type SportStatsEventTypeStats = {
   name: string;
   durationSeconds: number;

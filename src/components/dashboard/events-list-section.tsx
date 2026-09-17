@@ -1,17 +1,20 @@
+import { EventItemsListContent } from "@/components/dashboard/event-items-list-content";
 import { EventsAggregateContent } from "@/components/dashboard/events-aggregate-content";
 import { EventsListContent } from "@/components/dashboard/events-list-content";
 import { eventsAggregateHeading } from "@/lib/events-aggregate-format";
 import {
   fetchAthleteEventItemsAggregate,
+  fetchAthleteEventItemsList,
   fetchAthleteEventsAggregate,
   fetchAthleteEventsList,
 } from "@/lib/events-list-data";
 import { itemMeasureChildNoun } from "@/lib/events-list-metrics";
 import {
+  eventsListItemMeasureListLabel,
   isEventsListAggregateShow,
   isEventsListExerciseMeasure,
+  isEventsListItemListShow,
   isEventsListItemMeasure,
-  isEventsListItemShow,
   isEventsListMetricShow,
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
@@ -37,20 +40,45 @@ export async function EventsListSection({
   itemTypeChildTypes,
 }: EventsListSectionProps) {
   if (isEventsListExerciseMeasure(params.measure) && !params.label) {
+    const heading = isEventsListItemListShow(params.show)
+      ? eventsListItemMeasureListLabel(itemTypes, params.measure)
+      : eventsAggregateHeading(
+          isEventsListAggregateShow(params.show) ? params.show : "count",
+          "exercise",
+        );
+
     return (
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
-        <h2 className="text-base font-semibold text-white">
-          {eventsAggregateHeading(
-            isEventsListItemShow(params.show) ? params.show : "count",
-            "exercise",
-          )}
-        </h2>
+        <h2 className="text-base font-semibold text-white">{heading}</h2>
         <p className="mt-4 text-sm text-zinc-500">Enter an exercise name.</p>
       </section>
     );
   }
 
   if (isEventsListItemMeasure(params.measure)) {
+    if (isEventsListItemListShow(params.show)) {
+      const result = await fetchAthleteEventItemsList(athleteId, params, itemTypes);
+
+      if (result.error) {
+        return resultError(result.error);
+      }
+
+      if (!result.data) {
+        return resultError("Unable to load items");
+      }
+
+      return (
+        <EventItemsListContent
+          athleteId={athleteId}
+          params={params}
+          items={result.data.items}
+          timeZone={timeZone}
+          total={result.data.pagination.total}
+          heading={eventsListItemMeasureListLabel(itemTypes, params.measure)}
+        />
+      );
+    }
+
     if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
       return (
         <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">

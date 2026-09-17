@@ -1,3 +1,4 @@
+import { pluralizeItemTypeName } from "@/lib/event-item-display";
 import { zonedDateTimeToUtcIso, getZonedWeekRange } from "@/lib/time-zone";
 import { EVENT_CATEGORIES, type EventCategory } from "@/lib/types";
 
@@ -8,6 +9,7 @@ const EVENTS_LIST_MAX_LIMIT = 100;
 
 const EVENTS_LIST_SHOW_VALUES = [
   "events",
+  "items",
   "count",
   "durationSeconds",
   "metric",
@@ -32,13 +34,33 @@ export const EVENTS_LIST_MEASURE_OPTIONS: { value: EventsListMeasure; label: str
   { value: "cool_down", label: "Cool down" },
   { value: "exercise", label: "Exercise" },
 ];
-export const EVENTS_LIST_DEFAULT_ITEM_SHOW: EventsListShow = "count";
-export const EVENTS_LIST_ITEM_SHOW_OPTIONS: { value: EventsListShow; label: string }[] = [
-  { value: "count", label: "Item count" },
-  { value: "durationSeconds", label: "Total duration" },
-  { value: "metric", label: "Metric total" },
-  { value: "metricAverage", label: "Metric average" },
-];
+export const EVENTS_LIST_DEFAULT_ITEM_SHOW: EventsListShow = "items";
+const EVENTS_LIST_ITEM_SHOW_VALUES = [
+  "items",
+  "count",
+  "durationSeconds",
+  "metric",
+  "metricAverage",
+] as const;
+const EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES = [
+  "count",
+  "durationSeconds",
+  "metric",
+  "metricAverage",
+] as const;
+
+export function eventsListItemShowOptions(listLabel: string): {
+  value: EventsListShow;
+  label: string;
+}[] {
+  return [
+    { value: "items", label: listLabel },
+    { value: "count", label: "Item count" },
+    { value: "durationSeconds", label: "Total duration" },
+    { value: "metric", label: "Metric total" },
+    { value: "metricAverage", label: "Metric average" },
+  ];
+}
 
 /** Keep in sync with athlete-development-service EVENT_ITEM_LABEL_MAX_LENGTH. */
 const EVENTS_LIST_LABEL_MAX_LENGTH = 100;
@@ -87,16 +109,28 @@ export function normalizeEventsListLabel(value: string | undefined): string | un
   return normalized;
 }
 
+export function isEventsListItemListShow(show: EventsListShow): show is "items" {
+  return show === "items";
+}
+
 export function isEventsListItemShow(
   show: EventsListShow,
-): show is "count" | "durationSeconds" | "metric" | "metricAverage" {
-  return show !== "events";
+): show is (typeof EVENTS_LIST_ITEM_SHOW_VALUES)[number] {
+  return (EVENTS_LIST_ITEM_SHOW_VALUES as readonly string[]).includes(show);
 }
 
 export function isEventsListAggregateShow(
   show: EventsListShow,
-): show is Exclude<EventsListShow, "events"> {
-  return show !== "events";
+): show is (typeof EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES)[number] {
+  return (EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES as readonly string[]).includes(show);
+}
+
+export function isEventsListPagedShow(measure: EventsListMeasure, show: EventsListShow): boolean {
+  if (isEventsListItemMeasure(measure)) {
+    return isEventsListItemListShow(show);
+  }
+
+  return show === "events";
 }
 
 export function isEventsListMetricShow(show: EventsListShow): show is "metric" | "metricAverage" {
@@ -115,6 +149,25 @@ export function resolveEventsListItemTypeId(
     matches.find((itemType) => itemType.sportId === focusSportId)?.id ??
     matches[0]?.id
   );
+}
+
+function eventsListItemMeasureName(
+  itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
+  measure: Exclude<EventsListMeasure, "events">,
+  focusSportId?: string,
+): string {
+  const typeId = resolveEventsListItemTypeId(itemTypes, measure, focusSportId);
+  return (
+    itemTypes.find((itemType) => itemType.id === typeId)?.name ?? eventsListMeasureLabel(measure)
+  );
+}
+
+export function eventsListItemMeasureListLabel(
+  itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
+  measure: Exclude<EventsListMeasure, "events">,
+  focusSportId?: string,
+): string {
+  return pluralizeItemTypeName(eventsListItemMeasureName(itemTypes, measure, focusSportId));
 }
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
@@ -249,8 +302,12 @@ function parseMeasure(value: string | undefined): EventsListMeasure {
 }
 
 function resolveShowForMeasure(measure: EventsListMeasure, show: EventsListShow): EventsListShow {
-  if (isEventsListItemMeasure(measure) && !isEventsListItemShow(show)) {
-    return EVENTS_LIST_DEFAULT_ITEM_SHOW;
+  if (isEventsListItemMeasure(measure)) {
+    return isEventsListItemShow(show) ? show : EVENTS_LIST_DEFAULT_ITEM_SHOW;
+  }
+
+  if (isEventsListItemListShow(show)) {
+    return EVENTS_LIST_DEFAULT_SHOW;
   }
 
   return show;
@@ -381,7 +438,7 @@ export function buildEventsListQueryString(params: EventsListSearchParams): stri
   const itemMeasure = isEventsListItemMeasure(params.measure);
   const show = resolveShowForMeasure(params.measure, params.show);
 
-  if (!itemMeasure && show === EVENTS_LIST_DEFAULT_SHOW) {
+  if (isEventsListPagedShow(params.measure, show)) {
     if (params.limit !== EVENTS_LIST_DEFAULT_LIMIT) {
       search.set("limit", String(params.limit));
     }

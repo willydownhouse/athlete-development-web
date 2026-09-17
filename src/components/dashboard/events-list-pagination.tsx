@@ -11,6 +11,7 @@ type EventsListPaginationProps = {
   athleteId: string;
   params: EventsListSearchParams;
   total: number;
+  ariaLabel?: string;
 };
 
 function pageHref(athleteId: string, params: EventsListSearchParams, page: number): string {
@@ -19,7 +20,12 @@ function pageHref(athleteId: string, params: EventsListSearchParams, page: numbe
   return query ? `${base}?${query}` : base;
 }
 
-export function EventsListPagination({ athleteId, params, total }: EventsListPaginationProps) {
+export function EventsListPagination({
+  athleteId,
+  params,
+  total,
+  ariaLabel = "Events pagination",
+}: EventsListPaginationProps) {
   const pageCount = eventsListPageCount(total, params.limit);
 
   if (total <= params.limit) {
@@ -33,7 +39,7 @@ export function EventsListPagination({ athleteId, params, total }: EventsListPag
 
   return (
     <nav
-      aria-label="Events pagination"
+      aria-label={ariaLabel}
       className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="text-sm text-zinc-400">

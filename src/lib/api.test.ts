@@ -11,6 +11,7 @@ import {
   fetchEventAggregate,
   fetchEventItemAggregate,
   fetchEventItemTypes,
+  fetchEventItems,
   fetchEventItemTypesChildTypes,
   fetchEventItemTypesMetricDefinitions,
   fetchEvents,
@@ -592,6 +593,40 @@ describe("api client", () => {
     );
     expect(result.total).toBe(14);
     expect(result.metricDefinitionId).toBe(metricDefinitionId);
+  });
+
+  it("fetches matching event items", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const eventItemTypeId = "00000000-0000-4000-8000-000000000605";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "item-1", label: "Treadmill" }],
+        pagination: { limit: 10, offset: 0, total: 1 },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchEventItems("test-token", athleteId, {
+      startedAtFrom: "2026-08-01T00:00:00.000Z",
+      startedAtTo: "2026-09-01T00:00:00.000Z",
+      eventItemTypeId,
+      limit: 10,
+      offset: 0,
+      eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
+      categories: ["training"],
+      label: "Treadmill",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/event-items?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&eventItemTypeId=${eventItemTypeId}&limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&categories=training&label=Treadmill`,
+    );
+    expect(result.pagination.total).toBe(1);
+    expect(result.items[0]?.label).toBe("Treadmill");
   });
 
   it("creates events in batch", async () => {

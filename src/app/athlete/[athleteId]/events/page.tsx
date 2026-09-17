@@ -113,6 +113,7 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
             key={eventsListFilterKey(listParams)}
             eventTypes={eventTypes}
             eventTypeMetrics={eventTypeMetrics}
+            itemTypes={itemTypes}
             itemMeasureMetrics={itemMeasureMetrics}
             focusSportName={selectedAthlete.focusSport.name}
             params={listParams}

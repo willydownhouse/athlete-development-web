@@ -53,10 +53,17 @@ export function eventItemSameTypeIndex(siblings: EventItem[], index: number): nu
   return count;
 }
 
-export function eventItemLabel(item: EventItem): string | null {
+export function eventItemLabel(item: { label: string | null }): string | null {
   const label = item.label?.trim();
 
   return label ? label : null;
+}
+
+export function eventItemListTitle(item: {
+  label: string | null;
+  eventItemType: { name: string };
+}): string {
+  return eventItemLabel(item) ?? item.eventItemType.name;
 }
 
 export function eventItemTypeHeading(item: EventItem, sameTypeIndex: number): string {

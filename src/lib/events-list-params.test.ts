@@ -5,6 +5,8 @@ import {
   EVENTS_LIST_DEFAULT_LIMIT,
   EVENTS_LIST_DEFAULT_PAGE,
   eventsListDateRange,
+  eventsListItemMeasureListLabel,
+  eventsListItemShowOptions,
   eventsListPageCount,
   getDefaultEventsListWeekDates,
   getEventsListDayDates,
@@ -137,6 +139,7 @@ describe("parseEventsListSearchParams", () => {
     expect(parseEventsListSearchParams({ show: "durationSeconds" }).show).toBe("durationSeconds");
     expect(parseEventsListSearchParams({ show: "metric" }).show).toBe("metric");
     expect(parseEventsListSearchParams({ show: "metricAverage" }).show).toBe("metricAverage");
+    expect(parseEventsListSearchParams({ measure: "warm_up", show: "items" }).show).toBe("items");
   });
 
   it("parses a metric definition id", () => {
@@ -148,10 +151,10 @@ describe("parseEventsListSearchParams", () => {
     ).toBe("00000000-0000-4000-8000-000000000401");
   });
 
-  it("parses item measures and defaults their show to count", () => {
+  it("parses item measures and defaults their show to the item list", () => {
     expect(parseEventsListSearchParams({ measure: "warm_up" })).toMatchObject({
       measure: "warm_up",
-      show: "count",
+      show: "items",
       metricDefinitionId: undefined,
       label: undefined,
     });
@@ -160,8 +163,10 @@ describe("parseEventsListSearchParams", () => {
     ).toBe("durationSeconds");
   });
 
-  it("coerces list shows to item count for item measures and keeps metric shows", () => {
-    expect(parseEventsListSearchParams({ measure: "warm_up", show: "events" }).show).toBe("count");
+  it("coerces event-only shows for item measures and keeps metric shows", () => {
+    expect(parseEventsListSearchParams({ measure: "warm_up", show: "events" }).show).toBe("items");
+    expect(parseEventsListSearchParams({ measure: "warm_up", show: "items" }).show).toBe("items");
+    expect(parseEventsListSearchParams({ measure: "events", show: "items" }).show).toBe("events");
     expect(
       parseEventsListSearchParams({
         measure: "cool_down",
@@ -183,7 +188,7 @@ describe("parseEventsListSearchParams", () => {
       }),
     ).toMatchObject({
       measure: "exercise",
-      show: "count",
+      show: "items",
       label: undefined,
     });
     expect(
@@ -349,7 +354,7 @@ describe("buildEventsListQueryString", () => {
     ).toBe("show=metricAverage&metricDefinitionId=00000000-0000-4000-8000-000000000401");
   });
 
-  it("serializes a warm-up item count without a show param", () => {
+  it("serializes a warm-up item count with an explicit show param", () => {
     expect(
       buildEventsListQueryString({
         limit: 20,
@@ -362,7 +367,7 @@ describe("buildEventsListQueryString", () => {
         metricDefinitionId: "00000000-0000-4000-8000-000000000401",
         explicitDateRange: false,
       }),
-    ).toBe("measure=warm_up");
+    ).toBe("measure=warm_up&show=count");
   });
 
   it("serializes cool-down duration", () => {
@@ -397,7 +402,7 @@ describe("buildEventsListQueryString", () => {
         label: "Back squat",
         explicitDateRange: false,
       }),
-    ).toBe("measure=exercise&label=Back+squat");
+    ).toBe("measure=exercise&show=count&label=Back+squat");
     expect(
       buildEventsListQueryString({
         limit: EVENTS_LIST_DEFAULT_LIMIT,
@@ -409,7 +414,7 @@ describe("buildEventsListQueryString", () => {
         show: "count",
         explicitDateRange: false,
       }),
-    ).toBe("measure=exercise");
+    ).toBe("measure=exercise&show=count");
     expect(
       buildEventsListQueryString({
         limit: EVENTS_LIST_DEFAULT_LIMIT,
@@ -438,7 +443,35 @@ describe("buildEventsListQueryString", () => {
         label: "Treadmill",
         explicitDateRange: false,
       }),
-    ).toBe("measure=warm_up");
+    ).toBe("measure=warm_up&show=count");
+  });
+
+  it("serializes an item list show and keeps pagination", () => {
+    expect(
+      buildEventsListQueryString({
+        limit: 20,
+        page: 2,
+        offset: 20,
+        eventTypeIds: [],
+        categories: [],
+        measure: "warm_up",
+        show: "items",
+        explicitDateRange: false,
+      }),
+    ).toBe("limit=20&page=2&measure=warm_up");
+    expect(
+      buildEventsListQueryString({
+        limit: EVENTS_LIST_DEFAULT_LIMIT,
+        page: EVENTS_LIST_DEFAULT_PAGE,
+        offset: 0,
+        eventTypeIds: [],
+        categories: [],
+        measure: "exercise",
+        show: "items",
+        label: "Back squat",
+        explicitDateRange: false,
+      }),
+    ).toBe("measure=exercise&label=Back+squat");
   });
 });
 
@@ -532,5 +565,36 @@ describe("resolveEventsListItemTypeId", () => {
         "00000000-0000-4000-8000-000000000001",
       ),
     ).toBe("00000000-0000-4000-8000-000000000605");
+  });
+});
+
+describe("eventsListItemMeasureListLabel", () => {
+  it("pluralizes the catalog item type name", () => {
+    expect(
+      eventsListItemMeasureListLabel(
+        [
+          {
+            id: "00000000-0000-4000-8000-000000000605",
+            slug: "warm_up",
+            sportId: null,
+            name: "Warm-up",
+          },
+          {
+            id: "00000000-0000-4000-8000-000000000601",
+            slug: "exercise",
+            sportId: null,
+            name: "Exercise",
+          },
+        ],
+        "warm_up",
+      ),
+    ).toBe("Warm-ups");
+    expect(eventsListItemShowOptions("Warm-ups").map((option) => option.value)).toEqual([
+      "items",
+      "count",
+      "durationSeconds",
+      "metric",
+      "metricAverage",
+    ]);
   });
 });

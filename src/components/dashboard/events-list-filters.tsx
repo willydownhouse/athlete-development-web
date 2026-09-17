@@ -7,6 +7,7 @@ import { DatePickerInput } from "@/components/date-picker-input";
 import { FormMultiSelect } from "@/components/form/form-multi-select";
 import type { FormSelectGroup } from "@/components/form/form-select";
 import { PickerMenu } from "@/components/picker-menu";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import {
@@ -15,19 +16,22 @@ import {
 } from "@/lib/events-list-metrics";
 import {
   buildEventsListQueryString,
+  eventsListItemMeasureListLabel,
+  eventsListItemShowOptions,
   EVENTS_LIST_DEFAULT_ITEM_SHOW,
   EVENTS_LIST_DEFAULT_LIMIT,
   EVENTS_LIST_DEFAULT_MEASURE,
   EVENTS_LIST_DEFAULT_PAGE,
   EVENTS_LIST_DEFAULT_SHOW,
-  EVENTS_LIST_ITEM_SHOW_OPTIONS,
   EVENTS_LIST_MEASURE_OPTIONS,
   EVENTS_LIST_PAGE_SIZE_OPTIONS,
   EVENTS_LIST_SHOW_OPTIONS,
   isEventsListExerciseMeasure,
+  isEventsListItemListShow,
   isEventsListItemMeasure,
   isEventsListItemShow,
   isEventsListMetricShow,
+  isEventsListPagedShow,
   normalizeEventsListLabel,
   type EventsListMeasure,
   type EventsListSearchParams,
@@ -37,6 +41,7 @@ import {
   EVENT_CATEGORIES,
   formatCategoryLabel,
   type EventCategory,
+  type EventItemType,
   type EventType,
   type EventTypeMetricDefinition,
 } from "@/lib/types";
@@ -44,6 +49,7 @@ import {
 type EventsListFiltersProps = {
   eventTypes: EventType[];
   eventTypeMetrics: EventTypeMetricDefinition[];
+  itemTypes: EventItemType[];
   itemMeasureMetrics: ItemMeasureNumericMetrics;
   focusSportName: string;
   params: EventsListSearchParams;
@@ -57,6 +63,7 @@ const datePickerClassName =
 export function EventsListFilters({
   eventTypes,
   eventTypeMetrics,
+  itemTypes,
   itemMeasureMetrics,
   focusSportName,
   params,
@@ -83,6 +90,14 @@ export function EventsListFilters({
         })),
       })),
     [eventTypes, focusSportName],
+  );
+
+  const itemShowOptions = useMemo(
+    () =>
+      isEventsListItemMeasure(measure)
+        ? eventsListItemShowOptions(eventsListItemMeasureListLabel(itemTypes, measure))
+        : EVENTS_LIST_SHOW_OPTIONS,
+    [itemTypes, measure],
   );
 
   const metricOptions = useMemo(() => {
@@ -112,8 +127,12 @@ export function EventsListFilters({
   function setSelectedMeasure(nextMeasure: EventsListMeasure) {
     setMeasure(nextMeasure);
 
-    if (isEventsListItemMeasure(nextMeasure) && !isEventsListItemShow(show)) {
-      setShow(EVENTS_LIST_DEFAULT_ITEM_SHOW);
+    if (isEventsListItemMeasure(nextMeasure)) {
+      if (!isEventsListItemShow(show)) {
+        setShow(EVENTS_LIST_DEFAULT_ITEM_SHOW);
+      }
+    } else if (isEventsListItemListShow(show)) {
+      setShow(EVENTS_LIST_DEFAULT_SHOW);
     }
 
     if (!isEventsListExerciseMeasure(nextMeasure)) {
@@ -278,9 +297,23 @@ export function EventsListFilters({
         </label>
 
         {isEventsListExerciseMeasure(measure) ? (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Name</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="exercise-name" className="font-medium text-zinc-300">
+                Name
+              </label>
+              <InfoTooltip label="How exercise name matching works">
+                <div className="space-y-2 text-sm text-zinc-300">
+                  <p>
+                    The list matches names that start with what you type.{" "}
+                    <span className="font-medium text-white">B</span> finds Back squat.
+                  </p>
+                  <p>Count, duration, and metric totals need the full name.</p>
+                </div>
+              </InfoTooltip>
+            </div>
             <input
+              id="exercise-name"
               value={label}
               onChange={(event) => setLabel(event.target.value)}
               maxLength={EVENT_ITEM_LABEL_MAX_LENGTH}
@@ -289,7 +322,7 @@ export function EventsListFilters({
               className={inputClassName}
               aria-label="Exercise name"
             />
-          </label>
+          </div>
         ) : null}
 
         <label className="flex flex-col gap-1 text-sm">
@@ -297,22 +330,15 @@ export function EventsListFilters({
           <PickerMenu
             value={show}
             onChange={(value) => {
-              const options = isEventsListItemMeasure(measure)
-                ? EVENTS_LIST_ITEM_SHOW_OPTIONS
-                : EVENTS_LIST_SHOW_OPTIONS;
               setShow(
-                options.some((option) => option.value === value)
+                itemShowOptions.some((option) => option.value === value)
                   ? (value as EventsListShow)
                   : isEventsListItemMeasure(measure)
                     ? EVENTS_LIST_DEFAULT_ITEM_SHOW
                     : EVENTS_LIST_DEFAULT_SHOW,
               );
             }}
-            options={
-              isEventsListItemMeasure(measure)
-                ? EVENTS_LIST_ITEM_SHOW_OPTIONS
-                : EVENTS_LIST_SHOW_OPTIONS
-            }
+            options={itemShowOptions}
             className={inputClassName}
             aria-label="Show"
           />
@@ -335,7 +361,7 @@ export function EventsListFilters({
           />
         </label>
 
-        {measure === "events" && show === "events" ? (
+        {isEventsListPagedShow(measure, show) ? (
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-zinc-300">Page size</span>
             <PickerMenu
@@ -343,7 +369,11 @@ export function EventsListFilters({
               onChange={setLimit}
               options={EVENTS_LIST_PAGE_SIZE_OPTIONS.map((option) => ({
                 value: String(option),
-                label: `${option} events`,
+                label: `${option} ${
+                  isEventsListItemMeasure(measure)
+                    ? eventsListItemMeasureListLabel(itemTypes, measure).toLowerCase()
+                    : "events"
+                }`,
               }))}
               className={inputClassName}
               aria-label="Page size"
