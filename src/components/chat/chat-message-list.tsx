@@ -18,7 +18,7 @@ const SKELETON_ROWS = [
 
 export function ChatMessageListSkeleton() {
   return (
-    <div className="flex h-full flex-col justify-end space-y-3" aria-hidden="true">
+    <div className="flex h-full flex-col justify-center space-y-3" aria-hidden="true">
       {SKELETON_ROWS.map((row, index) => (
         <div
           key={index}
@@ -26,9 +26,7 @@ export function ChatMessageListSkeleton() {
         >
           <div
             className={`max-w-[85%] ${row.width} space-y-2 ${
-              row.align === "end"
-                ? "rounded-2xl border border-white/10 bg-[#1c222c] px-4 py-3"
-                : "py-1"
+              row.align === "end" ? "rounded-2xl bg-[#1c222c] px-4 py-3" : "py-1"
             }`}
           >
             <Skeleton className={`${row.lines} w-full`} />
@@ -66,11 +64,7 @@ function MessageBubble({
 
   return (
     <article className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[85%] ${
-          isUser ? "rounded-2xl border border-white/10 bg-[#1c222c] px-4 py-3" : "py-1"
-        }`}
-      >
+      <div className={`max-w-[85%] ${isUser ? "rounded-2xl bg-[#1c222c] px-4 py-3" : "py-1"}`}>
         {animate ? (
           <ChatTypewriterContent
             key={message.id}

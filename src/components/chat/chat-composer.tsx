@@ -103,7 +103,7 @@ export function ChatComposer({
           Message
         </label>
       )}
-      <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-[#1c222c] px-2 py-2 focus-within:border-[#9ec9e8] focus-within:ring-2 focus-within:ring-[#9ec9e8]/20">
+      <div className="flex items-end gap-2 rounded-2xl bg-[#1c222c] px-2 py-2 focus-within:ring-2 focus-within:ring-[#9ec9e8]/20">
         <textarea
           ref={textareaRef}
           id={messageFieldId}
