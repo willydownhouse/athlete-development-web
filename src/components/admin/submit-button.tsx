@@ -7,6 +7,8 @@ type SubmitButtonProps = {
   variant?: "primary" | "danger" | "secondary";
   className?: string;
   disabled?: boolean;
+  pending?: boolean;
+  pendingLabel?: string;
 };
 
 const variantClasses = {
@@ -21,8 +23,11 @@ export function SubmitButton({
   variant = "primary",
   className = "",
   disabled = false,
+  pending: pendingProp,
+  pendingLabel = "Saving…",
 }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const { pending: formPending } = useFormStatus();
+  const pending = pendingProp ?? formPending;
 
   return (
     <button
@@ -30,7 +35,7 @@ export function SubmitButton({
       disabled={pending || disabled}
       className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed sm:w-auto sm:py-2 ${variantClasses[variant]} ${className}`}
     >
-      {pending ? "Saving…" : children}
+      {pending ? pendingLabel : children}
     </button>
   );
 }

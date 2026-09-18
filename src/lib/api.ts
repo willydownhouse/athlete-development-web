@@ -1,17 +1,42 @@
+import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
   Athlete,
   AthleteAccessRole,
   AthleteListResponse,
+  ChatMessageListResponse,
+  ChatThread,
+  ChatTurn,
   Event,
+  EventAggregate,
+  EventAggregateKind,
+  EventCategory,
   EventIntensity,
   EventListResponse,
+  EventItemAggregate,
+  EventItemAggregateKind,
+  EventItemListResponse,
+  EventItemType,
+  EventItemTypeChildType,
+  EventItemTypeMetricDefinition,
+  EventMediaItem,
+  EventMediaListResponse,
   EventType,
+  EventTypeItemType,
   EventTypeMetricDefinition,
+  MediaKind,
+  MediaReadUrlResponse,
+  MediaUploadIntentResponse,
+  MonthlyUsage,
   Sport,
   SportStats,
   UserRole,
 } from "./types";
-import { athleteEventsCacheTag, eventCacheTag, EVENT_TYPES_CACHE_TAG } from "./cache-tags";
+import {
+  athleteEventsCacheTag,
+  chatMessagesCacheTag,
+  eventCacheTag,
+  EVENT_TYPES_CACHE_TAG,
+} from "./cache-tags";
 
 /** Event types are admin config; busted on admin writes via EVENT_TYPES_CACHE_TAG. */
 const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
@@ -85,6 +110,10 @@ export async function fetchCurrentAppUser(token: string): Promise<AppUser> {
   return apiFetch<AppUser>(token, "/api/auth/me");
 }
 
+export async function fetchMonthlyUsage(token: string): Promise<MonthlyUsage> {
+  return apiFetch<MonthlyUsage>(token, "/api/usage");
+}
+
 export async function fetchAthletes(token: string): Promise<Athlete[]> {
   const result = await apiFetch<AthleteListResponse>(token, "/api/athletes?limit=100");
   return result.items;
@@ -130,6 +159,20 @@ export type EventMetricInput = {
   unit?: string;
 };
 
+export type EventItemInput = {
+  id?: string;
+  eventItemTypeId: string;
+  sortOrder?: number;
+  label?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  notes?: string;
+  structuredData?: Record<string, unknown>;
+  metrics?: EventMetricInput[];
+  children?: EventItemInput[];
+};
+
 export type CreateEventBody = {
   eventTypeId: string;
   startedAt: string;
@@ -142,6 +185,7 @@ export type CreateEventBody = {
   originalInput?: string;
   structuredData?: Record<string, unknown>;
   metrics?: EventMetricInput[];
+  items?: EventItemInput[];
 };
 
 export async function createEvent(
@@ -176,7 +220,9 @@ export async function fetchEvents(
     startedAtTo?: string;
     sportId?: string;
     eventTypeId?: string;
-    include?: "metrics";
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    include?: "metrics" | "items" | "metrics,items";
   } = {},
 ): Promise<EventListResponse> {
   const params = new URLSearchParams();
@@ -203,6 +249,14 @@ export async function fetchEvents(
 
   if (query.eventTypeId) {
     params.set("eventTypeId", query.eventTypeId);
+  }
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
   }
 
   if (query.include) {
@@ -232,6 +286,231 @@ export async function fetchEvents(
   return result;
 }
 
+export async function fetchEventAggregate(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    aggregation: EventAggregateKind;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    metricDefinitionId?: string;
+  },
+): Promise<EventAggregate> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    aggregation: query.aggregation,
+  });
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.metricDefinitionId) {
+    params.set("metricDefinitionId", query.metricDefinitionId);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/events/aggregate?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventAggregate;
+}
+
+export async function fetchEventItemTypes(sportId?: string): Promise<EventItemType[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-item-types${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemType[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypesMetricDefinitions(
+  sportId?: string,
+): Promise<EventItemTypeMetricDefinition[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/metric-definitions${query}`,
+    {
+      next: {
+        revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+        tags: [EVENT_TYPES_CACHE_TAG],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeMetricDefinition[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypesChildTypes(
+  sportId?: string,
+): Promise<EventItemTypeChildType[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-item-types/child-types${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeChildType[] };
+  return result.items;
+}
+
+export async function fetchEventItemAggregate(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    eventItemTypeId: string;
+    aggregation: EventItemAggregateKind;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    label?: string;
+    metricDefinitionId?: string;
+  },
+): Promise<EventItemAggregate> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    eventItemTypeId: query.eventItemTypeId,
+    aggregation: query.aggregation,
+  });
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.label) {
+    params.set("label", query.label);
+  }
+
+  if (query.metricDefinitionId) {
+    params.set("metricDefinitionId", query.metricDefinitionId);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/event-items/aggregate?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventItemAggregate;
+}
+
+export async function fetchEventItems(
+  token: string,
+  athleteId: string,
+  query: {
+    startedAtFrom: string;
+    startedAtTo: string;
+    eventItemTypeId: string;
+    limit?: number;
+    offset?: number;
+    eventTypeIds?: string[];
+    categories?: EventCategory[];
+    label?: string;
+  },
+): Promise<EventItemListResponse> {
+  const params = new URLSearchParams({
+    startedAtFrom: query.startedAtFrom,
+    startedAtTo: query.startedAtTo,
+    eventItemTypeId: query.eventItemTypeId,
+  });
+
+  if (query.limit !== undefined) {
+    params.set("limit", String(query.limit));
+  }
+
+  if (query.offset !== undefined) {
+    params.set("offset", String(query.offset));
+  }
+
+  for (const eventTypeId of query.eventTypeIds ?? []) {
+    params.append("eventTypeIds", eventTypeId);
+  }
+
+  for (const category of query.categories ?? []) {
+    params.append("categories", category);
+  }
+
+  if (query.label) {
+    params.set("label", query.label);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/athletes/${athleteId}/event-items?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "force-cache",
+      next: {
+        tags: [athleteEventsCacheTag(athleteId)],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return (await response.json()) as EventItemListResponse;
+}
+
 const EVENTS_PAGE_SIZE = 100;
 
 type FetchEventsQuery = {
@@ -239,7 +518,7 @@ type FetchEventsQuery = {
   startedAtTo?: string;
   sportId?: string;
   eventTypeId?: string;
-  include?: "metrics";
+  include?: "metrics" | "items" | "metrics,items";
 };
 
 export async function fetchAllEvents(
@@ -275,7 +554,7 @@ export async function fetchEvent(
   athleteId: string,
   eventId: string,
   query: {
-    include?: "metrics";
+    include?: "metrics" | "items" | "metrics,items";
   } = {},
 ): Promise<Event> {
   const params = new URLSearchParams();
@@ -294,7 +573,7 @@ export async function fetchEvent(
       },
       cache: "force-cache",
       next: {
-        tags: [eventCacheTag(eventId), athleteEventsCacheTag(athleteId)],
+        tags: [eventCacheTag(eventId)],
       },
     },
   );
@@ -315,11 +594,12 @@ export async function updateEvent(
     startedAt?: string;
     title?: string | null;
     description?: string | null;
-    endedAt?: string;
+    endedAt?: string | null;
     durationSeconds?: number | null;
     intensity?: EventIntensity | null;
     structuredData?: Record<string, unknown>;
     metrics?: EventMetricInput[];
+    items?: EventItemInput[];
   },
 ): Promise<Event> {
   return apiFetch<Event>(token, `/api/athletes/${athleteId}/events/${eventId}`, {
@@ -396,6 +676,25 @@ export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
   return result.items;
 }
 
+export async function fetchEventTypesMetricDefinitions(
+  sportId?: string,
+): Promise<EventTypeMetricDefinition[]> {
+  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const response = await fetch(`${getApiBaseUrl()}/api/event-types/metric-definitions${query}`, {
+    next: {
+      revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
+      tags: [EVENT_TYPES_CACHE_TAG],
+    },
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
+  return result.items;
+}
+
 export async function fetchEventTypeMetricDefinitions(
   eventTypeId: string,
 ): Promise<EventTypeMetricDefinition[]> {
@@ -412,4 +711,247 @@ export async function fetchEventTypeMetricDefinitions(
 
   const result = (await response.json()) as { items: EventTypeMetricDefinition[] };
   return result.items;
+}
+
+export async function fetchEventTypeItemTypes(eventTypeId: string): Promise<EventTypeItemType[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/item-types`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventTypeItemType[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypeChildTypes(
+  eventItemTypeId: string,
+): Promise<EventItemTypeChildType[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/child-types`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeChildType[] };
+  return result.items;
+}
+
+export async function fetchEventItemTypeMetricDefinitions(
+  eventItemTypeId: string,
+): Promise<EventItemTypeMetricDefinition[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/metric-definitions`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  const result = (await response.json()) as { items: EventItemTypeMetricDefinition[] };
+  return result.items;
+}
+
+export async function getEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<EventMediaItem> {
+  return apiFetch<EventMediaItem>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`,
+  );
+}
+
+export async function listEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+): Promise<EventMediaListResponse> {
+  return apiFetch<EventMediaListResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media`,
+  );
+}
+
+export async function createMediaUploadIntent(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  body: {
+    kind: MediaKind;
+    declaredMimeType: string;
+    declaredByteSize: number;
+    originalFilename?: string;
+  },
+): Promise<MediaUploadIntentResponse> {
+  return apiFetch<MediaUploadIntentResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/upload-intents`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function completeMediaUpload(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}/complete-upload`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export async function getEventMediaReadUrl(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<MediaReadUrlResponse> {
+  return apiFetch<MediaReadUrlResponse>(
+    token,
+    `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}/read-url`,
+  );
+}
+
+export async function deleteEventMedia(
+  token: string,
+  athleteId: string,
+  eventId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function createChatThread(token: string): Promise<ChatThread> {
+  return apiFetch<ChatThread>(token, "/api/chat/threads", {
+    method: "POST",
+  });
+}
+
+async function fetchChatMessages(
+  token: string,
+  threadId: string,
+  options: { limit: number; before?: string; cache: RequestCache },
+): Promise<ChatMessageListResponse> {
+  const params = new URLSearchParams({
+    limit: String(options.limit),
+    excludeFocused: "true",
+  });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: options.cache,
+      ...(options.cache === "force-cache"
+        ? {
+            next: {
+              tags: [chatMessagesCacheTag(threadId)],
+            },
+          }
+        : {}),
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<ChatMessageListResponse>;
+}
+
+export async function fetchLatestChatMessages(
+  token: string,
+  threadId: string,
+  limit: number = CHAT_MESSAGES_PAGE_SIZE,
+): Promise<ChatMessageListResponse> {
+  return fetchChatMessages(token, threadId, { limit, cache: "force-cache" });
+}
+
+export async function fetchOlderChatMessages(
+  token: string,
+  threadId: string,
+  before: string,
+  limit: number = CHAT_MESSAGES_PAGE_SIZE,
+): Promise<ChatMessageListResponse> {
+  return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
+}
+
+export async function fetchFocusedEventChatMessages(
+  token: string,
+  threadId: string,
+  focusedEventId: string,
+  options: { limit?: number; before?: string } = {},
+): Promise<ChatMessageListResponse> {
+  const params = new URLSearchParams({
+    limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
+    focusedEventId,
+  });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<ChatMessageListResponse>;
+}
+
+export async function submitChatMessage(
+  token: string,
+  threadId: string,
+  body: {
+    content: string;
+    clientRequestId: string;
+    timeZone: string;
+    eventId?: string;
+  },
+): Promise<ChatTurn> {
+  return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }

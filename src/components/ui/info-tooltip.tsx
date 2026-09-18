@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 type InfoTooltipProps = {
   label: string;
@@ -26,8 +27,20 @@ function InfoIcon() {
 
 export function InfoTooltip({ label, children }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const tooltipId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const updateIsMobile = () => setIsMobile(mediaQuery.matches);
+
+    updateIsMobile();
+    mediaQuery.addEventListener("change", updateIsMobile);
+
+    return () => mediaQuery.removeEventListener("change", updateIsMobile);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -37,7 +50,11 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
       const target = event.target;
 
-      if (!(target instanceof Node) || containerRef.current?.contains(target)) {
+      if (
+        !(target instanceof Node) ||
+        containerRef.current?.contains(target) ||
+        tooltipRef.current?.contains(target)
+      ) {
         return;
       }
 
@@ -74,7 +91,7 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
         <InfoIcon />
       </button>
 
-      {open ? (
+      {open && !isMobile ? (
         <div
           id={tooltipId}
           role="tooltip"
@@ -83,6 +100,21 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
           {children}
         </div>
       ) : null}
+      {open && isMobile
+        ? createPortal(
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+              <div
+                ref={tooltipRef}
+                id={tooltipId}
+                role="tooltip"
+                className="pointer-events-auto w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+              >
+                {children}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

@@ -2,8 +2,10 @@ import {
   EVENT_DURATION_FIELDS,
   readDurationPartsSecondsFromFormData,
   validateDurationPartsForm,
+  validateEventMetricPayloadForm,
   validateMetricForm,
 } from "./event-metric-form";
+import { validateEventItemsForm, type EventItemFormCatalog } from "./event-item-form";
 import type { EventIntensity, EventTypeMetricDefinition } from "./types";
 
 export const EVENT_TITLE_MAX_LENGTH = 100;
@@ -32,10 +34,53 @@ function getEventFormTextErrorFromFormData(formData: FormData): string | null {
   );
 }
 
+function readTextField(formData: FormData, key: string): string {
+  return readField(formData.get(key));
+}
+
+export type EventFormValidationOptions = {
+  timeZone?: string;
+  requireEventId?: boolean;
+};
+
+function getEventFormRequiredFieldsError(
+  formData: FormData,
+  options: EventFormValidationOptions = {},
+): string | null {
+  if (!readTextField(formData, "athleteId")) {
+    return "Athlete is required";
+  }
+
+  if (!readTextField(formData, "eventTypeId")) {
+    return "Event type is required";
+  }
+
+  if (options.requireEventId && !readTextField(formData, "eventId")) {
+    return "Event is required";
+  }
+
+  if (!options.timeZone) {
+    return "Time zone is not ready. Refresh the page and try again.";
+  }
+
+  if (!readTextField(formData, "eventDate")) {
+    return "Date is required";
+  }
+
+  return null;
+}
+
 export function getEventFormValidationError(
   formData: FormData,
   metricMappings: EventTypeMetricDefinition[] = [],
+  itemCatalog: EventItemFormCatalog | null = null,
+  options: EventFormValidationOptions = {},
 ): string | null {
+  const requiredFieldsError = getEventFormRequiredFieldsError(formData, options);
+  if (requiredFieldsError) {
+    return requiredFieldsError;
+  }
+
   const textError = getEventFormTextErrorFromFormData(formData);
   if (textError) {
     return textError;
@@ -46,7 +91,21 @@ export function getEventFormValidationError(
     return durationError;
   }
 
-  return validateMetricForm(formData, metricMappings);
+  const metricError = validateMetricForm(formData, metricMappings);
+  if (metricError) {
+    return metricError;
+  }
+
+  const metricPayloadError = validateEventMetricPayloadForm(formData, metricMappings);
+  if (metricPayloadError) {
+    return metricPayloadError;
+  }
+
+  if (itemCatalog && itemCatalog.roots.length > 0) {
+    return validateEventItemsForm(formData, itemCatalog);
+  }
+
+  return null;
 }
 
 export function readEventDurationSecondsForCreate(formData: FormData): number | undefined {
@@ -57,10 +116,6 @@ export function readEventDurationSecondsForCreate(formData: FormData): number | 
 export function readEventDurationSecondsForUpdate(formData: FormData): number | null {
   const totalSeconds = readDurationPartsSecondsFromFormData(formData, EVENT_DURATION_FIELDS);
   return totalSeconds > 0 ? totalSeconds : null;
-}
-
-function readTextField(formData: FormData, key: string): string {
-  return readField(formData.get(key));
 }
 
 export function readEventTitleForCreate(formData: FormData): string | undefined {

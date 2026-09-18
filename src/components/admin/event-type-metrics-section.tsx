@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import { AdminCreateModal, useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import { AdminFormSelect } from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import {
@@ -41,14 +42,15 @@ function AddEventTypeMetricForm({ eventTypeId, availableMetrics }: AddEventTypeM
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
           <span className="font-medium text-zinc-300">Metric</span>
-          <select name="metricDefinitionId" required className={inputClassName}>
-            <option value="">Select a metric</option>
-            {availableMetrics.map((metric) => (
-              <option key={metric.id} value={metric.id}>
-                {metric.name} ({metric.key})
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="metricDefinitionId"
+            required
+            placeholder="Select a metric"
+            options={availableMetrics.map((metric) => ({
+              value: metric.id,
+              label: `${metric.name} (${metric.key})`,
+            }))}
+          />
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sort order</span>
@@ -89,7 +91,11 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
         </div>
       </div>
 
-      <form action={formAction} className="mt-4 space-y-3">
+      <form
+        action={formAction}
+        className="mt-4 space-y-3"
+        key={`${mapping.id}-${mapping.required}-${mapping.sortOrder}`}
+      >
         <input type="hidden" name="eventTypeId" value={eventTypeId} />
         <input type="hidden" name="eventTypeMetricDefinitionId" value={mapping.id} />
         <FormMessage error={state.error} success={state.success} />
@@ -105,9 +111,11 @@ function EventTypeMetricRow({ eventTypeId, mapping }: EventTypeMetricRowProps) {
             />
           </label>
           <label className="flex items-center gap-2 pb-2 text-sm text-zinc-300">
+            <input type="hidden" name="required" value="false" />
             <input
               name="required"
               type="checkbox"
+              value="true"
               defaultChecked={mapping.required}
               className="rounded border-white/20 bg-[#1c222c]"
             />

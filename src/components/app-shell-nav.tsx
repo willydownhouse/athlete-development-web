@@ -2,15 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
   activeAthleteIdFromPath,
+  CHAT_HREF,
+  CHAT_NAV_LABEL,
   dashboardHref,
   defaultDashboardHref,
   isAthleteDashboardPath,
+  isChatPath,
+  isUsagePath,
   TODAY_NAV_LABEL,
+  USAGE_HREF,
+  USAGE_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
 import type { Athlete } from "@/lib/types";
 
@@ -67,6 +74,104 @@ function AthleteNavLink({
   );
 }
 
+function NavLink({
+  href,
+  active,
+  icon,
+  children,
+  onNavigate,
+}: {
+  href: string;
+  active: boolean;
+  icon: ReactNode;
+  children: ReactNode;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link href={href} onClick={onNavigate} className={navLinkClass(active)}>
+      {icon}
+      <span className="min-w-0 truncate">{children}</span>
+    </Link>
+  );
+}
+
+function NavIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function TodayIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.5 10.5 12 4l8.5 6.5M6 10v8.5a1 1 0 0 0 1 1h3.5V15a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 14.5 15v4.5H18a1 1 0 0 0 1-1V10"
+      />
+    </NavIcon>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5.5 18.5 4 20.5V7.5A2 2 0 0 1 6 5.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8.5z"
+      />
+      <path strokeLinecap="round" d="M8.5 10.5h7M8.5 13.5h4.5" />
+    </NavIcon>
+  );
+}
+
+function UsageIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 19.5v-6.75M12 19.5V4.5M19.5 19.5v-4.5"
+      />
+    </NavIcon>
+  );
+}
+
+function AddAthleteIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.5 19.5v-1.25A3.25 3.25 0 0 0 12.25 15h-5.5A3.25 3.25 0 0 0 3.5 18.25v1.25M9.5 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 8.5v5M14.5 11H19.5"
+      />
+    </NavIcon>
+  );
+}
+
+function AdminIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3.5 19.5 7v4.5c0 4.5-3.1 7.8-7.5 9-4.4-1.2-7.5-4.5-7.5-9V7L12 3.5Z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 12.2 11.2 14l3.3-3.5" />
+    </NavIcon>
+  );
+}
+
 export function AppShellNav({
   isAdmin = false,
   athletes = [],
@@ -84,13 +189,14 @@ export function AppShellNav({
   return (
     <nav className="space-y-1">
       <div>
-        <Link
+        <NavLink
           href={dashboardLink}
-          onClick={onNavigate}
-          className={navLinkClass(isAthleteDashboardPath(pathname))}
+          active={isAthleteDashboardPath(pathname)}
+          icon={<TodayIcon />}
+          onNavigate={onNavigate}
         >
           {TODAY_NAV_LABEL}
-        </Link>
+        </NavLink>
 
         {athletes.length > 1 ? (
           <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
@@ -99,18 +205,37 @@ export function AppShellNav({
         ) : null}
       </div>
 
-      <Link
+      <NavLink
+        href={CHAT_HREF}
+        active={isChatPath(pathname)}
+        icon={<ChatIcon />}
+        onNavigate={onNavigate}
+      >
+        {CHAT_NAV_LABEL}
+      </NavLink>
+
+      <NavLink
+        href={USAGE_HREF}
+        active={isUsagePath(pathname)}
+        icon={<UsageIcon />}
+        onNavigate={onNavigate}
+      >
+        {USAGE_NAV_LABEL}
+      </NavLink>
+
+      <NavLink
         href="/onboarding"
-        onClick={onNavigate}
-        className={navLinkClass(pathname.startsWith("/onboarding"))}
+        active={pathname.startsWith("/onboarding")}
+        icon={<AddAthleteIcon />}
+        onNavigate={onNavigate}
       >
         Add athlete
-      </Link>
+      </NavLink>
 
       {isAdmin ? (
-        <Link href="/admin" className={navLinkClass(pathname.startsWith("/admin"))}>
+        <NavLink href="/admin" active={pathname.startsWith("/admin")} icon={<AdminIcon />}>
           Admin
-        </Link>
+        </NavLink>
       ) : null}
     </nav>
   );

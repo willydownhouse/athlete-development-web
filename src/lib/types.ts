@@ -1,5 +1,28 @@
 export type UserRole = "user" | "maintainer" | "admin";
 
+type UsageFeature = "event_logging";
+
+type UsageUnitTotals = {
+  used: number;
+  limit: number;
+  remaining: number;
+};
+
+type FeatureUsageTotals = {
+  feature: UsageFeature;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+export type MonthlyUsage = {
+  periodStart: string;
+  periodEnd: string;
+  limitReached: boolean;
+  inputTokens: UsageUnitTotals;
+  outputTokens: UsageUnitTotals;
+  features: FeatureUsageTotals[];
+};
+
 export type AthleteAccessRole = "parent" | "athlete";
 
 type AthleteProfile = {
@@ -80,6 +103,38 @@ export type EventMetric = {
   metricDefinition: MetricDefinition;
 };
 
+export type EventItemMetric = {
+  id: string;
+  eventItemId: string;
+  metricDefinitionId: string;
+  numericValue: string | null;
+  textValue: string | null;
+  booleanValue: boolean | null;
+  unit: string | null;
+  createdAt: string;
+  updatedAt: string;
+  metricDefinition: MetricDefinition;
+};
+
+export type EventItem = {
+  id: string;
+  eventId: string;
+  eventItemTypeId: string;
+  parentEventItemId: string | null;
+  sortOrder: number;
+  label: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  notes: string | null;
+  structuredData: unknown | null;
+  createdAt: string;
+  updatedAt: string;
+  eventItemType: EventItemType;
+  metrics: EventItemMetric[];
+  children: EventItem[];
+};
+
 export type Event = {
   id: string;
   athleteId: string;
@@ -100,10 +155,71 @@ export type Event = {
   updatedAt: string;
   eventType: EventType;
   metrics?: EventMetric[];
+  items?: EventItem[];
 };
 
 export type EventListResponse = {
   items: Event[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
+export type EventAggregateKind = "count" | "durationSeconds" | "metric" | "metricAverage";
+
+export type EventAggregate = {
+  athleteId: string;
+  aggregation: EventAggregateKind;
+  metricDefinitionId: string | null;
+  canonicalUnit: string | null;
+  total: number;
+  matchingEventCount: number;
+  eventsWithValue: number;
+};
+
+export type EventItemAggregateKind = "count" | "durationSeconds" | "metric" | "metricAverage";
+
+export type EventItemAggregate = {
+  athleteId: string;
+  aggregation: EventItemAggregateKind;
+  eventItemTypeId: string;
+  metricDefinitionId: string | null;
+  canonicalUnit: string | null;
+  total: number;
+  matchingItemCount: number;
+  itemsWithValue: number;
+  descendantItemsWithValue: number;
+};
+
+type EventItemListEvent = {
+  id: string;
+  startedAt: string;
+  title: string | null;
+  eventType: EventType;
+};
+
+export type EventItemListItem = {
+  id: string;
+  eventId: string;
+  eventItemTypeId: string;
+  parentEventItemId: string | null;
+  sortOrder: number;
+  label: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  notes: string | null;
+  structuredData: unknown | null;
+  createdAt: string;
+  updatedAt: string;
+  eventItemType: EventItemType;
+  event: EventItemListEvent;
+};
+
+export type EventItemListResponse = {
+  items: EventItemListItem[];
   pagination: {
     limit: number;
     offset: number;
@@ -153,6 +269,43 @@ export type EventTypeMetricDefinition = {
   metricDefinition: MetricDefinition;
 };
 
+export type EventItemType = {
+  id: string;
+  sportId: string | null;
+  slug: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  sport: Sport | null;
+};
+
+export type EventTypeItemType = {
+  id: string;
+  eventTypeId: string;
+  eventItemTypeId: string;
+  required: boolean;
+  sortOrder: number;
+  eventItemType: EventItemType;
+};
+
+export type EventItemTypeChildType = {
+  id: string;
+  parentEventItemTypeId: string;
+  childEventItemTypeId: string;
+  sortOrder: number;
+  childEventItemType: EventItemType;
+};
+
+export type EventItemTypeMetricDefinition = {
+  id: string;
+  eventItemTypeId: string;
+  metricDefinitionId: string;
+  required: boolean;
+  sortOrder: number;
+  metricDefinition: MetricDefinition;
+};
+
 export const EVENT_CATEGORIES: EventCategory[] = [
   "training",
   "competition",
@@ -168,6 +321,114 @@ export const EVENT_CATEGORIES: EventCategory[] = [
 ];
 
 export const METRIC_VALUE_TYPES: MetricValueType[] = ["number", "text", "boolean"];
+
+export type MediaKind = "image" | "video";
+
+export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed";
+
+export type EventMediaItem = {
+  id: string;
+  kind: MediaKind;
+  status: MediaStatus;
+  originalFilename: string | null;
+  width: number | null;
+  height: number | null;
+  originalWidth: number | null;
+  originalHeight: number | null;
+  durationSeconds: number | null;
+  failureCode: string | null;
+  updatedAt: string;
+};
+
+export type EventMediaReadAssets = {
+  readUrl: string;
+  readExpiresAt: string;
+  posterUrl: string | null;
+  posterExpiresAt: string | null;
+};
+
+export type EventMediaListResponse = {
+  items: EventMediaItem[];
+};
+
+export type MediaUploadIntentResponse = {
+  id: string;
+  eventId: string;
+  kind: MediaKind;
+  status: MediaStatus;
+  declaredMimeType: string;
+  declaredByteSize: number;
+  originalFilename: string | null;
+  uploadUrl: string;
+  uploadExpiresAt: string;
+  createdAt: string;
+};
+
+export type MediaReadUrlResponse = {
+  id: string;
+  readUrl: string;
+  readExpiresAt: string;
+  posterUrl: string | null;
+  posterExpiresAt: string | null;
+};
+
+type ChatThreadType = "event_logging";
+
+type ChatMessageRole = "user" | "assistant";
+
+type ChatRunStatus = "received" | "processing" | "completed" | "failed";
+
+type ChatToolCallStatus = "requested" | "succeeded" | "failed";
+
+export type ChatThread = {
+  id: string;
+  type: ChatThreadType;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  chatThreadId: string;
+  role: ChatMessageRole;
+  content: string;
+  clientRequestId: string | null;
+  createdAt: string;
+};
+
+type ChatToolCall = {
+  id: string;
+  chatRunId: string;
+  toolName: string;
+  arguments: unknown;
+  result: unknown | null;
+  status: ChatToolCallStatus;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export type ChatTurn = {
+  id: string;
+  chatThreadId: string;
+  status: ChatRunStatus;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  userMessage: ChatMessage;
+  assistantMessage: ChatMessage | null;
+  toolCalls: ChatToolCall[];
+};
+
+export type ChatMessageListResponse = {
+  items: ChatMessage[];
+  pagination: {
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+};
 
 export function formatCategoryLabel(category: EventCategory): string {
   return category.replace(/_/g, " ");

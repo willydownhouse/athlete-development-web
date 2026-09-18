@@ -1,5 +1,12 @@
 import { isSecondsMetric } from "./event-metric-form";
-import type { EventMetric } from "@/lib/types";
+import type { EventItemMetric, EventMetric, MetricDefinition } from "./types";
+
+type MetricDisplayValue = {
+  numericValue: string | null;
+  textValue: string | null;
+  booleanValue: boolean | null;
+  metricDefinition: MetricDefinition;
+};
 
 export function formatDurationSeconds(seconds: number): string {
   const normalized = Math.max(0, Math.round(seconds));
@@ -29,7 +36,9 @@ export function formatDurationSeconds(seconds: number): string {
   return `${normalized}s`;
 }
 
-export function formatEventMetricValue(metric: EventMetric): string {
+export function formatEventMetricValue(
+  metric: EventMetric | EventItemMetric | MetricDisplayValue,
+): string {
   const { metricDefinition } = metric;
 
   if (metricDefinition.valueType === "boolean") {

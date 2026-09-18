@@ -1,7 +1,18 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ChangeEvent,
+} from "react";
 import { createPortal } from "react-dom";
+
+import { CheckIcon } from "@/components/check-icon";
+import { useListboxKeyboard } from "@/components/listbox-keyboard";
 
 export type FormSelectOption = {
   value: string;
@@ -21,6 +32,7 @@ type FormSelectProps = {
   defaultValue?: string;
   placeholder?: string;
   className?: string;
+  required?: boolean;
   onChange?: (value: string) => void;
   onValueChange?: (value: string) => void;
 };
@@ -44,6 +56,7 @@ export function FormSelect({
   defaultValue = "",
   placeholder = "Select",
   className = "",
+  required = false,
   onChange,
   onValueChange,
 }: FormSelectProps) {
@@ -55,6 +68,7 @@ export function FormSelect({
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const currentValue = isControlled ? value : uncontrolledValue;
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const closeListbox = useCallback(() => setOpen(false), []);
 
   const allOptions = flattenOptions(options, groups);
   const selectedOption = allOptions.find((option) => option.value === currentValue);
@@ -68,7 +82,19 @@ export function FormSelect({
     onChange?.(nextValue);
     onValueChange?.(nextValue);
     setOpen(false);
+    triggerRef.current?.focus();
   }
+
+  function handleNativeSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    selectOption(event.currentTarget.value);
+  }
+
+  useListboxKeyboard({
+    open,
+    listRef,
+    triggerRef,
+    onClose: closeListbox,
+  });
 
   useEffect(() => {
     if (!open || !triggerRef.current) {
@@ -127,18 +153,10 @@ export function FormSelect({
       setOpen(false);
     }
 
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    }
-
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
 
@@ -151,6 +169,7 @@ export function FormSelect({
         type="button"
         role="option"
         aria-selected={selected}
+        tabIndex={-1}
         onClick={() => {
           selectOption(option.value);
         }}
@@ -159,7 +178,7 @@ export function FormSelect({
         }`}
       >
         <span>{option.label}</span>
-        {selected ? <span className="text-xs text-[#9ec9e8]">Selected</span> : null}
+        {selected ? <CheckIcon /> : null}
       </button>
     );
   }
@@ -172,7 +191,7 @@ export function FormSelect({
             id={listboxId}
             role="listbox"
             style={menuStyle}
-            className="overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+            className="scheme-dark overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             {groups
               ? groups.map((group) => (
@@ -191,19 +210,52 @@ export function FormSelect({
 
   return (
     <>
-      {name ? <input type="hidden" name={name} value={currentValue} /> : null}
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
-        onClick={() => setOpen((current) => !current)}
-        className={`flex w-full items-center justify-between gap-3 text-left ${className}`}
-      >
-        <span className={selectedOption ? "text-white" : "text-zinc-500"}>{displayLabel}</span>
-        <ChevronIcon open={open} />
-      </button>
+      <span className="relative block">
+        {name ? (
+          <select
+            name={name}
+            value={currentValue}
+            required={required}
+            onChange={handleNativeSelectChange}
+            onInvalid={() => {
+              triggerRef.current?.focus();
+            }}
+            tabIndex={-1}
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+          >
+            <option value="">{placeholder}</option>
+            {allOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          onClick={() => setOpen((current) => !current)}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+              return;
+            }
+
+            event.preventDefault();
+
+            if (!open) {
+              setOpen(true);
+            }
+          }}
+          className={`flex w-full items-center justify-between gap-3 text-left ${className}`}
+        >
+          <span className={selectedOption ? "text-white" : "text-zinc-500"}>{displayLabel}</span>
+          <ChevronIcon open={open} />
+        </button>
+      </span>
       {menu}
     </>
   );

@@ -1,0 +1,225 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  eventsAggregateHeading,
+  formatEventsAggregateCoverage,
+  formatEventsAggregateTotal,
+} from "./events-aggregate-format";
+import type { EventAggregate, EventItemAggregate } from "./types";
+
+function aggregate(overrides: Partial<EventAggregate>): EventAggregate {
+  return {
+    athleteId: "22222222-2222-4222-8222-222222222222",
+    aggregation: "count",
+    metricDefinitionId: null,
+    canonicalUnit: null,
+    total: 8,
+    matchingEventCount: 8,
+    eventsWithValue: 8,
+    ...overrides,
+  };
+}
+
+describe("eventsAggregateHeading", () => {
+  it("labels count and duration totals", () => {
+    expect(eventsAggregateHeading("count")).toBe("Event count");
+    expect(eventsAggregateHeading("count", "item")).toBe("Item count");
+    expect(eventsAggregateHeading("count", "exercise")).toBe("Exercise count");
+    expect(eventsAggregateHeading("durationSeconds")).toBe("Total duration");
+    expect(eventsAggregateHeading("metric")).toBe("Metric total");
+    expect(eventsAggregateHeading("metricAverage")).toBe("Metric average");
+  });
+});
+
+describe("formatEventsAggregateTotal", () => {
+  it("formats a duration total as hours and minutes", () => {
+    expect(
+      formatEventsAggregateTotal(
+        aggregate({
+          aggregation: "durationSeconds",
+          canonicalUnit: "s",
+          total: 5400,
+        }),
+      ),
+    ).toBe("1h 30m");
+  });
+
+  it("formats a seconds metric total as hours, minutes, and seconds", () => {
+    expect(
+      formatEventsAggregateTotal(
+        aggregate({
+          aggregation: "metric",
+          metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+          canonicalUnit: "s",
+          total: 75,
+        }),
+      ),
+    ).toBe("1m 15s");
+    expect(
+      formatEventsAggregateTotal(
+        aggregate({
+          aggregation: "metric",
+          metricDefinitionId: "00000000-0000-4000-8000-000000000401",
+          canonicalUnit: "s",
+          total: 45,
+        }),
+      ),
+    ).toBe("45s");
+  });
+
+  it("formats a metric total with its unit", () => {
+    expect(
+      formatEventsAggregateTotal(
+        aggregate({
+          aggregation: "metric",
+          metricDefinitionId: "00000000-0000-4000-8000-000000000402",
+          canonicalUnit: "goals",
+          total: 14,
+        }),
+      ),
+    ).toBe("14 goals");
+  });
+
+  it("formats a metric average with one decimal", () => {
+    expect(
+      formatEventsAggregateTotal(
+        aggregate({
+          aggregation: "metricAverage",
+          metricDefinitionId: "00000000-0000-4000-8000-000000000402",
+          canonicalUnit: "scale_1_10",
+          total: 6.5,
+        }),
+      ),
+    ).toBe("6.5");
+  });
+
+  it("formats a count total", () => {
+    expect(formatEventsAggregateTotal(aggregate({ total: 8 }))).toBe("8");
+  });
+});
+
+describe("formatEventsAggregateCoverage", () => {
+  it("reports matching events for a complete count", () => {
+    expect(
+      formatEventsAggregateCoverage(aggregate({ matchingEventCount: 1, eventsWithValue: 1 })),
+    ).toBe("1 event");
+  });
+
+  it("reports incomplete duration coverage", () => {
+    expect(
+      formatEventsAggregateCoverage(
+        aggregate({
+          aggregation: "durationSeconds",
+          matchingEventCount: 8,
+          eventsWithValue: 6,
+        }),
+      ),
+    ).toBe("6 of 8 events had a duration");
+  });
+
+  it("reports incomplete metric coverage", () => {
+    expect(
+      formatEventsAggregateCoverage(
+        aggregate({
+          aggregation: "metric",
+          matchingEventCount: 8,
+          eventsWithValue: 6,
+        }),
+      ),
+    ).toBe("6 of 8 events had a value");
+  });
+
+  it("reports matching items for an item count", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "count",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000605",
+      metricDefinitionId: null,
+      canonicalUnit: null,
+      total: 3,
+      matchingItemCount: 3,
+      itemsWithValue: 3,
+      descendantItemsWithValue: 0,
+    };
+
+    expect(formatEventsAggregateCoverage(result)).toBe("3 items");
+  });
+
+  it("reports incomplete item duration coverage", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "durationSeconds",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000605",
+      metricDefinitionId: null,
+      canonicalUnit: "s",
+      total: 1080,
+      matchingItemCount: 3,
+      itemsWithValue: 2,
+      descendantItemsWithValue: 0,
+    };
+
+    expect(formatEventsAggregateCoverage(result)).toBe("2 of 3 items had a duration");
+  });
+
+  it("reports incomplete item metric coverage", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "metric",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000601",
+      metricDefinitionId: "00000000-0000-4000-8000-000000000417",
+      canonicalUnit: "reps",
+      total: 14,
+      matchingItemCount: 2,
+      itemsWithValue: 1,
+      descendantItemsWithValue: 0,
+    };
+
+    expect(formatEventsAggregateCoverage(result)).toBe("1 of 2 items had a value");
+  });
+
+  it("reports matching exercises for an exercise measure", () => {
+    const result: EventItemAggregate = {
+      athleteId: "22222222-2222-4222-8222-222222222222",
+      aggregation: "count",
+      eventItemTypeId: "00000000-0000-4000-8000-000000000601",
+      metricDefinitionId: null,
+      canonicalUnit: null,
+      total: 2,
+      matchingItemCount: 2,
+      itemsWithValue: 2,
+      descendantItemsWithValue: 0,
+    };
+
+    expect(formatEventsAggregateCoverage(result, "exercise")).toBe("2 exercises");
+    expect(
+      formatEventsAggregateCoverage(
+        { ...result, aggregation: "metric", itemsWithValue: 1 },
+        "exercise",
+      ),
+    ).toBe("1 of 2 exercises had a value");
+    expect(
+      formatEventsAggregateCoverage(
+        {
+          ...result,
+          aggregation: "metricAverage",
+          itemsWithValue: 2,
+          descendantItemsWithValue: 6,
+        },
+        "exercise",
+        "set",
+      ),
+    ).toBe("2 exercises, 6 sets");
+    expect(
+      formatEventsAggregateCoverage(
+        {
+          ...result,
+          aggregation: "metricAverage",
+          itemsWithValue: 1,
+          descendantItemsWithValue: 1,
+        },
+        "exercise",
+        "set",
+      ),
+    ).toBe("1 of 2 exercises had a value, 1 set");
+  });
+});

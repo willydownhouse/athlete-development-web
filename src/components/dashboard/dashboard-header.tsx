@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import type { Athlete } from "@/lib/types";
 
 import { ageGroupFromDateOfBirth } from "./athlete-meta";
+import { HISTORY_NAV_LABEL } from "./dashboard-nav";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
   eventsMeta?: ReactNode;
   calendarHref?: string;
   statsHref?: string;
+  historyHref?: string;
 };
 
 export function DashboardHeader({
@@ -17,9 +19,10 @@ export function DashboardHeader({
   eventsMeta,
   calendarHref,
   statsHref,
+  historyHref,
 }: DashboardHeaderProps) {
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
-  const showMetaRow = ageGroup || eventsMeta || calendarHref || statsHref;
+  const showMetaRow = ageGroup || eventsMeta || calendarHref || statsHref || historyHref;
 
   return (
     <header>
@@ -40,8 +43,8 @@ export function DashboardHeader({
                 ) : null}
                 {eventsMeta}
               </div>
-              {calendarHref || statsHref ? (
-                <div className="flex shrink-0 items-center gap-3">
+              {calendarHref || statsHref || historyHref ? (
+                <nav className="hidden shrink-0 items-center gap-3 lg:flex">
                   {statsHref ? (
                     <Link
                       href={statsHref}
@@ -58,7 +61,15 @@ export function DashboardHeader({
                       Calendar
                     </Link>
                   ) : null}
-                </div>
+                  {historyHref ? (
+                    <Link
+                      href={historyHref}
+                      className="font-medium text-zinc-300 transition hover:text-white"
+                    >
+                      {HISTORY_NAV_LABEL}
+                    </Link>
+                  ) : null}
+                </nav>
               ) : null}
             </div>
           ) : null}

@@ -3,14 +3,24 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
+import {
+  dashboardHref,
+  backToTodayLabel,
+  HISTORY_NAV_LABEL,
+} from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventsListFilters } from "@/components/dashboard/events-list-filters";
 import { EventsListSection } from "@/components/dashboard/events-list-section";
-import { fetchEventTypes } from "@/lib/api";
+import {
+  fetchEventItemTypes,
+  fetchEventItemTypesChildTypes,
+  fetchEventItemTypesMetricDefinitions,
+  fetchEventTypes,
+  fetchEventTypesMetricDefinitions,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { getRequestTimeZone } from "@/lib/time-zone-server";
+import { itemMeasureNumericMetricsFromCatalog } from "@/lib/events-list-metrics";
 import {
   eventsListFilterKey,
   eventsListSuspenseKey,
@@ -19,6 +29,7 @@ import {
 } from "@/lib/events-list-params";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
 
 type AthleteEventsPageProps = {
   params: Promise<{ athleteId: string }>;
@@ -63,7 +74,20 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
     redirect("/dashboard");
   }
 
-  const eventTypes = await fetchEventTypes(selectedAthlete.focusSportId).catch(() => []);
+  const [eventTypes, eventTypeMetrics, itemTypes, itemTypeMetrics, itemTypeChildTypes] =
+    await Promise.all([
+      fetchEventTypes(selectedAthlete.focusSportId).catch(() => []),
+      fetchEventTypesMetricDefinitions(selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypes(selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypesMetricDefinitions(selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypesChildTypes(selectedAthlete.focusSportId).catch(() => []),
+    ]);
+  const itemMeasureMetrics = itemMeasureNumericMetricsFromCatalog(
+    itemTypes,
+    itemTypeMetrics,
+    itemTypeChildTypes,
+    selectedAthlete.focusSportId,
+  );
 
   return (
     <DashboardShell
@@ -80,12 +104,17 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Events</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {HISTORY_NAV_LABEL}
+        </h1>
 
         <div className="mt-6 space-y-4">
           <EventsListFilters
             key={eventsListFilterKey(listParams)}
             eventTypes={eventTypes}
+            eventTypeMetrics={eventTypeMetrics}
+            itemTypes={itemTypes}
+            itemMeasureMetrics={itemMeasureMetrics}
             focusSportName={selectedAthlete.focusSport.name}
             params={listParams}
           />
@@ -95,6 +124,8 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
               athleteId={normalizedAthleteId}
               timeZone={timeZone}
               params={listParams}
+              itemTypes={itemTypes}
+              itemTypeChildTypes={itemTypeChildTypes}
             />
           </Suspense>
         </div>

@@ -3,10 +3,12 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { EventTobyDockSkeleton, EventTobySection } from "@/components/chat/event-toby-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
+import { EventDetailSection } from "@/components/dashboard/event-detail-section";
+import { EventPageFrame } from "@/components/dashboard/event-page-frame";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
@@ -14,6 +16,8 @@ import { loadShellAthletes } from "@/lib/shell-data";
 type AthleteEventPageProps = {
   params: Promise<{ athleteId: string; eventId: string }>;
 };
+
+export const maxDuration = 240;
 
 export default async function AthleteEventPage({ params }: AthleteEventPageProps) {
   const session = await auth();
@@ -51,7 +55,13 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
       athletes={athletes}
       selectedAthlete={selectedAthlete}
     >
-      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
+      <EventPageFrame
+        dock={
+          <Suspense fallback={<EventTobyDockSkeleton />}>
+            <EventTobySection athleteId={normalizedAthleteId} eventId={normalizedEventId} />
+          </Suspense>
+        }
+      >
         <Link
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
@@ -71,7 +81,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
             />
           </Suspense>
         </div>
-      </div>
+      </EventPageFrame>
     </DashboardShell>
   );
 }

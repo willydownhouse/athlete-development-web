@@ -7,6 +7,7 @@ const navItems = [
   { href: "/admin", label: "Overview", exact: true },
   { href: "/admin/sports", label: "Sports" },
   { href: "/admin/event-types", label: "Event types" },
+  { href: "/admin/event-item-types", label: "Event item types" },
   { href: "/admin/metric-definitions", label: "Metric definitions" },
 ];
 

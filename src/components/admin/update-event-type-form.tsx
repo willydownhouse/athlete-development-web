@@ -2,10 +2,15 @@
 
 import { useActionState } from "react";
 
+import {
+  AdminFormSelect,
+  eventCategoryOptions,
+  sportScopeOptions,
+} from "@/components/admin/admin-form-select";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateEventTypeAction, type ActionState } from "@/app/admin/actions";
-import { EVENT_CATEGORIES, formatCategoryLabel, type EventType, type Sport } from "@/lib/types";
+import { EVENT_CATEGORIES, type EventType, type Sport } from "@/lib/types";
 
 const initialState: ActionState = {};
 
@@ -42,28 +47,19 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Category</span>
-          <select name="category" defaultValue={eventType.category} className={inputClassName}>
-            {EVENT_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {formatCategoryLabel(category)}
-              </option>
-            ))}
-          </select>
+          <AdminFormSelect
+            name="category"
+            defaultValue={eventType.category}
+            options={eventCategoryOptions(EVENT_CATEGORIES)}
+          />
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sport</span>
-          <select
+          <AdminFormSelect
             name="sportId"
             defaultValue={eventType.sportId ?? "general"}
-            className={inputClassName}
-          >
-            <option value="general">General (all sports)</option>
-            {sports.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+            options={sportScopeOptions(sports)}
+          />
         </label>
       </div>
 

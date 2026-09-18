@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { EventTypeItemTypesSection } from "@/components/admin/event-type-item-types-section";
 import { EventTypeMetricsSection } from "@/components/admin/event-type-metrics-section";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { UpdateEventTypeForm } from "@/components/admin/update-event-type-form";
 import {
   getAdminEventType,
+  listAdminEventItemTypes,
+  listAdminEventTypeItemTypes,
   listAdminEventTypeMetricDefinitions,
   listAdminMetricDefinitions,
   listAdminSports,
@@ -29,6 +32,17 @@ function isMetricCompatibleWithEventType(
   return eventTypeSportId === metricSportId;
 }
 
+function isItemTypeCompatibleWithEventType(
+  eventTypeSportId: string | null,
+  itemTypeSportId: string | null,
+): boolean {
+  if (itemTypeSportId === null) {
+    return true;
+  }
+
+  return eventTypeSportId === itemTypeSportId;
+}
+
 export default async function AdminEventTypeDetailPage({ params }: AdminEventTypeDetailPageProps) {
   const { eventTypeId } = await params;
   const { token } = await requireAdmin();
@@ -41,19 +55,29 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
     notFound();
   }
 
-  const [sports, mappings, allMetrics] = await Promise.all([
+  const [sports, metricMappings, itemTypeMappings, allMetrics, allItemTypes] = await Promise.all([
     listAdminSports(token),
     listAdminEventTypeMetricDefinitions(token, eventTypeId),
+    listAdminEventTypeItemTypes(token, eventTypeId),
     listAdminMetricDefinitions(token),
+    listAdminEventItemTypes(token),
   ]);
 
-  const mappedMetricIds = new Set(mappings.map((mapping) => mapping.metricDefinitionId));
+  const mappedMetricIds = new Set(metricMappings.map((mapping) => mapping.metricDefinitionId));
+  const mappedItemTypeIds = new Set(itemTypeMappings.map((mapping) => mapping.eventItemTypeId));
 
   const availableMetrics = allMetrics.filter(
     (metric) =>
       metric.active &&
       !mappedMetricIds.has(metric.id) &&
       isMetricCompatibleWithEventType(eventType.sportId, metric.sportId),
+  );
+
+  const availableItemTypes = allItemTypes.filter(
+    (itemType) =>
+      itemType.active &&
+      !mappedItemTypeIds.has(itemType.id) &&
+      isItemTypeCompatibleWithEventType(eventType.sportId, itemType.sportId),
   );
 
   return (
@@ -67,7 +91,7 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
         </Link>
         <PageHeader
           title={eventType.name}
-          description={`Manage event type settings and allowed metrics for ${eventType.slug}.`}
+          description={`Manage event type settings, allowed metrics, and root item types for ${eventType.slug}.`}
         />
         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
           <StatusBadge active={eventType.active} />
@@ -89,8 +113,14 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
 
       <EventTypeMetricsSection
         eventTypeId={eventTypeId}
-        mappings={mappings}
+        mappings={metricMappings}
         availableMetrics={availableMetrics}
+      />
+
+      <EventTypeItemTypesSection
+        eventTypeId={eventTypeId}
+        mappings={itemTypeMappings}
+        availableItemTypes={availableItemTypes}
       />
     </div>
   );

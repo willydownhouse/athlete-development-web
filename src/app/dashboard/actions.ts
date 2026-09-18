@@ -1,17 +1,10 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  ApiError,
-  createEvent,
-  createEventsBatch,
-  deleteEvent,
-  fetchEventTypeMetricDefinitions,
-  updateEvent,
-  type EventMetricInput,
-} from "@/lib/api";
+import { ApiError, createEvent, createEventsBatch, deleteEvent, updateEvent } from "@/lib/api";
+import { CALENDAR_EVENTS_INCLUDE } from "@/lib/calendar-event-data";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -23,7 +16,6 @@ import {
 } from "@/lib/copy-event";
 import { isLocalDateString } from "@/lib/date-range";
 import {
-  getEventFormValidationError,
   readEventDescriptionForCreate,
   readEventDescriptionForUpdate,
   readEventDurationSecondsForCreate,
@@ -33,7 +25,8 @@ import {
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "@/lib/event-form-schema";
-import { parseMetricsFromFormData } from "@/lib/event-metric-form";
+import { parseEventItemsFromFormData } from "@/lib/event-item-form";
+import { parseEventMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
 import { zonedDateTimeToUtcIso } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
@@ -60,16 +53,6 @@ function readString(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readSafeRedirectTo(formData: FormData): string | null {
-  const value = readString(formData, "redirectTo");
-
-  if (!value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-
-  return value;
-}
-
 async function readEventFormFields(formData: FormData) {
   const athleteId = readString(formData, "athleteId");
   const eventTypeId = readString(formData, "eventTypeId");
@@ -87,31 +70,6 @@ async function readEventFormFields(formData: FormData) {
   };
 }
 
-function validateEventTextFields(
-  formData: FormData,
-  metricMappings: Awaited<ReturnType<typeof fetchEventTypeMetricDefinitions>> = [],
-): DashboardActionState | null {
-  const error = getEventFormValidationError(formData, metricMappings);
-
-  if (error) {
-    return { error };
-  }
-
-  return null;
-}
-
-async function loadMetricMappingsForEventType(eventTypeId: string) {
-  if (!eventTypeId) {
-    return [];
-  }
-
-  try {
-    return await fetchEventTypeMetricDefinitions(eventTypeId);
-  } catch {
-    return [];
-  }
-}
-
 export async function createEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
@@ -127,6 +85,8 @@ export async function createEventAction(
   const title = readEventTitleForCreate(formData);
   const description = readEventDescriptionForCreate(formData);
   const intensity = readEventIntensityForCreate(formData);
+  const metricsLoaded = readString(formData, "metricsLoaded") === "1";
+  const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -144,13 +104,12 @@ export async function createEventAction(
     return { error: "Date is required" };
   }
 
-  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
-  if (textError) {
-    return textError;
+  if (!metricsLoaded) {
+    return { error: "Metric fields are not ready. Refresh the page and try again." };
   }
 
-  const metrics = parseMetricsFromFormData(formData, metricMappings);
+  const metrics = parseEventMetricsFromFormData(formData);
+  const items = itemsLoaded ? parseEventItemsFromFormData(formData) : undefined;
 
   try {
     await createEvent(token, fields.athleteId, {
@@ -161,7 +120,8 @@ export async function createEventAction(
       description,
       durationSeconds,
       intensity,
-      ...(metrics.length > 0 || metricMappings.length > 0 ? { metrics } : {}),
+      metrics,
+      ...(itemsLoaded ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
@@ -188,6 +148,8 @@ export async function updateEventAction(
   const title = readEventTitleForUpdate(formData);
   const description = readEventDescriptionForUpdate(formData);
   const intensity = readEventIntensityForUpdate(formData);
+  const metricsLoaded = readString(formData, "metricsLoaded") === "1";
+  const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
     return { error: "Athlete is required" };
@@ -209,13 +171,12 @@ export async function updateEventAction(
     return { error: "Date is required" };
   }
 
-  const metricMappings = await loadMetricMappingsForEventType(fields.eventTypeId);
-  const textError = validateEventTextFields(formData, metricMappings);
-  if (textError) {
-    return textError;
+  if (!metricsLoaded) {
+    return { error: "Metric fields are not ready. Refresh the page and try again." };
   }
 
-  const metrics = parseMetricsFromFormData(formData, metricMappings);
+  const metrics = parseEventMetricsFromFormData(formData);
+  const items = itemsLoaded ? parseEventItemsFromFormData(formData) : undefined;
 
   try {
     await updateEvent(token, fields.athleteId, eventId, {
@@ -226,6 +187,7 @@ export async function updateEventAction(
       durationSeconds,
       intensity,
       metrics,
+      ...(itemsLoaded ? { items } : {}),
     });
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
@@ -237,42 +199,38 @@ export async function updateEventAction(
   }
 }
 
-export async function deleteEventAction(
-  _prevState: DashboardActionState,
-  formData: FormData,
-): Promise<DashboardActionState> {
+export async function deleteEventMenuAction(
+  athleteId: string,
+  eventId: string,
+  redirectTo: string,
+): Promise<{ error: string }> {
   const token = await getAuthBearerToken();
 
   if (!token) {
     return { error: "You need to sign in again" };
   }
 
-  const athleteId = readString(formData, "athleteId");
-  const eventId = readString(formData, "eventId");
+  const normalizedAthleteId = athleteId.trim();
+  const normalizedEventId = eventId.trim();
+  const normalizedRedirectTo = redirectTo.trim();
 
-  if (!athleteId) {
-    return { error: "Athlete is required" };
-  }
-
-  if (!eventId) {
+  if (!normalizedAthleteId || !normalizedEventId) {
     return { error: "Event is required" };
   }
 
-  const redirectTo = readSafeRedirectTo(formData);
+  if (!normalizedRedirectTo.startsWith("/") || normalizedRedirectTo.startsWith("//")) {
+    return { error: "Invalid redirect" };
+  }
 
   try {
-    await deleteEvent(token, athleteId, eventId);
-    updateTag(athleteEventsCacheTag(athleteId));
-    updateTag(eventCacheTag(eventId));
+    await deleteEvent(token, normalizedAthleteId, normalizedEventId);
+    revalidateTag(athleteEventsCacheTag(normalizedAthleteId), "max");
   } catch (error) {
-    return actionError(error);
+    const result = actionError(error);
+    return { error: result.error ?? "Something went wrong" };
   }
 
-  if (redirectTo) {
-    redirect(redirectTo);
-  }
-
-  return { success: "Event deleted" };
+  redirect(normalizedRedirectTo);
 }
 
 export async function fetchEventsInRangeAction(
@@ -280,22 +238,17 @@ export async function fetchEventsInRangeAction(
   startedAtFrom: string,
   startedAtTo: string,
 ): Promise<{ events: Event[]; error?: undefined } | { events: []; error: string }> {
-  return fetchDashboardEventsInRange(athleteId, startedAtFrom, startedAtTo);
+  return fetchDashboardEventsInRange(
+    athleteId,
+    startedAtFrom,
+    startedAtTo,
+    CALENDAR_EVENTS_INCLUDE,
+  );
 }
-
-export type CopyEventForTodaySource = {
-  eventTypeId: string;
-  startedAt: string;
-  title: string | null;
-  description: string | null;
-  durationSeconds: number | null;
-  intensity: Event["intensity"];
-  metrics: EventMetricInput[];
-};
 
 export async function copyEventAction(
   athleteId: string,
-  source: CopyEventForTodaySource,
+  source: EventCopySource,
   targetDate: string,
 ): Promise<{ error: string } | { redirectTo: string }> {
   const token = await getAuthBearerToken();

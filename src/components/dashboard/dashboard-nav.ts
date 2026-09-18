@@ -1,16 +1,18 @@
-import {
-  buildEventsListQueryString,
-  EVENTS_LIST_DEFAULT_LIMIT,
-  EVENTS_LIST_DEFAULT_PAGE,
-  getDefaultEventsListWeekDates,
-  getEventsListDayDates,
-} from "@/lib/events-list-params";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 
 export const TODAY_NAV_LABEL = "Today";
+export const CHAT_NAV_LABEL = "Event Agent Toby";
+export const CHAT_HREF = "/chat";
+export const USAGE_NAV_LABEL = "Usage";
+export const USAGE_HREF = "/usage";
+export const HISTORY_NAV_LABEL = "History";
 
 export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
+}
+
+export function backToEventLabel(): string {
+  return "← Back to event";
 }
 
 export function dashboardHref(athleteId: string): string {
@@ -31,42 +33,22 @@ export function athleteEventHref(athleteId: string, eventId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/event/${encodeURIComponent(eventId)}`;
 }
 
+export function athleteEventIdFromPath(pathname: string): string | null {
+  const match = pathname.match(/^\/athlete\/[^/]+\/event\/([^/]+)(?:\/media\/[^/]+)?\/?$/);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return decodeURIComponent(match[1]);
+}
+
+export function athleteEventMediaHref(athleteId: string, eventId: string, mediaId: string): string {
+  return `${athleteEventHref(athleteId, eventId)}/media/${encodeURIComponent(mediaId)}`;
+}
+
 export function athleteEventsHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/events`;
-}
-
-function athleteEventsHrefWithDateRange(athleteId: string, from: string, to: string): string {
-  const query = buildEventsListQueryString({
-    limit: EVENTS_LIST_DEFAULT_LIMIT,
-    page: EVENTS_LIST_DEFAULT_PAGE,
-    offset: 0,
-    from,
-    to,
-    explicitDateRange: true,
-  });
-  const base = athleteEventsHref(athleteId);
-
-  return query ? `${base}?${query}` : base;
-}
-
-export function athleteEventsWeekHref(
-  athleteId: string,
-  timeZone: string,
-  date = new Date(),
-): string {
-  const { from, to } = getDefaultEventsListWeekDates(timeZone, date);
-
-  return athleteEventsHrefWithDateRange(athleteId, from, to);
-}
-
-export function athleteEventsDayHref(
-  athleteId: string,
-  timeZone: string,
-  date = new Date(),
-): string {
-  const { from, to } = getEventsListDayDates(timeZone, date);
-
-  return athleteEventsHrefWithDateRange(athleteId, from, to);
 }
 
 export function defaultDashboardHref(athletes: { id: string }[]): string {
@@ -89,7 +71,23 @@ export function isAthleteDashboardPath(pathname: string): boolean {
   return /^\/athlete\/[^/]+\/dashboard\/?$/.test(pathname);
 }
 
+export function isChatPath(pathname: string): boolean {
+  return pathname === CHAT_HREF || pathname.startsWith(`${CHAT_HREF}/`);
+}
+
+export function isUsagePath(pathname: string): boolean {
+  return pathname === USAGE_HREF || pathname.startsWith(`${USAGE_HREF}/`);
+}
+
 export function appShellMobileTitle(pathname: string): string {
+  if (isChatPath(pathname)) {
+    return CHAT_NAV_LABEL;
+  }
+
+  if (isUsagePath(pathname)) {
+    return USAGE_NAV_LABEL;
+  }
+
   if (isAthleteDashboardPath(pathname) || pathname === "/dashboard") {
     return TODAY_NAV_LABEL;
   }
@@ -103,7 +101,11 @@ export function appShellMobileTitle(pathname: string): string {
   }
 
   if (/^\/athlete\/[^/]+\/events\/?$/.test(pathname)) {
-    return "Events";
+    return HISTORY_NAV_LABEL;
+  }
+
+  if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {
+    return "Video";
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {

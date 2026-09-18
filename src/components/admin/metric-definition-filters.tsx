@@ -1,15 +1,25 @@
+"use client";
+
 import Link from "next/link";
 
+import {
+  ACTIVE_FILTER_OPTIONS,
+  AdminFormSelect,
+  sportFilterOptions,
+} from "@/components/admin/admin-form-select";
 import type { Sport } from "@/lib/types";
 
 type MetricDefinitionFiltersProps = {
   sports: Sport[];
+  defaultSportId?: string;
+  defaultActive?: string;
 };
 
-const inputClassName =
-  "rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
-
-export function MetricDefinitionFilters({ sports }: MetricDefinitionFiltersProps) {
+export function MetricDefinitionFilters({
+  sports,
+  defaultSportId = "",
+  defaultActive = "",
+}: MetricDefinitionFiltersProps) {
   return (
     <form
       method="get"
@@ -17,23 +27,20 @@ export function MetricDefinitionFilters({ sports }: MetricDefinitionFiltersProps
     >
       <label className="w-full space-y-1 text-sm sm:w-auto sm:min-w-[10rem]">
         <span className="font-medium text-zinc-300">Sport</span>
-        <select name="sportId" defaultValue="" className={`${inputClassName} w-full`}>
-          <option value="">All sports</option>
-          {sports.map((sport) => (
-            <option key={sport.id} value={sport.id}>
-              {sport.name}
-            </option>
-          ))}
-        </select>
+        <AdminFormSelect
+          name="sportId"
+          defaultValue={defaultSportId}
+          options={sportFilterOptions(sports)}
+        />
       </label>
 
       <label className="w-full space-y-1 text-sm sm:w-auto sm:min-w-[10rem]">
         <span className="font-medium text-zinc-300">Active</span>
-        <select name="active" defaultValue="" className={`${inputClassName} w-full`}>
-          <option value="">All</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
+        <AdminFormSelect
+          name="active"
+          defaultValue={defaultActive}
+          options={ACTIVE_FILTER_OPTIONS}
+        />
       </label>
 
       <button

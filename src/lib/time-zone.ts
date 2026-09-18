@@ -174,6 +174,26 @@ export function formatZonedTime(timeZone: string, date: Date): string {
   return getZonedTimeString(timeZone, date);
 }
 
+export function formatZonedTimeRange(
+  timeZone: string,
+  startedAt: Date,
+  endedAt?: Date | null,
+): string {
+  const startTime = formatZonedTime(timeZone, startedAt);
+
+  if (!endedAt) {
+    return startTime;
+  }
+
+  const endTime = formatZonedTime(timeZone, endedAt);
+
+  if (getZonedDateString(timeZone, startedAt) === getZonedDateString(timeZone, endedAt)) {
+    return `${startTime} – ${endTime}`;
+  }
+
+  return `${formatZonedShortDate(timeZone, startedAt, endedAt)} ${startTime} – ${formatZonedShortDate(timeZone, endedAt, startedAt)} ${endTime}`;
+}
+
 export function formatZonedShortDate(
   timeZone: string,
   date: Date,

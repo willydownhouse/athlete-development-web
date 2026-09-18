@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatZonedTimeRange,
   getZonedDayRange,
   getZonedMonthRange,
   getZonedWeekRange,
@@ -87,5 +88,43 @@ describe("zoned ranges", () => {
         merged,
       ),
     ).toBe(false);
+  });
+});
+
+describe("formatZonedTimeRange", () => {
+  it("formats a start-only time", () => {
+    expect(formatZonedTimeRange("Europe/Helsinki", new Date("2026-08-05T16:00:00.000Z"))).toBe(
+      "19:00",
+    );
+  });
+
+  it("formats a same-day start and end as times", () => {
+    expect(
+      formatZonedTimeRange(
+        "Europe/Helsinki",
+        new Date("2026-08-05T16:00:00.000Z"),
+        new Date("2026-08-05T18:30:00.000Z"),
+      ),
+    ).toBe("19:00 – 21:30");
+  });
+
+  it("includes dates when start and end are on different local days", () => {
+    expect(
+      formatZonedTimeRange(
+        "Europe/Helsinki",
+        new Date("2026-08-05T20:00:00.000Z"),
+        new Date("2026-08-05T22:00:00.000Z"),
+      ),
+    ).toBe("Wed 5 Aug 23:00 – Thu 6 Aug 01:00");
+  });
+
+  it("includes years when the range crosses a year boundary", () => {
+    expect(
+      formatZonedTimeRange(
+        "Europe/Helsinki",
+        new Date("2026-12-31T21:00:00.000Z"),
+        new Date("2026-12-31T23:00:00.000Z"),
+      ),
+    ).toBe("Thu 31 Dec 2026 23:00 – Fri 1 Jan 2027 01:00");
   });
 });

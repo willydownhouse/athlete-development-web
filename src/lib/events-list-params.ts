@@ -1,9 +1,69 @@
+import { pluralizeItemTypeName } from "@/lib/event-item-display";
+import { EVENT_ITEM_LABEL_MAX_LENGTH, normalizeEventItemLabel } from "@/lib/event-item-form";
 import { zonedDateTimeToUtcIso, getZonedWeekRange } from "@/lib/time-zone";
+import { EVENT_CATEGORIES, type EventCategory } from "@/lib/types";
 
 export const EVENTS_LIST_DEFAULT_LIMIT = 10;
 export const EVENTS_LIST_DEFAULT_PAGE = 1;
 export const EVENTS_LIST_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const EVENTS_LIST_MAX_LIMIT = 100;
+
+const EVENTS_LIST_SHOW_VALUES = [
+  "events",
+  "items",
+  "count",
+  "durationSeconds",
+  "metric",
+  "metricAverage",
+] as const;
+export type EventsListShow = (typeof EVENTS_LIST_SHOW_VALUES)[number];
+export const EVENTS_LIST_DEFAULT_SHOW: EventsListShow = "events";
+export const EVENTS_LIST_SHOW_OPTIONS: { value: EventsListShow; label: string }[] = [
+  { value: "events", label: "Events" },
+  { value: "count", label: "Event count" },
+  { value: "durationSeconds", label: "Total duration" },
+  { value: "metric", label: "Metric total" },
+  { value: "metricAverage", label: "Metric average" },
+];
+
+const EVENTS_LIST_MEASURE_VALUES = ["events", "warm_up", "cool_down", "exercise"] as const;
+export type EventsListMeasure = (typeof EVENTS_LIST_MEASURE_VALUES)[number];
+export const EVENTS_LIST_DEFAULT_MEASURE: EventsListMeasure = "events";
+export const EVENTS_LIST_MEASURE_OPTIONS: { value: EventsListMeasure; label: string }[] = [
+  { value: "events", label: "Events" },
+  { value: "warm_up", label: "Warm up" },
+  { value: "cool_down", label: "Cool down" },
+  { value: "exercise", label: "Exercise" },
+];
+export const EVENTS_LIST_DEFAULT_ITEM_SHOW: EventsListShow = "items";
+const EVENTS_LIST_ITEM_SHOW_VALUES = [
+  "items",
+  "count",
+  "durationSeconds",
+  "metric",
+  "metricAverage",
+] as const;
+const EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES = [
+  "count",
+  "durationSeconds",
+  "metric",
+  "metricAverage",
+] as const;
+
+export function eventsListItemShowOptions(listLabel: string): {
+  value: EventsListShow;
+  label: string;
+}[] {
+  return [
+    { value: "items", label: listLabel },
+    { value: "count", label: "Item count" },
+    { value: "durationSeconds", label: "Total duration" },
+    { value: "metric", label: "Metric total" },
+    { value: "metricAverage", label: "Metric average" },
+  ];
+}
+
+const EVENTS_LIST_LABEL_MAX_LENGTH = EVENT_ITEM_LABEL_MAX_LENGTH;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -13,9 +73,102 @@ export type EventsListSearchParams = {
   offset: number;
   from?: string;
   to?: string;
-  eventTypeId?: string;
+  eventTypeIds: string[];
+  categories: EventCategory[];
+  measure: EventsListMeasure;
+  show: EventsListShow;
+  metricDefinitionId?: string;
+  label?: string;
   explicitDateRange: boolean;
 };
+
+export function isEventsListItemMeasure(
+  measure: EventsListMeasure,
+): measure is Exclude<EventsListMeasure, "events"> {
+  return measure !== "events";
+}
+
+export function isEventsListExerciseMeasure(measure: EventsListMeasure): measure is "exercise" {
+  return measure === "exercise";
+}
+
+export function eventsListMeasureLabel(measure: EventsListMeasure): string {
+  return EVENTS_LIST_MEASURE_OPTIONS.find((option) => option.value === measure)?.label ?? measure;
+}
+
+export function normalizeEventsListLabel(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = normalizeEventItemLabel(value);
+  if (!normalized || normalized.length > EVENTS_LIST_LABEL_MAX_LENGTH) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+export function isEventsListItemListShow(show: EventsListShow): show is "items" {
+  return show === "items";
+}
+
+export function isEventsListItemShow(
+  show: EventsListShow,
+): show is (typeof EVENTS_LIST_ITEM_SHOW_VALUES)[number] {
+  return (EVENTS_LIST_ITEM_SHOW_VALUES as readonly string[]).includes(show);
+}
+
+export function isEventsListAggregateShow(
+  show: EventsListShow,
+): show is (typeof EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES)[number] {
+  return (EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES as readonly string[]).includes(show);
+}
+
+export function isEventsListPagedShow(measure: EventsListMeasure, show: EventsListShow): boolean {
+  if (isEventsListItemMeasure(measure)) {
+    return isEventsListItemListShow(show);
+  }
+
+  return show === "events";
+}
+
+export function isEventsListMetricShow(show: EventsListShow): show is "metric" | "metricAverage" {
+  return show === "metric" || show === "metricAverage";
+}
+
+export function resolveEventsListItemTypeId(
+  itemTypes: { id: string; slug: string; sportId: string | null }[],
+  measure: Exclude<EventsListMeasure, "events">,
+  focusSportId?: string,
+): string | undefined {
+  const matches = itemTypes.filter((itemType) => itemType.slug === measure);
+
+  return (
+    matches.find((itemType) => itemType.sportId === null)?.id ??
+    matches.find((itemType) => itemType.sportId === focusSportId)?.id ??
+    matches[0]?.id
+  );
+}
+
+function eventsListItemMeasureName(
+  itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
+  measure: Exclude<EventsListMeasure, "events">,
+  focusSportId?: string,
+): string {
+  const typeId = resolveEventsListItemTypeId(itemTypes, measure, focusSportId);
+  return (
+    itemTypes.find((itemType) => itemType.id === typeId)?.name ?? eventsListMeasureLabel(measure)
+  );
+}
+
+export function eventsListItemMeasureListLabel(
+  itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
+  measure: Exclude<EventsListMeasure, "events">,
+  focusSportId?: string,
+): string {
+  return pluralizeItemTypeName(eventsListItemMeasureName(itemTypes, measure, focusSportId));
+}
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
@@ -26,6 +179,11 @@ function readSingleValue(value: string | string[] | undefined): string | undefin
 
   const trimmed = value?.trim();
   return trimmed || undefined;
+}
+
+function readManyValues(value: string | string[] | undefined): string[] {
+  const items = Array.isArray(value) ? value : value ? [value] : [];
+  return [...new Set(items.map((item) => item.trim()).filter(Boolean))];
 }
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -104,12 +262,67 @@ function parseUuid(value: string | undefined): string | undefined {
     : undefined;
 }
 
+function parseEventTypeIds(raw: RawSearchParams): string[] {
+  const fromQuery = readManyValues(raw["eventTypeIds"]).flatMap((value) =>
+    value.split(",").flatMap((part) => {
+      const parsed = parseUuid(part.trim());
+      return parsed ? [parsed] : [];
+    }),
+  );
+  const fromLegacy = parseUuid(readSingleValue(raw["eventTypeId"]));
+
+  return [...new Set([...fromQuery, ...(fromLegacy ? [fromLegacy] : [])])];
+}
+
+function parseCategories(raw: RawSearchParams): EventCategory[] {
+  const fromQuery = readManyValues(raw["categories"]).flatMap((value) =>
+    value.split(",").flatMap((part) => {
+      const trimmed = part.trim();
+      return EVENT_CATEGORIES.includes(trimmed as EventCategory) ? [trimmed as EventCategory] : [];
+    }),
+  );
+
+  return [...new Set(fromQuery)];
+}
+
+function parseShow(value: string | undefined): EventsListShow {
+  if (value && (EVENTS_LIST_SHOW_VALUES as readonly string[]).includes(value)) {
+    return value as EventsListShow;
+  }
+
+  return EVENTS_LIST_DEFAULT_SHOW;
+}
+
+function parseMeasure(value: string | undefined): EventsListMeasure {
+  if (value && (EVENTS_LIST_MEASURE_VALUES as readonly string[]).includes(value)) {
+    return value as EventsListMeasure;
+  }
+
+  return EVENTS_LIST_DEFAULT_MEASURE;
+}
+
+function resolveShowForMeasure(measure: EventsListMeasure, show: EventsListShow): EventsListShow {
+  if (isEventsListItemMeasure(measure)) {
+    return isEventsListItemShow(show) ? show : EVENTS_LIST_DEFAULT_ITEM_SHOW;
+  }
+
+  if (isEventsListItemListShow(show)) {
+    return EVENTS_LIST_DEFAULT_SHOW;
+  }
+
+  return show;
+}
+
 export function parseEventsListSearchParams(raw: RawSearchParams): EventsListSearchParams {
   const limit = parseLimit(readSingleValue(raw["limit"]));
   const page = parsePositiveInt(readSingleValue(raw["page"]), EVENTS_LIST_DEFAULT_PAGE);
   const from = parseDate(readSingleValue(raw["from"]));
   const to = parseDate(readSingleValue(raw["to"]));
-  const eventTypeId = parseUuid(readSingleValue(raw["eventTypeId"]));
+  const measure = parseMeasure(readSingleValue(raw["measure"]));
+  const show = resolveShowForMeasure(measure, parseShow(readSingleValue(raw["show"])));
+  const label = isEventsListExerciseMeasure(measure)
+    ? normalizeEventsListLabel(readSingleValue(raw["label"]))
+    : undefined;
 
   return {
     limit,
@@ -117,7 +330,12 @@ export function parseEventsListSearchParams(raw: RawSearchParams): EventsListSea
     offset: (page - 1) * limit,
     from,
     to,
-    eventTypeId,
+    eventTypeIds: parseEventTypeIds(raw),
+    categories: parseCategories(raw),
+    measure,
+    show,
+    metricDefinitionId: parseUuid(readSingleValue(raw["metricDefinitionId"])),
+    label,
     explicitDateRange: from !== undefined || to !== undefined,
   };
 }
@@ -217,13 +435,17 @@ export function eventsListDateRange(
 
 export function buildEventsListQueryString(params: EventsListSearchParams): string {
   const search = new URLSearchParams();
+  const itemMeasure = isEventsListItemMeasure(params.measure);
+  const show = resolveShowForMeasure(params.measure, params.show);
 
-  if (params.limit !== EVENTS_LIST_DEFAULT_LIMIT) {
-    search.set("limit", String(params.limit));
-  }
+  if (isEventsListPagedShow(params.measure, show)) {
+    if (params.limit !== EVENTS_LIST_DEFAULT_LIMIT) {
+      search.set("limit", String(params.limit));
+    }
 
-  if (params.page !== EVENTS_LIST_DEFAULT_PAGE) {
-    search.set("page", String(params.page));
+    if (params.page !== EVENTS_LIST_DEFAULT_PAGE) {
+      search.set("page", String(params.page));
+    }
   }
 
   if (params.explicitDateRange) {
@@ -236,15 +458,46 @@ export function buildEventsListQueryString(params: EventsListSearchParams): stri
     }
   }
 
-  if (params.eventTypeId) {
-    search.set("eventTypeId", params.eventTypeId);
+  if (params.eventTypeIds.length > 0) {
+    search.set("eventTypeIds", params.eventTypeIds.join(","));
   }
 
-  return search.toString();
+  if (params.categories.length > 0) {
+    search.set("categories", params.categories.join(","));
+  }
+
+  if (itemMeasure) {
+    search.set("measure", params.measure);
+  }
+
+  const defaultShow = itemMeasure ? EVENTS_LIST_DEFAULT_ITEM_SHOW : EVENTS_LIST_DEFAULT_SHOW;
+  if (show !== defaultShow) {
+    search.set("show", show);
+  }
+
+  if (isEventsListMetricShow(show) && params.metricDefinitionId) {
+    search.set("metricDefinitionId", params.metricDefinitionId);
+  }
+
+  if (isEventsListExerciseMeasure(params.measure) && params.label) {
+    search.set("label", params.label);
+  }
+
+  return search.toString().replaceAll("%2C", ",");
 }
 
 export function eventsListFilterKey(params: EventsListSearchParams): string {
-  return [params.from ?? "", params.to ?? "", params.eventTypeId ?? "", params.limit].join(":");
+  return [
+    params.from ?? "",
+    params.to ?? "",
+    params.eventTypeIds.join(","),
+    params.categories.join(","),
+    params.measure,
+    params.show,
+    params.metricDefinitionId ?? "",
+    params.label ?? "",
+    params.limit,
+  ].join(":");
 }
 
 export function eventsListSuspenseKey(params: EventsListSearchParams): string {
@@ -253,7 +506,12 @@ export function eventsListSuspenseKey(params: EventsListSearchParams): string {
     params.page,
     params.from ?? "",
     params.to ?? "",
-    params.eventTypeId ?? "",
+    params.eventTypeIds.join(","),
+    params.categories.join(","),
+    params.measure,
+    params.show,
+    params.metricDefinitionId ?? "",
+    params.label ?? "",
   ].join(":");
 }
 

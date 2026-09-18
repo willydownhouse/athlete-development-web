@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
+import { EventItemsDisplay } from "@/components/dashboard/event-items/event-items-display";
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
-import { formatZonedTime } from "@/lib/time-zone";
+import { formatZonedTimeRange } from "@/lib/time-zone";
 import type { Event, EventIntensity } from "@/lib/types";
 
 function formatIntensity(intensity: EventIntensity): string {
@@ -11,14 +12,11 @@ function formatIntensity(intensity: EventIntensity): string {
 }
 
 function formatTimeRange(event: Event, timeZone: string): string {
-  const start = formatZonedTime(timeZone, new Date(event.startedAt));
-
-  if (event.endedAt) {
-    const end = formatZonedTime(timeZone, new Date(event.endedAt));
-    return `${start} – ${end}`;
-  }
-
-  return start;
+  return formatZonedTimeRange(
+    timeZone,
+    new Date(event.startedAt),
+    event.endedAt ? new Date(event.endedAt) : null,
+  );
 }
 
 function formatCategory(category: Event["category"]): string {
@@ -43,15 +41,21 @@ type EventDetailCardProps = {
   event: Event;
   timeZone: string;
   editAction?: ReactNode;
+  afterBasicInfo?: ReactNode;
 };
 
-export function EventDetailCard({ event, timeZone, editAction }: EventDetailCardProps) {
+export function EventDetailCard({
+  event,
+  timeZone,
+  editAction,
+  afterBasicInfo,
+}: EventDetailCardProps) {
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = event.metrics ?? [];
 
   return (
-    <article className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
+    <article className="rounded-2xl bg-[#12161d] p-4">
       <div className="flex items-start gap-3">
         <div
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${eventIconClassName(event)}`}
@@ -92,6 +96,8 @@ export function EventDetailCard({ event, timeZone, editAction }: EventDetailCard
         </div>
       ) : null}
 
+      {afterBasicInfo}
+
       {metrics.length > 0 ? (
         <div className="mt-4 border-t border-white/5 pt-4">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Metrics</p>
@@ -110,6 +116,8 @@ export function EventDetailCard({ event, timeZone, editAction }: EventDetailCard
           </dl>
         </div>
       ) : null}
+
+      <EventItemsDisplay items={event.items ?? []} timeZone={timeZone} />
 
       {event.originalInput ? (
         <div className="mt-4 border-t border-white/5 pt-4">

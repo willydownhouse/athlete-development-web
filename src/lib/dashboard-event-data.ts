@@ -9,10 +9,13 @@ import type { Event } from "@/lib/types";
 export type DashboardEventsResult =
   { events: Event[]; error?: undefined } | { events: []; error: string };
 
+export type DashboardEventsInclude = "metrics" | "items" | "metrics,items";
+
 export async function fetchDashboardEventsInRange(
   athleteId: string,
   startedAtFrom: string,
   startedAtTo: string,
+  include: DashboardEventsInclude = "metrics",
 ): Promise<DashboardEventsResult> {
   const token = await getAuthBearerToken();
 
@@ -24,7 +27,7 @@ export async function fetchDashboardEventsInRange(
     const events = await fetchAllEvents(token, athleteId, {
       startedAtFrom,
       startedAtTo,
-      include: "metrics",
+      include,
     });
 
     return { events };

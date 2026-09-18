@@ -1,0 +1,78 @@
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
+import { ChatView } from "@/components/chat/chat-view";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
+import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
+import { getAuthBearerToken } from "@/lib/auth-token";
+import { getIsAdminUser } from "@/lib/is-admin-user";
+import { loadShellAthletes } from "@/lib/shell-data";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
+import type { ChatMessage } from "@/lib/types";
+
+export const maxDuration = 240;
+
+export default async function ChatPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/");
+  }
+
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    redirect("/");
+  }
+
+  const [athletes, isAdmin, timeZone] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    getRequestTimeZone(),
+  ]);
+
+  let threadId: string | null = null;
+  let messages: ChatMessage[] = [];
+  let hasMore = false;
+  let loadError: string | null = null;
+
+  try {
+    const thread = await createChatThread(token);
+    threadId = thread.id;
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : "Unable to load chat";
+  }
+
+  if (threadId) {
+    try {
+      const latest = await fetchLatestChatMessages(token, threadId);
+      messages = latest.items;
+      hasMore = latest.pagination.hasMore;
+    } catch (error) {
+      loadError = error instanceof Error ? error.message : "Unable to load messages";
+    }
+  }
+
+  return (
+    <DashboardShell
+      userEmail={session.user.email ?? ""}
+      isAdmin={isAdmin}
+      athletes={athletes}
+      selectedAthlete={null}
+    >
+      <VisibleViewportFrame className="relative mx-auto flex h-[calc(100svh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-svh lg:max-w-3xl lg:px-10">
+        <ChatView
+          threadId={threadId}
+          messages={messages}
+          hasMore={hasMore}
+          timeZone={timeZone}
+          nowIso={new Date().toISOString()}
+          exampleAthleteName={athletes[0]?.name ?? ""}
+          canSend={athletes.length > 0}
+          loadError={loadError}
+        />
+      </VisibleViewportFrame>
+    </DashboardShell>
+  );
+}

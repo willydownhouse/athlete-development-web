@@ -1,18 +1,12 @@
-import Link from "next/link";
 import { Suspense } from "react";
 
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
-import {
-  athleteEventsDayHref,
-  athleteCalendarHref,
-  athleteEventsWeekHref,
-  athleteStatsHref,
-} from "./dashboard-nav";
+import { athleteCalendarHref, athleteEventsHref, athleteStatsHref } from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
 import { QuickLogSection } from "./quick-log-section";
@@ -36,16 +30,8 @@ async function DashboardWeekEventsMeta({
   timeZone: string;
 }) {
   const eventsBundle = await loadDashboardEventsBundle(athleteId, timeZone);
-  const eventsLabel = athleteEventsThisWeekLabel(eventsBundle.weekEvents.length);
 
-  return (
-    <Link
-      href={athleteEventsWeekHref(athleteId, timeZone)}
-      className="transition hover:text-zinc-200"
-    >
-      {eventsLabel}
-    </Link>
-  );
+  return athleteEventsThisWeekLabel(eventsBundle.weekEvents.length);
 }
 
 async function DashboardTodaysEventsSection({
@@ -63,7 +49,6 @@ async function DashboardTodaysEventsSection({
       events={eventsBundle.todayEvents}
       timeZone={timeZone}
       loadError={eventsBundle.error}
-      eventsHref={athleteEventsDayHref(selectedAthlete.id, timeZone)}
     />
   );
 }
@@ -92,6 +77,7 @@ export async function DashboardAthleteContent({
         selectedAthlete={selectedAthlete}
         calendarHref={athleteCalendarHref(selectedAthlete.id)}
         statsHref={statsHref}
+        historyHref={athleteEventsHref(selectedAthlete.id)}
         eventsMeta={
           <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>
             <DashboardWeekEventsMeta athleteId={selectedAthlete.id} timeZone={timeZone} />

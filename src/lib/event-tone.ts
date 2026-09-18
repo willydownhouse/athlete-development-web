@@ -29,6 +29,7 @@ const EVENT_TYPE_SLUG_TONE: Record<string, EventTone> = {
   skill_training: "ice",
   shooting: "ice",
   gym: "gym",
+  strength_training: "gym",
   off_ice: "gym",
   mobility: "recovery",
   recovery: "recovery",

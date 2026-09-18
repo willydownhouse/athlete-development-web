@@ -1,7 +1,12 @@
 import Link from "next/link";
 
 import { PageHeader } from "@/components/admin/page-header";
-import { listAdminEventTypes, listAdminMetricDefinitions, listAdminSports } from "@/lib/admin-api";
+import {
+  listAdminEventItemTypes,
+  listAdminEventTypes,
+  listAdminMetricDefinitions,
+  listAdminSports,
+} from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-auth";
 
 const overviewSections = [
@@ -14,6 +19,10 @@ const overviewSections = [
     href: "/admin/event-types",
   },
   {
+    title: "Event item types",
+    href: "/admin/event-item-types",
+  },
+  {
     title: "Metric definitions",
     href: "/admin/metric-definitions",
   },
@@ -22,15 +31,20 @@ const overviewSections = [
 export default async function AdminOverviewPage() {
   const { token } = await requireAdmin();
 
-  const [sports, eventTypes, metricDefinitions] = await Promise.all([
+  const [sports, eventTypes, eventItemTypes, metricDefinitions] = await Promise.all([
     listAdminSports(token),
     listAdminEventTypes(token),
+    listAdminEventItemTypes(token),
     listAdminMetricDefinitions(token),
   ]);
 
   const stats = [
     { total: sports.length, active: sports.filter((sport) => sport.active).length },
     { total: eventTypes.length, active: eventTypes.filter((eventType) => eventType.active).length },
+    {
+      total: eventItemTypes.length,
+      active: eventItemTypes.filter((itemType) => itemType.active).length,
+    },
     {
       total: metricDefinitions.length,
       active: metricDefinitions.filter((metric) => metric.active).length,
@@ -41,7 +55,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Admin overview"
-        description="Manage sports, event types, and metric definitions."
+        description="Manage sports, event types, event item types, and metric definitions."
       />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
