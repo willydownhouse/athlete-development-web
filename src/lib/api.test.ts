@@ -2,10 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   acceptInvitation,
+  createAthleteInvitation,
   createChatThread,
   createEventsBatch,
   declineInvitation,
+  endAthleteAccessGrant,
   fetchAllEvents,
+  fetchAthleteAccess,
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
@@ -24,6 +27,7 @@ import {
   fetchOlderChatMessages,
   fetchSports,
   getApiBaseUrl,
+  revokeAthleteInvitation,
   submitChatMessage,
 } from "./api";
 
@@ -253,6 +257,131 @@ describe("api client", () => {
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.method).toBe("POST");
     expect(invitation.status).toBe("declined");
+  });
+
+  it("fetches athlete access for a parent", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        members: [
+          {
+            id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+            role: "parent",
+            invitationId: null,
+            createdAt: "2026-09-18T12:00:00.000Z",
+            user: {
+              id: "11111111-1111-4111-8111-111111111111",
+              email: "parent@example.com",
+              name: "Parent User",
+            },
+          },
+        ],
+        invitations: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const access = await fetchAthleteAccess("test-token", "22222222-2222-4222-8222-222222222222");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222/access",
+    );
+    expect(access.members).toHaveLength(1);
+    expect(access.invitations).toEqual([]);
+  });
+
+  it("creates an athlete invitation", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        athleteId: "22222222-2222-4222-8222-222222222222",
+        invitedEmail: "other@example.com",
+        role: "parent",
+        status: "pending",
+        expiresAt: "2026-10-18T12:00:00.000Z",
+        createdAt: "2026-09-18T12:00:00.000Z",
+        invitedBy: {
+          id: "11111111-1111-4111-8111-111111111111",
+          email: "parent@example.com",
+          name: "Parent User",
+        },
+        athlete: {
+          id: "22222222-2222-4222-8222-222222222222",
+          name: "Leo Laine",
+        },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const invitation = await createAthleteInvitation(
+      "test-token",
+      "22222222-2222-4222-8222-222222222222",
+      { email: "other@example.com", role: "parent" },
+    );
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222/invitations",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(JSON.parse(String(options.body))).toEqual({
+      email: "other@example.com",
+      role: "parent",
+    });
+    expect(invitation.invitedEmail).toBe("other@example.com");
+  });
+
+  it("revokes an athlete invitation", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await revokeAthleteInvitation(
+      "test-token",
+      "22222222-2222-4222-8222-222222222222",
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    );
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222/invitations/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("DELETE");
+  });
+
+  it("ends an athlete access grant", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await endAthleteAccessGrant(
+      "test-token",
+      "22222222-2222-4222-8222-222222222222",
+      "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    );
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222/access/cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("DELETE");
   });
 
   it("fetches public sports", async () => {

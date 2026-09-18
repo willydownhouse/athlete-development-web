@@ -8,6 +8,23 @@ export const USAGE_HREF = "/usage";
 export const INVITES_NAV_LABEL = "Invites";
 export const INVITES_HREF = "/invites";
 export const HISTORY_NAV_LABEL = "History";
+export const ACCESS_NAV_LABEL = "Access";
+
+export function pendingInvitesNavLabel(count: number): string {
+  if (count <= 0) {
+    return INVITES_NAV_LABEL;
+  }
+
+  return `${INVITES_NAV_LABEL}, ${count} pending`;
+}
+
+export function pendingInvitesMenuButtonLabel(count: number): string {
+  if (count <= 0) {
+    return "Open menu";
+  }
+
+  return `Open menu, ${count} pending`;
+}
 
 export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
@@ -51,6 +68,10 @@ export function athleteEventMediaHref(athleteId: string, eventId: string, mediaI
 
 export function athleteEventsHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/events`;
+}
+
+export function athleteAccessHref(athleteId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/access`;
 }
 
 export function defaultDashboardHref(athletes: { id: string }[]): string {
@@ -112,6 +133,10 @@ export function appShellMobileTitle(pathname: string): string {
 
   if (/^\/athlete\/[^/]+\/events\/?$/.test(pathname)) {
     return HISTORY_NAV_LABEL;
+  }
+
+  if (/^\/athlete\/[^/]+\/access\/?$/.test(pathname)) {
+    return ACCESS_NAV_LABEL;
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {

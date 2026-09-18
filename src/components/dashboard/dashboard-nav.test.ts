@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   athleteEventIdFromPath,
   appShellMobileTitle,
+  ACCESS_NAV_LABEL,
   HISTORY_NAV_LABEL,
   isChatPath,
   isInvitesPath,
   isUsagePath,
+  pendingInvitesMenuButtonLabel,
+  pendingInvitesNavLabel,
 } from "./dashboard-nav";
 
 describe("athleteEventIdFromPath", () => {
@@ -64,10 +67,27 @@ describe("invites nav", () => {
   it("uses Invites as the mobile title", () => {
     expect(appShellMobileTitle("/invites")).toBe("Invites");
   });
+
+  it("adds a pending count to the nav label", () => {
+    expect(pendingInvitesNavLabel(0)).toBe("Invites");
+    expect(pendingInvitesNavLabel(1)).toBe("Invites, 1 pending");
+    expect(pendingInvitesNavLabel(3)).toBe("Invites, 3 pending");
+  });
+
+  it("adds a pending count to the mobile menu button label", () => {
+    expect(pendingInvitesMenuButtonLabel(0)).toBe("Open menu");
+    expect(pendingInvitesMenuButtonLabel(2)).toBe("Open menu, 2 pending");
+  });
 });
 
 describe("history nav", () => {
   it("uses History as the mobile title", () => {
     expect(appShellMobileTitle("/athlete/ath-1/events")).toBe(HISTORY_NAV_LABEL);
+  });
+});
+
+describe("access nav", () => {
+  it("uses Access as the mobile title", () => {
+    expect(appShellMobileTitle("/athlete/ath-1/access")).toBe(ACCESS_NAV_LABEL);
   });
 });

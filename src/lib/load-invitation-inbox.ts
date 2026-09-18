@@ -27,3 +27,8 @@ export async function loadInvitationInbox(): Promise<InvitationInboxResult> {
     return { invitations: [], error: "Unable to load invitations" };
   }
 }
+
+export async function loadPendingInviteCount(): Promise<number> {
+  const result = await loadInvitationInbox();
+  return result.error ? 0 : result.invitations.length;
+}

@@ -2,6 +2,7 @@ import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
   AcceptAthleteInvitationResponse,
   Athlete,
+  AthleteAccessListResponse,
   AthleteAccessRole,
   AthleteInvitation,
   AthleteInvitationInboxResponse,
@@ -146,6 +147,52 @@ export async function declineInvitation(
     token,
     `/api/invitations/${encodeURIComponent(invitationId)}/decline`,
     { method: "POST" },
+  );
+}
+
+export async function fetchAthleteAccess(
+  token: string,
+  athleteId: string,
+): Promise<AthleteAccessListResponse> {
+  return apiFetch<AthleteAccessListResponse>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/access`,
+  );
+}
+
+export async function createAthleteInvitation(
+  token: string,
+  athleteId: string,
+  body: { email: string; role: AthleteAccessRole },
+): Promise<AthleteInvitation> {
+  return apiFetch<AthleteInvitation>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/invitations`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function revokeAthleteInvitation(
+  token: string,
+  athleteId: string,
+  invitationId: string,
+): Promise<void> {
+  return apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/invitations/${encodeURIComponent(invitationId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function endAthleteAccessGrant(
+  token: string,
+  athleteId: string,
+  accessId: string,
+): Promise<void> {
+  return apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/access/${encodeURIComponent(accessId)}`,
+    { method: "DELETE" },
   );
 }
 

@@ -9,19 +9,10 @@ import {
 } from "@/app/invites/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
-import type { AthleteAccessRole, AthleteInvitation } from "@/lib/types";
+import { athleteAccessRoleLabel, formatInvitationExpiry } from "@/lib/athlete-access-display";
+import type { AthleteInvitation } from "@/lib/types";
 
 const initialState: InviteActionState = {};
-
-const expiryFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
-function roleLabel(role: AthleteAccessRole): string {
-  return role === "parent" ? "Parent" : "Athlete";
-}
 
 function inviterName(invitation: AthleteInvitation): string {
   return invitation.invitedBy.name?.trim() || invitation.invitedBy.email;
@@ -42,10 +33,11 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
     <article className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
       <h2 className="text-base font-semibold text-white">{invitation.athlete.name}</h2>
       <p className="mt-1 text-sm text-zinc-400">
-        {inviterName(invitation)} invited you as {roleLabel(invitation.role).toLowerCase()}.
+        {inviterName(invitation)} invited you as{" "}
+        {athleteAccessRoleLabel(invitation.role).toLowerCase()}.
       </p>
       <p className="mt-1 text-sm text-zinc-500">
-        Expires {expiryFormatter.format(new Date(invitation.expiresAt))}
+        Expires {formatInvitationExpiry(invitation.expiresAt)}
       </p>
 
       <div className="mt-4 flex flex-col gap-3">

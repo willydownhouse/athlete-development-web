@@ -90,6 +90,19 @@ export type AcceptAthleteInvitationResponse = {
   };
 };
 
+export type AthleteAccessMember = {
+  id: string;
+  role: AthleteAccessRole;
+  invitationId: string | null;
+  createdAt: string;
+  user: AthleteInvitationUser;
+};
+
+export type AthleteAccessListResponse = {
+  members: AthleteAccessMember[];
+  invitations: AthleteInvitation[];
+};
+
 export type EventCategory =
   | "training"
   | "competition"

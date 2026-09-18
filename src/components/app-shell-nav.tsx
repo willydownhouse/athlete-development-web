@@ -18,6 +18,7 @@ import {
   isUsagePath,
   INVITES_HREF,
   INVITES_NAV_LABEL,
+  pendingInvitesNavLabel,
   TODAY_NAV_LABEL,
   USAGE_HREF,
   USAGE_NAV_LABEL,
@@ -29,6 +30,7 @@ type AppShellNavProps = {
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
   dashboardAthleteId?: string | null;
+  pendingInviteCount?: number;
   onNavigate?: () => void;
 };
 
@@ -82,18 +84,30 @@ function NavLink({
   active,
   icon,
   children,
+  badgeCount = 0,
+  ariaLabel,
   onNavigate,
 }: {
   href: string;
   active: boolean;
   icon: ReactNode;
   children: ReactNode;
+  badgeCount?: number;
+  ariaLabel?: string;
   onNavigate?: () => void;
 }) {
   return (
-    <Link href={href} onClick={onNavigate} className={navLinkClass(active)}>
+    <Link href={href} onClick={onNavigate} className={navLinkClass(active)} aria-label={ariaLabel}>
       {icon}
       <span className="min-w-0 truncate">{children}</span>
+      {badgeCount > 0 ? (
+        <span
+          className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#b7d7ec] px-1.5 text-[11px] font-semibold text-[#1a2430]"
+          aria-hidden="true"
+        >
+          {badgeCount}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -192,6 +206,7 @@ export function AppShellNav({
   athletes = [],
   selectedAthlete = null,
   dashboardAthleteId = null,
+  pendingInviteCount = 0,
   onNavigate,
 }: AppShellNavProps) {
   const pathname = usePathname();
@@ -233,6 +248,8 @@ export function AppShellNav({
         href={INVITES_HREF}
         active={isInvitesPath(pathname)}
         icon={<InvitesIcon />}
+        badgeCount={pendingInviteCount}
+        ariaLabel={pendingInviteCount > 0 ? pendingInvitesNavLabel(pendingInviteCount) : undefined}
         onNavigate={onNavigate}
       >
         {INVITES_NAV_LABEL}
