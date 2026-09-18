@@ -141,7 +141,11 @@ function EventMetricFields({
                   type={mapping.metricDefinition.valueType === "number" ? "number" : "text"}
                   defaultValue={defaultValue}
                   className={inputClassName}
-                  {...(isRpeMetric ? { min: 1, max: 10, step: 1 } : {})}
+                  {...(mapping.metricDefinition.valueType === "number"
+                    ? isRpeMetric
+                      ? { min: 1, max: 10, step: 1 }
+                      : { step: "any" }
+                    : {})}
                 />
                 {mapping.metricDefinition.description || unit || isRpeMetric ? (
                   <span className="text-xs text-zinc-500">

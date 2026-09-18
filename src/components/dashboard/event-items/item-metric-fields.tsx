@@ -122,7 +122,11 @@ export function ItemMetricFields({ path, mappings, defaultValues = {} }: ItemMet
                 type={mapping.metricDefinition.valueType === "number" ? "number" : "text"}
                 defaultValue={defaultValue}
                 className={inputClassName}
-                {...(isRpeMetric ? { min: 1, max: 10, step: 1 } : {})}
+                {...(mapping.metricDefinition.valueType === "number"
+                  ? isRpeMetric
+                    ? { min: 1, max: 10, step: 1 }
+                    : { step: "any" }
+                  : {})}
               />
               {unit ? <span className="text-xs text-zinc-500">Unit: {unit}</span> : null}
             </label>
