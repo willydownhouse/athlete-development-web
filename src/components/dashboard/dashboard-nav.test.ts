@@ -7,6 +7,7 @@ import {
   HISTORY_NAV_LABEL,
   isChatPath,
   isInvitesPath,
+  isOnboardingPath,
   isUsagePath,
   pendingInvitesMenuButtonLabel,
   pendingInvitesNavLabel,
@@ -89,5 +90,15 @@ describe("history nav", () => {
 describe("access nav", () => {
   it("uses Access as the mobile title", () => {
     expect(appShellMobileTitle("/athlete/ath-1/access")).toBe(ACCESS_NAV_LABEL);
+  });
+});
+
+describe("onboarding nav", () => {
+  it("uses Add athlete as the mobile title", () => {
+    expect(isOnboardingPath("/onboarding")).toBe(true);
+    expect(isOnboardingPath("/onboarding/athlete")).toBe(true);
+    expect(isOnboardingPath("/dashboard")).toBe(false);
+    expect(appShellMobileTitle("/onboarding")).toBe("Add athlete");
+    expect(appShellMobileTitle("/onboarding/athlete")).toBe("Add athlete");
   });
 });

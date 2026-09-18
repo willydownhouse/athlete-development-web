@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   endAthleteAccessGrantAction,
   type AccessActionState,
 } from "@/app/athlete/[athleteId]/access/actions";
-import { FormMessage } from "@/components/admin/form-message";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { RemoveAccessConfirmModal } from "@/components/access/remove-access-confirm-modal";
 import { athleteAccessRoleLabel } from "@/lib/athlete-access-display";
 import type { AthleteAccessMember } from "@/lib/types";
 
@@ -26,13 +25,22 @@ export function AccessMemberCard({
   member: AthleteAccessMember;
   isCurrentUser: boolean;
 }) {
-  const [state, formAction] = useActionState(endAthleteAccessGrantAction, initialState);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [state, formAction, pending] = useActionState(endAthleteAccessGrantAction, initialState);
+  const name = memberName(member);
+
+  function confirmRemove() {
+    const formData = new FormData();
+    formData.set("athleteId", athleteId);
+    formData.set("accessId", member.id);
+    formAction(formData);
+  }
 
   return (
     <article className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-white">{memberName(member)}</h3>
+          <h3 className="truncate text-base font-semibold text-white">{name}</h3>
           <p className="mt-1 truncate text-sm text-zinc-400">{member.user.email}</p>
           <p className="mt-1 text-sm text-zinc-500">{athleteAccessRoleLabel(member.role)}</p>
         </div>
@@ -40,18 +48,30 @@ export function AccessMemberCard({
           <p className="shrink-0 rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-zinc-300">
             You
           </p>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            className="shrink-0 text-sm font-medium text-zinc-500 transition hover:text-zinc-200"
+          >
+            Remove
+          </button>
+        )}
       </div>
 
       {isCurrentUser ? null : (
-        <form action={formAction} className="mt-4 space-y-3">
-          <input type="hidden" name="athleteId" value={athleteId} />
-          <input type="hidden" name="accessId" value={member.id} />
-          <FormMessage error={state.error} />
-          <SubmitButton variant="danger" pendingLabel="Removing…">
-            Remove access
-          </SubmitButton>
-        </form>
+        <RemoveAccessConfirmModal
+          open={confirmOpen}
+          memberName={name}
+          pending={pending}
+          error={state.error}
+          onClose={() => {
+            if (!pending) {
+              setConfirmOpen(false);
+            }
+          }}
+          onConfirm={confirmRemove}
+        />
       )}
     </article>
   );

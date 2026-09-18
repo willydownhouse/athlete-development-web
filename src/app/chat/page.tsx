@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { ChatView } from "@/components/chat/chat-view";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
 import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -55,7 +55,7 @@ export default async function ChatPage() {
   }
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -73,6 +73,6 @@ export default async function ChatPage() {
           loadError={loadError}
         />
       </VisibleViewportFrame>
-    </DashboardShell>
+    </AppShell>
   );
 }

@@ -10,7 +10,7 @@ import {
   backToTodayLabel,
   dashboardHref,
 } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
@@ -52,7 +52,7 @@ export default async function AthleteAccessPage({ params }: AthleteAccessPagePro
   }
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -80,6 +80,6 @@ export default async function AthleteAccessPage({ params }: AthleteAccessPagePro
           <InviteForm athleteId={selectedAthlete.id} />
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

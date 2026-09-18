@@ -8,7 +8,7 @@ import {
   backToTodayLabel,
   HISTORY_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventsListFilters } from "@/components/dashboard/events-list-filters";
 import { EventsListSection } from "@/components/dashboard/events-list-section";
@@ -90,7 +90,7 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
   );
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -130,6 +130,6 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           </Suspense>
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

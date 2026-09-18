@@ -9,6 +9,7 @@ export const INVITES_NAV_LABEL = "Invites";
 export const INVITES_HREF = "/invites";
 export const HISTORY_NAV_LABEL = "History";
 export const ACCESS_NAV_LABEL = "Access";
+export const ADD_ATHLETE_NAV_LABEL = "Add athlete";
 
 export function pendingInvitesNavLabel(count: number): string {
   if (count <= 0) {
@@ -106,6 +107,10 @@ export function isInvitesPath(pathname: string): boolean {
   return pathname === INVITES_HREF || pathname.startsWith(`${INVITES_HREF}/`);
 }
 
+export function isOnboardingPath(pathname: string): boolean {
+  return pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+}
+
 export function appShellMobileTitle(pathname: string): string {
   if (isChatPath(pathname)) {
     return CHAT_NAV_LABEL;
@@ -145,6 +150,10 @@ export function appShellMobileTitle(pathname: string): string {
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {
     return "Event";
+  }
+
+  if (isOnboardingPath(pathname)) {
+    return ADD_ATHLETE_NAV_LABEL;
   }
 
   return "Athlete Development Center";

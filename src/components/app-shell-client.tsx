@@ -5,19 +5,21 @@ import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import {
+  ADD_ATHLETE_NAV_LABEL,
   appShellMobileTitle,
   athleteEventIdFromPath,
+  isOnboardingPath,
   pendingInvitesMenuButtonLabel,
 } from "@/components/dashboard/dashboard-nav";
 import { SignOutButton } from "@/components/sign-out-button";
 import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
-type DashboardShellClientProps = {
+type AppShellClientProps = {
   userEmail: string;
   isAdmin?: boolean;
-  athletes: Athlete[];
-  selectedAthlete: Athlete | null;
+  athletes?: Athlete[];
+  selectedAthlete?: Athlete | null;
   pendingInviteCount: number;
   children: React.ReactNode;
 };
@@ -38,16 +40,17 @@ function CloseIcon() {
   );
 }
 
-export function DashboardShellClient({
+export function AppShellClient({
   userEmail,
   isAdmin = false,
-  athletes,
-  selectedAthlete,
+  athletes = [],
+  selectedAthlete = null,
   pendingInviteCount,
   children,
-}: DashboardShellClientProps) {
+}: AppShellClientProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const onboarding = isOnboardingPath(pathname);
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -95,7 +98,14 @@ export function DashboardShellClient({
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-lg font-semibold text-white">Athlete Development Center</p>
+            {onboarding ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                {ADD_ATHLETE_NAV_LABEL}
+              </p>
+            ) : null}
+            <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
+              Athlete Development Center
+            </p>
           </div>
           <button
             type="button"

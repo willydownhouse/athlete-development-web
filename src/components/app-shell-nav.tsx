@@ -15,6 +15,7 @@ import {
   isAthleteDashboardPath,
   isChatPath,
   isInvitesPath,
+  isOnboardingPath,
   isUsagePath,
   INVITES_HREF,
   INVITES_NAV_LABEL,
@@ -22,6 +23,7 @@ import {
   TODAY_NAV_LABEL,
   USAGE_HREF,
   USAGE_NAV_LABEL,
+  ADD_ATHLETE_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
 import type { Athlete } from "@/lib/types";
 
@@ -29,7 +31,6 @@ type AppShellNavProps = {
   isAdmin?: boolean;
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
-  dashboardAthleteId?: string | null;
   pendingInviteCount?: number;
   onNavigate?: () => void;
 };
@@ -205,16 +206,12 @@ export function AppShellNav({
   isAdmin = false,
   athletes = [],
   selectedAthlete = null,
-  dashboardAthleteId = null,
   pendingInviteCount = 0,
   onNavigate,
 }: AppShellNavProps) {
   const pathname = usePathname();
-  const dashboardLink = dashboardAthleteId
-    ? dashboardHref(dashboardAthleteId)
-    : selectedAthlete !== null
-      ? dashboardHref(selectedAthlete.id)
-      : defaultDashboardHref(athletes);
+  const dashboardLink =
+    selectedAthlete !== null ? dashboardHref(selectedAthlete.id) : defaultDashboardHref(athletes);
 
   return (
     <nav className="space-y-1">
@@ -266,11 +263,11 @@ export function AppShellNav({
 
       <NavLink
         href="/onboarding"
-        active={pathname.startsWith("/onboarding")}
+        active={isOnboardingPath(pathname)}
         icon={<AddAthleteIcon />}
         onNavigate={onNavigate}
       >
-        Add athlete
+        {ADD_ATHLETE_NAV_LABEL}
       </NavLink>
 
       {isAdmin ? (

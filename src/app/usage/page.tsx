@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { UsageMeters, UsageMetersSkeleton } from "@/components/usage/usage-meters";
 import { UsagePlanCard } from "@/components/usage/usage-plan-card";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -25,7 +25,7 @@ export default async function UsagePage() {
   const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -40,6 +40,6 @@ export default async function UsagePage() {
           </Suspense>
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

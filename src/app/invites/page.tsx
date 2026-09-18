@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { InvitesList, InvitesListSkeleton } from "@/components/invites/invites-list";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
@@ -24,7 +24,7 @@ export default async function InvitesPage() {
   const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -41,6 +41,6 @@ export default async function InvitesPage() {
           </Suspense>
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

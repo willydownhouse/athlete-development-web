@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CalendarSection } from "@/components/calendar/calendar-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { loadCalendarMonthEvents } from "@/lib/calendar-event-data";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
@@ -50,7 +50,7 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
   const monthEvents = await loadCalendarMonthEvents(normalizedAthleteId, timeZone);
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -78,6 +78,6 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
           />
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { athleteEventHref, backToEventLabel } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { EventMediaPlayerSection } from "@/components/dashboard/event-media-player-section";
 import { EventMediaPlayerSkeleton } from "@/components/dashboard/event-media-player-view";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -45,7 +45,7 @@ export default async function AthleteEventMediaPage({ params }: AthleteEventMedi
   }
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -69,6 +69,6 @@ export default async function AthleteEventMediaPage({ params }: AthleteEventMedi
           </Suspense>
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }
