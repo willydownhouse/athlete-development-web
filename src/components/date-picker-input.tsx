@@ -217,7 +217,7 @@ export function DatePickerInput({
       : null;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full">
       {name ? <input type="hidden" name={name} value={formattedValue} /> : null}
       <button
         ref={triggerRef}
@@ -236,7 +236,7 @@ export function DatePickerInput({
         className={`flex w-full items-center justify-between text-left ${compact ? "gap-1.5" : "gap-3"} ${className ?? ""}`}
       >
         <span
-          className={`min-w-0 truncate whitespace-nowrap ${selected ? "text-white" : "text-zinc-500"}`}
+          className={`min-w-0 flex-1 truncate whitespace-nowrap ${selected ? "text-white" : "text-zinc-500"}`}
         >
           {displayValue}
         </span>

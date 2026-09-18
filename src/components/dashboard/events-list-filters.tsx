@@ -58,7 +58,7 @@ type EventsListFiltersProps = {
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 const datePickerClassName =
-  "w-full rounded-xl border border-white/10 bg-[#1c222c] px-2.5 py-2 text-xs text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20 sm:px-3 sm:py-2.5 sm:text-sm";
+  "h-9 w-full rounded-xl border border-white/10 bg-[#1c222c] px-2.5 text-xs text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20 sm:h-10 sm:px-3 sm:text-sm";
 
 export function EventsListFilters({
   eventTypes,
@@ -225,10 +225,10 @@ export function EventsListFilters({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4"
+      className="flex flex-col gap-4 rounded-[1.35rem] bg-[#171b22] p-4"
     >
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 [&>*]:min-w-0">
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex min-w-0 flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">From date</span>
           <DatePickerInput
             value={from}
@@ -239,7 +239,7 @@ export function EventsListFilters({
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex min-w-0 flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">To date</span>
           <DatePickerInput
             value={to}
