@@ -11,6 +11,7 @@ import {
   EVENT_ITEMS_MAX_TOTAL,
   eventItemFormSectionTitle,
   eventItemsToFormDrafts,
+  normalizeEventItemLabel,
   eventItemTypeAllowsMultiple,
   filterAddableItemTypes,
   findItemFormTypeNode,
@@ -187,7 +188,11 @@ function EventItemNode({
             name={itemFieldName(path, "label")}
             defaultValue={item.label}
             placeholder={typeName}
+            maxLength={EVENT_ITEM_LABEL_MAX_LENGTH}
             className={inputClassName}
+            onBlur={(event) => {
+              event.currentTarget.value = normalizeEventItemLabel(event.currentTarget.value);
+            }}
           />
           <span className="mt-1 text-xs text-zinc-500">
             Max {EVENT_ITEM_LABEL_MAX_LENGTH} characters

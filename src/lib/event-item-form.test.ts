@@ -13,6 +13,7 @@ import {
   parseEventItemsFromFormData,
   shouldUseCompactItemMetricFields,
   validateEventItemsForm,
+  normalizeEventItemLabel,
   type EventItemFormCatalog,
 } from "./event-item-form";
 import { BOOLEAN_METRIC_SAVED_VALUE, booleanMetricSavedFieldName } from "./event-metric-form";
@@ -170,6 +171,14 @@ function sampleExercise(overrides: Partial<EventItem> = {}): EventItem {
   };
 }
 
+describe("normalizeEventItemLabel", () => {
+  it("trims and collapses internal whitespace", () => {
+    expect(normalizeEventItemLabel("  Back   squat ")).toBe("Back squat");
+    expect(normalizeEventItemLabel("\tSet\n1")).toBe("Set 1");
+    expect(normalizeEventItemLabel("   ")).toBe("");
+  });
+});
+
 describe("parseEventItemsFromFormData", () => {
   it("builds exercise and set items from form fields", () => {
     const formData = new FormData();
@@ -208,6 +217,27 @@ describe("parseEventItemsFromFormData", () => {
     formData.set(itemFieldName([0], "label"), "  ");
 
     expect(parseEventItemsFromFormData(formData)).toEqual([]);
+  });
+
+  it("trims and collapses whitespace in item labels", () => {
+    const formData = new FormData();
+    formData.set(itemFieldName([0], "eventItemTypeId"), "exercise-type-id");
+    formData.set(itemFieldName([0], "label"), "  Back   squat ");
+    formData.set(itemFieldName([0, 0], "eventItemTypeId"), "set-type-id");
+    formData.set(itemFieldName([0, 0], "label"), "\tSet   1\n");
+
+    expect(parseEventItemsFromFormData(formData)).toEqual([
+      {
+        eventItemTypeId: "exercise-type-id",
+        label: "Back squat",
+        children: [
+          {
+            eventItemTypeId: "set-type-id",
+            label: "Set 1",
+          },
+        ],
+      },
+    ]);
   });
 
   it("includes existing item ids and passthrough fields", () => {
@@ -662,6 +692,16 @@ describe("eventItemsToInputs", () => {
             metrics: [{ metricDefinitionId: "rep-metric-id", numericValue: 10 }],
           },
         ],
+      },
+    ]);
+  });
+
+  it("trims and collapses whitespace in copied item labels", () => {
+    expect(eventItemsToInputs([sampleExercise({ label: "  Back   squat " })])).toEqual([
+      {
+        eventItemTypeId: "exercise-type-id",
+        sortOrder: 0,
+        label: "Back squat",
       },
     ]);
   });

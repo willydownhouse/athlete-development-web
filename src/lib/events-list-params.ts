@@ -1,4 +1,5 @@
 import { pluralizeItemTypeName } from "@/lib/event-item-display";
+import { EVENT_ITEM_LABEL_MAX_LENGTH, normalizeEventItemLabel } from "@/lib/event-item-form";
 import { zonedDateTimeToUtcIso, getZonedWeekRange } from "@/lib/time-zone";
 import { EVENT_CATEGORIES, type EventCategory } from "@/lib/types";
 
@@ -62,8 +63,7 @@ export function eventsListItemShowOptions(listLabel: string): {
   ];
 }
 
-/** Keep in sync with athlete-development-service EVENT_ITEM_LABEL_MAX_LENGTH. */
-const EVENTS_LIST_LABEL_MAX_LENGTH = 100;
+const EVENTS_LIST_LABEL_MAX_LENGTH = EVENT_ITEM_LABEL_MAX_LENGTH;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -101,7 +101,7 @@ export function normalizeEventsListLabel(value: string | undefined): string | un
     return undefined;
   }
 
-  const normalized = value.trim().replace(/\s+/g, " ");
+  const normalized = normalizeEventItemLabel(value);
   if (!normalized || normalized.length > EVENTS_LIST_LABEL_MAX_LENGTH) {
     return undefined;
   }

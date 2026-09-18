@@ -34,6 +34,11 @@ const EVENT_ITEMS_MAX_DEPTH = 10;
 /** Keep in sync with athlete-development-service EVENT_ITEM_LABEL_MAX_LENGTH. */
 export const EVENT_ITEM_LABEL_MAX_LENGTH = 100;
 
+/** Same as the item list/aggregate `label` query: trim and collapse internal whitespace. */
+export function normalizeEventItemLabel(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 const COMPACT_ITEM_METRIC_LIMIT = 3;
 
 export type EventItemFormPath = number[];
@@ -193,6 +198,11 @@ function readField(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function readItemLabel(formData: FormData, path: EventItemFormPath): string {
+  const value = formData.get(itemFieldName(path, "label"));
+  return typeof value === "string" ? normalizeEventItemLabel(value) : "";
+}
+
 function readOptionalId(formData: FormData, key: string): string | undefined {
   const value = readField(formData, key);
   return value || undefined;
@@ -278,7 +288,7 @@ function parseItemAt(formData: FormData, path: EventItemFormPath): EventItemInpu
   }
 
   const children = parseItemsAt(formData, path);
-  const label = readField(formData, itemFieldName(path, "label"));
+  const label = readItemLabel(formData, path);
   const durationSeconds = readDurationPartsSecondsFromFormData(
     formData,
     itemDurationFieldNames(path),
@@ -395,7 +405,7 @@ function validateItemsAt(
       findItemFormTypeNode(allowedTypes, eventItemTypeId);
     const typeName = typeNode?.name ?? "Item";
     const itemTitle = `${titlePrefix}${typeName} ${position + 1}`;
-    const label = readField(formData, itemFieldName(path, "label"));
+    const label = readItemLabel(formData, path);
 
     if (label.length > EVENT_ITEM_LABEL_MAX_LENGTH) {
       return `${itemTitle} · Name must be ${EVENT_ITEM_LABEL_MAX_LENGTH} characters or less`;
@@ -582,7 +592,7 @@ export function eventItemsToInputs(items: EventItem[]): EventItemInput[] {
 function eventItemToInput(item: EventItem): EventItemInput {
   const metrics = eventMetricsToInputs(item.metrics);
   const children = item.children.length > 0 ? eventItemsToInputs(item.children) : undefined;
-  const label = item.label?.trim();
+  const label = item.label ? normalizeEventItemLabel(item.label) : "";
   const notes = item.notes?.trim();
   const structuredData =
     typeof item.structuredData === "object" &&
