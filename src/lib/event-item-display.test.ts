@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   eventItemIsCollapsible,
   eventItemHeading,
+  eventItemListTitle,
   eventItemShowsDurationOnHeading,
   eventItemLabel,
   eventItemSameTypeIndex,
@@ -189,6 +190,7 @@ describe("eventItemSameTypeIndex, eventItemTypeHeading, and eventItemLabel", () 
     expect(eventItemLabel(warmUp)).toBe("Treadmill");
     expect(eventItemUsesLabelAsHeading(warmUp)).toBe(false);
     expect(eventItemHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemListTitle(warmUp)).toBe("Treadmill");
     expect(eventItemIsCollapsible(warmUp)).toBe(false);
   });
 
@@ -213,6 +215,7 @@ describe("eventItemSameTypeIndex, eventItemTypeHeading, and eventItemLabel", () 
 
     expect(eventItemTypeHeading(warmUp, 1)).toBe("Warm-up");
     expect(eventItemHeading(warmUp, 1)).toBe("Warm-up");
+    expect(eventItemListTitle(warmUp)).toBe("Warm-up");
     expect(eventItemTypeHeading(coolDown, 1)).toBe("Cool-down");
     expect(eventItemShowsDurationOnHeading(warmUp)).toBe(true);
     expect(

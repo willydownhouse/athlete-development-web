@@ -1,19 +1,41 @@
-import { ApiError, fetchEventAggregate, fetchEvents } from "@/lib/api";
+import {
+  ApiError,
+  fetchEventAggregate,
+  fetchEventItemAggregate,
+  fetchEventItems,
+  fetchEvents,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import {
   eventsListDateRange,
+  eventsListMeasureLabel,
   isEventsListAggregateShow,
+  isEventsListExerciseMeasure,
+  isEventsListItemMeasure,
   isEventsListMetricShow,
+  resolveEventsListItemTypeId,
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import type { EventAggregate, EventListResponse } from "@/lib/types";
+import type {
+  EventAggregate,
+  EventItemAggregate,
+  EventItemListResponse,
+  EventItemType,
+  EventListResponse,
+} from "@/lib/types";
 
 type EventsListResult =
   { data: EventListResponse; error?: undefined } | { data?: undefined; error: string };
 
 type EventsAggregateResult =
   { data: EventAggregate; error?: undefined } | { data?: undefined; error: string };
+
+type EventItemsAggregateResult =
+  { data: EventItemAggregate; error?: undefined } | { data?: undefined; error: string };
+
+type EventItemsListResult =
+  { data: EventItemListResponse; error?: undefined } | { data?: undefined; error: string };
 
 function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
@@ -95,5 +117,119 @@ export async function fetchAthleteEventsAggregate(
     return { data };
   } catch (error) {
     return { error: errorMessage(error, "Unable to load total") };
+  }
+}
+
+export async function fetchAthleteEventItemsAggregate(
+  athleteId: string,
+  params: EventsListSearchParams,
+  itemTypes: EventItemType[],
+): Promise<EventItemsAggregateResult> {
+  if (!isEventsListItemMeasure(params.measure) || !isEventsListAggregateShow(params.show)) {
+    return { error: "Choose a total to show" };
+  }
+
+  if (isEventsListExerciseMeasure(params.measure) && !params.label) {
+    return { error: "Enter an exercise name" };
+  }
+
+  if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
+    return { error: "Select a metric" };
+  }
+
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: "You need to sign in again" };
+  }
+
+  const timeZone = await getRequestTimeZone();
+  const dateRange = eventsListDateRange(timeZone, params.from, params.to);
+
+  if (!dateRange.startedAtFrom || !dateRange.startedAtTo) {
+    return { error: "Choose a from date and a to date" };
+  }
+
+  try {
+    const eventItemTypeId = resolveEventsListItemTypeId(itemTypes, params.measure);
+
+    if (!eventItemTypeId) {
+      return {
+        error: `${eventsListMeasureLabel(params.measure)} is not available`,
+      };
+    }
+
+    const data = await fetchEventItemAggregate(token, athleteId, {
+      startedAtFrom: dateRange.startedAtFrom,
+      startedAtTo: dateRange.startedAtTo,
+      eventItemTypeId,
+      aggregation: params.show,
+      ...(params.eventTypeIds.length > 0 ? { eventTypeIds: params.eventTypeIds } : {}),
+      ...(params.categories.length > 0 ? { categories: params.categories } : {}),
+      ...(isEventsListExerciseMeasure(params.measure) && params.label
+        ? { label: params.label }
+        : {}),
+      ...(isEventsListMetricShow(params.show) && params.metricDefinitionId
+        ? { metricDefinitionId: params.metricDefinitionId }
+        : {}),
+    });
+
+    return { data };
+  } catch (error) {
+    return { error: errorMessage(error, "Unable to load total") };
+  }
+}
+
+export async function fetchAthleteEventItemsList(
+  athleteId: string,
+  params: EventsListSearchParams,
+  itemTypes: EventItemType[],
+): Promise<EventItemsListResult> {
+  if (!isEventsListItemMeasure(params.measure)) {
+    return { error: "Choose items to show" };
+  }
+
+  if (isEventsListExerciseMeasure(params.measure) && !params.label) {
+    return { error: "Enter an exercise name" };
+  }
+
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: "You need to sign in again" };
+  }
+
+  const timeZone = await getRequestTimeZone();
+  const dateRange = eventsListDateRange(timeZone, params.from, params.to);
+
+  if (!dateRange.startedAtFrom || !dateRange.startedAtTo) {
+    return { error: "Choose a from date and a to date" };
+  }
+
+  try {
+    const eventItemTypeId = resolveEventsListItemTypeId(itemTypes, params.measure);
+
+    if (!eventItemTypeId) {
+      return {
+        error: `${eventsListMeasureLabel(params.measure)} is not available`,
+      };
+    }
+
+    const data = await fetchEventItems(token, athleteId, {
+      startedAtFrom: dateRange.startedAtFrom,
+      startedAtTo: dateRange.startedAtTo,
+      eventItemTypeId,
+      limit: params.limit,
+      offset: params.offset,
+      ...(params.eventTypeIds.length > 0 ? { eventTypeIds: params.eventTypeIds } : {}),
+      ...(params.categories.length > 0 ? { categories: params.categories } : {}),
+      ...(isEventsListExerciseMeasure(params.measure) && params.label
+        ? { label: params.label }
+        : {}),
+    });
+
+    return { data };
+  } catch (error) {
+    return { error: errorMessage(error, "Unable to load items") };
   }
 }

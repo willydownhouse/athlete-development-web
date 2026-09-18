@@ -7,23 +7,41 @@ import { DatePickerInput } from "@/components/date-picker-input";
 import { FormMultiSelect } from "@/components/form/form-multi-select";
 import type { FormSelectGroup } from "@/components/form/form-select";
 import { PickerMenu } from "@/components/picker-menu";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
+import { groupEventTypes } from "@/lib/event-type-groups";
+import {
+  numericMetricsForEventsListMeasure,
+  type ItemMeasureNumericMetrics,
+} from "@/lib/events-list-metrics";
 import {
   buildEventsListQueryString,
+  eventsListItemMeasureListLabel,
+  eventsListItemShowOptions,
+  EVENTS_LIST_DEFAULT_ITEM_SHOW,
   EVENTS_LIST_DEFAULT_LIMIT,
+  EVENTS_LIST_DEFAULT_MEASURE,
   EVENTS_LIST_DEFAULT_PAGE,
   EVENTS_LIST_DEFAULT_SHOW,
+  EVENTS_LIST_MEASURE_OPTIONS,
   EVENTS_LIST_PAGE_SIZE_OPTIONS,
   EVENTS_LIST_SHOW_OPTIONS,
+  isEventsListExerciseMeasure,
+  isEventsListItemListShow,
+  isEventsListItemMeasure,
+  isEventsListItemShow,
   isEventsListMetricShow,
+  isEventsListPagedShow,
+  normalizeEventsListLabel,
+  type EventsListMeasure,
   type EventsListSearchParams,
   type EventsListShow,
 } from "@/lib/events-list-params";
-import { groupEventTypes } from "@/lib/event-type-groups";
-import { numericMetricsForSelectedEventTypes } from "@/lib/events-list-metrics";
 import {
   EVENT_CATEGORIES,
   formatCategoryLabel,
   type EventCategory,
+  type EventItemType,
   type EventType,
   type EventTypeMetricDefinition,
 } from "@/lib/types";
@@ -31,6 +49,8 @@ import {
 type EventsListFiltersProps = {
   eventTypes: EventType[];
   eventTypeMetrics: EventTypeMetricDefinition[];
+  itemTypes: EventItemType[];
+  itemMeasureMetrics: ItemMeasureNumericMetrics;
   focusSportName: string;
   params: EventsListSearchParams;
 };
@@ -43,6 +63,8 @@ const datePickerClassName =
 export function EventsListFilters({
   eventTypes,
   eventTypeMetrics,
+  itemTypes,
+  itemMeasureMetrics,
   focusSportName,
   params,
 }: EventsListFiltersProps) {
@@ -52,8 +74,10 @@ export function EventsListFilters({
   const [to, setTo] = useState(params.to ?? "");
   const [eventTypeIds, setEventTypeIds] = useState(params.eventTypeIds);
   const [categories, setCategories] = useState<EventCategory[]>(params.categories);
+  const [measure, setMeasure] = useState<EventsListMeasure>(params.measure);
   const [show, setShow] = useState<EventsListShow>(params.show);
   const [metricDefinitionId, setMetricDefinitionId] = useState(params.metricDefinitionId ?? "");
+  const [label, setLabel] = useState(params.label ?? "");
   const [limit, setLimit] = useState(String(params.limit));
 
   const eventTypeGroups = useMemo<FormSelectGroup[]>(
@@ -68,21 +92,64 @@ export function EventsListFilters({
     [eventTypes, focusSportName],
   );
 
-  const metricOptions = useMemo(
+  const itemShowOptions = useMemo(
     () =>
-      numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds).map((metric) => ({
-        value: metric.id,
-        label: metric.name,
-      })),
-    [eventTypeIds, eventTypeMetrics],
+      isEventsListItemMeasure(measure)
+        ? eventsListItemShowOptions(eventsListItemMeasureListLabel(itemTypes, measure))
+        : EVENTS_LIST_SHOW_OPTIONS,
+    [itemTypes, measure],
   );
+
+  const metricOptions = useMemo(() => {
+    return numericMetricsForEventsListMeasure(
+      measure,
+      itemMeasureMetrics,
+      eventTypeMetrics,
+      eventTypeIds,
+    ).map((metric) => ({
+      value: metric.id,
+      label: metric.name,
+    }));
+  }, [eventTypeIds, eventTypeMetrics, itemMeasureMetrics, measure]);
 
   function setSelectedEventTypeIds(nextEventTypeIds: string[]) {
     setEventTypeIds(nextEventTypeIds);
     const nextMetricIds = new Set(
-      numericMetricsForSelectedEventTypes(eventTypeMetrics, nextEventTypeIds).map(
-        (metric) => metric.id,
-      ),
+      numericMetricsForEventsListMeasure(
+        measure,
+        itemMeasureMetrics,
+        eventTypeMetrics,
+        nextEventTypeIds,
+      ).map((metric) => metric.id),
+    );
+
+    if (metricDefinitionId && !nextMetricIds.has(metricDefinitionId)) {
+      setMetricDefinitionId("");
+    }
+  }
+
+  function setSelectedMeasure(nextMeasure: EventsListMeasure) {
+    setMeasure(nextMeasure);
+
+    if (isEventsListItemMeasure(nextMeasure)) {
+      if (!isEventsListItemShow(show)) {
+        setShow(EVENTS_LIST_DEFAULT_ITEM_SHOW);
+      }
+    } else if (isEventsListItemListShow(show)) {
+      setShow(EVENTS_LIST_DEFAULT_SHOW);
+    }
+
+    if (!isEventsListExerciseMeasure(nextMeasure)) {
+      setLabel("");
+    }
+
+    const nextMetricIds = new Set(
+      numericMetricsForEventsListMeasure(
+        nextMeasure,
+        itemMeasureMetrics,
+        eventTypeMetrics,
+        eventTypeIds,
+      ).map((metric) => metric.id),
     );
 
     if (metricDefinitionId && !nextMetricIds.has(metricDefinitionId)) {
@@ -95,11 +162,16 @@ export function EventsListFilters({
     to: string;
     eventTypeIds: string[];
     categories: EventCategory[];
+    measure: EventsListMeasure;
     show: EventsListShow;
     metricDefinitionId: string;
+    label: string;
     limit: string;
   }) {
     const parsedLimit = Number.parseInt(next.limit, 10);
+    const itemMeasure = isEventsListItemMeasure(next.measure);
+    const nextShow =
+      itemMeasure && !isEventsListItemShow(next.show) ? EVENTS_LIST_DEFAULT_ITEM_SHOW : next.show;
     const query = buildEventsListQueryString({
       limit: Number.isFinite(parsedLimit) ? parsedLimit : EVENTS_LIST_DEFAULT_LIMIT,
       page: EVENTS_LIST_DEFAULT_PAGE,
@@ -108,8 +180,14 @@ export function EventsListFilters({
       to: next.to || undefined,
       eventTypeIds: next.eventTypeIds,
       categories: next.categories,
-      show: next.show,
-      metricDefinitionId: next.metricDefinitionId || undefined,
+      measure: next.measure,
+      show: nextShow,
+      metricDefinitionId: isEventsListMetricShow(nextShow)
+        ? next.metricDefinitionId || undefined
+        : undefined,
+      label: isEventsListExerciseMeasure(next.measure)
+        ? normalizeEventsListLabel(next.label)
+        : undefined,
       explicitDateRange: Boolean(next.from || next.to),
     });
 
@@ -118,7 +196,17 @@ export function EventsListFilters({
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    applyFilters({ from, to, eventTypeIds, categories, show, metricDefinitionId, limit });
+    applyFilters({
+      from,
+      to,
+      eventTypeIds,
+      categories,
+      measure,
+      show,
+      metricDefinitionId,
+      label,
+      limit,
+    });
   }
 
   function handleClear() {
@@ -126,8 +214,10 @@ export function EventsListFilters({
     setTo("");
     setEventTypeIds([]);
     setCategories([]);
+    setMeasure(EVENTS_LIST_DEFAULT_MEASURE);
     setShow(EVENTS_LIST_DEFAULT_SHOW);
     setMetricDefinitionId("");
+    setLabel("");
     setLimit(String(EVENTS_LIST_DEFAULT_LIMIT));
     router.replace(pathname, { scroll: false });
   }
@@ -196,17 +286,65 @@ export function EventsListFilters({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium text-zinc-300">Measure</span>
+          <PickerMenu
+            value={measure}
+            onChange={(value) =>
+              setSelectedMeasure(
+                EVENTS_LIST_MEASURE_OPTIONS.some((option) => option.value === value)
+                  ? (value as EventsListMeasure)
+                  : EVENTS_LIST_DEFAULT_MEASURE,
+              )
+            }
+            options={EVENTS_LIST_MEASURE_OPTIONS}
+            className={inputClassName}
+            aria-label="Measure"
+          />
+        </label>
+
+        {isEventsListExerciseMeasure(measure) ? (
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="exercise-name" className="font-medium text-zinc-300">
+                Name
+              </label>
+              <InfoTooltip label="How exercise name matching works">
+                <div className="space-y-2 text-sm text-zinc-300">
+                  <p>
+                    The list matches names that start with what you type.{" "}
+                    <span className="font-medium text-white">B</span> finds Back squat.
+                  </p>
+                  <p>Count, duration, and metric totals need the full name.</p>
+                </div>
+              </InfoTooltip>
+            </div>
+            <input
+              id="exercise-name"
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              maxLength={EVENT_ITEM_LABEL_MAX_LENGTH}
+              required
+              placeholder="Back squat"
+              className={inputClassName}
+              aria-label="Exercise name"
+            />
+          </div>
+        ) : null}
+
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">Show</span>
           <PickerMenu
             value={show}
-            onChange={(value) =>
+            onChange={(value) => {
               setShow(
-                EVENTS_LIST_SHOW_OPTIONS.some((option) => option.value === value)
+                itemShowOptions.some((option) => option.value === value)
                   ? (value as EventsListShow)
-                  : EVENTS_LIST_DEFAULT_SHOW,
-              )
-            }
-            options={EVENTS_LIST_SHOW_OPTIONS}
+                  : isEventsListItemMeasure(measure)
+                    ? EVENTS_LIST_DEFAULT_ITEM_SHOW
+                    : EVENTS_LIST_DEFAULT_SHOW,
+              );
+            }}
+            options={itemShowOptions}
             className={inputClassName}
             aria-label="Show"
           />
@@ -229,7 +367,7 @@ export function EventsListFilters({
           />
         </label>
 
-        {show === "events" ? (
+        {isEventsListPagedShow(measure, show) ? (
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-zinc-300">Page size</span>
             <PickerMenu
@@ -237,7 +375,11 @@ export function EventsListFilters({
               onChange={setLimit}
               options={EVENTS_LIST_PAGE_SIZE_OPTIONS.map((option) => ({
                 value: String(option),
-                label: `${option} events`,
+                label: `${option} ${
+                  isEventsListItemMeasure(measure)
+                    ? eventsListItemMeasureListLabel(itemTypes, measure).toLowerCase()
+                    : "events"
+                }`,
               }))}
               className={inputClassName}
               aria-label="Page size"
