@@ -1,7 +1,10 @@
 import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
+  AcceptAthleteInvitationResponse,
   Athlete,
   AthleteAccessRole,
+  AthleteInvitation,
+  AthleteInvitationInboxResponse,
   AthleteListResponse,
   ChatMessageListResponse,
   ChatThread,
@@ -117,6 +120,33 @@ export async function fetchMonthlyUsage(token: string): Promise<MonthlyUsage> {
 export async function fetchAthletes(token: string): Promise<Athlete[]> {
   const result = await apiFetch<AthleteListResponse>(token, "/api/athletes?limit=100");
   return result.items;
+}
+
+export async function fetchInvitationInbox(token: string): Promise<AthleteInvitation[]> {
+  const result = await apiFetch<AthleteInvitationInboxResponse>(token, "/api/invitations");
+  return result.items;
+}
+
+export async function acceptInvitation(
+  token: string,
+  invitationId: string,
+): Promise<AcceptAthleteInvitationResponse> {
+  return apiFetch<AcceptAthleteInvitationResponse>(
+    token,
+    `/api/invitations/${encodeURIComponent(invitationId)}/accept`,
+    { method: "POST" },
+  );
+}
+
+export async function declineInvitation(
+  token: string,
+  invitationId: string,
+): Promise<AthleteInvitation> {
+  return apiFetch<AthleteInvitation>(
+    token,
+    `/api/invitations/${encodeURIComponent(invitationId)}/decline`,
+    { method: "POST" },
+  );
 }
 
 export async function createAthlete(

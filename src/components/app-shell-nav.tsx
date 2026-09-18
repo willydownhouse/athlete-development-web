@@ -14,7 +14,10 @@ import {
   defaultDashboardHref,
   isAthleteDashboardPath,
   isChatPath,
+  isInvitesPath,
   isUsagePath,
+  INVITES_HREF,
+  INVITES_NAV_LABEL,
   TODAY_NAV_LABEL,
   USAGE_HREF,
   USAGE_NAV_LABEL,
@@ -135,6 +138,18 @@ function ChatIcon() {
   );
 }
 
+function InvitesIcon() {
+  return (
+    <NavIcon>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 8 12 13.25 19.5 8M5.5 6.5h13a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"
+      />
+    </NavIcon>
+  );
+}
+
 function UsageIcon() {
   return (
     <NavIcon>
@@ -212,6 +227,15 @@ export function AppShellNav({
         onNavigate={onNavigate}
       >
         {CHAT_NAV_LABEL}
+      </NavLink>
+
+      <NavLink
+        href={INVITES_HREF}
+        active={isInvitesPath(pathname)}
+        icon={<InvitesIcon />}
+        onNavigate={onNavigate}
+      >
+        {INVITES_NAV_LABEL}
       </NavLink>
 
       <NavLink

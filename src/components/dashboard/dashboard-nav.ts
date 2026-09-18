@@ -5,6 +5,8 @@ export const CHAT_NAV_LABEL = "Event Agent Toby";
 export const CHAT_HREF = "/chat";
 export const USAGE_NAV_LABEL = "Usage";
 export const USAGE_HREF = "/usage";
+export const INVITES_NAV_LABEL = "Invites";
+export const INVITES_HREF = "/invites";
 export const HISTORY_NAV_LABEL = "History";
 
 export function backToTodayLabel(): string {
@@ -79,9 +81,17 @@ export function isUsagePath(pathname: string): boolean {
   return pathname === USAGE_HREF || pathname.startsWith(`${USAGE_HREF}/`);
 }
 
+export function isInvitesPath(pathname: string): boolean {
+  return pathname === INVITES_HREF || pathname.startsWith(`${INVITES_HREF}/`);
+}
+
 export function appShellMobileTitle(pathname: string): string {
   if (isChatPath(pathname)) {
     return CHAT_NAV_LABEL;
+  }
+
+  if (isInvitesPath(pathname)) {
+    return INVITES_NAV_LABEL;
   }
 
   if (isUsagePath(pathname)) {

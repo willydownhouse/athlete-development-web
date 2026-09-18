@@ -5,6 +5,7 @@ import {
   appShellMobileTitle,
   HISTORY_NAV_LABEL,
   isChatPath,
+  isInvitesPath,
   isUsagePath,
 } from "./dashboard-nav";
 
@@ -50,6 +51,18 @@ describe("usage nav", () => {
 
   it("uses Usage as the mobile title", () => {
     expect(appShellMobileTitle("/usage")).toBe("Usage");
+  });
+});
+
+describe("invites nav", () => {
+  it("treats /invites as the invites path", () => {
+    expect(isInvitesPath("/invites")).toBe(true);
+    expect(isInvitesPath("/invites/")).toBe(true);
+    expect(isInvitesPath("/dashboard")).toBe(false);
+  });
+
+  it("uses Invites as the mobile title", () => {
+    expect(appShellMobileTitle("/invites")).toBe("Invites");
   });
 });
 

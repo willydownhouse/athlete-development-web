@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  acceptInvitation,
   createChatThread,
   createEventsBatch,
+  declineInvitation,
   fetchAllEvents,
   fetchAthletes,
   fetchCurrentAppUser,
@@ -16,6 +18,7 @@ import {
   fetchEventItemTypesMetricDefinitions,
   fetchEvents,
   fetchFocusedEventChatMessages,
+  fetchInvitationInbox,
   fetchLatestChatMessages,
   fetchMonthlyUsage,
   fetchOlderChatMessages,
@@ -123,6 +126,133 @@ describe("api client", () => {
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athletes).toHaveLength(1);
     expect(athletes[0]?.name).toBe("Leo Laine");
+  });
+
+  it("fetches the invitation inbox with a bearer token", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            athleteId: "22222222-2222-4222-8222-222222222222",
+            invitedEmail: "parent@example.com",
+            role: "parent",
+            status: "pending",
+            expiresAt: "2026-10-18T12:00:00.000Z",
+            createdAt: "2026-09-18T12:00:00.000Z",
+            invitedBy: {
+              id: "11111111-1111-4111-8111-111111111111",
+              email: "other@example.com",
+              name: "Other Parent",
+            },
+            athlete: {
+              id: "22222222-2222-4222-8222-222222222222",
+              name: "Leo Laine",
+            },
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const invitations = await fetchInvitationInbox("test-token");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/invitations");
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(invitations).toHaveLength(1);
+    expect(invitations[0]?.athlete.name).toBe("Leo Laine");
+  });
+
+  it("accepts an invitation", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        invitation: {
+          id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          athleteId: "22222222-2222-4222-8222-222222222222",
+          invitedEmail: "parent@example.com",
+          role: "parent",
+          status: "accepted",
+          expiresAt: "2026-10-18T12:00:00.000Z",
+          createdAt: "2026-09-18T12:00:00.000Z",
+          invitedBy: {
+            id: "11111111-1111-4111-8111-111111111111",
+            email: "other@example.com",
+            name: "Other Parent",
+          },
+          athlete: {
+            id: "22222222-2222-4222-8222-222222222222",
+            name: "Leo Laine",
+          },
+        },
+        access: {
+          id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          athleteId: "22222222-2222-4222-8222-222222222222",
+          role: "parent",
+          createdAt: "2026-09-18T12:00:00.000Z",
+        },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await acceptInvitation("test-token", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/invitations/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/accept",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(result.access.athleteId).toBe("22222222-2222-4222-8222-222222222222");
+  });
+
+  it("declines an invitation", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        athleteId: "22222222-2222-4222-8222-222222222222",
+        invitedEmail: "parent@example.com",
+        role: "parent",
+        status: "declined",
+        expiresAt: "2026-10-18T12:00:00.000Z",
+        createdAt: "2026-09-18T12:00:00.000Z",
+        invitedBy: {
+          id: "11111111-1111-4111-8111-111111111111",
+          email: "other@example.com",
+          name: "Other Parent",
+        },
+        athlete: {
+          id: "22222222-2222-4222-8222-222222222222",
+          name: "Leo Laine",
+        },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const invitation = await declineInvitation(
+      "test-token",
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    );
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/invitations/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/decline",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("POST");
+    expect(invitation.status).toBe("declined");
   });
 
   it("fetches public sports", async () => {
