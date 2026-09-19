@@ -14,6 +14,20 @@ export function isParentRelationship(role: AthleteAccessRole): boolean {
   return role === "parent";
 }
 
+export function isRemovableAccessMember(
+  member: {
+    role: AthleteAccessRole;
+    invitationId: string | null;
+  },
+  isCurrentUser: boolean,
+): boolean {
+  if (isCurrentUser) {
+    return true;
+  }
+
+  return !(member.role === "parent" && member.invitationId === null);
+}
+
 export function formatInvitationExpiry(iso: string): string {
   return expiryFormatter.format(new Date(iso));
 }
