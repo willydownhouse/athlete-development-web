@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 
 import {
   endAthleteAccessGrantAction,
@@ -33,7 +33,9 @@ export function AccessMemberCard({
     const formData = new FormData();
     formData.set("athleteId", athleteId);
     formData.set("accessId", member.id);
-    formAction(formData);
+    startTransition(() => {
+      formAction(formData);
+    });
   }
 
   return (

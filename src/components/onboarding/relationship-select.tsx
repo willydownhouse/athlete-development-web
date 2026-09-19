@@ -20,7 +20,8 @@ const options: Array<{
   {
     value: "athlete",
     title: "Myself",
-    description: "I am creating a profile for my own development journey.",
+    description:
+      "I am creating a profile for my own development journey and I am 13 years old or older.",
   },
 ];
 

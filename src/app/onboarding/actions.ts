@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { ApiError, createAthlete } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { isAtLeastAgeYears, SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
 import type { AthleteAccessRole } from "@/lib/types";
 
 export type OnboardingActionState = {
@@ -39,11 +40,6 @@ function readString(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readOptionalDate(formData: FormData, key: string): string | undefined {
-  const value = readString(formData, key);
-  return value === "" ? undefined : value;
-}
-
 function readRelationshipToAthlete(formData: FormData): AthleteAccessRole | null {
   const value = readString(formData, "relationshipToAthlete");
   if (value === "parent" || value === "athlete") {
@@ -65,6 +61,7 @@ export async function createAthleteBasicsAction(
   const focusSportId = readString(formData, "focusSportId");
   const relationshipToAthlete = readRelationshipToAthlete(formData);
   const name = readString(formData, "name");
+  const dateOfBirth = readString(formData, "dateOfBirth");
 
   if (!focusSportId) {
     return { error: "Focus sport is required" };
@@ -78,12 +75,25 @@ export async function createAthleteBasicsAction(
     return { error: "Athlete name is required" };
   }
 
+  if (!dateOfBirth) {
+    return { error: "Date of birth is required" };
+  }
+
+  if (
+    relationshipToAthlete === "athlete" &&
+    !isAtLeastAgeYears(dateOfBirth, SELF_ATHLETE_MIN_AGE_YEARS)
+  ) {
+    return {
+      error: `You must be at least ${SELF_ATHLETE_MIN_AGE_YEARS} years old to create your own profile`,
+    };
+  }
+
   try {
     const athlete = await createAthlete(token, {
       relationshipToAthlete,
       focusSportId,
       name,
-      dateOfBirth: readOptionalDate(formData, "dateOfBirth"),
+      dateOfBirth,
     });
 
     redirect(dashboardHref(athlete.id));

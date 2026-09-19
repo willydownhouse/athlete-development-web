@@ -202,7 +202,7 @@ export async function createAthlete(
     relationshipToAthlete: AthleteAccessRole;
     focusSportId: string;
     name: string;
-    dateOfBirth?: string;
+    dateOfBirth: string;
   },
 ): Promise<Athlete> {
   return apiFetch<Athlete>(token, "/api/athletes", {
