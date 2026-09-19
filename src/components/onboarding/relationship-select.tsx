@@ -1,5 +1,6 @@
 "use client";
 
+import { SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
 import type { AthleteAccessRole } from "@/lib/types";
 
 type RelationshipSelectProps = {
@@ -20,8 +21,7 @@ const options: Array<{
   {
     value: "athlete",
     title: "Myself",
-    description:
-      "I am creating a profile for my own development journey and I am 13 years old or older.",
+    description: `I am creating a profile for my own development journey and I am ${SELF_ATHLETE_MIN_AGE_YEARS} years old or older.`,
   },
 ];
 

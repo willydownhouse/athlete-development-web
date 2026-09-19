@@ -36,12 +36,12 @@ describe("latestSelfAthleteBirthDate", () => {
   it("uses the UTC calendar date as a local date-picker day", () => {
     const now = new Date("2026-09-20T00:30:00.000+02:00");
 
-    expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2013, 8, 19));
+    expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2008, 8, 19));
   });
 
   it("clamps a leap-day cutoff to the last valid day of that month", () => {
     const now = new Date("2024-02-29T12:00:00.000Z");
 
-    expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2011, 1, 28));
+    expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2006, 1, 28));
   });
 });

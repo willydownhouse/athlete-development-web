@@ -1,4 +1,5 @@
-export const SELF_ATHLETE_MIN_AGE_YEARS = 13;
+/** Age when an athlete may own a profile without a required parent (self-create and last-parent leave). */
+export const SELF_ATHLETE_MIN_AGE_YEARS = 18;
 
 const dateOnlyPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 
