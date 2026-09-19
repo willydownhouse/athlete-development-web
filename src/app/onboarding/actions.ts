@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { ApiError, createAthlete } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { isAtLeastAgeYears, SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
+import {
+  isAtLeastAgeYears,
+  isValidDateOnly,
+  SELF_ATHLETE_MIN_AGE_YEARS,
+} from "@/lib/date-of-birth";
 import type { AthleteAccessRole } from "@/lib/types";
 
 export type OnboardingActionState = {
@@ -77,6 +81,10 @@ export async function createAthleteBasicsAction(
 
   if (!dateOfBirth) {
     return { error: "Date of birth is required" };
+  }
+
+  if (!isValidDateOnly(dateOfBirth)) {
+    return { error: "Date of birth must be a valid calendar date" };
   }
 
   if (
