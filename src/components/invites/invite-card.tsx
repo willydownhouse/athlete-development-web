@@ -27,7 +27,7 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
     declineInvitationAction,
     initialState,
   );
-  const pending = acceptPending || declinePending;
+  const busy = acceptPending || declinePending;
 
   return (
     <article className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
@@ -45,7 +45,7 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
         <div className="flex flex-col gap-2 sm:flex-row">
           <form action={acceptAction}>
             <input type="hidden" name="invitationId" value={invitation.id} />
-            <SubmitButton pending={pending} pendingLabel="Accepting…" disabled={pending}>
+            <SubmitButton pending={acceptPending} pendingLabel="Accepting…" disabled={busy}>
               Accept
             </SubmitButton>
           </form>
@@ -53,9 +53,9 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
             <input type="hidden" name="invitationId" value={invitation.id} />
             <SubmitButton
               variant="secondary"
-              pending={pending}
+              pending={declinePending}
               pendingLabel="Declining…"
-              disabled={pending}
+              disabled={busy}
             >
               Decline
             </SubmitButton>
