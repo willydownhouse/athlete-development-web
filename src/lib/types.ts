@@ -127,6 +127,17 @@ export type Sport = {
   updatedAt: string;
 };
 
+export type DemoAllowedEmail = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
+
+export type DemoAllowedEmailList = {
+  enabled: boolean;
+  items: DemoAllowedEmail[];
+};
+
 export type EventType = {
   id: string;
   sportId: string | null;

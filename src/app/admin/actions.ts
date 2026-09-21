@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 
 import {
   AdminApiError,
+  createAdminDemoAllowedEmail,
   createAdminEventItemType,
   createAdminEventItemTypeChildType,
   createAdminEventItemTypeMetricDefinition,
@@ -12,6 +13,7 @@ import {
   createAdminEventTypeMetricDefinition,
   createAdminMetricDefinition,
   createAdminSport,
+  deleteAdminDemoAllowedEmail,
   deleteAdminEventItemTypeChildType,
   deleteAdminEventItemTypeMetricDefinition,
   deleteAdminEventTypeItemType,
@@ -128,6 +130,44 @@ export async function updateSportAction(
     revalidatePath("/admin");
     revalidatePath("/admin/sports");
     return { success: "Sport updated" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// Demo allowed emails
+
+export async function createDemoAllowedEmailAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+
+    await createAdminDemoAllowedEmail(token, {
+      email: readString(formData, "email"),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/demo-users");
+    return { success: "Email added" };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function deleteDemoAllowedEmailAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { token } = await requireAdmin();
+    const demoAllowedEmailId = readString(formData, "demoAllowedEmailId");
+
+    await deleteAdminDemoAllowedEmail(token, demoAllowedEmailId);
+    revalidatePath("/admin");
+    revalidatePath("/admin/demo-users");
+    return { success: "Email removed" };
   } catch (error) {
     return actionError(error);
   }
