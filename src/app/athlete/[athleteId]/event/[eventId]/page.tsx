@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EventTobyDockSkeleton, EventTobySection } from "@/components/chat/event-toby-section";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventPageFrame } from "@/components/dashboard/event-page-frame";
@@ -49,7 +49,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
   }
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -82,6 +82,6 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
           </Suspense>
         </div>
       </EventPageFrame>
-    </DashboardShell>
+    </AppShell>
   );
 }

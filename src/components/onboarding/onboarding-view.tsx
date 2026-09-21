@@ -1,7 +1,8 @@
-import { OnboardingShell } from "./onboarding-shell";
-import { SportSelect } from "./sport-select";
-import type { Athlete, Sport } from "@/lib/types";
+import { AppShell } from "@/components/app-shell";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import type { Athlete, Sport } from "@/lib/types";
+
+import { SportSelect } from "./sport-select";
 
 type OnboardingViewProps = {
   userEmail: string;
@@ -22,7 +23,7 @@ export async function OnboardingView({
   const isAdmin = await getIsAdminUser();
 
   return (
-    <OnboardingShell userEmail={userEmail} isAdmin={isAdmin} athletes={athletes}>
+    <AppShell userEmail={userEmail} isAdmin={isAdmin} athletes={athletes}>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:max-w-3xl lg:px-10 lg:py-16">
         <section className="space-y-8 lg:space-y-10">
           <div>
@@ -53,6 +54,6 @@ export async function OnboardingView({
           </div>
         </section>
       </div>
-    </OnboardingShell>
+    </AppShell>
   );
 }

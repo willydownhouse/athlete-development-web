@@ -1,7 +1,11 @@
 import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
 import type {
+  AcceptAthleteInvitationResponse,
   Athlete,
+  AthleteAccessListResponse,
   AthleteAccessRole,
+  AthleteInvitation,
+  AthleteInvitationInboxResponse,
   AthleteListResponse,
   ChatMessageListResponse,
   ChatThread,
@@ -119,13 +123,86 @@ export async function fetchAthletes(token: string): Promise<Athlete[]> {
   return result.items;
 }
 
+export async function fetchInvitationInbox(token: string): Promise<AthleteInvitation[]> {
+  const result = await apiFetch<AthleteInvitationInboxResponse>(token, "/api/invitations");
+  return result.items;
+}
+
+export async function acceptInvitation(
+  token: string,
+  invitationId: string,
+): Promise<AcceptAthleteInvitationResponse> {
+  return apiFetch<AcceptAthleteInvitationResponse>(
+    token,
+    `/api/invitations/${encodeURIComponent(invitationId)}/accept`,
+    { method: "POST" },
+  );
+}
+
+export async function declineInvitation(
+  token: string,
+  invitationId: string,
+): Promise<AthleteInvitation> {
+  return apiFetch<AthleteInvitation>(
+    token,
+    `/api/invitations/${encodeURIComponent(invitationId)}/decline`,
+    { method: "POST" },
+  );
+}
+
+export async function fetchAthleteAccess(
+  token: string,
+  athleteId: string,
+): Promise<AthleteAccessListResponse> {
+  return apiFetch<AthleteAccessListResponse>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/access`,
+  );
+}
+
+export async function createAthleteInvitation(
+  token: string,
+  athleteId: string,
+  body: { email: string; role: AthleteAccessRole },
+): Promise<AthleteInvitation> {
+  return apiFetch<AthleteInvitation>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/invitations`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function revokeAthleteInvitation(
+  token: string,
+  athleteId: string,
+  invitationId: string,
+): Promise<void> {
+  return apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/invitations/${encodeURIComponent(invitationId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function endAthleteAccessGrant(
+  token: string,
+  athleteId: string,
+  accessId: string,
+): Promise<void> {
+  return apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/access/${encodeURIComponent(accessId)}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function createAthlete(
   token: string,
   body: {
     relationshipToAthlete: AthleteAccessRole;
     focusSportId: string;
     name: string;
-    dateOfBirth?: string;
+    dateOfBirth: string;
   },
 ): Promise<Athlete> {
   return apiFetch<Athlete>(token, "/api/athletes", {

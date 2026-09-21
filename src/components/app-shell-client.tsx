@@ -1,16 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
+import {
+  ADD_ATHLETE_NAV_LABEL,
+  appShellMobileTitle,
+  athleteEventIdFromPath,
+  isOnboardingPath,
+  pendingInvitesMenuButtonLabel,
+} from "@/components/dashboard/dashboard-nav";
 import { SignOutButton } from "@/components/sign-out-button";
+import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
-type OnboardingShellProps = {
+type AppShellClientProps = {
   userEmail: string;
   isAdmin?: boolean;
   athletes?: Athlete[];
-  dashboardAthleteId?: string | null;
+  selectedAthlete?: Athlete | null;
+  pendingInviteCount: number;
   children: React.ReactNode;
 };
 
@@ -30,18 +40,25 @@ function CloseIcon() {
   );
 }
 
-export function OnboardingShell({
+export function AppShellClient({
   userEmail,
   isAdmin = false,
   athletes = [],
-  dashboardAthleteId = null,
+  selectedAthlete = null,
+  pendingInviteCount,
   children,
-}: OnboardingShellProps) {
+}: AppShellClientProps) {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const onboarding = isOnboardingPath(pathname);
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
   }, []);
+
+  useEffect(() => {
+    forgetLocalEventVideosOutsideEvent(athleteEventIdFromPath(pathname));
+  }, [pathname]);
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -64,7 +81,7 @@ export function OnboardingShell({
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="scheme-dark flex min-h-screen bg-[#0b0d10] text-white">
+    <div className="scheme-dark flex min-h-svh bg-[#0b0d10] text-white">
       {mobileOpen ? (
         <button
           type="button"
@@ -81,10 +98,14 @@ export function OnboardingShell({
       >
         <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Add athlete
+            {onboarding ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                {ADD_ATHLETE_NAV_LABEL}
+              </p>
+            ) : null}
+            <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
+              Athlete Development Center
             </p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
           </div>
           <button
             type="button"
@@ -100,7 +121,8 @@ export function OnboardingShell({
           <AppShellNav
             isAdmin={isAdmin}
             athletes={athletes}
-            dashboardAthleteId={dashboardAthleteId}
+            selectedAthlete={selectedAthlete}
+            pendingInviteCount={pendingInviteCount}
             onNavigate={closeMobile}
           />
         </div>
@@ -111,19 +133,27 @@ export function OnboardingShell({
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/5 bg-[#0b0d10]/95 px-4 py-3 backdrop-blur lg:hidden">
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
-            aria-label="Open menu"
+            className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
+            aria-label={pendingInvitesMenuButtonLabel(pendingInviteCount)}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon />
+            {pendingInviteCount > 0 ? (
+              <span
+                className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#b7d7ec]"
+                aria-hidden="true"
+              />
+            ) : null}
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Add athlete</p>
+            <p className="truncate text-sm font-semibold text-white">
+              {appShellMobileTitle(pathname)}
+            </p>
             <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
           </div>
         </header>

@@ -3,13 +3,12 @@ import { Suspense } from "react";
 
 import { auth } from "@/auth";
 import { AppShell } from "@/components/app-shell";
-import { UsageMeters, UsageMetersSkeleton } from "@/components/usage/usage-meters";
-import { UsagePlanCard } from "@/components/usage/usage-plan-card";
+import { InvitesList, InvitesListSkeleton } from "@/components/invites/invites-list";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 
-export default async function UsagePage() {
+export default async function InvitesPage() {
   const session = await auth();
 
   if (!session?.user) {
@@ -32,11 +31,13 @@ export default async function UsagePage() {
       selectedAthlete={null}
     >
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Usage</h1>
-        <div className="mt-6 space-y-4">
-          <UsagePlanCard />
-          <Suspense fallback={<UsageMetersSkeleton />}>
-            <UsageMeters />
+        <h1 className="text-2xl font-semibold tracking-tight text-white">Invites</h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Accept an invitation to share an athlete profile with your family.
+        </p>
+        <div className="mt-6">
+          <Suspense fallback={<InvitesListSkeleton />}>
+            <InvitesList />
           </Suspense>
         </div>
       </div>

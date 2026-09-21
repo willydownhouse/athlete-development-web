@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import { CalendarSection } from "@/components/calendar/calendar-section";
-import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
+import { AccessList, AccessListSkeleton } from "@/components/access/access-list";
+import { InviteForm } from "@/components/access/invite-form";
+import {
+  ACCESS_NAV_LABEL,
+  backToTodayLabel,
+  dashboardHref,
+} from "@/components/dashboard/dashboard-nav";
 import { AppShell } from "@/components/app-shell";
-import { loadCalendarMonthEvents } from "@/lib/calendar-event-data";
+import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import { getRequestTimeZone } from "@/lib/time-zone-server";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 
-type AthleteCalendarPageProps = {
+type AthleteAccessPageProps = {
   params: Promise<{ athleteId: string }>;
 };
 
-export default async function AthleteCalendarPage({ params }: AthleteCalendarPageProps) {
+export default async function AthleteAccessPage({ params }: AthleteAccessPageProps) {
   const session = await auth();
 
   if (!session?.user) {
@@ -35,19 +40,16 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
     redirect("/");
   }
 
-  const [athletes, isAdmin, timeZone] = await Promise.all([
-    loadShellAthletes(token),
-    getIsAdminUser(),
-    getRequestTimeZone(),
-  ]);
-
+  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");
   }
 
-  const monthEvents = await loadCalendarMonthEvents(normalizedAthleteId, timeZone);
+  if (!isParentRelationship(selectedAthlete.relationshipToAthlete)) {
+    redirect(dashboardHref(selectedAthlete.id));
+  }
 
   return (
     <AppShell
@@ -64,18 +66,18 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
           {backToTodayLabel()}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Calendar</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {ACCESS_NAV_LABEL}
+        </h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Invite family members to {selectedAthlete.name}&apos;s profile.
+        </p>
 
-        <div className="mt-6">
-          <CalendarSection
-            athleteId={normalizedAthleteId}
-            timeZone={timeZone}
-            initialMonthEvents={monthEvents.events}
-            loadedRange={monthEvents.monthRange}
-            initialSelectedDate={monthEvents.selectedDate}
-            initialVisibleMonth={monthEvents.visibleMonth}
-            initialLoadError={monthEvents.error}
-          />
+        <div className="mt-6 space-y-6">
+          <Suspense fallback={<AccessListSkeleton />}>
+            <AccessList athleteId={selectedAthlete.id} />
+          </Suspense>
+          <InviteForm athleteId={selectedAthlete.id} />
         </div>
       </div>
     </AppShell>

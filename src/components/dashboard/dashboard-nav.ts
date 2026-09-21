@@ -5,7 +5,27 @@ export const CHAT_NAV_LABEL = "Event Agent Toby";
 export const CHAT_HREF = "/chat";
 export const USAGE_NAV_LABEL = "Usage";
 export const USAGE_HREF = "/usage";
+export const INVITES_NAV_LABEL = "Invites";
+export const INVITES_HREF = "/invites";
 export const HISTORY_NAV_LABEL = "History";
+export const ACCESS_NAV_LABEL = "Access";
+export const ADD_ATHLETE_NAV_LABEL = "Add athlete";
+
+export function pendingInvitesNavLabel(count: number): string {
+  if (count <= 0) {
+    return INVITES_NAV_LABEL;
+  }
+
+  return `${INVITES_NAV_LABEL}, ${count} pending`;
+}
+
+export function pendingInvitesMenuButtonLabel(count: number): string {
+  if (count <= 0) {
+    return "Open menu";
+  }
+
+  return `Open menu, ${count} pending`;
+}
 
 export function backToTodayLabel(): string {
   return `← Back to ${TODAY_NAV_LABEL}`;
@@ -51,6 +71,10 @@ export function athleteEventsHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/events`;
 }
 
+export function athleteAccessHref(athleteId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/access`;
+}
+
 export function defaultDashboardHref(athletes: { id: string }[]): string {
   const firstAthlete = athletes[0];
 
@@ -79,9 +103,21 @@ export function isUsagePath(pathname: string): boolean {
   return pathname === USAGE_HREF || pathname.startsWith(`${USAGE_HREF}/`);
 }
 
+export function isInvitesPath(pathname: string): boolean {
+  return pathname === INVITES_HREF || pathname.startsWith(`${INVITES_HREF}/`);
+}
+
+export function isOnboardingPath(pathname: string): boolean {
+  return pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+}
+
 export function appShellMobileTitle(pathname: string): string {
   if (isChatPath(pathname)) {
     return CHAT_NAV_LABEL;
+  }
+
+  if (isInvitesPath(pathname)) {
+    return INVITES_NAV_LABEL;
   }
 
   if (isUsagePath(pathname)) {
@@ -104,12 +140,20 @@ export function appShellMobileTitle(pathname: string): string {
     return HISTORY_NAV_LABEL;
   }
 
+  if (/^\/athlete\/[^/]+\/access\/?$/.test(pathname)) {
+    return ACCESS_NAV_LABEL;
+  }
+
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {
     return "Video";
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {
     return "Event";
+  }
+
+  if (isOnboardingPath(pathname)) {
+    return ADD_ATHLETE_NAV_LABEL;
   }
 
   return "Athlete Development Center";

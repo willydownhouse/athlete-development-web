@@ -1,12 +1,18 @@
 import { Suspense } from "react";
 
+import { isParentRelationship } from "@/lib/athlete-access-display";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
-import { athleteCalendarHref, athleteEventsHref, athleteStatsHref } from "./dashboard-nav";
+import {
+  athleteAccessHref,
+  athleteCalendarHref,
+  athleteEventsHref,
+  athleteStatsHref,
+} from "./dashboard-nav";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { DashboardHeader } from "./dashboard-header";
 import { QuickLogSection } from "./quick-log-section";
@@ -78,6 +84,11 @@ export async function DashboardAthleteContent({
         calendarHref={athleteCalendarHref(selectedAthlete.id)}
         statsHref={statsHref}
         historyHref={athleteEventsHref(selectedAthlete.id)}
+        accessHref={
+          isParentRelationship(selectedAthlete.relationshipToAthlete)
+            ? athleteAccessHref(selectedAthlete.id)
+            : undefined
+        }
         eventsMeta={
           <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>
             <DashboardWeekEventsMeta athleteId={selectedAthlete.id} timeZone={timeZone} />

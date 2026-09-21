@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { auth } from "@/auth";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
 import { HockeyStats } from "@/components/dashboard/hockey-stats";
 import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
 import { HockeyStatsGridSkeleton } from "@/components/dashboard/dashboard-skeletons";
@@ -60,7 +60,7 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
   const period = parseHockeyStatsPeriod(statsPeriod);
 
   return (
-    <DashboardShell
+    <AppShell
       userEmail={session.user.email ?? ""}
       isAdmin={isAdmin}
       athletes={athletes}
@@ -93,6 +93,6 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
           </HockeyStatsSection>
         </div>
       </div>
-    </DashboardShell>
+    </AppShell>
   );
 }

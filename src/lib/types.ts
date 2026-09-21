@@ -39,6 +39,7 @@ export type Athlete = {
   dateOfBirth: string | null;
   createdAt: string;
   deletedAt: string | null;
+  relationshipToAthlete: AthleteAccessRole;
   focusSport: Sport;
   profile: AthleteProfile | null;
 };
@@ -50,6 +51,56 @@ export type AthleteListResponse = {
     offset: number;
     total: number;
   };
+};
+
+type AthleteInvitationStatus = "pending" | "accepted" | "declined" | "revoked" | "expired";
+
+type AthleteInvitationUser = {
+  id: string;
+  email: string;
+  name: string | null;
+};
+
+export type AthleteInvitation = {
+  id: string;
+  athleteId: string;
+  invitedEmail: string;
+  role: AthleteAccessRole;
+  status: AthleteInvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+  invitedBy: AthleteInvitationUser;
+  athlete: {
+    id: string;
+    name: string;
+  };
+};
+
+export type AthleteInvitationInboxResponse = {
+  items: AthleteInvitation[];
+};
+
+export type AcceptAthleteInvitationResponse = {
+  invitation: AthleteInvitation;
+  access: {
+    id: string;
+    athleteId: string;
+    role: AthleteAccessRole;
+    createdAt: string;
+  };
+};
+
+export type AthleteAccessMember = {
+  id: string;
+  role: AthleteAccessRole;
+  invitationId: string | null;
+  createdAt: string;
+  user: AthleteInvitationUser;
+};
+
+export type AthleteAccessListResponse = {
+  members: AthleteAccessMember[];
+  invitations: AthleteInvitation[];
 };
 
 export type EventCategory =
