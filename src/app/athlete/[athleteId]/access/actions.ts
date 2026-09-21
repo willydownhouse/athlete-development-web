@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { athleteAccessHref } from "@/components/dashboard/dashboard-nav";
+import { athleteAccessHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
   ApiError,
   createAthleteInvitation,
   endAthleteAccessGrant,
+  fetchAthletes,
   revokeAthleteInvitation,
 } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -120,9 +122,22 @@ export async function endAthleteAccessGrantAction(
 
   try {
     await endAthleteAccessGrant(token, athleteId, accessId);
-    revalidatePath(athleteAccessHref(athleteId));
-    return {};
   } catch (error) {
     return actionError(error);
   }
+
+  let athletes: Awaited<ReturnType<typeof fetchAthletes>> = [];
+
+  try {
+    athletes = await fetchAthletes(token);
+  } catch {
+    redirect("/dashboard");
+  }
+
+  if (!athletes.some((athlete) => athlete.id === athleteId)) {
+    redirect(defaultDashboardHref(athletes));
+  }
+
+  revalidatePath(athleteAccessHref(athleteId));
+  return {};
 }
