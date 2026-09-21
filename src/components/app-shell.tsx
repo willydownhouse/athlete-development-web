@@ -1,4 +1,5 @@
 import { AppShellClient } from "@/components/app-shell-client";
+import { assertApiAccess } from "@/lib/assert-api-access";
 import { loadPendingInviteCount } from "@/lib/load-invitation-inbox";
 import type { Athlete } from "@/lib/types";
 
@@ -11,6 +12,7 @@ type AppShellProps = {
 };
 
 export async function AppShell(props: AppShellProps) {
+  await assertApiAccess();
   const pendingInviteCount = await loadPendingInviteCount();
 
   return <AppShellClient {...props} pendingInviteCount={pendingInviteCount} />;
