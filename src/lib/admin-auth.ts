@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { fetchCurrentAppUser, type AppUser } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { isDemoAccessDenied } from "@/lib/demo-access";
 
 export async function requireAdmin(): Promise<{ token: string; user: AppUser }> {
   const session = await auth();
@@ -21,7 +22,11 @@ export async function requireAdmin(): Promise<{ token: string; user: AppUser }> 
 
   try {
     user = await fetchCurrentAppUser(token);
-  } catch {
+  } catch (error) {
+    if (isDemoAccessDenied(error)) {
+      redirect("/unavailable");
+    }
+
     redirect("/dashboard");
   }
 

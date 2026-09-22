@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AdminApiError, listAdminSports } from "./admin-api";
+import {
+  AdminApiError,
+  createAdminDemoAllowedEmail,
+  deleteAdminDemoAllowedEmail,
+  listAdminDemoAllowedEmails,
+  listAdminSports,
+} from "./admin-api";
 
 describe("admin api client", () => {
   afterEach(() => {
@@ -57,5 +63,86 @@ describe("admin api client", () => {
       status: 409,
       apiError: "Slug already exists",
     } satisfies Partial<AdminApiError>);
+  });
+
+  it("lists demo allowed emails with the gate flag", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+        items: [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            email: "parent@example.com",
+            createdAt: "2026-09-21T12:00:00.000Z",
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await listAdminDemoAllowedEmails("admin-token");
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/admin/demo-allowed-emails", {
+      headers: expect.any(Headers),
+      cache: "no-store",
+    });
+    expect(result.enabled).toBe(true);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.email).toBe("parent@example.com");
+  });
+
+  it("creates a demo allowed email", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const created = {
+      id: "33333333-3333-4333-8333-333333333333",
+      email: "parent@example.com",
+      createdAt: "2026-09-21T12:00:00.000Z",
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => created,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createAdminDemoAllowedEmail("admin-token", { email: "Parent@example.com" }),
+    ).resolves.toEqual(created);
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/admin/demo-allowed-emails", {
+      method: "POST",
+      body: JSON.stringify({ email: "Parent@example.com" }),
+      headers: expect.any(Headers),
+      cache: "no-store",
+    });
+  });
+
+  it("deletes a demo allowed email", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      deleteAdminDemoAllowedEmail("admin-token", "33333333-3333-4333-8333-333333333333"),
+    ).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/api/admin/demo-allowed-emails/33333333-3333-4333-8333-333333333333",
+      {
+        method: "DELETE",
+        headers: expect.any(Headers),
+        cache: "no-store",
+      },
+    );
   });
 });

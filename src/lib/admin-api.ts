@@ -1,5 +1,7 @@
 import { getApiBaseUrl } from "./api";
 import type {
+  DemoAllowedEmail,
+  DemoAllowedEmailList,
   EventItemType,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
@@ -102,6 +104,31 @@ export async function updateAdminSport(
   return adminFetch<Sport>(token, `/api/admin/sports/${sportId}`, {
     method: "PATCH",
     body: JSON.stringify(body),
+  });
+}
+
+// Demo allowed emails
+
+export async function listAdminDemoAllowedEmails(token: string): Promise<DemoAllowedEmailList> {
+  return adminFetch<DemoAllowedEmailList>(token, "/api/admin/demo-allowed-emails");
+}
+
+export async function createAdminDemoAllowedEmail(
+  token: string,
+  body: { email: string },
+): Promise<DemoAllowedEmail> {
+  return adminFetch<DemoAllowedEmail>(token, "/api/admin/demo-allowed-emails", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteAdminDemoAllowedEmail(
+  token: string,
+  demoAllowedEmailId: string,
+): Promise<void> {
+  await adminFetch<void>(token, `/api/admin/demo-allowed-emails/${demoAllowedEmailId}`, {
+    method: "DELETE",
   });
 }
 
