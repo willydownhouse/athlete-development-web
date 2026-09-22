@@ -12,6 +12,7 @@ import {
   revokeAthleteInvitation,
 } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import type { AthleteAccessRole } from "@/lib/types";
 
 export type AccessActionState = {
@@ -129,7 +130,7 @@ export async function endAthleteAccessGrantAction(
   let athletes: Awaited<ReturnType<typeof fetchAthletes>> = [];
 
   try {
-    athletes = await fetchAthletes(token);
+    athletes = await fetchAthletes(token, await getRequestLocale());
   } catch {
     redirect("/dashboard");
   }

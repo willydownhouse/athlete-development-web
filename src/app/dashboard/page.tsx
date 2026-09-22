@@ -5,6 +5,7 @@ import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { fetchAthletes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -14,13 +15,14 @@ export default async function DashboardPage() {
   }
 
   const token = await getAuthBearerToken();
+  const locale = await getRequestLocale();
 
   let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
   let loadError: string | null = null;
 
   if (token) {
     try {
-      athletes = await fetchAthletes(token);
+      athletes = await fetchAthletes(token, locale);
     } catch (error) {
       loadError = error instanceof Error ? error.message : "Unable to load athletes";
     }

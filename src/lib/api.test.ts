@@ -121,10 +121,10 @@ describe("api client", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const athletes = await fetchAthletes("test-token");
+    const athletes = await fetchAthletes("test-token", "en");
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/athletes?limit=100");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/api/athletes?locale=en&limit=100");
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");

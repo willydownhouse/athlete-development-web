@@ -30,7 +30,7 @@ export default async function AthleteDashboardPage({ params }: AthleteDashboardP
 
   const [athletesResult, eventTypesResult] = await Promise.all([
     token
-      ? fetchAthletes(token)
+      ? fetchAthletes(token, locale)
           .then((items) => ({ items, error: null }))
           .catch((error) => ({
             items: [] as Athlete[],

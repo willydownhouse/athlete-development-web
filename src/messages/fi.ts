@@ -13,6 +13,8 @@ export const fi = {
     notSet: "Ei asetettu",
     language: "Kieli",
     closeMenu: "Sulje valikko",
+    close: "Sulje",
+    closeDialog: "Sulje ikkuna",
     today: "Tänään",
     date: "Päivä",
     details: "Tiedot",
@@ -40,7 +42,7 @@ export const fi = {
   },
   nav: {
     today: "Tänään",
-    chat: "Tapahtuma-agentti Toby",
+    chat: "Event Agent Toby",
     usage: "Käyttö",
     invites: "Kutsut",
     history: "Historia",
@@ -63,7 +65,7 @@ export const fi = {
     getStartedHint: "Lisää ensimmäinen urheilija avataksesi hallintapaneelin.",
     eventsThisWeek: (count: number) =>
       count === 1 ? "1 tapahtuma tällä viikolla" : `${count} tapahtumaa tällä viikolla`,
-    todaysEvents: "Tämän päivän tapahtumat",
+    todaysEvents: "Tänään",
     noEventsToday: "Tälle päivälle ei ole kirjattu tapahtumia.",
     quickLog: "Pikakirjaus",
     noEventTypesInScope: (scopeLabel: string) =>
@@ -289,13 +291,13 @@ export const fi = {
   },
   usage: {
     title: "Käyttö",
-    currentPlan: "Nykyinen suunnitelma",
+    currentPlan: "Nykyinen tilaus",
     free: "Ilmainen",
-    upgrade: "Päivitä suunnitelma",
+    upgrade: "Päivitä tilaus",
     thisMonth: "Tämä kuukausi",
     limitReached: "Olet saavuttanut tämän kuukauden keskustelurajan.",
-    inputTokens: "Syötetokenit",
-    outputTokens: "Vastauksen tokenit",
+    inputTokens: "Input tokenit",
+    outputTokens: "Output tokenit",
     remaining: (count: string) => `${count} jäljellä`,
   },
   calendar: {

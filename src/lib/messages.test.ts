@@ -10,8 +10,8 @@ describe("getMessages", () => {
 
   it("returns Finnish chrome", () => {
     expect(getMessages("fi").nav.today).toBe("Tänään");
-    expect(getMessages("fi").nav.chat).toBe("Tapahtuma-agentti Toby");
-    expect(getMessages("fi").dashboard.todaysEvents).toBe("Tämän päivän tapahtumat");
+    expect(getMessages("fi").nav.chat).toBe("Event Agent Toby");
+    expect(getMessages("fi").dashboard.todaysEvents).toBe("Tänään");
   });
 
   it("interpolates pending invite counts", () => {

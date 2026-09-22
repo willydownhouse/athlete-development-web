@@ -11,6 +11,8 @@ export const en = {
     notSet: "Not set",
     language: "Language",
     closeMenu: "Close menu",
+    close: "Close",
+    closeDialog: "Close dialog",
     today: "Today",
     date: "Date",
     details: "Details",

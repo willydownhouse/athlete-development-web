@@ -131,8 +131,11 @@ export async function fetchMonthlyUsage(token: string): Promise<MonthlyUsage> {
   return apiFetch<MonthlyUsage>(token, "/api/usage");
 }
 
-export async function fetchAthletes(token: string): Promise<Athlete[]> {
-  const result = await apiFetch<AthleteListResponse>(token, "/api/athletes?limit=100");
+export async function fetchAthletes(token: string, locale: AppLocale): Promise<Athlete[]> {
+  const result = await apiFetch<AthleteListResponse>(
+    token,
+    `/api/athletes${catalogQuery(locale, { limit: "100" })}`,
+  );
   return result.items;
 }
 
