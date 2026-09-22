@@ -11,7 +11,9 @@ import {
   isOnboardingPath,
   pendingInvitesMenuButtonLabel,
 } from "@/components/dashboard/dashboard-nav";
+import { LanguageToggle } from "@/components/language-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
+import type { AppLocale } from "@/lib/locale";
 import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
@@ -21,6 +23,7 @@ type AppShellClientProps = {
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
   pendingInviteCount: number;
+  locale: AppLocale;
   children: React.ReactNode;
 };
 
@@ -46,6 +49,7 @@ export function AppShellClient({
   athletes = [],
   selectedAthlete = null,
   pendingInviteCount,
+  locale,
   children,
 }: AppShellClientProps) {
   const pathname = usePathname();
@@ -128,6 +132,7 @@ export function AppShellClient({
         </div>
 
         <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
+          <LanguageToggle locale={locale} />
           <p className="truncate text-xs text-zinc-500">{userEmail}</p>
           <SignOutButton className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]" />
         </div>
