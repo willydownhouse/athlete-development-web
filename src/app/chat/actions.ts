@@ -11,6 +11,7 @@ import {
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, chatMessagesCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
+import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { ChatMessage, ChatTurn } from "@/lib/types";
 
@@ -78,13 +79,14 @@ export async function sendChatMessageAction(
     return { error: "Could not send that message" };
   }
 
-  const timeZone = await getRequestTimeZone();
+  const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
 
   try {
     const turn = await submitChatMessage(token, threadId, {
       content,
       clientRequestId,
       timeZone,
+      locale,
       ...(eventId ? { eventId } : {}),
     });
 

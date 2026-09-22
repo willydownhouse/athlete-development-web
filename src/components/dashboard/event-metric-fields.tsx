@@ -6,6 +6,7 @@ import { RpeScaleInfoTooltip } from "@/components/dashboard/rpe-scale-guide";
 import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSectionDetails } from "@/components/form/form-section-details";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
+import { useAppLocale } from "@/lib/locale-context";
 import {
   BOOLEAN_METRIC_CHECKED_VALUE,
   BOOLEAN_METRIC_SAVED_VALUE,
@@ -187,6 +188,7 @@ export function EventTypeMetricsSection({
   onLoadingChange,
   onLoadErrorChange,
 }: EventTypeMetricsSectionProps) {
+  const locale = useAppLocale();
   const [mappings, setMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -197,7 +199,7 @@ export function EventTypeMetricsSection({
     onLoadingChange?.(true);
     onLoadErrorChange?.(null);
 
-    void fetchEventTypeMetricDefinitions(eventTypeId)
+    void fetchEventTypeMetricDefinitions(eventTypeId, locale)
       .then((items) => {
         if (cancelled) {
           return;
@@ -230,7 +232,7 @@ export function EventTypeMetricsSection({
       cancelled = true;
       onLoadingChange?.(false);
     };
-  }, [eventTypeId, onLoadErrorChange, onLoadingChange, onMappingsChange]);
+  }, [eventTypeId, locale, onLoadErrorChange, onLoadingChange, onMappingsChange]);
 
   return (
     <EventMetricFields

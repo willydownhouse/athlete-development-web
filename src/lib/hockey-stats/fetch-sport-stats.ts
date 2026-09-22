@@ -1,5 +1,6 @@
 import { ApiError, fetchSportStats } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import type { AppLocale } from "@/lib/locale";
 import type { SportStats } from "@/lib/types";
 
 export type HockeySportStatsResult =
@@ -10,6 +11,7 @@ export async function fetchHockeySportStats(
   sportId: string,
   startedAtFrom: string,
   startedAtTo: string,
+  locale: AppLocale,
 ): Promise<HockeySportStatsResult> {
   const token = await getAuthBearerToken();
 
@@ -21,6 +23,7 @@ export async function fetchHockeySportStats(
     const sportStats = await fetchSportStats(token, athleteId, sportId, {
       startedAtFrom,
       startedAtTo,
+      locale,
     });
 
     return { sportStats };

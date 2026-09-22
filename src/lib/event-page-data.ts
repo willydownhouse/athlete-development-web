@@ -1,5 +1,6 @@
 import { ApiError, fetchEvent, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import type { Event, EventType } from "@/lib/types";
 
 export type EventPageDataResult =
@@ -22,8 +23,10 @@ export async function fetchEventPageData(
   }
 
   try {
+    const locale = await getRequestLocale();
     const event = await fetchEvent(token, athleteId, eventId, {
       include: "metrics,items",
+      locale,
     });
 
     return { event };
@@ -48,7 +51,8 @@ export async function fetchEventPageFormData(
   focusSportId: string,
 ): Promise<EventPageFormDataResult> {
   try {
-    const eventTypes = await fetchEventTypes(focusSportId);
+    const locale = await getRequestLocale();
+    const eventTypes = await fetchEventTypes(locale, focusSportId);
     return { eventTypes };
   } catch (error) {
     return {

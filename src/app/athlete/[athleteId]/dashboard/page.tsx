@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { fetchAthletes, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
-import type { EventType } from "@/lib/types";
+import { getRequestLocale } from "@/lib/locale-server";
+import type { Athlete, EventType } from "@/lib/types";
 
 type AthleteDashboardPageProps = {
   params: Promise<{ athleteId: string }>;
@@ -25,43 +26,47 @@ export default async function AthleteDashboardPage({ params }: AthleteDashboardP
   }
 
   const token = await getAuthBearerToken();
+  const locale = await getRequestLocale();
 
-  let athletes = [] as Awaited<ReturnType<typeof fetchAthletes>>;
-  let loadError: string | null = null;
+  const [athletesResult, eventTypesResult] = await Promise.all([
+    token
+      ? fetchAthletes(token)
+          .then((items) => ({ items, error: null }))
+          .catch((error) => ({
+            items: [] as Athlete[],
+            error: error instanceof Error ? error.message : "Unable to load athletes",
+          }))
+      : Promise.resolve({
+          items: [] as Athlete[],
+          error: "Missing Auth.js session token",
+        }),
+    fetchEventTypes(locale)
+      .then((items) => ({ items, error: null }))
+      .catch((error) => ({
+        items: [] as EventType[],
+        error: error instanceof Error ? error.message : "Unable to load event types",
+      })),
+  ]);
 
-  if (token) {
-    try {
-      athletes = await fetchAthletes(token);
-    } catch (error) {
-      loadError = error instanceof Error ? error.message : "Unable to load athletes";
-    }
-  } else {
-    loadError = "Missing Auth.js session token";
-  }
-
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
+  const selectedAthlete =
+    athletesResult.items.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");
   }
 
-  let eventTypes: EventType[] = [];
-  let eventTypesError: string | null = null;
-
-  try {
-    eventTypes = await fetchEventTypes(selectedAthlete.focusSportId);
-  } catch (error) {
-    eventTypesError = error instanceof Error ? error.message : "Unable to load event types";
-  }
+  const eventTypes = eventTypesResult.items.filter(
+    (eventType) => eventType.sportId === null || eventType.sportId === selectedAthlete.focusSportId,
+  );
 
   return (
     <DashboardView
       userEmail={session.user.email ?? ""}
-      athletes={athletes}
+      athletes={athletesResult.items}
       selectedAthlete={selectedAthlete}
       eventTypes={eventTypes}
-      eventTypesError={eventTypesError}
-      loadError={loadError}
+      eventTypesError={eventTypesResult.error}
+      loadError={athletesResult.error}
     />
   );
 }

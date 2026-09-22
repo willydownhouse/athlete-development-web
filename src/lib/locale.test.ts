@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_APP_LOCALE, parseAcceptLanguage, parseAppLocale } from "./locale";
+import {
+  compareCatalogNames,
+  DEFAULT_APP_LOCALE,
+  parseAcceptLanguage,
+  parseAppLocale,
+} from "./locale";
 
 describe("parseAppLocale", () => {
   it("accepts English and Finnish", () => {
@@ -34,5 +39,13 @@ describe("parseAcceptLanguage", () => {
   it("skips unsupported languages and uses the next supported tag", () => {
     expect(parseAcceptLanguage("sv,en;q=0.8")).toBe("en");
     expect(parseAcceptLanguage("sv,de")).toBe(DEFAULT_APP_LOCALE);
+  });
+});
+
+describe("compareCatalogNames", () => {
+  it("sorts Finnish letters after Z for Finnish", () => {
+    expect(compareCatalogNames("Zebra", "Äly", "en")).toBeGreaterThan(0);
+    expect(compareCatalogNames("Zebra", "Äly", "fi")).toBeLessThan(0);
+    expect(compareCatalogNames("Äly", "Öljy", "fi")).toBeLessThan(0);
   });
 });

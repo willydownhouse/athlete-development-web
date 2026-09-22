@@ -23,6 +23,7 @@ import {
   type EventItemFormPath,
   type EventItemFormTypeNode,
 } from "@/lib/event-item-form";
+import { useAppLocale } from "@/lib/locale-context";
 import type { EventItem } from "@/lib/types";
 
 const inputClassName =
@@ -278,6 +279,7 @@ export function EventItemsSection({
   onLoadingChange,
   onLoadErrorChange,
 }: EventItemsSectionProps) {
+  const locale = useAppLocale();
   const [catalog, setCatalog] = useState<EventItemFormCatalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -289,7 +291,7 @@ export function EventItemsSection({
     onLoadingChange?.(true);
     onLoadErrorChange?.(null);
 
-    void loadEventItemFormCatalog(eventTypeId)
+    void loadEventItemFormCatalog(eventTypeId, locale)
       .then((loadedCatalog) => {
         if (cancelled) {
           return;
@@ -326,7 +328,7 @@ export function EventItemsSection({
     };
     // savedItems omitted intentionally — prefill on open/type change only, not on revalidation
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventTypeId, fieldsResetKey, onCatalogChange, onLoadErrorChange, onLoadingChange]);
+  }, [eventTypeId, fieldsResetKey, locale, onCatalogChange, onLoadErrorChange, onLoadingChange]);
 
   const sectionKey = useMemo(
     () =>

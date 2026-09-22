@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { ApiError, fetchAllEvents } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import { eventsInHalfOpenRange } from "@/lib/event-grouping";
 import { getZonedDayRange, getZonedWeekRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
@@ -24,10 +25,12 @@ export async function fetchDashboardEventsInRange(
   }
 
   try {
+    const locale = await getRequestLocale();
     const events = await fetchAllEvents(token, athleteId, {
       startedAtFrom,
       startedAtTo,
       include,
+      locale,
     });
 
     return { events };

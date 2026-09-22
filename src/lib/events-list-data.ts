@@ -16,6 +16,7 @@ import {
   resolveEventsListItemTypeId,
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
+import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type {
   EventAggregate,
@@ -59,7 +60,7 @@ export async function fetchAthleteEventsList(
     return { error: "You need to sign in again" };
   }
 
-  const timeZone = await getRequestTimeZone();
+  const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
   const dateRange = eventsListDateRange(timeZone, params.from, params.to);
 
   try {
@@ -69,6 +70,7 @@ export async function fetchAthleteEventsList(
       ...dateRange,
       ...(params.eventTypeIds.length > 0 ? { eventTypeIds: params.eventTypeIds } : {}),
       ...(params.categories.length > 0 ? { categories: params.categories } : {}),
+      locale,
     });
 
     return { data };
@@ -215,6 +217,7 @@ export async function fetchAthleteEventItemsList(
       };
     }
 
+    const locale = await getRequestLocale();
     const data = await fetchEventItems(token, athleteId, {
       startedAtFrom: dateRange.startedAtFrom,
       startedAtTo: dateRange.startedAtTo,
@@ -226,6 +229,7 @@ export async function fetchAthleteEventItemsList(
       ...(isEventsListExerciseMeasure(params.measure) && params.label
         ? { label: params.label }
         : {}),
+      locale,
     });
 
     return { data };

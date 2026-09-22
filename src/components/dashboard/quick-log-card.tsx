@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { filterEventTypesByScope, type EventTypeScope } from "@/lib/event-type-groups";
+import { useAppLocale } from "@/lib/locale-context";
 import type { EventType } from "@/lib/types";
 
 type QuickLogCardProps = {
@@ -27,10 +28,11 @@ export function QuickLogCard({
     [focusSportName],
   );
   const [scope, setScope] = useState<EventTypeScope>("sport");
+  const locale = useAppLocale();
 
   const visibleEventTypes = useMemo(
-    () => filterEventTypesByScope(eventTypes, scope),
-    [eventTypes, scope],
+    () => filterEventTypesByScope(eventTypes, scope, locale),
+    [eventTypes, locale, scope],
   );
 
   const emptyScopeLabel = scope === "sport" ? focusSportName.toLowerCase() : "general";

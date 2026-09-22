@@ -12,7 +12,7 @@ describe("buildHockeyStatTiles", () => {
       eventTypes: {},
     };
 
-    expect(buildHockeyStatTiles(sportStats)).toEqual([]);
+    expect(buildHockeyStatTiles(sportStats, "en")).toEqual([]);
   });
 
   it("builds duration and metric tiles in API order within each event type", () => {
@@ -46,7 +46,7 @@ describe("buildHockeyStatTiles", () => {
       },
     };
 
-    expect(buildHockeyStatTiles(sportStats)).toEqual([
+    expect(buildHockeyStatTiles(sportStats, "en")).toEqual([
       {
         key: "11111111-1111-4111-8111-111111111111-duration",
         value: "1h",
@@ -103,7 +103,7 @@ describe("buildHockeyStatTiles", () => {
       },
     };
 
-    expect(buildHockeyStatTiles(sportStats).map((tile) => tile.key)).toEqual([
+    expect(buildHockeyStatTiles(sportStats, "en").map((tile) => tile.key)).toEqual([
       "11111111-1111-4111-8111-111111111111-assist_count",
       "11111111-1111-4111-8111-111111111111-rpe",
       "11111111-1111-4111-8111-111111111111-goal_count",
@@ -130,7 +130,7 @@ describe("buildHockeyStatTiles", () => {
       },
     };
 
-    expect(buildHockeyStatTiles(sportStats)).toEqual([
+    expect(buildHockeyStatTiles(sportStats, "en")).toEqual([
       {
         key: "11111111-1111-4111-8111-111111111111-duration",
         value: "1h",
@@ -165,7 +165,7 @@ describe("buildHockeyStatTiles", () => {
       },
     };
 
-    expect(buildHockeyStatTiles(sportStats)).toEqual([
+    expect(buildHockeyStatTiles(sportStats, "en")).toEqual([
       {
         key: "22222222-2222-4222-8222-222222222222-shot_count",
         value: "25 shots",

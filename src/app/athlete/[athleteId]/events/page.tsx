@@ -28,6 +28,7 @@ import {
   resolveEventsListSearchParams,
 } from "@/lib/events-list-params";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
 import { loadShellAthletes } from "@/lib/shell-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
@@ -56,11 +57,12 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
     redirect("/");
   }
 
-  const [athletes, rawSearchParams, isAdmin, timeZone] = await Promise.all([
+  const [athletes, rawSearchParams, isAdmin, timeZone, locale] = await Promise.all([
     loadShellAthletes(token),
     searchParams,
     getIsAdminUser(),
     getRequestTimeZone(),
+    getRequestLocale(),
   ]);
 
   const listParams = resolveEventsListSearchParams(
@@ -76,16 +78,17 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
 
   const [eventTypes, eventTypeMetrics, itemTypes, itemTypeMetrics, itemTypeChildTypes] =
     await Promise.all([
-      fetchEventTypes(selectedAthlete.focusSportId).catch(() => []),
-      fetchEventTypesMetricDefinitions(selectedAthlete.focusSportId).catch(() => []),
-      fetchEventItemTypes(selectedAthlete.focusSportId).catch(() => []),
-      fetchEventItemTypesMetricDefinitions(selectedAthlete.focusSportId).catch(() => []),
-      fetchEventItemTypesChildTypes(selectedAthlete.focusSportId).catch(() => []),
+      fetchEventTypes(locale, selectedAthlete.focusSportId).catch(() => []),
+      fetchEventTypesMetricDefinitions(locale, selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypes(locale, selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypesMetricDefinitions(locale, selectedAthlete.focusSportId).catch(() => []),
+      fetchEventItemTypesChildTypes(locale, selectedAthlete.focusSportId).catch(() => []),
     ]);
   const itemMeasureMetrics = itemMeasureNumericMetricsFromCatalog(
     itemTypes,
     itemTypeMetrics,
     itemTypeChildTypes,
+    locale,
     selectedAthlete.focusSportId,
   );
 

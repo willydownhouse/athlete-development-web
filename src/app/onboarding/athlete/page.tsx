@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type OnboardingAthletePageProps = {
@@ -32,9 +33,10 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
     redirect("/");
   }
 
+  const locale = await getRequestLocale();
   const [athletes, sports, isAdmin] = await Promise.all([
     loadShellAthletes(token),
-    fetchSports(),
+    fetchSports(locale),
     getIsAdminUser(),
   ]);
 

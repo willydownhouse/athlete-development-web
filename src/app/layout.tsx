@@ -28,8 +28,6 @@ export default async function RootLayout({
 }>) {
   const locale = await getRequestLocale();
 
-  console.log("locale", locale);
-
   return (
     <html
       lang={locale}

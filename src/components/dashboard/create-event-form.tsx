@@ -26,6 +26,7 @@ import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
 import { groupEventTypes } from "@/lib/event-type-groups";
+import { useAppLocale } from "@/lib/locale-context";
 import { type EventItemFormCatalog } from "@/lib/event-item-form";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
@@ -87,9 +88,10 @@ export function EventForm({
     initialState,
   );
 
+  const locale = useAppLocale();
   const groups = useMemo(
-    () => groupEventTypes(eventTypes, focusSportName),
-    [eventTypes, focusSportName],
+    () => groupEventTypes(eventTypes, focusSportName, locale),
+    [eventTypes, focusSportName, locale],
   );
   const values = useMemo(
     () =>

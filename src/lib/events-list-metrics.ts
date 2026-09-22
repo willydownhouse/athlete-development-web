@@ -3,6 +3,7 @@ import {
   resolveEventsListItemTypeId,
   type EventsListMeasure,
 } from "@/lib/events-list-params";
+import { compareCatalogNames, type AppLocale } from "@/lib/locale";
 import type {
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
@@ -21,7 +22,7 @@ const EMPTY_ITEM_MEASURE_METRICS: ItemMeasureNumericMetrics = {
   exercise: [],
 };
 
-function uniqueNumericMetrics(metrics: MetricDefinition[]): MetricDefinition[] {
+function uniqueNumericMetrics(metrics: MetricDefinition[], locale: AppLocale): MetricDefinition[] {
   const byId = new Map<string, MetricDefinition>();
 
   for (const metric of metrics) {
@@ -30,19 +31,25 @@ function uniqueNumericMetrics(metrics: MetricDefinition[]): MetricDefinition[] {
     }
   }
 
-  return [...byId.values()].sort((left, right) => left.name.localeCompare(right.name));
+  return [...byId.values()].sort((left, right) =>
+    compareCatalogNames(left.name, right.name, locale),
+  );
 }
 
 export function numericMetricsForSelectedEventTypes(
   mappings: EventTypeMetricDefinition[],
   eventTypeIds: string[],
+  locale: AppLocale,
 ): MetricDefinition[] {
   const scoped =
     eventTypeIds.length === 0
       ? mappings
       : mappings.filter((mapping) => eventTypeIds.includes(mapping.eventTypeId));
 
-  return uniqueNumericMetrics(scoped.map((mapping) => mapping.metricDefinition));
+  return uniqueNumericMetrics(
+    scoped.map((mapping) => mapping.metricDefinition),
+    locale,
+  );
 }
 
 export function numericMetricsForEventsListMeasure(
@@ -50,24 +57,30 @@ export function numericMetricsForEventsListMeasure(
   itemMeasureMetrics: ItemMeasureNumericMetrics,
   eventTypeMetrics: EventTypeMetricDefinition[],
   eventTypeIds: string[],
+  locale: AppLocale,
 ): MetricDefinition[] {
   if (isEventsListItemMeasure(measure)) {
     return itemMeasureMetrics[measure];
   }
 
-  return numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds);
+  return numericMetricsForSelectedEventTypes(eventTypeMetrics, eventTypeIds, locale);
 }
 
 export function numericMetricsFromItemTypeMappings(
   mappings: EventItemTypeMetricDefinition[],
+  locale: AppLocale,
 ): MetricDefinition[] {
-  return uniqueNumericMetrics(mappings.map((mapping) => mapping.metricDefinition));
+  return uniqueNumericMetrics(
+    mappings.map((mapping) => mapping.metricDefinition),
+    locale,
+  );
 }
 
 function numericMetricsForItemTypeTree(
   rootTypeId: string,
   mappingsByTypeId: Map<string, EventItemTypeMetricDefinition[]>,
   childrenByParentId: Map<string, string[]>,
+  locale: AppLocale,
 ): MetricDefinition[] {
   const seenTypeIds = new Set<string>();
   const queue = [rootTypeId];
@@ -80,20 +93,21 @@ function numericMetricsForItemTypeTree(
     }
 
     seenTypeIds.add(typeId);
-    metrics.push(...numericMetricsFromItemTypeMappings(mappingsByTypeId.get(typeId) ?? []));
+    metrics.push(...numericMetricsFromItemTypeMappings(mappingsByTypeId.get(typeId) ?? [], locale));
 
     for (const childId of childrenByParentId.get(typeId) ?? []) {
       queue.push(childId);
     }
   }
 
-  return uniqueNumericMetrics(metrics);
+  return uniqueNumericMetrics(metrics, locale);
 }
 
 export function itemMeasureNumericMetricsFromCatalog(
   itemTypes: { id: string; slug: string; sportId: string | null }[],
   mappings: EventItemTypeMetricDefinition[],
   childTypes: Pick<EventItemTypeChildType, "parentEventItemTypeId" | "childEventItemTypeId">[],
+  locale: AppLocale,
   focusSportId?: string,
 ): ItemMeasureNumericMetrics {
   const mappingsByTypeId = new Map<string, EventItemTypeMetricDefinition[]>();
@@ -119,7 +133,7 @@ export function itemMeasureNumericMetricsFromCatalog(
 
     return [
       measure,
-      numericMetricsForItemTypeTree(typeId, mappingsByTypeId, childrenByParentId),
+      numericMetricsForItemTypeTree(typeId, mappingsByTypeId, childrenByParentId, locale),
     ] as const;
   });
 

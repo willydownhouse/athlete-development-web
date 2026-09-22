@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { OnboardingView } from "@/components/onboarding/onboarding-view";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 export default async function OnboardingPage() {
@@ -14,7 +15,8 @@ export default async function OnboardingPage() {
   }
 
   const token = await getAuthBearerToken();
-  const [athletes, sports] = await Promise.all([loadShellAthletes(token), fetchSports()]);
+  const locale = await getRequestLocale();
+  const [athletes, sports] = await Promise.all([loadShellAthletes(token), fetchSports(locale)]);
   const loadError = sports === null ? "Unable to load sports" : null;
 
   return (

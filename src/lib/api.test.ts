@@ -405,14 +405,31 @@ describe("api client", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const sports = await fetchSports();
+    const sports = await fetchSports("en");
 
-    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports", {
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports?locale=en", {
       cache: "no-store",
     });
     expect(sports).not.toBeNull();
     expect(sports).toHaveLength(1);
     expect(sports?.[0]?.slug).toBe("hockey");
+  });
+
+  it("fetches sports with the requested locale", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [] }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchSports("fi");
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/sports?locale=fi", {
+      cache: "no-store",
+    });
   });
 
   it("returns null when sports fetch fails", async () => {
@@ -422,7 +439,7 @@ describe("api client", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchSports()).resolves.toBeNull();
+    await expect(fetchSports("en")).resolves.toBeNull();
   });
 
   it("fetches public event types, optionally filtered by sport", async () => {
@@ -444,14 +461,17 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const sportId = "44444444-4444-4444-8444-444444444444";
-    const eventTypes = await fetchEventTypes(sportId);
+    const eventTypes = await fetchEventTypes("en", sportId);
 
-    expect(fetchMock).toHaveBeenCalledWith(`http://api.test/api/event-types?sportId=${sportId}`, {
-      next: {
-        revalidate: 3600,
-        tags: ["event-types"],
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/api/event-types?locale=en&sportId=${sportId}`,
+      {
+        next: {
+          revalidate: 3600,
+          tags: ["event-types"],
+        },
       },
-    });
+    );
     expect(eventTypes).toHaveLength(1);
     expect(eventTypes[0]?.name).toBe("Ice practice");
   });
@@ -483,10 +503,10 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const sportId = "44444444-4444-4444-8444-444444444444";
-    const mappings = await fetchEventTypesMetricDefinitions(sportId);
+    const mappings = await fetchEventTypesMetricDefinitions("en", sportId);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `http://api.test/api/event-types/metric-definitions?sportId=${sportId}`,
+      `http://api.test/api/event-types/metric-definitions?locale=en&sportId=${sportId}`,
       {
         next: {
           revalidate: 3600,
@@ -525,14 +545,15 @@ describe("api client", () => {
       startedAtFrom: "2026-08-01T00:00:00.000Z",
       startedAtTo: "2026-09-01T00:00:00.000Z",
       include: "metrics",
+      locale: "en",
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=0&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
+      `http://api.test/api/athletes/${athleteId}/events?locale=en&limit=100&offset=0&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
     );
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      `http://api.test/api/athletes/${athleteId}/events?limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
+      `http://api.test/api/athletes/${athleteId}/events?locale=en&limit=100&offset=100&startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&include=metrics`,
     );
     expect(events).toHaveLength(101);
   });
@@ -558,10 +579,11 @@ describe("api client", () => {
         "00000000-0000-4000-8000-000000000201",
         "00000000-0000-4000-8000-000000000209",
       ],
+      locale: "en",
     });
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/athletes/${athleteId}/events?limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&eventTypeIds=00000000-0000-4000-8000-000000000209`,
+      `http://api.test/api/athletes/${athleteId}/events?locale=en&limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&eventTypeIds=00000000-0000-4000-8000-000000000209`,
     );
   });
 
@@ -583,10 +605,11 @@ describe("api client", () => {
       limit: 10,
       offset: 0,
       categories: ["training", "competition"],
+      locale: "en",
     });
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/athletes/${athleteId}/events?limit=10&offset=0&categories=training&categories=competition`,
+      `http://api.test/api/athletes/${athleteId}/events?locale=en&limit=10&offset=0&categories=training&categories=competition`,
     );
   });
 
@@ -650,10 +673,10 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const sportId = "44444444-4444-4444-8444-444444444444";
-    const itemTypes = await fetchEventItemTypes(sportId);
+    const itemTypes = await fetchEventItemTypes("en", sportId);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `http://api.test/api/event-item-types?sportId=${sportId}`,
+      `http://api.test/api/event-item-types?locale=en&sportId=${sportId}`,
       {
         next: {
           revalidate: 3600,
@@ -692,10 +715,10 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const sportId = "44444444-4444-4444-8444-444444444444";
-    const mappings = await fetchEventItemTypesMetricDefinitions(sportId);
+    const mappings = await fetchEventItemTypesMetricDefinitions("en", sportId);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `http://api.test/api/event-item-types/metric-definitions?sportId=${sportId}`,
+      `http://api.test/api/event-item-types/metric-definitions?locale=en&sportId=${sportId}`,
       {
         next: {
           revalidate: 3600,
@@ -727,10 +750,10 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const sportId = "44444444-4444-4444-8444-444444444444";
-    const childTypes = await fetchEventItemTypesChildTypes(sportId);
+    const childTypes = await fetchEventItemTypesChildTypes("en", sportId);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `http://api.test/api/event-item-types/child-types?sportId=${sportId}`,
+      `http://api.test/api/event-item-types/child-types?locale=en&sportId=${sportId}`,
       {
         next: {
           revalidate: 3600,
@@ -878,11 +901,12 @@ describe("api client", () => {
       eventTypeIds: ["00000000-0000-4000-8000-000000000201"],
       categories: ["training"],
       label: "Treadmill",
+      locale: "en",
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/athletes/${athleteId}/event-items?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&eventItemTypeId=${eventItemTypeId}&limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&categories=training&label=Treadmill`,
+      `http://api.test/api/athletes/${athleteId}/event-items?startedAtFrom=2026-08-01T00%3A00%3A00.000Z&startedAtTo=2026-09-01T00%3A00%3A00.000Z&eventItemTypeId=${eventItemTypeId}&limit=10&offset=0&eventTypeIds=00000000-0000-4000-8000-000000000201&categories=training&label=Treadmill&locale=en`,
     );
     expect(result.pagination.total).toBe(1);
     expect(result.items[0]?.label).toBe("Treadmill");
@@ -1070,6 +1094,7 @@ describe("api client", () => {
       content: "Lisa has ice practice.",
       clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
       timeZone: "Europe/Helsinki",
+      locale: "en" as const,
     };
     const turn = await submitChatMessage("test-token", threadId, body);
 
@@ -1108,6 +1133,7 @@ describe("api client", () => {
       content: "Move this to 6pm.",
       clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
       timeZone: "Europe/Helsinki",
+      locale: "fi" as const,
       eventId,
     };
     await submitChatMessage("test-token", threadId, body);

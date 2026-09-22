@@ -1,4 +1,5 @@
 import { CHAT_MESSAGES_PAGE_SIZE } from "./constants";
+import type { AppLocale } from "./locale";
 import type {
   AcceptAthleteInvitationResponse,
   Athlete,
@@ -44,6 +45,18 @@ import {
 
 /** Event types are admin config; busted on admin writes via EVENT_TYPES_CACHE_TAG. */
 const EVENT_TYPES_REVALIDATE_SECONDS = 60 * 60;
+
+function catalogQuery(locale: AppLocale, extra?: Record<string, string | undefined>): string {
+  const params = new URLSearchParams({ locale });
+
+  for (const [key, value] of Object.entries(extra ?? {})) {
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  return `?${params.toString()}`;
+}
 
 export type AppUser = {
   id: string;
@@ -211,9 +224,9 @@ export async function createAthlete(
   });
 }
 
-export async function fetchSports(): Promise<Sport[] | null> {
+export async function fetchSports(locale: AppLocale): Promise<Sport[] | null> {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/api/sports`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/sports${catalogQuery(locale)}`, {
       cache: "no-store",
     });
 
@@ -300,9 +313,11 @@ export async function fetchEvents(
     eventTypeIds?: string[];
     categories?: EventCategory[];
     include?: "metrics" | "items" | "metrics,items";
-  } = {},
+    locale: AppLocale;
+  },
 ): Promise<EventListResponse> {
   const params = new URLSearchParams();
+  params.set("locale", query.locale);
 
   if (query.limit !== undefined) {
     params.set("limit", String(query.limit));
@@ -413,8 +428,11 @@ export async function fetchEventAggregate(
   return (await response.json()) as EventAggregate;
 }
 
-export async function fetchEventItemTypes(sportId?: string): Promise<EventItemType[]> {
-  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+export async function fetchEventItemTypes(
+  locale: AppLocale,
+  sportId?: string,
+): Promise<EventItemType[]> {
+  const query = catalogQuery(locale, sportId ? { sportId } : undefined);
   const response = await fetch(`${getApiBaseUrl()}/api/event-item-types${query}`, {
     next: {
       revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
@@ -431,9 +449,10 @@ export async function fetchEventItemTypes(sportId?: string): Promise<EventItemTy
 }
 
 export async function fetchEventItemTypesMetricDefinitions(
+  locale: AppLocale,
   sportId?: string,
 ): Promise<EventItemTypeMetricDefinition[]> {
-  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const query = catalogQuery(locale, sportId ? { sportId } : undefined);
   const response = await fetch(
     `${getApiBaseUrl()}/api/event-item-types/metric-definitions${query}`,
     {
@@ -453,9 +472,10 @@ export async function fetchEventItemTypesMetricDefinitions(
 }
 
 export async function fetchEventItemTypesChildTypes(
+  locale: AppLocale,
   sportId?: string,
 ): Promise<EventItemTypeChildType[]> {
-  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const query = catalogQuery(locale, sportId ? { sportId } : undefined);
   const response = await fetch(`${getApiBaseUrl()}/api/event-item-types/child-types${query}`, {
     next: {
       revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
@@ -540,6 +560,7 @@ export async function fetchEventItems(
     eventTypeIds?: string[];
     categories?: EventCategory[];
     label?: string;
+    locale: AppLocale;
   },
 ): Promise<EventItemListResponse> {
   const params = new URLSearchParams({
@@ -567,6 +588,8 @@ export async function fetchEventItems(
   if (query.label) {
     params.set("label", query.label);
   }
+
+  params.set("locale", query.locale);
 
   const response = await fetch(
     `${getApiBaseUrl()}/api/athletes/${athleteId}/event-items?${params.toString()}`,
@@ -596,12 +619,13 @@ type FetchEventsQuery = {
   sportId?: string;
   eventTypeId?: string;
   include?: "metrics" | "items" | "metrics,items";
+  locale: AppLocale;
 };
 
 export async function fetchAllEvents(
   token: string,
   athleteId: string,
-  query: FetchEventsQuery = {},
+  query: FetchEventsQuery,
 ): Promise<Event[]> {
   const events: Event[] = [];
   let offset = 0;
@@ -632,9 +656,11 @@ export async function fetchEvent(
   eventId: string,
   query: {
     include?: "metrics" | "items" | "metrics,items";
-  } = {},
+    locale: AppLocale;
+  },
 ): Promise<Event> {
   const params = new URLSearchParams();
+  params.set("locale", query.locale);
 
   if (query.include) {
     params.set("include", query.include);
@@ -702,9 +728,11 @@ export async function fetchSportStats(
   query: {
     startedAtFrom?: string;
     startedAtTo?: string;
-  } = {},
+    locale: AppLocale;
+  },
 ): Promise<SportStats> {
   const params = new URLSearchParams();
+  params.set("locale", query.locale);
 
   if (query.startedAtFrom) {
     params.set("startedAtFrom", query.startedAtFrom);
@@ -736,8 +764,8 @@ export async function fetchSportStats(
   return (await response.json()) as SportStats;
 }
 
-export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
-  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+export async function fetchEventTypes(locale: AppLocale, sportId?: string): Promise<EventType[]> {
+  const query = catalogQuery(locale, sportId ? { sportId } : undefined);
   const response = await fetch(`${getApiBaseUrl()}/api/event-types${query}`, {
     next: {
       revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
@@ -754,9 +782,10 @@ export async function fetchEventTypes(sportId?: string): Promise<EventType[]> {
 }
 
 export async function fetchEventTypesMetricDefinitions(
+  locale: AppLocale,
   sportId?: string,
 ): Promise<EventTypeMetricDefinition[]> {
-  const query = sportId ? `?sportId=${encodeURIComponent(sportId)}` : "";
+  const query = catalogQuery(locale, sportId ? { sportId } : undefined);
   const response = await fetch(`${getApiBaseUrl()}/api/event-types/metric-definitions${query}`, {
     next: {
       revalidate: EVENT_TYPES_REVALIDATE_SECONDS,
@@ -774,9 +803,10 @@ export async function fetchEventTypesMetricDefinitions(
 
 export async function fetchEventTypeMetricDefinitions(
   eventTypeId: string,
+  locale: AppLocale,
 ): Promise<EventTypeMetricDefinition[]> {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/metric-definitions`,
+    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/metric-definitions${catalogQuery(locale)}`,
     {
       cache: "no-store",
     },
@@ -790,9 +820,12 @@ export async function fetchEventTypeMetricDefinitions(
   return result.items;
 }
 
-export async function fetchEventTypeItemTypes(eventTypeId: string): Promise<EventTypeItemType[]> {
+export async function fetchEventTypeItemTypes(
+  eventTypeId: string,
+  locale: AppLocale,
+): Promise<EventTypeItemType[]> {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/item-types`,
+    `${getApiBaseUrl()}/api/event-types/${encodeURIComponent(eventTypeId)}/item-types${catalogQuery(locale)}`,
     {
       cache: "no-store",
     },
@@ -808,9 +841,10 @@ export async function fetchEventTypeItemTypes(eventTypeId: string): Promise<Even
 
 export async function fetchEventItemTypeChildTypes(
   eventItemTypeId: string,
+  locale: AppLocale,
 ): Promise<EventItemTypeChildType[]> {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/child-types`,
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/child-types${catalogQuery(locale)}`,
     {
       cache: "no-store",
     },
@@ -826,9 +860,10 @@ export async function fetchEventItemTypeChildTypes(
 
 export async function fetchEventItemTypeMetricDefinitions(
   eventItemTypeId: string,
+  locale: AppLocale,
 ): Promise<EventItemTypeMetricDefinition[]> {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/metric-definitions`,
+    `${getApiBaseUrl()}/api/event-item-types/${encodeURIComponent(eventItemTypeId)}/metric-definitions${catalogQuery(locale)}`,
     {
       cache: "no-store",
     },
@@ -1024,6 +1059,7 @@ export async function submitChatMessage(
     content: string;
     clientRequestId: string;
     timeZone: string;
+    locale: AppLocale;
     eventId?: string;
   },
 ): Promise<ChatTurn> {

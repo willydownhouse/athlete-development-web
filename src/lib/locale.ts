@@ -49,3 +49,7 @@ export function parseAcceptLanguage(header: string | null | undefined): AppLocal
 
   return DEFAULT_APP_LOCALE;
 }
+
+export function compareCatalogNames(left: string, right: string, locale: AppLocale): number {
+  return left.localeCompare(right, locale, { sensitivity: "base" });
+}

@@ -10,6 +10,7 @@ import { PickerMenu } from "@/components/picker-menu";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
 import { groupEventTypes } from "@/lib/event-type-groups";
+import { useAppLocale } from "@/lib/locale-context";
 import {
   numericMetricsForEventsListMeasure,
   type ItemMeasureNumericMetrics,
@@ -79,17 +80,18 @@ export function EventsListFilters({
   const [metricDefinitionId, setMetricDefinitionId] = useState(params.metricDefinitionId ?? "");
   const [label, setLabel] = useState(params.label ?? "");
   const [limit, setLimit] = useState(String(params.limit));
+  const locale = useAppLocale();
 
   const eventTypeGroups = useMemo<FormSelectGroup[]>(
     () =>
-      groupEventTypes(eventTypes, focusSportName).map((group) => ({
+      groupEventTypes(eventTypes, focusSportName, locale).map((group) => ({
         label: group.label,
         options: group.items.map((eventType) => ({
           value: eventType.id,
           label: eventType.name,
         })),
       })),
-    [eventTypes, focusSportName],
+    [eventTypes, focusSportName, locale],
   );
 
   const itemShowOptions = useMemo(
@@ -106,11 +108,12 @@ export function EventsListFilters({
       itemMeasureMetrics,
       eventTypeMetrics,
       eventTypeIds,
+      locale,
     ).map((metric) => ({
       value: metric.id,
       label: metric.name,
     }));
-  }, [eventTypeIds, eventTypeMetrics, itemMeasureMetrics, measure]);
+  }, [eventTypeIds, eventTypeMetrics, itemMeasureMetrics, locale, measure]);
 
   function setSelectedEventTypeIds(nextEventTypeIds: string[]) {
     setEventTypeIds(nextEventTypeIds);
@@ -120,6 +123,7 @@ export function EventsListFilters({
         itemMeasureMetrics,
         eventTypeMetrics,
         nextEventTypeIds,
+        locale,
       ).map((metric) => metric.id),
     );
 
@@ -149,6 +153,7 @@ export function EventsListFilters({
         itemMeasureMetrics,
         eventTypeMetrics,
         eventTypeIds,
+        locale,
       ).map((metric) => metric.id),
     );
 
