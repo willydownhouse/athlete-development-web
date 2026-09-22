@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import {
-  ADD_ATHLETE_NAV_LABEL,
   appShellMobileTitle,
   athleteEventIdFromPath,
   isOnboardingPath,
@@ -15,6 +14,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { AppLocale } from "@/lib/locale";
 import { LocaleProvider } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
@@ -56,6 +56,7 @@ export function AppShellClient({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const onboarding = isOnboardingPath(pathname);
+  const messages = getMessages(locale);
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -92,7 +93,7 @@ export function AppShellClient({
           <button
             type="button"
             className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-            aria-label="Close menu"
+            aria-label={messages.common.closeMenu}
             onClick={closeMobile}
           />
         ) : null}
@@ -106,17 +107,17 @@ export function AppShellClient({
             <div>
               {onboarding ? (
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                  {ADD_ATHLETE_NAV_LABEL}
+                  {messages.nav.addAthlete}
                 </p>
               ) : null}
               <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
-                Athlete Development Center
+                {messages.brand}
               </p>
             </div>
             <button
               type="button"
               className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-              aria-label="Close menu"
+              aria-label={messages.common.closeMenu}
               onClick={closeMobile}
             >
               <CloseIcon />
@@ -136,7 +137,10 @@ export function AppShellClient({
           <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
             <LanguageToggle locale={locale} />
             <p className="truncate text-xs text-zinc-500">{userEmail}</p>
-            <SignOutButton className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]" />
+            <SignOutButton
+              className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]"
+              label={messages.common.signOut}
+            />
           </div>
         </aside>
 
@@ -145,7 +149,7 @@ export function AppShellClient({
             <button
               type="button"
               className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
-              aria-label={pendingInvitesMenuButtonLabel(pendingInviteCount)}
+              aria-label={pendingInvitesMenuButtonLabel(pendingInviteCount, locale)}
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen(true)}
             >
@@ -159,9 +163,9 @@ export function AppShellClient({
             </button>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
-                {appShellMobileTitle(pathname)}
+                {appShellMobileTitle(pathname, locale)}
               </p>
-              <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
+              <p className="truncate text-xs text-zinc-500">{messages.brand}</p>
             </div>
           </header>
 

@@ -1,3 +1,5 @@
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import { formatZonedShortDate, formatZonedTime, getZonedDateString } from "@/lib/time-zone";
 
 function previousZonedDateString(timeZone: string, date: Date): string {
@@ -17,6 +19,7 @@ export function formatChatTimestamp(
   timeZone: string,
   createdAt: string,
   referenceDate = new Date(),
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
   const date = new Date(createdAt);
   const time = formatZonedTime(timeZone, date);
@@ -28,8 +31,8 @@ export function formatChatTimestamp(
   }
 
   if (messageDay === previousZonedDateString(timeZone, referenceDate)) {
-    return `Yesterday ${time}`;
+    return `${getMessages(locale).chat.yesterday} ${time}`;
   }
 
-  return `${formatZonedShortDate(timeZone, date, referenceDate)} ${time}`;
+  return `${formatZonedShortDate(timeZone, date, referenceDate, locale)} ${time}`;
 }

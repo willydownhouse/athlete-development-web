@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { filterEventTypesByScope, type EventTypeScope } from "@/lib/event-type-groups";
 import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { EventType } from "@/lib/types";
 
 type QuickLogCardProps = {
@@ -19,28 +20,30 @@ export function QuickLogCard({
   loadError,
   onEventTypeClick,
 }: QuickLogCardProps) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const scopes = useMemo(
     () =>
       [
         { id: "sport" as const, label: focusSportName },
-        { id: "general" as const, label: "General" },
+        { id: "general" as const, label: messages.common.general },
       ] satisfies { id: EventTypeScope; label: string }[],
-    [focusSportName],
+    [focusSportName, messages.common.general],
   );
   const [scope, setScope] = useState<EventTypeScope>("sport");
-  const locale = useAppLocale();
 
   const visibleEventTypes = useMemo(
     () => filterEventTypesByScope(eventTypes, scope, locale),
     [eventTypes, locale, scope],
   );
 
-  const emptyScopeLabel = scope === "sport" ? focusSportName.toLowerCase() : "general";
+  const emptyScopeLabel =
+    scope === "sport" ? focusSportName.toLowerCase() : messages.common.general.toLowerCase();
 
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">Quick log</h2>
+        <h2 className="text-base font-semibold text-white">{messages.dashboard.quickLog}</h2>
 
         {!loadError ? (
           <div className="flex flex-wrap justify-end gap-2">
@@ -84,7 +87,7 @@ export function QuickLogCard({
         </div>
       ) : (
         <p className="mt-4 text-sm text-zinc-500">
-          No {emptyScopeLabel} event types available yet.
+          {messages.dashboard.noEventTypesInScope(emptyScopeLabel)}
         </p>
       )}
     </section>

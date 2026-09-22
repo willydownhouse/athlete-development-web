@@ -1,5 +1,7 @@
 import { pluralizeItemTypeName } from "@/lib/event-item-display";
 import { EVENT_ITEM_LABEL_MAX_LENGTH, normalizeEventItemLabel } from "@/lib/event-item-form";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import { zonedDateTimeToUtcIso, getZonedWeekRange } from "@/lib/time-zone";
 import { EVENT_CATEGORIES, type EventCategory } from "@/lib/types";
 
@@ -18,23 +20,36 @@ const EVENTS_LIST_SHOW_VALUES = [
 ] as const;
 export type EventsListShow = (typeof EVENTS_LIST_SHOW_VALUES)[number];
 export const EVENTS_LIST_DEFAULT_SHOW: EventsListShow = "events";
-export const EVENTS_LIST_SHOW_OPTIONS: { value: EventsListShow; label: string }[] = [
-  { value: "events", label: "Events" },
-  { value: "count", label: "Event count" },
-  { value: "durationSeconds", label: "Total duration" },
-  { value: "metric", label: "Metric total" },
-  { value: "metricAverage", label: "Metric average" },
-];
+export function eventsListShowOptions(
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): { value: EventsListShow; label: string }[] {
+  const messages = getMessages(locale).events;
+
+  return [
+    { value: "events", label: messages.showEvents },
+    { value: "count", label: messages.showEventCount },
+    { value: "durationSeconds", label: messages.showTotalDuration },
+    { value: "metric", label: messages.showMetricTotal },
+    { value: "metricAverage", label: messages.showMetricAverage },
+  ];
+}
 
 const EVENTS_LIST_MEASURE_VALUES = ["events", "warm_up", "cool_down", "exercise"] as const;
 export type EventsListMeasure = (typeof EVENTS_LIST_MEASURE_VALUES)[number];
 export const EVENTS_LIST_DEFAULT_MEASURE: EventsListMeasure = "events";
-export const EVENTS_LIST_MEASURE_OPTIONS: { value: EventsListMeasure; label: string }[] = [
-  { value: "events", label: "Events" },
-  { value: "warm_up", label: "Warm up" },
-  { value: "cool_down", label: "Cool down" },
-  { value: "exercise", label: "Exercise" },
-];
+export function eventsListMeasureOptions(
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): { value: EventsListMeasure; label: string }[] {
+  const messages = getMessages(locale).events;
+
+  return [
+    { value: "events", label: messages.measureEvents },
+    { value: "warm_up", label: messages.measureWarmUp },
+    { value: "cool_down", label: messages.measureCoolDown },
+    { value: "exercise", label: messages.measureExercise },
+  ];
+}
+
 export const EVENTS_LIST_DEFAULT_ITEM_SHOW: EventsListShow = "items";
 const EVENTS_LIST_ITEM_SHOW_VALUES = [
   "items",
@@ -50,16 +65,21 @@ const EVENTS_LIST_ITEM_AGGREGATE_SHOW_VALUES = [
   "metricAverage",
 ] as const;
 
-export function eventsListItemShowOptions(listLabel: string): {
+export function eventsListItemShowOptions(
+  listLabel: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): {
   value: EventsListShow;
   label: string;
 }[] {
+  const messages = getMessages(locale).events;
+
   return [
     { value: "items", label: listLabel },
-    { value: "count", label: "Item count" },
-    { value: "durationSeconds", label: "Total duration" },
-    { value: "metric", label: "Metric total" },
-    { value: "metricAverage", label: "Metric average" },
+    { value: "count", label: messages.showItemCount },
+    { value: "durationSeconds", label: messages.showTotalDuration },
+    { value: "metric", label: messages.showMetricTotal },
+    { value: "metricAverage", label: messages.showMetricAverage },
   ];
 }
 
@@ -92,8 +112,13 @@ export function isEventsListExerciseMeasure(measure: EventsListMeasure): measure
   return measure === "exercise";
 }
 
-export function eventsListMeasureLabel(measure: EventsListMeasure): string {
-  return EVENTS_LIST_MEASURE_OPTIONS.find((option) => option.value === measure)?.label ?? measure;
+export function eventsListMeasureLabel(
+  measure: EventsListMeasure,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return (
+    eventsListMeasureOptions(locale).find((option) => option.value === measure)?.label ?? measure
+  );
 }
 
 export function normalizeEventsListLabel(value: string | undefined): string | undefined {
@@ -155,10 +180,12 @@ function eventsListItemMeasureName(
   itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
   measure: Exclude<EventsListMeasure, "events">,
   focusSportId?: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
   const typeId = resolveEventsListItemTypeId(itemTypes, measure, focusSportId);
   return (
-    itemTypes.find((itemType) => itemType.id === typeId)?.name ?? eventsListMeasureLabel(measure)
+    itemTypes.find((itemType) => itemType.id === typeId)?.name ??
+    eventsListMeasureLabel(measure, locale)
   );
 }
 
@@ -166,8 +193,12 @@ export function eventsListItemMeasureListLabel(
   itemTypes: { id: string; slug: string; sportId: string | null; name: string }[],
   measure: Exclude<EventsListMeasure, "events">,
   focusSportId?: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
-  return pluralizeItemTypeName(eventsListItemMeasureName(itemTypes, measure, focusSportId));
+  return pluralizeItemTypeName(
+    eventsListItemMeasureName(itemTypes, measure, focusSportId, locale),
+    locale,
+  );
 }
 
 type RawSearchParams = Record<string, string | string[] | undefined>;

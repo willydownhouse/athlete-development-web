@@ -3,6 +3,9 @@
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
+
 export type EventActionMenuItem = {
   label: string;
   onClick: () => void;
@@ -30,8 +33,10 @@ function MoreIcon() {
 export function EventActionMenu({
   items,
   onTriggerClick,
-  "aria-label": ariaLabel = "Event actions",
+  "aria-label": ariaLabel,
 }: EventActionMenuProps) {
+  const locale = useAppLocale();
+  const resolvedAriaLabel = ariaLabel ?? getMessages(locale).events.eventActions;
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -164,7 +169,7 @@ export function EventActionMenu({
       <button
         ref={triggerRef}
         type="button"
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

@@ -1,4 +1,5 @@
 import { compareCatalogNames, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import type { EventType } from "@/lib/types";
 
 export type EventTypeScope = "general" | "sport";
@@ -42,7 +43,7 @@ export function groupEventTypes(
   }
 
   if (general.length > 0) {
-    groups.push({ label: "General", items: general });
+    groups.push({ label: getMessages(locale).common.general, items: general });
   }
 
   return groups;

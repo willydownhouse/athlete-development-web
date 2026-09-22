@@ -3,11 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import {
-  dashboardHref,
-  backToTodayLabel,
-  HISTORY_NAV_LABEL,
-} from "@/components/dashboard/dashboard-nav";
+import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { AppShell } from "@/components/app-shell";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventsListFilters } from "@/components/dashboard/events-list-filters";
@@ -29,6 +25,7 @@ import {
 } from "@/lib/events-list-params";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadShellAthletes } from "@/lib/shell-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
@@ -104,11 +101,11 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToTodayLabel()}
+          {backToTodayLabel(locale)}
         </Link>
 
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-          {HISTORY_NAV_LABEL}
+          {getMessages(locale).nav.history}
         </h1>
 
         <div className="mt-6 space-y-4">

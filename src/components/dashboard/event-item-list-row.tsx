@@ -4,6 +4,7 @@ import { eventShortLabel } from "@/lib/event-display";
 import { eventItemListTitle } from "@/lib/event-item-display";
 import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
+import { getRequestLocale } from "@/lib/locale-server";
 import { formatZonedShortDate } from "@/lib/time-zone";
 import type { EventItemListItem } from "@/lib/types";
 
@@ -13,10 +14,11 @@ type EventItemListRowProps = {
   timeZone: string;
 };
 
-export function EventItemListRow({ item, href, timeZone }: EventItemListRowProps) {
+export async function EventItemListRow({ item, href, timeZone }: EventItemListRowProps) {
+  const locale = await getRequestLocale();
   const title = eventItemListTitle(item);
   const shortLabel = eventShortLabel(item.event.eventType.name);
-  const date = formatZonedShortDate(timeZone, new Date(item.event.startedAt));
+  const date = formatZonedShortDate(timeZone, new Date(item.event.startedAt), new Date(), locale);
   const eventName = item.event.title ?? item.event.eventType.name;
   const detail = [date, eventName];
 

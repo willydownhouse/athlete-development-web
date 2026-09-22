@@ -1,18 +1,10 @@
 import Link from "next/link";
 
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 import { athleteStatsHref } from "./dashboard-nav";
-
-const PERIOD_OPTIONS: Array<{
-  value: HockeyStatsPeriod;
-  label: string;
-  shortLabel: string;
-}> = [
-  { value: "day", label: "Today", shortLabel: "Today" },
-  { value: "week", label: "This week", shortLabel: "Week" },
-  { value: "month", label: "This month", shortLabel: "Month" },
-];
 
 type HockeyStatsSectionProps = {
   athleteId: string;
@@ -21,20 +13,35 @@ type HockeyStatsSectionProps = {
   children: React.ReactNode;
 };
 
-export function HockeyStatsSection({
+export async function HockeyStatsSection({
   athleteId,
   sportName,
   period,
   children,
 }: HockeyStatsSectionProps) {
+  const messages = getMessages(await getRequestLocale());
+  const periodOptions: Array<{
+    value: HockeyStatsPeriod;
+    label: string;
+    shortLabel: string;
+  }> = [
+    { value: "day", label: messages.stats.periodToday, shortLabel: messages.stats.periodToday },
+    { value: "week", label: messages.stats.periodWeek, shortLabel: messages.stats.periodWeekShort },
+    {
+      value: "month",
+      label: messages.stats.periodMonth,
+      shortLabel: messages.stats.periodMonthShort,
+    },
+  ];
+
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
         <h2 className="min-w-0 truncate text-sm font-semibold text-white sm:text-base">
-          {sportName} stats
+          {messages.stats.sportStats(sportName)}
         </h2>
         <div className="flex shrink-0 rounded-lg bg-white/5 p-0.5">
-          {PERIOD_OPTIONS.map((option) => {
+          {periodOptions.map((option) => {
             const isActive = option.value === period;
             const className =
               "rounded-md px-2 py-1 text-xs font-medium transition-colors sm:px-2.5 " +

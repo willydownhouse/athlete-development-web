@@ -11,6 +11,8 @@ import { EventDetailSection } from "@/components/dashboard/event-detail-section"
 import { EventPageFrame } from "@/components/dashboard/event-page-frame";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteEventPageProps = {
@@ -40,7 +42,12 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
     redirect("/");
   }
 
-  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
+  const [athletes, isAdmin, locale] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    getRequestLocale(),
+  ]);
+  const messages = getMessages(locale);
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -66,10 +73,12 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToTodayLabel()}
+          {backToTodayLabel(locale)}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Event</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {messages.nav.event}
+        </h1>
 
         <div className="mt-6">
           <Suspense fallback={<EventDetailSkeleton />}>

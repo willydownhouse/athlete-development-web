@@ -11,6 +11,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { EVENT_ITEM_LABEL_MAX_LENGTH } from "@/lib/event-item-form";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import {
   numericMetricsForEventsListMeasure,
   type ItemMeasureNumericMetrics,
@@ -19,14 +20,14 @@ import {
   buildEventsListQueryString,
   eventsListItemMeasureListLabel,
   eventsListItemShowOptions,
+  eventsListMeasureOptions,
+  eventsListShowOptions,
   EVENTS_LIST_DEFAULT_ITEM_SHOW,
   EVENTS_LIST_DEFAULT_LIMIT,
   EVENTS_LIST_DEFAULT_MEASURE,
   EVENTS_LIST_DEFAULT_PAGE,
   EVENTS_LIST_DEFAULT_SHOW,
-  EVENTS_LIST_MEASURE_OPTIONS,
   EVENTS_LIST_PAGE_SIZE_OPTIONS,
-  EVENTS_LIST_SHOW_OPTIONS,
   isEventsListExerciseMeasure,
   isEventsListItemListShow,
   isEventsListItemMeasure,
@@ -81,6 +82,9 @@ export function EventsListFilters({
   const [label, setLabel] = useState(params.label ?? "");
   const [limit, setLimit] = useState(String(params.limit));
   const locale = useAppLocale();
+  const messages = getMessages(locale);
+  const measureOptions = eventsListMeasureOptions(locale);
+  const showOptions = eventsListShowOptions(locale);
 
   const eventTypeGroups = useMemo<FormSelectGroup[]>(
     () =>
@@ -97,9 +101,12 @@ export function EventsListFilters({
   const itemShowOptions = useMemo(
     () =>
       isEventsListItemMeasure(measure)
-        ? eventsListItemShowOptions(eventsListItemMeasureListLabel(itemTypes, measure))
-        : EVENTS_LIST_SHOW_OPTIONS,
-    [itemTypes, measure],
+        ? eventsListItemShowOptions(
+            eventsListItemMeasureListLabel(itemTypes, measure, undefined, locale),
+            locale,
+          )
+        : showOptions,
+    [itemTypes, locale, measure, showOptions],
   );
 
   const metricOptions = useMemo(() => {
@@ -234,52 +241,52 @@ export function EventsListFilters({
     >
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 [&>*]:min-w-0">
         <label className="flex min-w-0 flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">From date</span>
+          <span className="font-medium text-zinc-300">{messages.events.fromDate}</span>
           <DatePickerInput
             value={from}
             onChange={setFrom}
-            placeholder="Date"
+            placeholder={messages.common.date}
             compact
             className={datePickerClassName}
           />
         </label>
 
         <label className="flex min-w-0 flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">To date</span>
+          <span className="font-medium text-zinc-300">{messages.events.toDate}</span>
           <DatePickerInput
             value={to}
             onChange={setTo}
-            placeholder="Date"
+            placeholder={messages.common.date}
             compact
             className={datePickerClassName}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Event types</span>
+          <span className="font-medium text-zinc-300">{messages.events.eventTypes}</span>
           <FormMultiSelect
             values={eventTypeIds}
             groups={eventTypeGroups}
-            emptyLabel="All event types"
-            placeholder="All event types"
+            emptyLabel={messages.events.allEventTypes}
+            placeholder={messages.events.allEventTypes}
             className={inputClassName}
-            aria-label="Event types"
+            aria-label={messages.events.eventTypes}
             onChange={setSelectedEventTypeIds}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Categories</span>
+          <span className="font-medium text-zinc-300">{messages.events.categories}</span>
           <FormMultiSelect
             values={categories}
             options={EVENT_CATEGORIES.map((category) => ({
               value: category,
               label: formatEventCategoryLabel(category, locale),
             }))}
-            emptyLabel="All categories"
-            placeholder="All categories"
+            emptyLabel={messages.events.allCategories}
+            placeholder={messages.events.allCategories}
             className={inputClassName}
-            aria-label="Categories"
+            aria-label={messages.events.categories}
             onChange={(values) =>
               setCategories(
                 values.filter((value): value is EventCategory =>
@@ -291,19 +298,19 @@ export function EventsListFilters({
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Measure</span>
+          <span className="font-medium text-zinc-300">{messages.events.measure}</span>
           <PickerMenu
             value={measure}
             onChange={(value) =>
               setSelectedMeasure(
-                EVENTS_LIST_MEASURE_OPTIONS.some((option) => option.value === value)
+                measureOptions.some((option) => option.value === value)
                   ? (value as EventsListMeasure)
                   : EVENTS_LIST_DEFAULT_MEASURE,
               )
             }
-            options={EVENTS_LIST_MEASURE_OPTIONS}
+            options={measureOptions}
             className={inputClassName}
-            aria-label="Measure"
+            aria-label={messages.events.measure}
           />
         </label>
 
@@ -311,15 +318,18 @@ export function EventsListFilters({
           <div className="flex flex-col gap-1 text-sm">
             <div className="flex items-center gap-1.5">
               <label htmlFor="exercise-name" className="font-medium text-zinc-300">
-                Name
+                {messages.events.exerciseName}
               </label>
-              <InfoTooltip label="How exercise name matching works">
+              <InfoTooltip label={messages.events.exerciseNameTooltip}>
                 <div className="space-y-2 text-sm text-zinc-300">
                   <p>
-                    The list matches names that start with what you type.{" "}
-                    <span className="font-medium text-white">B</span> finds Back squat.
+                    {messages.events.exerciseNameHelpPrefix}{" "}
+                    <span className="font-medium text-white">
+                      {messages.events.exerciseNameHelpExample}
+                    </span>{" "}
+                    {messages.events.exerciseNameHelpSuffix}
                   </p>
-                  <p>Count, duration, and metric totals need the full name.</p>
+                  <p>{messages.events.exerciseNameHelpTotals}</p>
                 </div>
               </InfoTooltip>
             </div>
@@ -329,15 +339,15 @@ export function EventsListFilters({
               onChange={(event) => setLabel(event.target.value)}
               maxLength={EVENT_ITEM_LABEL_MAX_LENGTH}
               required
-              placeholder="Back squat"
+              placeholder={messages.events.exerciseNamePlaceholder}
               className={inputClassName}
-              aria-label="Exercise name"
+              aria-label={messages.events.exerciseNameAria}
             />
           </div>
         ) : null}
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Show</span>
+          <span className="font-medium text-zinc-300">{messages.events.show}</span>
           <PickerMenu
             value={show}
             onChange={(value) => {
@@ -351,7 +361,7 @@ export function EventsListFilters({
             }}
             options={itemShowOptions}
             className={inputClassName}
-            aria-label="Show"
+            aria-label={messages.events.show}
           />
         </label>
 
@@ -359,22 +369,22 @@ export function EventsListFilters({
           <span
             className={`font-medium ${isEventsListMetricShow(show) ? "text-zinc-300" : "text-zinc-500"}`}
           >
-            Metric
+            {messages.events.metric}
           </span>
           <PickerMenu
             value={metricDefinitionId}
             options={metricOptions}
-            placeholder="Select a metric"
+            placeholder={messages.events.selectMetric}
             disabled={!isEventsListMetricShow(show)}
             onChange={setMetricDefinitionId}
             className={inputClassName}
-            aria-label="Metric"
+            aria-label={messages.events.metric}
           />
         </label>
 
         {isEventsListPagedShow(measure, show) ? (
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Page size</span>
+            <span className="font-medium text-zinc-300">{messages.events.pageSize}</span>
             <PickerMenu
               value={limit}
               onChange={setLimit}
@@ -382,12 +392,17 @@ export function EventsListFilters({
                 value: String(option),
                 label: `${option} ${
                   isEventsListItemMeasure(measure)
-                    ? eventsListItemMeasureListLabel(itemTypes, measure).toLowerCase()
-                    : "events"
+                    ? eventsListItemMeasureListLabel(
+                        itemTypes,
+                        measure,
+                        undefined,
+                        locale,
+                      ).toLowerCase()
+                    : messages.events.pageSizeEvents
                 }`,
               }))}
               className={inputClassName}
-              aria-label="Page size"
+              aria-label={messages.events.pageSize}
             />
           </label>
         ) : null}
@@ -398,14 +413,14 @@ export function EventsListFilters({
           type="submit"
           className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-2.5 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] sm:flex-none"
         >
-          Apply filters
+          {messages.events.applyFilters}
         </button>
         <button
           type="button"
           onClick={handleClear}
           className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] sm:flex-none"
         >
-          Clear
+          {messages.events.clear}
         </button>
       </div>
     </form>

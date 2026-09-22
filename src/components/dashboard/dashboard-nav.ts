@@ -1,38 +1,33 @@
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 
-export const TODAY_NAV_LABEL = "Today";
-export const CHAT_NAV_LABEL = "Event Agent Toby";
 export const CHAT_HREF = "/chat";
-export const USAGE_NAV_LABEL = "Usage";
 export const USAGE_HREF = "/usage";
-export const INVITES_NAV_LABEL = "Invites";
 export const INVITES_HREF = "/invites";
-export const HISTORY_NAV_LABEL = "History";
-export const ACCESS_NAV_LABEL = "Access";
-export const ADD_ATHLETE_NAV_LABEL = "Add athlete";
+export const HISTORY_NAV_LABEL = getMessages("en").nav.history;
+export const ACCESS_NAV_LABEL = getMessages("en").nav.access;
 
-export function pendingInvitesNavLabel(count: number): string {
-  if (count <= 0) {
-    return INVITES_NAV_LABEL;
-  }
-
-  return `${INVITES_NAV_LABEL}, ${count} pending`;
+export function pendingInvitesNavLabel(
+  count: number,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return getMessages(locale).nav.pendingInvites(count);
 }
 
-export function pendingInvitesMenuButtonLabel(count: number): string {
-  if (count <= 0) {
-    return "Open menu";
-  }
-
-  return `Open menu, ${count} pending`;
+export function pendingInvitesMenuButtonLabel(
+  count: number,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return getMessages(locale).nav.pendingMenu(count);
 }
 
-export function backToTodayLabel(): string {
-  return `← Back to ${TODAY_NAV_LABEL}`;
+export function backToTodayLabel(locale: AppLocale = DEFAULT_APP_LOCALE): string {
+  return getMessages(locale).nav.backToToday;
 }
 
-export function backToEventLabel(): string {
-  return "← Back to event";
+export function backToEventLabel(locale: AppLocale = DEFAULT_APP_LOCALE): string {
+  return getMessages(locale).nav.backToEvent;
 }
 
 export function dashboardHref(athleteId: string): string {
@@ -111,50 +106,55 @@ export function isOnboardingPath(pathname: string): boolean {
   return pathname === "/onboarding" || pathname.startsWith("/onboarding/");
 }
 
-export function appShellMobileTitle(pathname: string): string {
+export function appShellMobileTitle(
+  pathname: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  const messages = getMessages(locale);
+
   if (isChatPath(pathname)) {
-    return CHAT_NAV_LABEL;
+    return messages.nav.chat;
   }
 
   if (isInvitesPath(pathname)) {
-    return INVITES_NAV_LABEL;
+    return messages.nav.invites;
   }
 
   if (isUsagePath(pathname)) {
-    return USAGE_NAV_LABEL;
+    return messages.nav.usage;
   }
 
   if (isAthleteDashboardPath(pathname) || pathname === "/dashboard") {
-    return TODAY_NAV_LABEL;
+    return messages.nav.today;
   }
 
   if (/^\/athlete\/[^/]+\/calendar\/?$/.test(pathname)) {
-    return "Calendar";
+    return messages.nav.calendar;
   }
 
   if (/^\/athlete\/[^/]+\/stats\/?$/.test(pathname)) {
-    return "Stats";
+    return messages.nav.stats;
   }
 
   if (/^\/athlete\/[^/]+\/events\/?$/.test(pathname)) {
-    return HISTORY_NAV_LABEL;
+    return messages.nav.history;
   }
 
   if (/^\/athlete\/[^/]+\/access\/?$/.test(pathname)) {
-    return ACCESS_NAV_LABEL;
+    return messages.nav.access;
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {
-    return "Video";
+    return messages.nav.video;
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/?$/.test(pathname)) {
-    return "Event";
+    return messages.nav.event;
   }
 
   if (isOnboardingPath(pathname)) {
-    return ADD_ATHLETE_NAV_LABEL;
+    return messages.nav.addAthlete;
   }
 
-  return "Athlete Development Center";
+  return messages.brand;
 }

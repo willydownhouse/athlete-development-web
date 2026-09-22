@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { DatePickerInput } from "@/components/date-picker-input";
 import { Modal } from "@/components/ui/modal";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import { getZonedDateString } from "@/lib/time-zone";
 
 type CopyEventsConfirmModalProps = {
@@ -26,12 +28,12 @@ export function CopyEventsConfirmModal({
   onConfirm,
 }: CopyEventsConfirmModalProps) {
   const [targetDate, setTargetDate] = useState(() => getZonedDateString(timeZone));
+  const messages = getMessages(useAppLocale());
 
-  const title = eventCount === 1 ? "Copy event?" : "Copy day?";
+  const title =
+    eventCount === 1 ? messages.calendar.copyEventTitle : messages.calendar.copyDayTitle;
   const description =
-    eventCount === 1
-      ? "Create a new event on the selected date with the same details?"
-      : `Create ${eventCount} events on the selected date with the same details?`;
+    eventCount === 1 ? messages.calendar.copyEventBody : messages.calendar.copyDayBody(eventCount);
 
   return (
     <Modal open={open} onClose={onClose} title={title} align="content">
@@ -39,11 +41,11 @@ export function CopyEventsConfirmModal({
         <p className="text-sm text-zinc-300">{description}</p>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Copy to date</span>
+          <span className="font-medium text-zinc-300">{messages.calendar.copyToDate}</span>
           <DatePickerInput
             value={targetDate}
             onChange={setTargetDate}
-            placeholder="Select date"
+            placeholder={messages.events.selectDate}
             className="w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20"
           />
         </label>
@@ -57,7 +59,7 @@ export function CopyEventsConfirmModal({
             disabled={pending}
             className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Cancel
+            {messages.common.cancel}
           </button>
           <button
             type="button"
@@ -65,7 +67,7 @@ export function CopyEventsConfirmModal({
             disabled={pending || !targetDate}
             className="inline-flex items-center justify-center rounded-xl bg-[#9ec9e8] px-4 py-2.5 text-sm font-medium text-[#111827] transition hover:bg-[#b7d7ec] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pending ? "Copying…" : "Yes, copy"}
+            {pending ? messages.calendar.copying : messages.calendar.yesCopy}
           </button>
         </div>
       </div>

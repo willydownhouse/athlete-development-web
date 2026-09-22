@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import type { Athlete, Sport } from "@/lib/types";
 
 import { SportSelect } from "./sport-select";
@@ -20,7 +22,8 @@ export async function OnboardingView({
   athletes,
 }: OnboardingViewProps) {
   const greetingName = userName?.trim().split(/\s+/)[0];
-  const isAdmin = await getIsAdminUser();
+  const [isAdmin, locale] = await Promise.all([getIsAdminUser(), getRequestLocale()]);
+  const messages = getMessages(locale);
 
   return (
     <AppShell userEmail={userEmail} isAdmin={isAdmin} athletes={athletes}>
@@ -28,20 +31,16 @@ export async function OnboardingView({
         <section className="space-y-8 lg:space-y-10">
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">
-              Welcome{greetingName ? `, ${greetingName}` : ""}
+              {greetingName
+                ? messages.dashboard.welcomeNamed(greetingName)
+                : messages.dashboard.welcome}
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
-              Let&apos;s set up your athlete profile
+              {messages.onboarding.setupTitle}
             </h1>
             <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:space-y-4 lg:text-base lg:leading-7">
-              <p>
-                This setup creates the starting point for your athlete profile and long-term
-                development memory.
-              </p>
-              <p>
-                The more useful context you share with us — training, recovery, and everyday
-                observations — the better we can support your athlete&apos;s journey.
-              </p>
+              <p>{messages.onboarding.setupBody1}</p>
+              <p>{messages.onboarding.setupBody2}</p>
             </div>
           </div>
 

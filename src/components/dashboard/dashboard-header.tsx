@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import type { Athlete } from "@/lib/types";
 
 import { ageGroupFromDateOfBirth } from "./athlete-meta";
-import { ACCESS_NAV_LABEL, HISTORY_NAV_LABEL } from "./dashboard-nav";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
@@ -15,7 +16,7 @@ type DashboardHeaderProps = {
   accessHref?: string;
 };
 
-export function DashboardHeader({
+export async function DashboardHeader({
   selectedAthlete,
   eventsMeta,
   calendarHref,
@@ -23,13 +24,14 @@ export function DashboardHeader({
   historyHref,
   accessHref,
 }: DashboardHeaderProps) {
+  const messages = getMessages(await getRequestLocale());
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
   const showMetaRow =
     ageGroup || eventsMeta || calendarHref || statsHref || historyHref || accessHref;
 
   return (
     <header>
-      <p className="text-sm text-zinc-400">Today</p>
+      <p className="text-sm text-zinc-400">{messages.dashboard.todayEyebrow}</p>
       {selectedAthlete ? (
         <>
           <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
@@ -53,7 +55,7 @@ export function DashboardHeader({
                       href={statsHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      Stats
+                      {messages.nav.stats}
                     </Link>
                   ) : null}
                   {calendarHref ? (
@@ -61,7 +63,7 @@ export function DashboardHeader({
                       href={calendarHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      Calendar
+                      {messages.nav.calendar}
                     </Link>
                   ) : null}
                   {historyHref ? (
@@ -69,7 +71,7 @@ export function DashboardHeader({
                       href={historyHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      {HISTORY_NAV_LABEL}
+                      {messages.nav.history}
                     </Link>
                   ) : null}
                   {accessHref ? (
@@ -77,7 +79,7 @@ export function DashboardHeader({
                       href={accessHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      {ACCESS_NAV_LABEL}
+                      {messages.nav.access}
                     </Link>
                   ) : null}
                 </nav>
@@ -87,10 +89,10 @@ export function DashboardHeader({
         </>
       ) : (
         <>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">Get started</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Add your first athlete to unlock the dashboard.
-          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
+            {messages.dashboard.getStarted}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-400">{messages.dashboard.getStartedHint}</p>
         </>
       )}
     </header>

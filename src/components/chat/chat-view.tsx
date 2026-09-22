@@ -8,10 +8,11 @@ import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList, ChatMessageListSkeleton } from "@/components/chat/chat-message-list";
 import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
-import { CHAT_NAV_LABEL } from "@/components/dashboard/dashboard-nav";
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
 import { chatEmptyIntro, chatEventLoggingExample } from "@/lib/chat-intro";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { ChatMessage } from "@/lib/types";
 
 type ChatViewProps = {
@@ -27,11 +28,6 @@ type ChatViewProps = {
 
 const LOAD_OLDER_THRESHOLD_PX = 80;
 
-const CHAT_NEEDS_ATHLETE_INTRO = [
-  "Hey — I'm Toby, your event logging agent.",
-  "I'm here to make daily event logging as easy as possible. Add an athlete to get started.",
-].join("\n\n");
-
 function ChatIntroMessage({ heading, content }: { heading: string; content: string }) {
   return (
     <article className="flex justify-start">
@@ -44,23 +40,34 @@ function ChatIntroMessage({ heading, content }: { heading: string; content: stri
 }
 
 function ChatNeedsAthleteState() {
+  const messages = getMessages(useAppLocale());
+
   return (
     <div className="flex flex-1 flex-col justify-center py-6">
-      <ChatIntroMessage heading="Add an athlete first" content={CHAT_NEEDS_ATHLETE_INTRO} />
+      <ChatIntroMessage
+        heading={messages.chat.addAthleteFirst}
+        content={messages.chat.needsAthleteIntro}
+      />
       <Link
         href="/onboarding"
         className="mt-6 inline-flex w-full max-w-xs items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0]"
       >
-        Add athlete
+        {messages.nav.addAthlete}
       </Link>
     </div>
   );
 }
 
 function ChatEmptyState({ athleteName }: { athleteName: string }) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
+
   return (
     <div className="flex flex-1 flex-col justify-center py-6">
-      <ChatIntroMessage heading="Nothing logged yet" content={chatEmptyIntro(athleteName)} />
+      <ChatIntroMessage
+        heading={messages.chat.nothingLogged}
+        content={chatEmptyIntro(athleteName, locale)}
+      />
     </div>
   );
 }
@@ -203,12 +210,14 @@ export function ChatView({
     void loadOlder();
   }
 
+  const locale = useAppLocale();
+  const copy = getMessages(locale);
   const showEmpty = displayedMessages.length === 0 && !isPending && !loadError;
   const composerKey = state.turn?.id ?? "draft";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <h1 className="sr-only">{CHAT_NAV_LABEL}</h1>
+      <h1 className="sr-only">{copy.nav.chat}</h1>
 
       {loadError ? (
         <p className="mb-4 shrink-0 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
@@ -233,7 +242,7 @@ export function ChatView({
                   className="inline-flex h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
                   aria-hidden="true"
                 />
-                <p className="text-sm text-zinc-400">Loading earlier messages…</p>
+                <p className="text-sm text-zinc-400">{copy.chat.loadingEarlier}</p>
               </div>
             </div>
           ) : null}
@@ -272,7 +281,7 @@ export function ChatView({
 
       {!threadId ? (
         <p className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-zinc-500">
-          Chat is unavailable until the thread loads.
+          {copy.chat.unavailable}
         </p>
       ) : canSend ? (
         <ChatComposer
@@ -280,7 +289,7 @@ export function ChatView({
           threadId={threadId}
           formAction={formAction}
           isPending={isPending}
-          examplePlaceholder={chatEventLoggingExample(exampleAthleteName)}
+          examplePlaceholder={chatEventLoggingExample(exampleAthleteName, locale)}
           onSend={({ content, clientRequestId }) => {
             const turn = state.turn;
             if (turn) {
@@ -297,9 +306,9 @@ export function ChatView({
         />
       ) : showEmpty ? null : (
         <p className="shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-zinc-500">
-          Add an athlete to keep logging.{" "}
+          {copy.chat.addAthleteToLog}{" "}
           <Link href="/onboarding" className="text-[#9ec9e8] transition hover:text-[#c5dff0]">
-            Add athlete
+            {copy.nav.addAthlete}
           </Link>
         </p>
       )}

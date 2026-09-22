@@ -13,6 +13,8 @@ import { EventFormModal } from "@/components/dashboard/event-form-modal";
 import { EventMediaUpload } from "@/components/dashboard/event-media-upload";
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { eventToCopySource } from "@/lib/copy-event";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { Event, EventType } from "@/lib/types";
 
 type EventCardActionsOptions = {
@@ -35,6 +37,7 @@ function useEventCardActions({
   deleteRedirectTo,
 }: EventCardActionsOptions) {
   const router = useRouter();
+  const messages = getMessages(useAppLocale());
   const redirectTo = deleteRedirectTo ?? dashboardHref(athleteId);
   const [editOpen, setEditOpen] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
@@ -171,21 +174,21 @@ function useEventCardActions({
         triggerEvent.stopPropagation();
       }}
       items={[
-        { label: "Edit", onClick: openEditModal },
-        { label: "Copy", onClick: openCopyConfirm },
+        { label: messages.common.edit, onClick: openEditModal },
+        { label: messages.common.copy, onClick: openCopyConfirm },
         {
-          label: mediaUploading ? "Adding media…" : "Add media",
+          label: mediaUploading ? messages.events.addingMedia : messages.events.addMedia,
           onClick: handleAddMedia,
           disabled: mediaUploading,
         },
         {
-          label: deleteMediaPending ? "Deleting image…" : "Delete image",
+          label: deleteMediaPending ? messages.media.deletingImage : messages.media.deleteImage,
           onClick: openDeleteMediaConfirm,
           disabled: !activeMediaId || deleteMediaPending,
           destructive: true,
         },
         {
-          label: "Delete event",
+          label: messages.events.deleteEvent,
           onClick: openDeleteConfirm,
           destructive: true,
           separatorBefore: true,

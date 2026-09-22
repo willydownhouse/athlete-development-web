@@ -7,6 +7,9 @@ import { DayPicker, type Matcher } from "react-day-picker";
 
 import { dayPickerClassNames } from "@/components/day-picker-styles";
 import { PortalSelect, isPickerOverlayTarget } from "@/components/picker-menu";
+import { dateFnsLocale, datePickerDisplayFormat } from "@/lib/date-fns-locale";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 const datePickerClassNames = {
   ...dayPickerClassNames,
@@ -80,13 +83,15 @@ export function DatePickerInput({
   value,
   defaultValue,
   onChange,
-  placeholder = "Select date",
+  placeholder,
   className,
   compact = false,
   disabledDates,
   fromYear = 1920,
   toYear = new Date().getFullYear(),
 }: DatePickerInputProps) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -175,8 +180,8 @@ export function DatePickerInput({
 
   const formattedValue = selected ? format(selected, "yyyy-MM-dd") : "";
   const displayValue = selected
-    ? format(selected, compact ? "d MMM yy" : "MMM d, yyyy")
-    : placeholder;
+    ? format(selected, datePickerDisplayFormat(locale, compact), { locale: dateFnsLocale(locale) })
+    : (placeholder ?? messages.events.selectDate);
 
   const panel =
     open && typeof document !== "undefined"
@@ -184,12 +189,13 @@ export function DatePickerInput({
           <div
             ref={panelRef}
             role="dialog"
-            aria-label="Choose date"
+            aria-label={messages.calendar.chooseDate}
             style={panelStyle}
             className="rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             <DayPicker
               mode="single"
+              locale={dateFnsLocale(locale)}
               selected={selected}
               onSelect={(date) => {
                 if (isControlled) {

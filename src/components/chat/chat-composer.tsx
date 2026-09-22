@@ -5,16 +5,19 @@ import { useFormStatus } from "react-dom";
 
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 import { chatEventLoggingExample } from "@/lib/chat-intro";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 function ChatSendButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   const isDisabled = pending || disabled;
+  const messages = getMessages(useAppLocale());
 
   return (
     <button
       type="submit"
       disabled={isDisabled}
-      aria-label={pending ? "Sending" : "Send"}
+      aria-label={pending ? messages.chat.sending : messages.chat.send}
       className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#b7d7ec] text-[#1a2430] transition hover:bg-[#c5dff0] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? <SendPendingIcon /> : <SendIcon />}
@@ -76,7 +79,7 @@ export function ChatComposer({
   formAction,
   isPending,
   disabled = false,
-  examplePlaceholder = chatEventLoggingExample(""),
+  examplePlaceholder,
   eventId,
   athleteId,
   messageFieldId = "chat-message",
@@ -84,6 +87,9 @@ export function ChatComposer({
   formClassName = "shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
   onSend,
 }: ChatComposerProps) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
+  const placeholder = examplePlaceholder ?? chatEventLoggingExample("", locale);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [content, setContent] = useState("");
 
@@ -132,7 +138,7 @@ export function ChatComposer({
       <input type="hidden" name="clientRequestId" defaultValue="" />
       {hideFieldLabel ? null : (
         <label htmlFor={messageFieldId} className="sr-only">
-          Message
+          {messages.chat.message}
         </label>
       )}
       <div className="flex items-end gap-2 rounded-2xl bg-[#1c222c] px-2 py-2 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#9ec9e8]/20">
@@ -142,7 +148,7 @@ export function ChatComposer({
           name="content"
           rows={1}
           maxLength={CHAT_MESSAGE_CONTENT_MAX_LENGTH}
-          placeholder={examplePlaceholder}
+          placeholder={placeholder}
           value={content}
           disabled={disabled || isPending}
           onChange={(event) => setContent(event.target.value)}

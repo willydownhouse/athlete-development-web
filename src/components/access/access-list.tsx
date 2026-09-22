@@ -2,6 +2,8 @@ import { AccessMemberCard } from "@/components/access/access-member-card";
 import { PendingInviteCard } from "@/components/access/pending-invite-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadAthleteAccess } from "@/lib/load-athlete-access";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 export function AccessListSkeleton() {
   return (
@@ -19,7 +21,8 @@ export function AccessListSkeleton() {
 }
 
 export async function AccessList({ athleteId }: { athleteId: string }) {
-  const result = await loadAthleteAccess(athleteId);
+  const [result, locale] = await Promise.all([loadAthleteAccess(athleteId), getRequestLocale()]);
+  const messages = getMessages(locale);
 
   if (result.error) {
     return (
@@ -32,7 +35,7 @@ export async function AccessList({ athleteId }: { athleteId: string }) {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">People with access</h2>
+        <h2 className="text-lg font-semibold text-white">{messages.access.peopleWithAccess}</h2>
         {result.members.map((member) => (
           <AccessMemberCard
             key={member.id}
@@ -44,10 +47,10 @@ export async function AccessList({ athleteId }: { athleteId: string }) {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Pending invitations</h2>
+        <h2 className="text-lg font-semibold text-white">{messages.access.pendingInvitations}</h2>
         {result.invitations.length === 0 ? (
           <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
-            <p className="text-sm text-zinc-400">No pending invitations.</p>
+            <p className="text-sm text-zinc-400">{messages.access.noPending}</p>
           </section>
         ) : (
           result.invitations.map((invitation) => (

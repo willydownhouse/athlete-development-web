@@ -10,8 +10,8 @@ function formatTime(startedAt: string, timeZone: string): string {
   return formatZonedTime(timeZone, new Date(startedAt));
 }
 
-function formatEventListDate(startedAt: string, timeZone: string): string {
-  return formatZonedShortDate(timeZone, new Date(startedAt));
+function formatEventListDate(startedAt: string, timeZone: string, locale: AppLocale): string {
+  return formatZonedShortDate(timeZone, new Date(startedAt), new Date(), locale);
 }
 
 export function eventShortLabel(name: string): string {
@@ -51,7 +51,7 @@ export function eventDetail(event: Event, options: EventDetailOptions): string {
   const parts: string[] = [];
 
   if (options.showDate) {
-    parts.push(formatEventListDate(event.startedAt, options.timeZone));
+    parts.push(formatEventListDate(event.startedAt, options.timeZone, options.locale));
   }
 
   parts.push(formatTime(event.startedAt, options.timeZone));

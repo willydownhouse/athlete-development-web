@@ -3,6 +3,10 @@
 import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
+import { dateFnsLocale } from "@/lib/date-fns-locale";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
+
 import { copyDayEventsAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
@@ -64,6 +68,8 @@ export function CalendarSection({
   const [copyConfirmKey, setCopyConfirmKey] = useState(0);
   const [copyError, setCopyError] = useState<string | null>(null);
   const [copyPending, startCopyTransition] = useTransition();
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const showLoading = useDelayedLoading(isFetching);
   const hasNavigatedAwayRef = useRef(false);
 
@@ -209,23 +215,25 @@ export function CalendarSection({
     <>
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
         <div className="flex items-center gap-3">
-          <h2 className="hidden shrink-0 text-base font-semibold text-white sm:block">Calendar</h2>
+          <h2 className="hidden shrink-0 text-base font-semibold text-white sm:block">
+            {messages.calendar.title}
+          </h2>
           <div className="flex flex-1 items-center justify-center gap-1">
             <button
               type="button"
               onClick={handlePreviousMonth}
-              aria-label="Previous month"
+              aria-label={messages.calendar.previousMonth}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#252b36] text-lg leading-none text-zinc-300 transition hover:bg-[#2f3642] hover:text-white"
             >
               ‹
             </button>
             <span className="min-w-[7.5rem] text-center text-sm capitalize text-zinc-200">
-              {format(visibleCalendarMonth, "MMMM yyyy")}
+              {format(visibleCalendarMonth, "MMMM yyyy", { locale: dateFnsLocale(locale) })}
             </span>
             <button
               type="button"
               onClick={handleNextMonth}
-              aria-label="Next month"
+              aria-label={messages.calendar.nextMonth}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#252b36] text-lg leading-none text-zinc-300 transition hover:bg-[#2f3642] hover:text-white"
             >
               ›
@@ -237,7 +245,7 @@ export function CalendarSection({
             disabled={isShowingToday}
             className="shrink-0 rounded-lg border border-white/10 bg-[#252b36] px-3 py-1.5 text-sm font-medium text-zinc-300 transition hover:bg-[#2f3642] hover:text-white disabled:cursor-default disabled:opacity-40 disabled:hover:bg-[#252b36] disabled:hover:text-zinc-300"
           >
-            Today
+            {messages.common.today}
           </button>
         </div>
 

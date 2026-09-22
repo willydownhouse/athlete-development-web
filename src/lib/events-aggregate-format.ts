@@ -1,36 +1,35 @@
 import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import type { EventAggregate, EventAggregateKind, EventItemAggregate } from "@/lib/types";
 
 export type EventsAggregateSubject = "event" | "item" | "exercise";
 
-const COVERAGE_NOUNS: Record<EventsAggregateSubject, { singular: string; plural: string }> = {
-  event: { singular: "event", plural: "events" },
-  item: { singular: "item", plural: "items" },
-  exercise: { singular: "exercise", plural: "exercises" },
-};
-
 export function eventsAggregateHeading(
   aggregation: EventAggregateKind,
   subject: EventsAggregateSubject = "event",
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
+  const messages = getMessages(locale);
+
   if (aggregation === "count") {
     if (subject === "exercise") {
-      return "Exercise count";
+      return messages.events.showExerciseCount;
     }
 
-    return subject === "item" ? "Item count" : "Event count";
+    return subject === "item" ? messages.events.showItemCount : messages.events.showEventCount;
   }
 
   if (aggregation === "durationSeconds") {
-    return "Total duration";
+    return messages.events.showTotalDuration;
   }
 
   if (aggregation === "metricAverage") {
-    return "Metric average";
+    return messages.events.showMetricAverage;
   }
 
-  return "Metric total";
+  return messages.events.showMetricTotal;
 }
 
 export function formatEventsAggregateTotal(
@@ -58,32 +57,33 @@ export function formatEventsAggregateCoverage(
   result: EventAggregate | EventItemAggregate,
   subject?: EventsAggregateSubject,
   descendantNoun?: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
+  const messages = getMessages(locale);
   const resolvedSubject = subject ?? (isEventItemAggregate(result) ? "item" : "event");
   const matchingCount = isEventItemAggregate(result)
     ? result.matchingItemCount
     : result.matchingEventCount;
   const withValue = isEventItemAggregate(result) ? result.itemsWithValue : result.eventsWithValue;
-  const { singular: noun, plural: nouns } = COVERAGE_NOUNS[resolvedSubject];
+  const { singular: noun, plural: nouns } = messages.events.aggregateNouns[resolvedSubject];
 
-  const valueLabel = result.aggregation === "durationSeconds" ? "a duration" : "a value";
+  const valueLabel =
+    result.aggregation === "durationSeconds"
+      ? messages.events.aggregateADuration
+      : messages.events.aggregateAValue;
   const coverage =
     result.aggregation === "count" || withValue === matchingCount
-      ? matchingCount === 1
-        ? `1 ${noun}`
-        : `${matchingCount} ${nouns}`
-      : `${withValue} of ${matchingCount} ${nouns} had ${valueLabel}`;
+      ? messages.events.aggregateCount(matchingCount, noun, nouns)
+      : messages.events.aggregatePartial(withValue, matchingCount, nouns, valueLabel);
 
   if (!isEventItemAggregate(result) || !descendantNoun || result.descendantItemsWithValue === 0) {
     return coverage;
   }
 
   const descendantLabel =
-    result.descendantItemsWithValue === 1
+    result.descendantItemsWithValue === 1 || locale === "fi" || descendantNoun.endsWith("s")
       ? descendantNoun
-      : descendantNoun.endsWith("s")
-        ? descendantNoun
-        : `${descendantNoun}s`;
+      : `${descendantNoun}s`;
 
   return `${coverage}, ${result.descendantItemsWithValue} ${descendantLabel}`;
 }

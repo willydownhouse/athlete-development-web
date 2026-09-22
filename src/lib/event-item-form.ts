@@ -1,5 +1,6 @@
 import type { EventItemInput } from "@/lib/api";
-import type { AppLocale } from "@/lib/locale";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import {
   fetchEventItemTypeChildTypes,
   fetchEventItemTypeMetricDefinitions,
@@ -145,18 +146,21 @@ export function shouldUseCompactItemMetricFields(
   );
 }
 
-export function eventItemFormSectionTitle(roots: EventItemFormTypeNode[]): string {
+export function eventItemFormSectionTitle(
+  roots: EventItemFormTypeNode[],
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
   const firstRoot = roots[0];
 
   if (!firstRoot) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
   if (roots.some((root) => root.eventItemTypeId !== firstRoot.eventItemTypeId)) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
-  return pluralizeItemTypeName(firstRoot.name);
+  return pluralizeItemTypeName(firstRoot.name, locale);
 }
 
 export function eventItemTypeAllowsMultiple(slug: string): boolean {

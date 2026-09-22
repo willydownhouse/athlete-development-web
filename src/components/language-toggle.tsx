@@ -1,5 +1,6 @@
 import { setLocaleAction } from "@/app/actions/locale";
 import { APP_LOCALES, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 
 const LOCALE_LABELS: Record<AppLocale, string> = {
   en: "EN",
@@ -7,10 +8,12 @@ const LOCALE_LABELS: Record<AppLocale, string> = {
 };
 
 export function LanguageToggle({ locale }: { locale: AppLocale }) {
+  const messages = getMessages(locale);
+
   return (
     <div
       role="group"
-      aria-label="Language"
+      aria-label={messages.common.language}
       className="flex rounded-xl border border-white/10 p-0.5"
     >
       {APP_LOCALES.map((option) => {

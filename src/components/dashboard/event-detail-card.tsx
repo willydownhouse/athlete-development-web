@@ -6,16 +6,19 @@ import { EventItemsDisplay } from "@/components/dashboard/event-items/event-item
 import { formatEventCategoryLabel, formatEventIntensityLabel } from "@/lib/enum-labels";
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
+import type { AppLocale } from "@/lib/locale";
 import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import { eventIconClassName } from "@/lib/event-tone";
 import { formatZonedTimeRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
-function formatTimeRange(event: Event, timeZone: string): string {
+function formatTimeRange(event: Event, timeZone: string, locale: AppLocale): string {
   return formatZonedTimeRange(
     timeZone,
     new Date(event.startedAt),
     event.endedAt ? new Date(event.endedAt) : null,
+    locale,
   );
 }
 
@@ -47,6 +50,7 @@ export function EventDetailCard({
   afterBasicInfo,
 }: EventDetailCardProps) {
   const locale = useAppLocale();
+  const messages = getMessages(locale);
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = event.metrics ?? [];
@@ -72,23 +76,32 @@ export function EventDetailCard({
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
-        <DetailField label="Time" value={formatTimeRange(event, timeZone)} />
+        <DetailField
+          label={messages.events.time}
+          value={formatTimeRange(event, timeZone, locale)}
+        />
         {event.durationSeconds ? (
-          <DetailField label="Duration" value={formatDurationSeconds(event.durationSeconds)} />
+          <DetailField
+            label={messages.common.duration}
+            value={formatDurationSeconds(event.durationSeconds)}
+          />
         ) : null}
         {event.intensity ? (
           <DetailField
-            label="Intensity"
+            label={messages.events.intensity}
             value={formatEventIntensityLabel(event.intensity, locale)}
           />
         ) : null}
-        <DetailField label="Category" value={formatEventCategoryLabel(event.category, locale)} />
+        <DetailField
+          label={messages.events.category}
+          value={formatEventCategoryLabel(event.category, locale)}
+        />
       </dl>
 
       {event.description ? (
         <div className="mt-4 border-t border-white/5 pt-4">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Description
+            {messages.events.description}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-200">
             {event.description}
@@ -100,7 +113,9 @@ export function EventDetailCard({
 
       {metrics.length > 0 ? (
         <div className="mt-4 border-t border-white/5 pt-4">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Metrics</p>
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
+            {messages.common.metrics}
+          </p>
           <dl className="mt-3 space-y-3">
             {metrics.map((metric) => (
               <div
@@ -122,7 +137,7 @@ export function EventDetailCard({
       {event.originalInput ? (
         <div className="mt-4 border-t border-white/5 pt-4">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-            Original input
+            {messages.events.originalInput}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
             {event.originalInput}

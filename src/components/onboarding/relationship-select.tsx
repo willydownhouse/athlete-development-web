@@ -1,6 +1,8 @@
 "use client";
 
 import { SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { AthleteAccessRole } from "@/lib/types";
 
 type RelationshipSelectProps = {
@@ -8,27 +10,28 @@ type RelationshipSelectProps = {
   onChange: (value: AthleteAccessRole) => void;
 };
 
-const options: Array<{
-  value: AthleteAccessRole;
-  title: string;
-  description: string;
-}> = [
-  {
-    value: "parent",
-    title: "My child",
-    description: "I am a parent setting up a profile for my child.",
-  },
-  {
-    value: "athlete",
-    title: "Myself",
-    description: `I am creating a profile for my own development journey and I am ${SELF_ATHLETE_MIN_AGE_YEARS} years old or older.`,
-  },
-];
-
 export function RelationshipSelect({ value, onChange }: RelationshipSelectProps) {
+  const messages = getMessages(useAppLocale());
+  const options: Array<{
+    value: AthleteAccessRole;
+    title: string;
+    description: string;
+  }> = [
+    {
+      value: "parent",
+      title: messages.onboarding.myChild,
+      description: messages.onboarding.myChildDescription,
+    },
+    {
+      value: "athlete",
+      title: messages.onboarding.myself,
+      description: messages.onboarding.myselfDescription(SELF_ATHLETE_MIN_AGE_YEARS),
+    },
+  ];
+
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-zinc-300 lg:text-base">Who is this profile for?</p>
+      <p className="text-sm font-medium text-zinc-300 lg:text-base">{messages.onboarding.whoFor}</p>
       <ul className="space-y-2">
         {options.map((option) => {
           const selected = value === option.value;

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ACCESS_NAV_LABEL, HISTORY_NAV_LABEL } from "@/components/dashboard/dashboard-nav";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 const linkClassName =
   "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-zinc-300 transition hover:text-white";
@@ -13,23 +14,27 @@ type DashboardBottomNavProps = {
   accessHref?: string;
 };
 
-export function DashboardBottomNav({
+export async function DashboardBottomNav({
   statsHref,
   calendarHref,
   historyHref,
   accessHref,
 }: DashboardBottomNavProps) {
+  const messages = getMessages(await getRequestLocale());
+
   return (
     <nav
-      aria-label="Athlete pages"
+      aria-label={messages.nav.athletePages}
       className="fixed inset-x-0 bottom-0 z-30 bg-[#0b0d10]/95 backdrop-blur lg:hidden"
     >
       <div className="flex px-4 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10">
-        {statsHref ? <NavLink href={statsHref} icon={<StatsIcon />} label="Stats" /> : null}
-        <NavLink href={calendarHref} icon={<CalendarIcon />} label="Calendar" />
-        <NavLink href={historyHref} icon={<HistoryIcon />} label={HISTORY_NAV_LABEL} />
+        {statsHref ? (
+          <NavLink href={statsHref} icon={<StatsIcon />} label={messages.nav.stats} />
+        ) : null}
+        <NavLink href={calendarHref} icon={<CalendarIcon />} label={messages.nav.calendar} />
+        <NavLink href={historyHref} icon={<HistoryIcon />} label={messages.nav.history} />
         {accessHref ? (
-          <NavLink href={accessHref} icon={<AccessIcon />} label={ACCESS_NAV_LABEL} />
+          <NavLink href={accessHref} icon={<AccessIcon />} label={messages.nav.access} />
         ) : null}
       </div>
     </nav>

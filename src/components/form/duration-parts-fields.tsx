@@ -1,4 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 type DurationPartsFieldsProps = {
   hoursName: string;
@@ -26,12 +31,14 @@ export function DurationPartsFields({
   description,
   inputClassName = defaultInputClassName,
 }: DurationPartsFieldsProps) {
+  const messages = getMessages(useAppLocale());
+
   return (
     <div className="space-y-2 text-sm">
       <span className="font-medium text-zinc-300">{label}</span>
       <div className="grid grid-cols-3 gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-500">Hours</span>
+          <span className="text-xs text-zinc-500">{messages.common.hours}</span>
           <input
             name={hoursName}
             type="number"
@@ -42,7 +49,7 @@ export function DurationPartsFields({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-500">Minutes</span>
+          <span className="text-xs text-zinc-500">{messages.common.minutes}</span>
           <input
             name={minutesName}
             type="number"
@@ -54,7 +61,7 @@ export function DurationPartsFields({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-500">Seconds</span>
+          <span className="text-xs text-zinc-500">{messages.common.seconds}</span>
           <input
             name={secondsName}
             type="number"

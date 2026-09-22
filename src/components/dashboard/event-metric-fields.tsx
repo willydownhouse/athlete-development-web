@@ -7,6 +7,7 @@ import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSectionDetails } from "@/components/form/form-section-details";
 import { fetchEventTypeMetricDefinitions } from "@/lib/api";
 import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import {
   BOOLEAN_METRIC_CHECKED_VALUE,
   BOOLEAN_METRIC_SAVED_VALUE,
@@ -39,8 +40,10 @@ function EventMetricFields({
   loadError,
   resetKey,
 }: EventMetricFieldsProps) {
+  const messages = getMessages(useAppLocale());
+
   if (loading) {
-    return <p className="text-sm text-zinc-500">Loading metric fields…</p>;
+    return <p className="text-sm text-zinc-500">{messages.events.loadingMetrics}</p>;
   }
 
   if (loadError) {
@@ -56,8 +59,8 @@ function EventMetricFields({
   return (
     <div key={resetKey} className="space-y-4 rounded-xl border border-white/10 bg-[#171b22] p-4">
       <FormSectionDetails
-        title="Metrics"
-        description="Optional details configured for this event type."
+        title={messages.common.metrics}
+        description={messages.events.optionalEventMetrics}
       >
         <div className="space-y-4">
           {mappings.map((mapping) => {
@@ -152,11 +155,7 @@ function EventMetricFields({
                   <span className="text-xs text-zinc-500">
                     {[
                       mapping.metricDefinition.description,
-                      isRpeMetric
-                        ? "Enter a whole number from 1 to 10"
-                        : unit
-                          ? `Unit: ${unit}`
-                          : null,
+                      isRpeMetric ? messages.events.rpeEnterScale : unit ? `Unit: ${unit}` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}

@@ -13,6 +13,8 @@ import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { mergeMessages } from "@/lib/chat-display";
 import { chatEventUpdateExample } from "@/lib/chat-intro";
 import { formatChatTimestamp } from "@/lib/chat-time";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { ChatMessage } from "@/lib/types";
 
 type EventTobyDockProps = {
@@ -40,6 +42,8 @@ export function EventTobyDock({
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyMessages, setHistoryMessages] = useState<ChatMessage[]>([]);
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const loadingOlderRef = useRef(false);
   const composerKey = state.turn?.id ?? "draft";
   const assistantMessage = state.turn?.assistantMessage ?? null;
@@ -118,7 +122,7 @@ export function EventTobyDock({
       <div className="mx-auto w-full max-w-md lg:max-w-3xl">
         <div className="mb-2 flex items-center justify-between gap-3">
           <label htmlFor="event-toby-message" className="text-sm font-medium text-zinc-300">
-            Tell Toby what to change
+            {messages.chat.tellToby}
           </label>
           {threadId ? (
             <button
@@ -129,7 +133,7 @@ export function EventTobyDock({
               aria-expanded={historyOpen}
               className="shrink-0 text-sm text-zinc-500 transition hover:text-zinc-300"
             >
-              {historyOpen ? "Hide" : "Earlier updates"}
+              {historyOpen ? messages.chat.hide : messages.chat.earlierUpdates}
             </button>
           ) : null}
         </div>
@@ -175,7 +179,7 @@ export function EventTobyDock({
               <ChatMarkdown content={assistantContent} />
             )}
             <p className="mt-1.5 text-xs text-zinc-500">
-              {formatChatTimestamp(timeZone, assistantMessage.createdAt, new Date(nowIso))}
+              {formatChatTimestamp(timeZone, assistantMessage.createdAt, new Date(nowIso), locale)}
             </p>
           </div>
         ) : null}
@@ -197,10 +201,10 @@ export function EventTobyDock({
             formAction={formAction}
             isPending={isPending}
             formClassName="shrink-0"
-            examplePlaceholder={chatEventUpdateExample()}
+            examplePlaceholder={chatEventUpdateExample(locale)}
           />
         ) : (
-          <p className="text-sm text-zinc-500">Toby is unavailable until chat loads.</p>
+          <p className="text-sm text-zinc-500">{messages.chat.tobyUnavailable}</p>
         )}
       </div>
     </div>

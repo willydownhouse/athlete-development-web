@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -5,6 +7,9 @@ import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { CalendarDayActionsMenu } from "@/components/dashboard/calendar-day-actions-menu";
 import { CalendarDayEventsSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventDetailCard } from "@/components/dashboard/event-detail-card";
+import { dateFnsLocale } from "@/lib/date-fns-locale";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { Event } from "@/lib/types";
 
 type CalendarDayEventsProps = {
@@ -28,7 +33,9 @@ export function CalendarDayEvents({
   onCopyClick,
   copyDisabled = false,
 }: CalendarDayEventsProps) {
-  const dayLabel = format(selectedDate, "EEE d MMM");
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
+  const dayLabel = format(selectedDate, "EEE d MMM", { locale: dateFnsLocale(locale) });
 
   return (
     <div className="border-t border-white/5 pt-4">
@@ -54,7 +61,7 @@ export function CalendarDayEvents({
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">No events logged for this day.</p>
+        <p className="mt-4 text-sm text-zinc-500">{messages.calendar.noEventsThisDay}</p>
       )}
     </div>
   );

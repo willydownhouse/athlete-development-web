@@ -2,6 +2,8 @@
 
 import { EventForm, type EventFormApplyHandlers } from "@/components/dashboard/create-event-form";
 import { Modal } from "@/components/ui/modal";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { Event, EventType } from "@/lib/types";
 
 type CreateEventModalState = {
@@ -41,11 +43,14 @@ export function EventFormModal({
   onClose,
   onSuccess,
 }: EventFormModalProps) {
+  const messages = getMessages(useAppLocale());
+
   if (!open && !keepMounted) {
     return null;
   }
 
-  const modalTitle = modalState.mode === "edit" ? "Edit event" : "Add event";
+  const modalTitle =
+    modalState.mode === "edit" ? messages.events.editEvent : messages.events.addEvent;
 
   return (
     <Modal

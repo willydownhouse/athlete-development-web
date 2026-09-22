@@ -1,21 +1,27 @@
-export function chatExampleAthleteName(name: string): string {
-  return name.trim().split(/\s+/).find(Boolean) ?? "your athlete";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
+
+export function chatExampleAthleteName(
+  name: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return name.trim().split(/\s+/).find(Boolean) ?? getMessages(locale).chat.fallbackAthlete;
 }
 
-export function chatEventLoggingExample(athleteName: string): string {
-  return `${chatExampleAthleteName(athleteName)} had ice practice today at 2pm`;
+export function chatEventLoggingExample(
+  athleteName: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return getMessages(locale).chat.loggingExample(chatExampleAthleteName(athleteName, locale));
 }
 
-export function chatEventUpdateExample(): string {
-  return "Move this to 6pm, add RPE 7…";
+export function chatEventUpdateExample(locale: AppLocale = DEFAULT_APP_LOCALE): string {
+  return getMessages(locale).chat.updateExample;
 }
 
-export function chatEmptyIntro(athleteName: string): string {
-  return [
-    "Hey — I'm Toby, your event logging agent. 🙂",
-    "I'm here to make your daily event logging as easy as possible.",
-    "Just tell me about a practice, game, or rest day and I'll add it to the timeline. Name the athlete if you have more than one, and include the day and time when you can.",
-    "I'm not here to plan training, suggest what to practice, or answer coaching questions.",
-    `Try something like: *${chatEventLoggingExample(athleteName)}*`,
-  ].join("\n\n");
+export function chatEmptyIntro(
+  athleteName: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return getMessages(locale).chat.emptyIntro(chatEventLoggingExample(athleteName, locale));
 }

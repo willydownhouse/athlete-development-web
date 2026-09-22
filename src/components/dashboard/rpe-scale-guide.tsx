@@ -1,30 +1,26 @@
-import { InfoTooltip } from "@/components/ui/info-tooltip";
+"use client";
 
-const RPE_SCALE_ROWS = [
-  { rpe: "1–2", feeling: "Very easy", example: "Recovery / walking" },
-  { rpe: "3–4", feeling: "Easy", example: "Comfortable aerobic exercise" },
-  { rpe: "5–6", feeling: "Moderate", example: "Noticeably working, sustainable" },
-  { rpe: "7", feeling: "Hard", example: "Challenging but controlled" },
-  { rpe: "8", feeling: "Very hard", example: "Only a few more reps/minutes possible" },
-  { rpe: "9", feeling: "Near maximal", example: "Almost all-out" },
-  { rpe: "10", feeling: "Maximal", example: "Absolute maximum effort" },
-] as const;
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 function RpeScaleGuideTable() {
+  const messages = getMessages(useAppLocale());
+
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-white">RPE scale guide</p>
+      <p className="text-xs font-medium text-white">{messages.events.rpeTitle}</p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[18rem] text-left text-xs">
           <thead>
             <tr className="border-b border-white/10 text-zinc-400">
               <th className="pb-2 pr-3 font-medium">RPE</th>
-              <th className="pb-2 pr-3 font-medium">Feeling</th>
-              <th className="pb-2 font-medium">Example</th>
+              <th className="pb-2 pr-3 font-medium">{messages.events.rpeFeeling}</th>
+              <th className="pb-2 font-medium">{messages.events.rpeExample}</th>
             </tr>
           </thead>
           <tbody className="text-zinc-300">
-            {RPE_SCALE_ROWS.map((row) => (
+            {messages.events.rpeRows.map((row) => (
               <tr key={row.rpe} className="border-b border-white/5 last:border-b-0">
                 <td className="py-2 pr-3 align-top font-medium text-white">{row.rpe}</td>
                 <td className="py-2 pr-3 align-top">{row.feeling}</td>
@@ -39,8 +35,10 @@ function RpeScaleGuideTable() {
 }
 
 export function RpeScaleInfoTooltip() {
+  const messages = getMessages(useAppLocale());
+
   return (
-    <InfoTooltip label="Show RPE scale guide">
+    <InfoTooltip label={messages.events.rpeShow}>
       <RpeScaleGuideTable />
     </InfoTooltip>
   );

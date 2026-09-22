@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
+import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { Athlete, EventType } from "@/lib/types";
 
@@ -37,7 +38,7 @@ async function DashboardWeekEventsMeta({
 }) {
   const eventsBundle = await loadDashboardEventsBundle(athleteId, timeZone);
 
-  return athleteEventsThisWeekLabel(eventsBundle.weekEvents.length);
+  return athleteEventsThisWeekLabel(eventsBundle.weekEvents.length, await getRequestLocale());
 }
 
 async function DashboardTodaysEventsSection({

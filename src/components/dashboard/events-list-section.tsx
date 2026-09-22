@@ -18,6 +18,8 @@ import {
   isEventsListMetricShow,
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import type { EventItemType, EventItemTypeChildType } from "@/lib/types";
 
 type EventsListSectionProps = {
@@ -39,18 +41,22 @@ export async function EventsListSection({
   itemTypes,
   itemTypeChildTypes,
 }: EventsListSectionProps) {
+  const locale = await getRequestLocale();
+  const messages = getMessages(locale);
+
   if (isEventsListExerciseMeasure(params.measure) && !params.label) {
     const heading = isEventsListItemListShow(params.show)
-      ? eventsListItemMeasureListLabel(itemTypes, params.measure)
+      ? eventsListItemMeasureListLabel(itemTypes, params.measure, undefined, locale)
       : eventsAggregateHeading(
           isEventsListAggregateShow(params.show) ? params.show : "count",
           "exercise",
+          locale,
         );
 
     return (
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
         <h2 className="text-base font-semibold text-white">{heading}</h2>
-        <p className="mt-4 text-sm text-zinc-500">Enter an exercise name.</p>
+        <p className="mt-4 text-sm text-zinc-500">{messages.events.enterExerciseName}</p>
       </section>
     );
   }
@@ -74,7 +80,8 @@ export async function EventsListSection({
           items={result.data.items}
           timeZone={timeZone}
           total={result.data.pagination.total}
-          heading={eventsListItemMeasureListLabel(itemTypes, params.measure)}
+          heading={eventsListItemMeasureListLabel(itemTypes, params.measure, undefined, locale)}
+          locale={locale}
         />
       );
     }
@@ -83,9 +90,11 @@ export async function EventsListSection({
       return (
         <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
           <h2 className="text-base font-semibold text-white">
-            {params.show === "metricAverage" ? "Metric average" : "Metric total"}
+            {params.show === "metricAverage"
+              ? messages.events.showMetricAverage
+              : messages.events.showMetricTotal}
           </h2>
-          <p className="mt-4 text-sm text-zinc-500">Select a metric.</p>
+          <p className="mt-4 text-sm text-zinc-500">{messages.events.selectMetric}</p>
         </section>
       );
     }
@@ -102,6 +111,7 @@ export async function EventsListSection({
     return (
       <EventsAggregateContent
         result={result.data}
+        locale={locale}
         subject={isEventsListExerciseMeasure(params.measure) ? "exercise" : "item"}
         descendantNoun={
           isEventsListMetricShow(params.show)
@@ -116,9 +126,11 @@ export async function EventsListSection({
     return (
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
         <h2 className="text-base font-semibold text-white">
-          {params.show === "metricAverage" ? "Metric average" : "Metric total"}
+          {params.show === "metricAverage"
+            ? messages.events.showMetricAverage
+            : messages.events.showMetricTotal}
         </h2>
-        <p className="mt-4 text-sm text-zinc-500">Select a metric.</p>
+        <p className="mt-4 text-sm text-zinc-500">{messages.events.selectMetric}</p>
       </section>
     );
   }
@@ -134,7 +146,7 @@ export async function EventsListSection({
       return resultError("Unable to load total");
     }
 
-    return <EventsAggregateContent result={result.data} />;
+    return <EventsAggregateContent result={result.data} locale={locale} />;
   }
 
   const result = await fetchAthleteEventsList(athleteId, params);
@@ -154,6 +166,7 @@ export async function EventsListSection({
       events={result.data.items}
       timeZone={timeZone}
       total={result.data.pagination.total}
+      locale={locale}
     />
   );
 }
