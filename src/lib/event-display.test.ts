@@ -40,12 +40,19 @@ function buildEvent(overrides: Partial<Event> = {}): Event {
 
 describe("eventDetail", () => {
   it("formats stored UTC timestamps in the provided time zone", () => {
-    expect(eventDetail(buildEvent(), { timeZone: "Europe/Oslo" })).toBe("16:00");
+    expect(eventDetail(buildEvent(), { timeZone: "Europe/Oslo", locale: "en" })).toBe("16:00");
   });
 
   it("formats event dates in the provided time zone", () => {
-    expect(eventDetail(buildEvent(), { showDate: true, timeZone: "Europe/Oslo" })).toBe(
-      "Wed 5 Aug · 16:00",
-    );
+    expect(
+      eventDetail(buildEvent(), { showDate: true, timeZone: "Europe/Oslo", locale: "en" }),
+    ).toBe("Wed 5 Aug · 16:00");
+  });
+
+  it("formats intensity in the requested locale", () => {
+    const event = buildEvent({ intensity: "hard" });
+
+    expect(eventDetail(event, { timeZone: "Europe/Oslo", locale: "en" })).toBe("16:00 · Hard");
+    expect(eventDetail(event, { timeZone: "Europe/Oslo", locale: "fi" })).toBe("16:00 · Kova");
   });
 });

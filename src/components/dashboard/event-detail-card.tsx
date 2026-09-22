@@ -1,15 +1,15 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { EventItemsDisplay } from "@/components/dashboard/event-items/event-items-display";
+import { formatEventCategoryLabel, formatEventIntensityLabel } from "@/lib/enum-labels";
 import { eventShortLabel, eventTitle } from "@/lib/event-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
+import { useAppLocale } from "@/lib/locale-context";
 import { eventIconClassName } from "@/lib/event-tone";
 import { formatZonedTimeRange } from "@/lib/time-zone";
-import type { Event, EventIntensity } from "@/lib/types";
-
-function formatIntensity(intensity: EventIntensity): string {
-  return intensity.charAt(0).toUpperCase() + intensity.slice(1);
-}
+import type { Event } from "@/lib/types";
 
 function formatTimeRange(event: Event, timeZone: string): string {
   return formatZonedTimeRange(
@@ -17,10 +17,6 @@ function formatTimeRange(event: Event, timeZone: string): string {
     new Date(event.startedAt),
     event.endedAt ? new Date(event.endedAt) : null,
   );
-}
-
-function formatCategory(category: Event["category"]): string {
-  return category.replace(/_/g, " ");
 }
 
 type DetailFieldProps = {
@@ -50,6 +46,7 @@ export function EventDetailCard({
   editAction,
   afterBasicInfo,
 }: EventDetailCardProps) {
+  const locale = useAppLocale();
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = event.metrics ?? [];
@@ -80,9 +77,12 @@ export function EventDetailCard({
           <DetailField label="Duration" value={formatDurationSeconds(event.durationSeconds)} />
         ) : null}
         {event.intensity ? (
-          <DetailField label="Intensity" value={formatIntensity(event.intensity)} />
+          <DetailField
+            label="Intensity"
+            value={formatEventIntensityLabel(event.intensity, locale)}
+          />
         ) : null}
-        <DetailField label="Category" value={formatCategory(event.category)} />
+        <DetailField label="Category" value={formatEventCategoryLabel(event.category, locale)} />
       </dl>
 
       {event.description ? (

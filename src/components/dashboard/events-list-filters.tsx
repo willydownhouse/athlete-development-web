@@ -38,9 +38,9 @@ import {
   type EventsListSearchParams,
   type EventsListShow,
 } from "@/lib/events-list-params";
+import { formatEventCategoryLabel } from "@/lib/enum-labels";
 import {
   EVENT_CATEGORIES,
-  formatCategoryLabel,
   type EventCategory,
   type EventItemType,
   type EventType,
@@ -274,7 +274,7 @@ export function EventsListFilters({
             values={categories}
             options={EVENT_CATEGORIES.map((category) => ({
               value: category,
-              label: formatCategoryLabel(category),
+              label: formatEventCategoryLabel(category, locale),
             }))}
             emptyLabel="All categories"
             placeholder="All categories"

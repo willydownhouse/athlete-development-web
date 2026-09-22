@@ -25,6 +25,7 @@ import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
+import { formatEventIntensityLabel } from "@/lib/enum-labels";
 import { groupEventTypes } from "@/lib/event-type-groups";
 import { useAppLocale } from "@/lib/locale-context";
 import { type EventItemFormCatalog } from "@/lib/event-item-form";
@@ -36,19 +37,14 @@ import {
   EVENT_TITLE_MAX_LENGTH,
   getEventFormValidationError,
 } from "@/lib/event-form-schema";
-import type { Event, EventType, EventTypeMetricDefinition } from "@/lib/types";
+import type { Event, EventIntensity, EventType, EventTypeMetricDefinition } from "@/lib/types";
 
 const initialState: DashboardActionState = {};
 
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
-const INTENSITY_OPTIONS = [
-  { value: "", label: "Not set" },
-  { value: "light", label: "Light" },
-  { value: "moderate", label: "Moderate" },
-  { value: "hard", label: "Hard" },
-] as const;
+const INTENSITY_VALUES = ["light", "moderate", "hard"] as const satisfies EventIntensity[];
 
 export type EventFormApplyHandlers = {
   applyEventType: (eventTypeId: string) => void;
@@ -92,6 +88,16 @@ export function EventForm({
   const groups = useMemo(
     () => groupEventTypes(eventTypes, focusSportName, locale),
     [eventTypes, focusSportName, locale],
+  );
+  const intensityOptions = useMemo(
+    () => [
+      { value: "", label: "Not set" },
+      ...INTENSITY_VALUES.map((value) => ({
+        value,
+        label: formatEventIntensityLabel(value, locale),
+      })),
+    ],
+    [locale],
   );
   const values = useMemo(
     () =>
@@ -327,7 +333,7 @@ export function EventForm({
             <span className="font-medium text-zinc-300">Intensity</span>
             <OptionPills
               name="intensity"
-              options={[...INTENSITY_OPTIONS]}
+              options={intensityOptions}
               defaultValue={values.intensity}
             />
           </div>
