@@ -62,7 +62,7 @@ export const fi = {
   dashboard: {
     todayEyebrow: "Tänään",
     getStarted: "Aloita",
-    getStartedHint: "Lisää ensimmäinen urheilija avataksesi hallintapaneelin.",
+    getStartedHint: "Lisää ensimmäinen urheilija avataksesi Dashboardin.",
     eventsThisWeek: (count: number) =>
       count === 1 ? "1 tapahtuma tällä viikolla" : `${count} tapahtumaa tällä viikolla`,
     todaysEvents: "Tänään",
@@ -72,9 +72,9 @@ export const fi = {
       `${scopeLabel}-tapahtumatyyppejä ei ole vielä saatavilla.`,
     welcome: "Tervetuloa",
     welcomeNamed: (name: string) => `Tervetuloa, ${name}`,
-    emptyTitle: "Hallintapaneeli on vielä tyhjä",
+    emptyTitle: "Dashboard on vielä tyhjä",
     emptyBody:
-      "Hallintapaneeli täyttyy, kun sinulla on urheilijaprofiili. Lisää ensimmäinen urheilija aloittaaksesi.",
+      "Dashboard täyttyy, kun sinulla on urheilijaprofiili. Lisää ensimmäinen urheilija aloittaaksesi.",
     getStartedCard: "Aloita",
     invitationTitle: "Sinulla on kutsu",
     invitationsTitle: "Sinulla on odottavia kutsuja",
@@ -227,7 +227,7 @@ export const fi = {
     tellToby: "Kerro Tobylle mitä muutetaan",
   },
   onboarding: {
-    setupTitle: "Luodaan urheilijaprofiilisi",
+    setupTitle: "Luodaan urheilijaprofiili",
     setupBody1: "Tämä luo lähtökohdan urheilijaprofiilille ja pitkäaikaiselle kehityshistorialle.",
     setupBody2:
       "Mitä enemmän jaat meille hyödyllistä kontekstia — harjoittelua, palautumista ja arjen havaintoja — sitä paremmin voimme tukea urheilijasi matkaa.",
