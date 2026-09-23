@@ -13,7 +13,7 @@ type DashboardHeaderProps = {
   calendarHref?: string;
   statsHref?: string;
   historyHref?: string;
-  accessHref?: string;
+  profileHref?: string;
 };
 
 export async function DashboardHeader({
@@ -22,12 +22,12 @@ export async function DashboardHeader({
   calendarHref,
   statsHref,
   historyHref,
-  accessHref,
+  profileHref,
 }: DashboardHeaderProps) {
   const messages = getMessages(await getRequestLocale());
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
   const showMetaRow =
-    ageGroup || eventsMeta || calendarHref || statsHref || historyHref || accessHref;
+    ageGroup || eventsMeta || calendarHref || statsHref || historyHref || profileHref;
 
   return (
     <header>
@@ -48,7 +48,7 @@ export async function DashboardHeader({
                 ) : null}
                 {eventsMeta}
               </div>
-              {calendarHref || statsHref || historyHref || accessHref ? (
+              {calendarHref || statsHref || historyHref || profileHref ? (
                 <nav className="hidden shrink-0 items-center gap-3 lg:flex">
                   {statsHref ? (
                     <Link
@@ -74,12 +74,12 @@ export async function DashboardHeader({
                       {messages.nav.history}
                     </Link>
                   ) : null}
-                  {accessHref ? (
+                  {profileHref ? (
                     <Link
-                      href={accessHref}
+                      href={profileHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      {messages.nav.access}
+                      {messages.nav.profile}
                     </Link>
                   ) : null}
                 </nav>

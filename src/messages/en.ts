@@ -47,6 +47,7 @@ export const en = {
     invites: "Invites",
     history: "History",
     access: "Access",
+    profile: "Profile",
     addAthlete: "Add athlete",
     calendar: "Calendar",
     stats: "Stats",
@@ -245,6 +246,10 @@ export const en = {
     createAthleteProfile: "Create athlete profile",
     athleteDetails: "Athlete details",
   },
+  profile: {
+    addPhoto: "Add photo",
+    sport: "Sport",
+  },
   invites: {
     title: "Invites",
     pageHint: "Accept an invitation to share an athlete profile with your family.",
@@ -394,6 +399,7 @@ export const en = {
     dateOfBirthInvalid: "Date of birth must be a valid calendar date",
     selfCreateMinAge: (minAge: number) =>
       `You must be at least ${minAge} years old to create your own profile`,
+    profileSaved: "Profile saved",
     chooseTotalToShow: "Choose a total to show",
     chooseDateRange: "Choose a from date and a to date",
     chooseItemsToShow: "Choose items to show",

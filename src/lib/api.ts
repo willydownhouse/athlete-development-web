@@ -227,6 +227,21 @@ export async function createAthlete(
   });
 }
 
+export async function updateAthlete(
+  token: string,
+  athleteId: string,
+  body: {
+    name?: string;
+    dateOfBirth?: string;
+    focusSportId?: string;
+  },
+): Promise<Athlete> {
+  return apiFetch<Athlete>(token, `/api/athletes/${encodeURIComponent(athleteId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function fetchSports(locale: AppLocale): Promise<Sport[] | null> {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/sports${catalogQuery(locale)}`, {

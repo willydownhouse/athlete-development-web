@@ -29,6 +29,7 @@ import {
   getApiBaseUrl,
   revokeAthleteInvitation,
   submitChatMessage,
+  updateAthlete,
 } from "./api";
 
 describe("api client", () => {
@@ -130,6 +131,41 @@ describe("api client", () => {
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athletes).toHaveLength(1);
     expect(athletes[0]?.name).toBe("Leo Laine");
+  });
+
+  it("updates an athlete profile", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "22222222-2222-4222-8222-222222222222",
+        name: "Leo Updated",
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const athlete = await updateAthlete("test-token", "22222222-2222-4222-8222-222222222222", {
+      name: "Leo Updated",
+      dateOfBirth: "2012-05-14",
+      focusSportId: "33333333-3333-4333-8333-333333333333",
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("PATCH");
+    expect(options.body).toBe(
+      JSON.stringify({
+        name: "Leo Updated",
+        dateOfBirth: "2012-05-14",
+        focusSportId: "33333333-3333-4333-8333-333333333333",
+      }),
+    );
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(athlete.name).toBe("Leo Updated");
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {

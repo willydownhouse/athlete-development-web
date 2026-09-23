@@ -94,6 +94,13 @@ describe("access nav", () => {
   });
 });
 
+describe("profile nav", () => {
+  it("uses Profile as the mobile title", () => {
+    expect(appShellMobileTitle("/athlete/ath-1/profile")).toBe("Profile");
+    expect(appShellMobileTitle("/athlete/ath-1/profile", "fi")).toBe("Profiili");
+  });
+});
+
 describe("onboarding nav", () => {
   it("uses Add athlete as the mobile title", () => {
     expect(isOnboardingPath("/onboarding")).toBe(true);

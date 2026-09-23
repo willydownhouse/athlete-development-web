@@ -49,6 +49,7 @@ export const fi = {
     invites: "Kutsut",
     history: "Historia",
     access: "Käyttöoikeudet",
+    profile: "Profiili",
     addAthlete: "Lisää urheilija",
     calendar: "Kalenteri",
     stats: "Tilastot",
@@ -250,6 +251,10 @@ export const fi = {
     createAthleteProfile: "Luo urheilijaprofiili",
     athleteDetails: "Urheilijan tiedot",
   },
+  profile: {
+    addPhoto: "Lisää kuva",
+    sport: "Laji",
+  },
   invites: {
     title: "Kutsut",
     pageHint: "Hyväksy kutsu jakaaksesi urheilijaprofiilin perheesi kanssa.",
@@ -401,6 +406,7 @@ export const fi = {
     athleteNameRequired: "Urheilijan nimi on pakollinen",
     dateOfBirthRequired: "Syntymäaika on pakollinen",
     dateOfBirthInvalid: "Syntymäajan on oltava kelvollinen päivämäärä",
+    profileSaved: "Profiili tallennettu",
     selfCreateMinAge: (minAge: number) =>
       `Sinun on oltava vähintään ${minAge}-vuotias luodaksesi oman profiilin`,
     chooseTotalToShow: "Valitse näytettävä yhteenveto",

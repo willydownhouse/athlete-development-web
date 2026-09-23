@@ -1,5 +1,4 @@
 import { AppShell } from "@/components/app-shell";
-import { isParentRelationship } from "@/lib/athlete-access-display";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import type { Athlete, EventType } from "@/lib/types";
@@ -7,9 +6,9 @@ import type { Athlete, EventType } from "@/lib/types";
 import { DashboardAthleteContent } from "./dashboard-athlete-content";
 import { DashboardBottomNav } from "./dashboard-bottom-nav";
 import {
-  athleteAccessHref,
   athleteCalendarHref,
   athleteEventsHref,
+  athleteProfileHref,
   athleteStatsHref,
 } from "./dashboard-nav";
 import { DashboardOnboardingPrompt } from "./dashboard-onboarding-prompt";
@@ -79,11 +78,7 @@ export async function DashboardView({
           }
           calendarHref={athleteCalendarHref(selectedAthlete.id)}
           historyHref={athleteEventsHref(selectedAthlete.id)}
-          accessHref={
-            isParentRelationship(selectedAthlete.relationshipToAthlete)
-              ? athleteAccessHref(selectedAthlete.id)
-              : undefined
-          }
+          profileHref={athleteProfileHref(selectedAthlete.id)}
         />
       ) : null}
     </AppShell>

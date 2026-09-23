@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isAtLeastAgeYears, isValidDateOnly, latestSelfAthleteBirthDate } from "./date-of-birth";
+import {
+  dateOnlyInputValue,
+  isAtLeastAgeYears,
+  isValidDateOnly,
+  latestSelfAthleteBirthDate,
+} from "./date-of-birth";
 
 describe("isValidDateOnly", () => {
   it("accepts a real calendar date", () => {
@@ -12,6 +17,18 @@ describe("isValidDateOnly", () => {
     expect(isValidDateOnly("2013-02-29")).toBe(false);
     expect(isValidDateOnly("2013-09-31")).toBe(false);
     expect(isValidDateOnly("2013-09-19T00:00:00.000Z")).toBe(false);
+  });
+});
+
+describe("dateOnlyInputValue", () => {
+  it("keeps a date-only value and strips a UTC timestamp", () => {
+    expect(dateOnlyInputValue("2012-05-14")).toBe("2012-05-14");
+    expect(dateOnlyInputValue("2012-05-14T00:00:00.000Z")).toBe("2012-05-14");
+  });
+
+  it("returns an empty string for missing or invalid values", () => {
+    expect(dateOnlyInputValue(null)).toBe("");
+    expect(dateOnlyInputValue("2013-02-29T00:00:00.000Z")).toBe("");
   });
 });
 

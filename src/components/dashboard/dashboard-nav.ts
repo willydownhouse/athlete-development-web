@@ -70,6 +70,10 @@ export function athleteAccessHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/access`;
 }
 
+export function athleteProfileHref(athleteId: string): string {
+  return `/athlete/${encodeURIComponent(athleteId)}/profile`;
+}
+
 export function defaultDashboardHref(athletes: { id: string }[]): string {
   const firstAthlete = athletes[0];
 
@@ -142,6 +146,10 @@ export function appShellMobileTitle(
 
   if (/^\/athlete\/[^/]+\/access\/?$/.test(pathname)) {
     return messages.nav.access;
+  }
+
+  if (/^\/athlete\/[^/]+\/profile\/?$/.test(pathname)) {
+    return messages.nav.profile;
   }
 
   if (/^\/athlete\/[^/]+\/event\/[^/]+\/media\/[^/]+\/?$/.test(pathname)) {

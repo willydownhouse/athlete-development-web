@@ -37,6 +37,16 @@ function parseDateOnly(value: string): Date | null {
   return date;
 }
 
+export function dateOnlyInputValue(value: string | null | undefined): string {
+  if (!value) {
+    return "";
+  }
+
+  const dateOnly = value.slice(0, 10);
+
+  return isValidDateOnly(dateOnly) ? dateOnly : "";
+}
+
 export function isValidDateOnly(value: string): boolean {
   return parseDateOnly(value) !== null;
 }
