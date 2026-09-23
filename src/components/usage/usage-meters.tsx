@@ -1,5 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadMonthlyUsage } from "@/lib/load-monthly-usage";
+import type { AppLocale } from "@/lib/locale";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { formatTokenCount, formatUsagePeriod, usageBarPercent } from "@/lib/usage-display";
 import type { MonthlyUsage } from "@/lib/types";
 
@@ -43,30 +46,39 @@ function UsageMetersError({ message }: { message: string }) {
   );
 }
 
-function UsageMetersCard({ usage }: { usage: MonthlyUsage }) {
+async function UsageMetersCard({ usage }: { usage: MonthlyUsage }) {
+  const locale = await getRequestLocale();
+  const messages = getMessages(locale);
+
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-white sm:text-base">This month</h2>
-        <p className="text-sm text-zinc-400">{formatUsagePeriod(usage.periodStart)}</p>
+        <h2 className="text-sm font-semibold text-white sm:text-base">
+          {messages.usage.thisMonth}
+        </h2>
+        <p className="text-sm text-zinc-400">{formatUsagePeriod(usage.periodStart, locale)}</p>
       </div>
 
       {usage.limitReached ? (
-        <p className="mt-2 text-sm text-[#f0d4a8]">{"You've reached this month's chat limit."}</p>
+        <p className="mt-2 text-sm text-[#f0d4a8]">{messages.usage.limitReached}</p>
       ) : null}
 
       <div className="mt-5 space-y-5">
         <UsageUnitBar
-          label="Input tokens"
+          label={messages.usage.inputTokens}
           used={usage.inputTokens.used}
           limit={usage.inputTokens.limit}
           remaining={usage.inputTokens.remaining}
+          remainingLabel={messages.usage.remaining}
+          locale={locale}
         />
         <UsageUnitBar
-          label="Output tokens"
+          label={messages.usage.outputTokens}
           used={usage.outputTokens.used}
           limit={usage.outputTokens.limit}
           remaining={usage.outputTokens.remaining}
+          remainingLabel={messages.usage.remaining}
+          locale={locale}
         />
       </div>
     </section>
@@ -78,11 +90,15 @@ function UsageUnitBar({
   used,
   limit,
   remaining,
+  remainingLabel,
+  locale,
 }: {
   label: string;
   used: number;
   limit: number;
   remaining: number;
+  remainingLabel: (count: string) => string;
+  locale: AppLocale;
 }) {
   const percent = usageBarPercent(used, limit);
 
@@ -91,7 +107,7 @@ function UsageUnitBar({
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="text-sm text-zinc-400">
-          {formatTokenCount(used)} / {formatTokenCount(limit)}
+          {formatTokenCount(used, locale)} / {formatTokenCount(limit, locale)}
         </p>
       </div>
       <div
@@ -104,7 +120,9 @@ function UsageUnitBar({
       >
         <div className="h-full rounded-full bg-[#9ec9e8]" style={{ width: `${percent}%` }} />
       </div>
-      <p className="mt-2 text-xs text-zinc-500">{formatTokenCount(remaining)} remaining</p>
+      <p className="mt-2 text-xs text-zinc-500">
+        {remainingLabel(formatTokenCount(remaining, locale))}
+      </p>
     </div>
   );
 }

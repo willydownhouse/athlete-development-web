@@ -1,10 +1,10 @@
 import {
-  ApiError,
   fetchEventAggregate,
   fetchEventItemAggregate,
   fetchEventItems,
   fetchEvents,
 } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import {
   eventsListDateRange,
@@ -16,6 +16,8 @@ import {
   resolveEventsListItemTypeId,
   type EventsListSearchParams,
 } from "@/lib/events-list-params";
+import { getMessages } from "@/lib/messages";
+import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type {
   EventAggregate,
@@ -37,29 +39,17 @@ type EventItemsAggregateResult =
 type EventItemsListResult =
   { data: EventItemListResponse; error?: undefined } | { data?: undefined; error: string };
 
-function errorMessage(error: unknown, fallback: string): string {
-  if (error instanceof ApiError) {
-    return error.apiError ?? error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-}
-
 export async function fetchAthleteEventsList(
   athleteId: string,
   params: EventsListSearchParams,
 ): Promise<EventsListResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
-  const timeZone = await getRequestTimeZone();
+  const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
   const dateRange = eventsListDateRange(timeZone, params.from, params.to);
 
   try {
@@ -69,11 +59,12 @@ export async function fetchAthleteEventsList(
       ...dateRange,
       ...(params.eventTypeIds.length > 0 ? { eventTypeIds: params.eventTypeIds } : {}),
       ...(params.categories.length > 0 ? { categories: params.categories } : {}),
+      locale,
     });
 
     return { data };
   } catch (error) {
-    return { error: errorMessage(error, "Unable to load events") };
+    return { error: passthroughOrGeneric(error, actions.loadEvents) };
   }
 }
 
@@ -81,25 +72,27 @@ export async function fetchAthleteEventsAggregate(
   athleteId: string,
   params: EventsListSearchParams,
 ): Promise<EventsAggregateResult> {
+  const [token, locale] = await Promise.all([getAuthBearerToken(), getRequestLocale()]);
+  const messages = getMessages(locale);
+  const actions = messages.actions;
+
   if (!isEventsListAggregateShow(params.show)) {
-    return { error: "Choose a total to show" };
+    return { error: actions.chooseTotalToShow };
   }
 
   if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
-    return { error: "Select a metric" };
+    return { error: messages.events.selectMetric };
   }
 
-  const token = await getAuthBearerToken();
-
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const timeZone = await getRequestTimeZone();
   const dateRange = eventsListDateRange(timeZone, params.from, params.to);
 
   if (!dateRange.startedAtFrom || !dateRange.startedAtTo) {
-    return { error: "Choose a from date and a to date" };
+    return { error: actions.chooseDateRange };
   }
 
   try {
@@ -116,7 +109,7 @@ export async function fetchAthleteEventsAggregate(
 
     return { data };
   } catch (error) {
-    return { error: errorMessage(error, "Unable to load total") };
+    return { error: passthroughOrGeneric(error, actions.loadTotal) };
   }
 }
 
@@ -125,29 +118,31 @@ export async function fetchAthleteEventItemsAggregate(
   params: EventsListSearchParams,
   itemTypes: EventItemType[],
 ): Promise<EventItemsAggregateResult> {
+  const [token, locale] = await Promise.all([getAuthBearerToken(), getRequestLocale()]);
+  const messages = getMessages(locale);
+  const actions = messages.actions;
+
   if (!isEventsListItemMeasure(params.measure) || !isEventsListAggregateShow(params.show)) {
-    return { error: "Choose a total to show" };
+    return { error: actions.chooseTotalToShow };
   }
 
   if (isEventsListExerciseMeasure(params.measure) && !params.label) {
-    return { error: "Enter an exercise name" };
+    return { error: messages.events.enterExerciseName };
   }
 
   if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
-    return { error: "Select a metric" };
+    return { error: messages.events.selectMetric };
   }
 
-  const token = await getAuthBearerToken();
-
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const timeZone = await getRequestTimeZone();
   const dateRange = eventsListDateRange(timeZone, params.from, params.to);
 
   if (!dateRange.startedAtFrom || !dateRange.startedAtTo) {
-    return { error: "Choose a from date and a to date" };
+    return { error: actions.chooseDateRange };
   }
 
   try {
@@ -155,7 +150,7 @@ export async function fetchAthleteEventItemsAggregate(
 
     if (!eventItemTypeId) {
       return {
-        error: `${eventsListMeasureLabel(params.measure)} is not available`,
+        error: actions.measureNotAvailable(eventsListMeasureLabel(params.measure, locale)),
       };
     }
 
@@ -176,7 +171,7 @@ export async function fetchAthleteEventItemsAggregate(
 
     return { data };
   } catch (error) {
-    return { error: errorMessage(error, "Unable to load total") };
+    return { error: passthroughOrGeneric(error, actions.loadTotal) };
   }
 }
 
@@ -185,25 +180,27 @@ export async function fetchAthleteEventItemsList(
   params: EventsListSearchParams,
   itemTypes: EventItemType[],
 ): Promise<EventItemsListResult> {
+  const [token, locale] = await Promise.all([getAuthBearerToken(), getRequestLocale()]);
+  const messages = getMessages(locale);
+  const actions = messages.actions;
+
   if (!isEventsListItemMeasure(params.measure)) {
-    return { error: "Choose items to show" };
+    return { error: actions.chooseItemsToShow };
   }
 
   if (isEventsListExerciseMeasure(params.measure) && !params.label) {
-    return { error: "Enter an exercise name" };
+    return { error: messages.events.enterExerciseName };
   }
 
-  const token = await getAuthBearerToken();
-
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const timeZone = await getRequestTimeZone();
   const dateRange = eventsListDateRange(timeZone, params.from, params.to);
 
   if (!dateRange.startedAtFrom || !dateRange.startedAtTo) {
-    return { error: "Choose a from date and a to date" };
+    return { error: actions.chooseDateRange };
   }
 
   try {
@@ -211,7 +208,7 @@ export async function fetchAthleteEventItemsList(
 
     if (!eventItemTypeId) {
       return {
-        error: `${eventsListMeasureLabel(params.measure)} is not available`,
+        error: actions.measureNotAvailable(eventsListMeasureLabel(params.measure, locale)),
       };
     }
 
@@ -226,10 +223,11 @@ export async function fetchAthleteEventItemsList(
       ...(isEventsListExerciseMeasure(params.measure) && params.label
         ? { label: params.label }
         : {}),
+      locale,
     });
 
     return { data };
   } catch (error) {
-    return { error: errorMessage(error, "Unable to load items") };
+    return { error: passthroughOrGeneric(error, actions.loadItems) };
   }
 }

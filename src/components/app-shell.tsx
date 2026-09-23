@@ -1,6 +1,7 @@
 import { AppShellClient } from "@/components/app-shell-client";
 import { assertApiAccess } from "@/lib/assert-api-access";
 import { loadPendingInviteCount } from "@/lib/load-invitation-inbox";
+import { getRequestLocale } from "@/lib/locale-server";
 import type { Athlete } from "@/lib/types";
 
 type AppShellProps = {
@@ -13,7 +14,10 @@ type AppShellProps = {
 
 export async function AppShell(props: AppShellProps) {
   await assertApiAccess();
-  const pendingInviteCount = await loadPendingInviteCount();
+  const [pendingInviteCount, locale] = await Promise.all([
+    loadPendingInviteCount(),
+    getRequestLocale(),
+  ]);
 
-  return <AppShellClient {...props} pendingInviteCount={pendingInviteCount} />;
+  return <AppShellClient {...props} pendingInviteCount={pendingInviteCount} locale={locale} />;
 }

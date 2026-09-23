@@ -7,6 +7,8 @@ import { UsageMeters, UsageMetersSkeleton } from "@/components/usage/usage-meter
 import { UsagePlanCard } from "@/components/usage/usage-plan-card";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 export default async function UsagePage() {
@@ -22,7 +24,12 @@ export default async function UsagePage() {
     redirect("/");
   }
 
-  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
+  const [athletes, isAdmin, locale] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    getRequestLocale(),
+  ]);
+  const messages = getMessages(locale);
 
   return (
     <AppShell
@@ -32,7 +39,7 @@ export default async function UsagePage() {
       selectedAthlete={null}
     >
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Usage</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-white">{messages.usage.title}</h1>
         <div className="mt-6 space-y-4">
           <UsagePlanCard />
           <Suspense fallback={<UsageMetersSkeleton />}>

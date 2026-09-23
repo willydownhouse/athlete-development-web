@@ -25,7 +25,10 @@ import { DurationPartsFields } from "@/components/form/duration-parts-fields";
 import { FormSelect } from "@/components/form/form-select";
 import { OptionPills } from "@/components/form/option-pills";
 import { TimePickerInput } from "@/components/time-picker-input";
+import { formatEventIntensityLabel } from "@/lib/enum-labels";
 import { groupEventTypes } from "@/lib/event-type-groups";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import { type EventItemFormCatalog } from "@/lib/event-item-form";
 import { defaultCreateFormValues, eventToFormValues } from "@/lib/event-form-values";
 import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
@@ -35,19 +38,14 @@ import {
   EVENT_TITLE_MAX_LENGTH,
   getEventFormValidationError,
 } from "@/lib/event-form-schema";
-import type { Event, EventType, EventTypeMetricDefinition } from "@/lib/types";
+import type { Event, EventIntensity, EventType, EventTypeMetricDefinition } from "@/lib/types";
 
 const initialState: DashboardActionState = {};
 
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
-const INTENSITY_OPTIONS = [
-  { value: "", label: "Not set" },
-  { value: "light", label: "Light" },
-  { value: "moderate", label: "Moderate" },
-  { value: "hard", label: "Hard" },
-] as const;
+const INTENSITY_VALUES = ["light", "moderate", "hard"] as const satisfies EventIntensity[];
 
 export type EventFormApplyHandlers = {
   applyEventType: (eventTypeId: string) => void;
@@ -87,9 +85,21 @@ export function EventForm({
     initialState,
   );
 
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const groups = useMemo(
-    () => groupEventTypes(eventTypes, focusSportName),
-    [eventTypes, focusSportName],
+    () => groupEventTypes(eventTypes, focusSportName, locale),
+    [eventTypes, focusSportName, locale],
+  );
+  const intensityOptions = useMemo(
+    () => [
+      { value: "", label: messages.common.notSet },
+      ...INTENSITY_VALUES.map((value) => ({
+        value,
+        label: formatEventIntensityLabel(value, locale),
+      })),
+    ],
+    [locale, messages.common.notSet],
   );
   const values = useMemo(
     () =>
@@ -243,11 +253,7 @@ export function EventForm({
   );
 
   if (eventTypes.length === 0) {
-    return (
-      <p className="text-sm text-zinc-400">
-        No event types are available yet. Ask an admin to configure event types first.
-      </p>
-    );
+    return <p className="text-sm text-zinc-400">{messages.events.noEventTypes}</p>;
   }
 
   return (
@@ -266,10 +272,10 @@ export function EventForm({
         {isEdit ? <input type="hidden" name="eventId" value={event.id} /> : null}
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Event type</span>
+          <span className="font-medium text-zinc-300">{messages.events.eventType}</span>
           <FormSelect
             name="eventTypeId"
-            placeholder="Select event type"
+            placeholder={messages.events.selectEventType}
             className={inputClassName}
             {...(isCreate
               ? { value: eventTypeId, onValueChange: handleEventTypeChange }
@@ -286,26 +292,26 @@ export function EventForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Date</span>
+            <span className="font-medium text-zinc-300">{messages.events.date}</span>
             <DatePickerInput
               name="eventDate"
               {...(isCreate
                 ? { value: eventDate, onChange: applyDate }
                 : { defaultValue: values.eventDate, onChange: applyDate })}
-              placeholder="Select date"
+              placeholder={messages.events.selectDate}
               className={inputClassName}
             />
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium text-zinc-300">Start time</span>
+            <span className="font-medium text-zinc-300">{messages.events.startTime}</span>
             <TimePickerInput
               name="eventTime"
               defaultValue={values.eventTime}
-              placeholder="Select time"
+              placeholder={messages.events.selectTime}
               className={inputClassName}
             />
-            <span className="text-xs text-zinc-500">Leave empty to default to noon.</span>
+            <span className="text-xs text-zinc-500">{messages.events.noonHint}</span>
           </label>
         </div>
 
@@ -317,15 +323,15 @@ export function EventForm({
             defaultHours={values.durationHours}
             defaultMinutes={values.durationMinutes}
             defaultSeconds={values.durationSeconds}
-            label="Duration"
+            label={messages.common.duration}
             inputClassName={inputClassName}
           />
 
           <div className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-zinc-300">Intensity</span>
+            <span className="font-medium text-zinc-300">{messages.events.intensity}</span>
             <OptionPills
               name="intensity"
-              options={[...INTENSITY_OPTIONS]}
+              options={intensityOptions}
               defaultValue={values.intensity}
             />
           </div>
@@ -360,35 +366,40 @@ export function EventForm({
         ) : null}
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Title</span>
+          <span className="font-medium text-zinc-300">{messages.events.title}</span>
           <input
             name="title"
             defaultValue={values.title}
-            placeholder="Morning ice practice"
+            placeholder={messages.events.titlePlaceholder}
             className={inputClassName}
           />
-          <span className="text-xs text-zinc-500">Max {EVENT_TITLE_MAX_LENGTH} characters</span>
+          <span className="text-xs text-zinc-500">
+            {messages.events.maxCharacters(EVENT_TITLE_MAX_LENGTH)}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-300">Notes</span>
+          <span className="font-medium text-zinc-300">{messages.events.notes}</span>
           <textarea
             name="description"
             rows={3}
             defaultValue={values.description}
-            placeholder="Edge work, small-area games, felt pretty hard."
+            placeholder={messages.events.notesPlaceholder}
             className={`${inputClassName} resize-y`}
           />
           <span className="text-xs text-zinc-500">
-            Max {EVENT_DESCRIPTION_MAX_LENGTH} characters
+            {messages.events.maxCharacters(EVENT_DESCRIPTION_MAX_LENGTH)}
           </span>
         </label>
 
         <div className="flex flex-col gap-3 pt-1">
           <FormMessage error={clientError ?? state.error} success={state.success} />
           <div className="flex sm:justify-end">
-            <SubmitButton pending={isPending} pendingLabel={isEdit ? "Saving…" : "Adding…"}>
-              {isEdit ? "Save changes" : "Add event"}
+            <SubmitButton
+              pending={isPending}
+              pendingLabel={isEdit ? messages.events.saving : messages.events.adding}
+            >
+              {isEdit ? messages.events.saveChanges : messages.events.addEvent}
             </SubmitButton>
           </div>
         </div>

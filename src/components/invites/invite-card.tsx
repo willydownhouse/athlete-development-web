@@ -9,7 +9,9 @@ import {
 } from "@/app/invites/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
-import { athleteAccessRoleLabel, formatInvitationExpiry } from "@/lib/athlete-access-display";
+import { formatInvitationExpiry } from "@/lib/athlete-access-display";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { AthleteInvitation } from "@/lib/types";
 
 const initialState: InviteActionState = {};
@@ -28,16 +30,17 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
     initialState,
   );
   const busy = acceptPending || declinePending;
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
 
   return (
     <article className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
       <h2 className="text-base font-semibold text-white">{invitation.athlete.name}</h2>
       <p className="mt-1 text-sm text-zinc-400">
-        {inviterName(invitation)} invited you as{" "}
-        {athleteAccessRoleLabel(invitation.role).toLowerCase()}.
+        {messages.invites.invitedYouAs(inviterName(invitation), invitation.role)}
       </p>
       <p className="mt-1 text-sm text-zinc-500">
-        Expires {formatInvitationExpiry(invitation.expiresAt)}
+        {messages.invites.expires(formatInvitationExpiry(invitation.expiresAt, locale))}
       </p>
 
       <div className="mt-4 flex flex-col gap-3">
@@ -45,8 +48,12 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
         <div className="flex flex-col gap-2 sm:flex-row">
           <form action={acceptAction}>
             <input type="hidden" name="invitationId" value={invitation.id} />
-            <SubmitButton pending={acceptPending} pendingLabel="Accepting…" disabled={busy}>
-              Accept
+            <SubmitButton
+              pending={acceptPending}
+              pendingLabel={messages.invites.accepting}
+              disabled={busy}
+            >
+              {messages.invites.accept}
             </SubmitButton>
           </form>
           <form action={declineAction}>
@@ -54,10 +61,10 @@ export function InviteCard({ invitation }: { invitation: AthleteInvitation }) {
             <SubmitButton
               variant="secondary"
               pending={declinePending}
-              pendingLabel="Declining…"
+              pendingLabel={messages.invites.declining}
               disabled={busy}
             >
-              Decline
+              {messages.invites.decline}
             </SubmitButton>
           </form>
         </div>

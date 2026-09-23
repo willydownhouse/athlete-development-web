@@ -23,6 +23,8 @@ import {
   type EventItemFormPath,
   type EventItemFormTypeNode,
 } from "@/lib/event-item-form";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { EventItem } from "@/lib/types";
 
 const inputClassName =
@@ -101,6 +103,7 @@ function AddTypeButtons({
   disabled: boolean;
   onAdd: (typeNode: EventItemFormTypeNode) => void;
 }) {
+  const messages = getMessages(useAppLocale());
   const addableTypes = filterAddableItemTypes(types, siblings);
 
   if (addableTypes.length === 0) {
@@ -117,7 +120,7 @@ function AddTypeButtons({
           onClick={() => onAdd(typeNode)}
           className="text-sm font-medium text-[#9ec9e8] transition hover:text-[#b7d7ec] disabled:cursor-not-allowed disabled:text-zinc-500"
         >
-          Add {typeNode.name.toLowerCase()}
+          {messages.events.addItem(typeNode.name)}
         </button>
       ))}
     </div>
@@ -143,10 +146,11 @@ function EventItemNode({
   canAddMore: boolean;
   onItemsChange: (updater: (current: EventItemFormDraft[]) => EventItemFormDraft[]) => void;
 }) {
+  const messages = getMessages(useAppLocale());
   const typeNode =
     allowedTypes.find((node) => node.eventItemTypeId === item.eventItemTypeId) ??
     findItemFormTypeNode(catalog.roots, item.eventItemTypeId);
-  const typeName = typeNode?.name ?? "Item";
+  const typeName = typeNode?.name ?? messages.events.measureExercise;
   const typeHeading =
     typeNode && eventItemTypeAllowsMultiple(typeNode.slug)
       ? `${typeName} ${sameTypeIndex(siblings, index)}`
@@ -195,7 +199,7 @@ function EventItemNode({
             }}
           />
           <span className="mt-1 text-xs text-zinc-500">
-            Max {EVENT_ITEM_LABEL_MAX_LENGTH} characters
+            {messages.events.maxCharacters(EVENT_ITEM_LABEL_MAX_LENGTH)}
           </span>
         </label>
         <button
@@ -209,7 +213,7 @@ function EventItemNode({
           }
           className="absolute right-0 top-0 text-sm font-medium text-red-300 transition hover:text-red-200 sm:static"
         >
-          Remove {typeName.toLowerCase()}
+          {messages.events.removeItem}
         </button>
       </div>
 
@@ -220,7 +224,7 @@ function EventItemNode({
         defaultHours={item.durationHours}
         defaultMinutes={item.durationMinutes}
         defaultSeconds={item.durationSeconds}
-        label="Duration"
+        label={messages.common.duration}
         inputClassName={inputClassName}
       />
 
@@ -278,6 +282,8 @@ export function EventItemsSection({
   onLoadingChange,
   onLoadErrorChange,
 }: EventItemsSectionProps) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const [catalog, setCatalog] = useState<EventItemFormCatalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -289,7 +295,7 @@ export function EventItemsSection({
     onLoadingChange?.(true);
     onLoadErrorChange?.(null);
 
-    void loadEventItemFormCatalog(eventTypeId)
+    void loadEventItemFormCatalog(eventTypeId, locale)
       .then((loadedCatalog) => {
         if (cancelled) {
           return;
@@ -306,7 +312,7 @@ export function EventItemsSection({
           return;
         }
 
-        const message = error instanceof Error ? error.message : "Unable to load item fields";
+        const message = error instanceof Error ? error.message : messages.actions.loadItemFields;
         setCatalog(null);
         onCatalogChange(null);
         setItems([]);
@@ -326,19 +332,19 @@ export function EventItemsSection({
     };
     // savedItems omitted intentionally — prefill on open/type change only, not on revalidation
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventTypeId, fieldsResetKey, onCatalogChange, onLoadErrorChange, onLoadingChange]);
+  }, [eventTypeId, fieldsResetKey, locale, onCatalogChange, onLoadErrorChange, onLoadingChange]);
 
   const sectionKey = useMemo(
     () =>
       `${fieldsResetKey}-${catalog?.roots.map((root) => root.eventItemTypeId).join("-") ?? "none"}`,
     [catalog, fieldsResetKey],
   );
-  const sectionTitle = eventItemFormSectionTitle(catalog?.roots ?? []);
+  const sectionTitle = eventItemFormSectionTitle(catalog?.roots ?? [], locale);
   const canAddRoot = items.length < EVENT_ITEMS_MAX_ROOT_ITEMS;
   const canAddMore = canAddRoot && countDrafts(items) < EVENT_ITEMS_MAX_TOTAL;
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Loading item fields…</p>;
+    return <p className="text-sm text-zinc-500">{messages.events.loadingItems}</p>;
   }
 
   if (loadError) {
@@ -351,14 +357,11 @@ export function EventItemsSection({
 
   return (
     <div key={sectionKey} className="rounded-xl border border-white/10 bg-[#171b22] p-4">
-      <FormSectionDetails
-        title={sectionTitle}
-        description="Optional nested details configured for this event type."
-      >
+      <FormSectionDetails title={sectionTitle} description={messages.events.optionalItemDetails}>
         <div className="space-y-4">
           {items.length === 0 ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-zinc-500">No {sectionTitle.toLowerCase()} added yet.</p>
+              <p className="text-sm text-zinc-500">{messages.events.noneAddedYet(sectionTitle)}</p>
               <AddTypeButtons
                 types={catalog.roots}
                 siblings={items}

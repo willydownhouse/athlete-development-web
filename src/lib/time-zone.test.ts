@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatZonedShortDate,
   formatZonedTimeRange,
   getZonedDayRange,
   getZonedMonthRange,
@@ -126,5 +127,24 @@ describe("formatZonedTimeRange", () => {
         new Date("2026-12-31T23:00:00.000Z"),
       ),
     ).toBe("Thu 31 Dec 2026 23:00 – Fri 1 Jan 2027 01:00");
+  });
+});
+
+describe("formatZonedShortDate", () => {
+  it("keeps the English weekday-day-month shape", () => {
+    expect(formatZonedShortDate("Europe/Helsinki", new Date("2026-08-05T16:00:00.000Z"))).toBe(
+      "Wed 5 Aug",
+    );
+  });
+
+  it("formats Finnish weekday and month names", () => {
+    expect(
+      formatZonedShortDate(
+        "Europe/Helsinki",
+        new Date("2026-08-05T16:00:00.000Z"),
+        new Date(),
+        "fi",
+      ),
+    ).toMatch(/ke 5 /i);
   });
 });

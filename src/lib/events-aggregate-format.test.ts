@@ -28,6 +28,8 @@ describe("eventsAggregateHeading", () => {
     expect(eventsAggregateHeading("durationSeconds")).toBe("Total duration");
     expect(eventsAggregateHeading("metric")).toBe("Metric total");
     expect(eventsAggregateHeading("metricAverage")).toBe("Metric average");
+    expect(eventsAggregateHeading("count", "event", "fi")).toBe("Tapahtumien määrä");
+    expect(eventsAggregateHeading("count", "exercise", "fi")).toBe("Liikkeiden määrä");
   });
 });
 
@@ -221,5 +223,6 @@ describe("formatEventsAggregateCoverage", () => {
         "set",
       ),
     ).toBe("1 of 2 exercises had a value, 1 set");
+    expect(formatEventsAggregateCoverage(result, "exercise", undefined, "fi")).toBe("2 liikettä");
   });
 });

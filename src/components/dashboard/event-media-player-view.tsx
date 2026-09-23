@@ -30,6 +30,8 @@ import {
   rememberLocalEventVideoSize,
   subscribeLocalEventVideos,
 } from "@/lib/local-event-video";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { EventMediaItem, MediaReadUrlResponse } from "@/lib/types";
 
 const EVENT_MEDIA_STATUS_POLL_MS = 2000;
@@ -48,6 +50,7 @@ export function EventMediaPlayerView({
   assets,
 }: EventMediaPlayerViewProps) {
   const router = useRouter();
+  const messages = getMessages(useAppLocale());
   const mediaId = item.id;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmKey, setConfirmKey] = useState(0);
@@ -270,13 +273,13 @@ export function EventMediaPlayerView({
     <>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Video</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">{messages.nav.video}</h1>
         </div>
         <EventActionMenu
-          aria-label="Video actions"
+          aria-label={messages.media.videoActions}
           items={[
             {
-              label: pending ? "Deleting…" : "Delete video",
+              label: pending ? messages.common.deleting : messages.media.deleteVideo,
               onClick: openDeleteConfirm,
               disabled: pending,
               destructive: true,
@@ -318,7 +321,7 @@ export function EventMediaPlayerView({
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
             style={eventMediaPlayerFrameStyle(frameWidth, frameHeight)}
             aria-busy="true"
-            aria-label={`Processing ${label}`}
+            aria-label={messages.media.processingNamed(label)}
           >
             <Skeleton className="h-full w-full" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
@@ -326,7 +329,7 @@ export function EventMediaPlayerView({
                 className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
                 aria-hidden="true"
               />
-              <p className="text-center text-xs text-zinc-400">Processing…</p>
+              <p className="text-center text-xs text-zinc-400">{messages.common.processing}</p>
             </div>
           </div>
         ) : playback.kind === "loading" ? (
@@ -334,7 +337,7 @@ export function EventMediaPlayerView({
             className="relative mx-auto overflow-hidden rounded-lg bg-[#0f1319]"
             style={eventMediaPlayerFrameStyle(frameWidth, frameHeight)}
             aria-busy="true"
-            aria-label={`Loading ${label}`}
+            aria-label={messages.media.loadingNamed(label)}
           >
             <Skeleton className="h-full w-full" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
@@ -342,7 +345,7 @@ export function EventMediaPlayerView({
                 className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-[#9ec9e8]"
                 aria-hidden="true"
               />
-              <p className="text-center text-xs text-zinc-400">Loading…</p>
+              <p className="text-center text-xs text-zinc-400">{messages.common.loading}</p>
             </div>
           </div>
         ) : (

@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import {
-  ADD_ATHLETE_NAV_LABEL,
   appShellMobileTitle,
   athleteEventIdFromPath,
   isOnboardingPath,
   pendingInvitesMenuButtonLabel,
 } from "@/components/dashboard/dashboard-nav";
+import { LanguageToggle } from "@/components/language-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
+import type { AppLocale } from "@/lib/locale";
+import { LocaleProvider } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
 import type { Athlete } from "@/lib/types";
 
@@ -21,6 +24,7 @@ type AppShellClientProps = {
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
   pendingInviteCount: number;
+  locale: AppLocale;
   children: React.ReactNode;
 };
 
@@ -46,11 +50,13 @@ export function AppShellClient({
   athletes = [],
   selectedAthlete = null,
   pendingInviteCount,
+  locale,
   children,
 }: AppShellClientProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const onboarding = isOnboardingPath(pathname);
+  const messages = getMessages(locale);
 
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
@@ -81,85 +87,91 @@ export function AppShellClient({
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="scheme-dark flex min-h-svh bg-[#0b0d10] text-white">
-      {mobileOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          aria-label="Close menu"
-          onClick={closeMobile}
-        />
-      ) : null}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(100vw-3rem,16rem)] flex-col border-r border-white/5 bg-[#12161d] transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
-          <div>
-            {onboarding ? (
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                {ADD_ATHLETE_NAV_LABEL}
-              </p>
-            ) : null}
-            <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
-              Athlete Development Center
-            </p>
-          </div>
+    <LocaleProvider locale={locale}>
+      <div className="scheme-dark flex min-h-svh bg-[#0b0d10] text-white">
+        {mobileOpen ? (
           <button
             type="button"
-            className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-            aria-label="Close menu"
+            className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+            aria-label={messages.common.closeMenu}
             onClick={closeMobile}
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-3 py-4">
-          <AppShellNav
-            isAdmin={isAdmin}
-            athletes={athletes}
-            selectedAthlete={selectedAthlete}
-            pendingInviteCount={pendingInviteCount}
-            onNavigate={closeMobile}
           />
-        </div>
+        ) : null}
 
-        <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
-          <p className="truncate text-xs text-zinc-500">{userEmail}</p>
-          <SignOutButton className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]" />
-        </div>
-      </aside>
-
-      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/5 bg-[#0b0d10]/95 px-4 py-3 backdrop-blur lg:hidden">
-          <button
-            type="button"
-            className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
-            aria-label={pendingInvitesMenuButtonLabel(pendingInviteCount)}
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen(true)}
-          >
-            <MenuIcon />
-            {pendingInviteCount > 0 ? (
-              <span
-                className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#b7d7ec]"
-                aria-hidden="true"
-              />
-            ) : null}
-          </button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
-              {appShellMobileTitle(pathname)}
-            </p>
-            <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 flex w-[min(100vw-3rem,16rem)] flex-col border-r border-white/5 bg-[#12161d] transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
+            <div>
+              {onboarding ? (
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                  {messages.nav.addAthlete}
+                </p>
+              ) : null}
+              <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
+                {messages.brand}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
+              aria-label={messages.common.closeMenu}
+              onClick={closeMobile}
+            >
+              <CloseIcon />
+            </button>
           </div>
-        </header>
 
-        {children}
+          <div className="flex-1 overflow-y-auto px-3 py-4">
+            <AppShellNav
+              isAdmin={isAdmin}
+              athletes={athletes}
+              selectedAthlete={selectedAthlete}
+              pendingInviteCount={pendingInviteCount}
+              onNavigate={closeMobile}
+            />
+          </div>
+
+          <div className="space-y-3 border-t border-white/5 px-4 py-4 sm:px-5">
+            <LanguageToggle locale={locale} />
+            <p className="truncate text-xs text-zinc-500">{userEmail}</p>
+            <SignOutButton
+              className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-[#1c222c] px-5 py-2.5 text-sm font-medium text-zinc-100 transition hover:bg-[#252b36]"
+              label={messages.common.signOut}
+            />
+          </div>
+        </aside>
+
+        <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/5 bg-[#0b0d10]/95 px-4 py-3 backdrop-blur lg:hidden">
+            <button
+              type="button"
+              className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#171b22] p-2 text-zinc-200 transition hover:bg-[#1f2530]"
+              aria-label={pendingInvitesMenuButtonLabel(pendingInviteCount, locale)}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen(true)}
+            >
+              <MenuIcon />
+              {pendingInviteCount > 0 ? (
+                <span
+                  className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#b7d7ec]"
+                  aria-hidden="true"
+                />
+              ) : null}
+            </button>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">
+                {appShellMobileTitle(pathname, locale)}
+              </p>
+              <p className="truncate text-xs text-zinc-500">{messages.brand}</p>
+            </div>
+          </header>
+
+          {children}
+        </div>
       </div>
-    </div>
+    </LocaleProvider>
   );
 }

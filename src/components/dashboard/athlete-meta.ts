@@ -1,3 +1,6 @@
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
+
 export function athleteInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
 
@@ -60,6 +63,9 @@ export function ageGroupFromDateOfBirth(dateOfBirth: string | null): string | nu
   return null;
 }
 
-export function athleteEventsThisWeekLabel(eventsThisWeek: number): string {
-  return `${eventsThisWeek} event${eventsThisWeek === 1 ? "" : "s"} this week`;
+export function athleteEventsThisWeekLabel(
+  eventsThisWeek: number,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  return getMessages(locale).dashboard.eventsThisWeek(eventsThisWeek);
 }

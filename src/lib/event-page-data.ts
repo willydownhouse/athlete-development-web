@@ -1,5 +1,7 @@
 import { ApiError, fetchEvent, fetchEventTypes } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import type { Event, EventType } from "@/lib/types";
 
 export type EventPageDataResult =
@@ -15,15 +17,17 @@ export async function fetchEventPageData(
   athleteId: string,
   eventId: string,
 ): Promise<EventPageDataResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   try {
+    const locale = await getRequestLocale();
     const event = await fetchEvent(token, athleteId, eventId, {
       include: "metrics,items",
+      locale,
     });
 
     return { event };
@@ -32,15 +36,7 @@ export async function fetchEventPageData(
       return { notFound: true };
     }
 
-    if (error instanceof ApiError) {
-      return { error: error.apiError ?? error.message };
-    }
-
-    if (error instanceof Error) {
-      return { error: error.message };
-    }
-
-    return { error: "Unable to load event" };
+    return { error: passthroughOrGeneric(error, actions.loadEvent) };
   }
 }
 
@@ -48,12 +44,13 @@ export async function fetchEventPageFormData(
   focusSportId: string,
 ): Promise<EventPageFormDataResult> {
   try {
-    const eventTypes = await fetchEventTypes(focusSportId);
+    const locale = await getRequestLocale();
+    const eventTypes = await fetchEventTypes(locale, focusSportId);
     return { eventTypes };
   } catch (error) {
     return {
       eventTypes: [],
-      eventTypesError: error instanceof Error ? error.message : "Unable to load event types",
+      eventTypesError: passthroughOrGeneric(error, (await getActionMessages()).loadEventTypes),
     };
   }
 }

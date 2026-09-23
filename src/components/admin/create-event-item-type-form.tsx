@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createEventItemTypeAction, type ActionState } from "@/app/admin/actions";
@@ -47,7 +48,8 @@ export function CreateEventItemTypeForm({ sports }: CreateEventItemTypeFormProps
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Period" className={inputClassName} />
         </label>
-        <label className="space-y-1 text-sm sm:col-span-2">
+        <FinnishNameField placeholder="Erä" />
+        <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sport</span>
           <AdminFormSelect
             name="sportId"

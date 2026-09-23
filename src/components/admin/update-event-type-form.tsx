@@ -7,6 +7,7 @@ import {
   eventCategoryOptions,
   sportScopeOptions,
 } from "@/components/admin/admin-form-select";
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateEventTypeAction, type ActionState } from "@/app/admin/actions";
@@ -45,6 +46,7 @@ export function UpdateEventTypeForm({ eventType, sports }: UpdateEventTypeFormPr
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={eventType.name} className={inputClassName} />
         </label>
+        <FinnishNameField defaultValue={eventType.translations?.fi?.name} />
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Category</span>
           <AdminFormSelect

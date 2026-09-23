@@ -5,6 +5,10 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import { createPortal } from "react-dom";
 
 import { PickerMenu, isPickerOverlayTarget } from "@/components/picker-menu";
+import { dateFnsLocale, timePickerDisplayFormat } from "@/lib/date-fns-locale";
+import type { AppLocale } from "@/lib/locale";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 const menuTriggerClassName =
   "w-full rounded-lg border border-white/10 bg-[#252b36] py-1.5 pl-3 pr-8 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
@@ -54,8 +58,10 @@ function formatTimeValue({ hours, minutes }: TimeParts): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-function displayTime({ hours, minutes }: TimeParts): string {
-  return format(new Date(2000, 0, 1, hours, minutes), "h:mm a");
+function displayTime({ hours, minutes }: TimeParts, locale: AppLocale): string {
+  return format(new Date(2000, 0, 1, hours, minutes), timePickerDisplayFormat(locale), {
+    locale: dateFnsLocale(locale),
+  });
 }
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => ({
@@ -98,9 +104,11 @@ export function TimePickerInput({
   name,
   id,
   defaultValue,
-  placeholder = "Select time",
+  placeholder,
   className,
 }: TimePickerInputProps) {
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const panelId = `${inputId}-panel`;
@@ -186,7 +194,9 @@ export function TimePickerInput({
   }, [open]);
 
   const formattedValue = selected ? formatTimeValue(selected) : "";
-  const displayValue = selected ? displayTime(selected) : placeholder;
+  const displayValue = selected
+    ? displayTime(selected, locale)
+    : (placeholder ?? messages.events.selectTime);
 
   function updateHours(nextHours: number) {
     setSelected((current) => ({
@@ -209,15 +219,15 @@ export function TimePickerInput({
             ref={panelRef}
             id={panelId}
             role="dialog"
-            aria-label="Choose time"
+            aria-label={messages.calendar.chooseTime}
             style={panelStyle}
             className="rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-xs font-medium text-zinc-500">Hour</span>
+                <span className="text-xs font-medium text-zinc-500">{messages.common.hour}</span>
                 <PickerMenu
-                  aria-label="Hour"
+                  aria-label={messages.common.hour}
                   className={menuTriggerClassName}
                   value={String(selected?.hours ?? 12)}
                   options={HOUR_OPTIONS}
@@ -226,9 +236,9 @@ export function TimePickerInput({
               </label>
 
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-xs font-medium text-zinc-500">Minute</span>
+                <span className="text-xs font-medium text-zinc-500">{messages.common.minute}</span>
                 <PickerMenu
-                  aria-label="Minute"
+                  aria-label={messages.common.minute}
                   className={menuTriggerClassName}
                   value={String(selected?.minutes ?? 0)}
                   options={MINUTE_OPTIONS}

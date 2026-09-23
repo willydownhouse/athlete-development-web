@@ -1,5 +1,7 @@
 import { InviteCard } from "@/components/invites/invite-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadInvitationInbox } from "@/lib/load-invitation-inbox";
 
 export function InvitesListSkeleton() {
@@ -15,7 +17,8 @@ export function InvitesListSkeleton() {
 }
 
 export async function InvitesList() {
-  const result = await loadInvitationInbox();
+  const [result, locale] = await Promise.all([loadInvitationInbox(), getRequestLocale()]);
+  const messages = getMessages(locale);
 
   if (result.error) {
     return (
@@ -28,7 +31,7 @@ export async function InvitesList() {
   if (result.invitations.length === 0) {
     return (
       <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
-        <p className="text-sm text-zinc-400">You have no pending invitations.</p>
+        <p className="text-sm text-zinc-400">{messages.invites.empty}</p>
       </section>
     );
   }

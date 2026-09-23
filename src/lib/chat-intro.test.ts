@@ -18,12 +18,14 @@ describe("chatExampleAthleteName", () => {
 
   it("falls back when the name is blank", () => {
     expect(chatExampleAthleteName("   ")).toBe("your athlete");
+    expect(chatExampleAthleteName("   ", "fi")).toBe("urheilijasi");
   });
 });
 
 describe("chatEventLoggingExample", () => {
   it("builds the ice practice example with the given name", () => {
     expect(chatEventLoggingExample("Leo Laine")).toBe("Leo had ice practice today at 2pm");
+    expect(chatEventLoggingExample("Leo Laine", "fi")).toBe("Leo: jääharjoitus tänään klo 14");
   });
 });
 
@@ -40,5 +42,8 @@ describe("chatEmptyIntro", () => {
 
   it("adds a smile after the Toby intro", () => {
     expect(chatEmptyIntro("Leo Laine")).toContain("I'm Toby, your event logging agent. 🙂");
+    expect(chatEmptyIntro("Leo Laine", "fi")).toContain(
+      "olen Toby, tapahtumien kirjausagenttisi. 🙂",
+    );
   });
 });

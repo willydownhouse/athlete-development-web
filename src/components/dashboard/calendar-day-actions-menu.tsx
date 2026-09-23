@@ -4,6 +4,8 @@ import {
   EventActionMenu,
   type EventActionMenuItem,
 } from "@/components/dashboard/event-action-menu";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 type CalendarDayActionsMenuProps = {
   onCopyClick?: () => void;
@@ -14,11 +16,12 @@ export function CalendarDayActionsMenu({
   onCopyClick,
   copyDisabled = false,
 }: CalendarDayActionsMenuProps) {
+  const messages = getMessages(useAppLocale());
   const items: EventActionMenuItem[] = [];
 
   if (onCopyClick) {
     items.push({
-      label: "Copy day",
+      label: messages.calendar.copyDay,
       onClick: onCopyClick,
       disabled: copyDisabled,
     });
@@ -28,5 +31,5 @@ export function CalendarDayActionsMenu({
     return null;
   }
 
-  return <EventActionMenu items={items} aria-label="Day actions" />;
+  return <EventActionMenu items={items} aria-label={messages.calendar.dayActions} />;
 }

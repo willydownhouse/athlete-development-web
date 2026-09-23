@@ -1,5 +1,9 @@
+"use client";
+
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { formatChatTimestamp } from "@/lib/chat-time";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { ChatMessage } from "@/lib/types";
 
 type EventTobyHistoryProps = {
@@ -22,6 +26,7 @@ function HistoryMessage({
   timeZone: string;
   nowIso: string;
 }) {
+  const locale = useAppLocale();
   const isUser = message.role === "user";
 
   return (
@@ -39,7 +44,7 @@ function HistoryMessage({
           <ChatMarkdown content={message.content} />
         )}
         <p className={`mt-1.5 text-xs text-zinc-500 ${isUser ? "text-right" : "text-left"}`}>
-          {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso))}
+          {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso), locale)}
         </p>
       </div>
     </article>
@@ -56,8 +61,10 @@ export function EventTobyHistory({
   error,
   onLoadOlder,
 }: EventTobyHistoryProps) {
+  const copy = getMessages(useAppLocale());
+
   if (loading) {
-    return <p className="mb-3 text-sm text-zinc-500">Loading earlier updates…</p>;
+    return <p className="mb-3 text-sm text-zinc-500">{copy.chat.loadingEarlierUpdates}</p>;
   }
 
   return (
@@ -71,12 +78,12 @@ export function EventTobyHistory({
             disabled={loadingOlder}
             className="text-sm text-zinc-500 transition hover:text-zinc-300 disabled:opacity-50"
           >
-            {loadingOlder ? "Loading…" : "Load earlier"}
+            {loadingOlder ? copy.common.loading : copy.chat.loadEarlier}
           </button>
         </div>
       ) : null}
       {messages.length === 0 && !error ? (
-        <p className="text-sm text-zinc-500">No earlier updates yet.</p>
+        <p className="text-sm text-zinc-500">{copy.chat.noEarlierUpdates}</p>
       ) : (
         <div className="max-h-[min(12rem,30dvh)] space-y-2 overflow-y-auto overscroll-contain">
           {messages.map((message) => (

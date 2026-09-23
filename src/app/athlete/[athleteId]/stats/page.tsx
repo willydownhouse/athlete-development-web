@@ -13,6 +13,8 @@ import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
 type AthleteStatsPageProps = {
@@ -41,11 +43,13 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
     redirect("/");
   }
 
-  const [athletes, isAdmin, timeZone] = await Promise.all([
+  const [athletes, isAdmin, timeZone, locale] = await Promise.all([
     loadShellAthletes(token),
     getIsAdminUser(),
     getRequestTimeZone(),
+    getRequestLocale(),
   ]);
+  const messages = getMessages(locale);
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -71,10 +75,12 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToTodayLabel()}
+          {backToTodayLabel(locale)}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Stats</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {messages.stats.title}
+        </h1>
 
         <div className="mt-6">
           <HockeyStatsSection

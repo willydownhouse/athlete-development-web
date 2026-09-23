@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import type { Event } from "@/lib/types";
 import { eventDetail, eventShortLabel, eventTitle } from "@/lib/event-display";
 import { eventIconClassName } from "@/lib/event-tone";
+import { getRequestLocale } from "@/lib/locale-server";
+import type { Event } from "@/lib/types";
 
 type EventListRowProps = {
   event: Event;
@@ -11,7 +12,8 @@ type EventListRowProps = {
   showDate?: boolean;
 };
 
-export function EventListRow({ event, href, timeZone, showDate = false }: EventListRowProps) {
+export async function EventListRow({ event, href, timeZone, showDate = false }: EventListRowProps) {
+  const locale = await getRequestLocale();
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
 
@@ -28,7 +30,7 @@ export function EventListRow({ event, href, timeZone, showDate = false }: EventL
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="truncate text-[15px] font-semibold text-white">{title}</p>
         <p className="mt-0.5 truncate text-sm text-zinc-400">
-          {eventDetail(event, { showDate, timeZone })}
+          {eventDetail(event, { showDate, timeZone, locale })}
         </p>
       </div>
     </Link>

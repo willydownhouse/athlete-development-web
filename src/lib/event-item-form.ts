@@ -1,4 +1,6 @@
 import type { EventItemInput } from "@/lib/api";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import {
   fetchEventItemTypeChildTypes,
   fetchEventItemTypeMetricDefinitions,
@@ -144,18 +146,21 @@ export function shouldUseCompactItemMetricFields(
   );
 }
 
-export function eventItemFormSectionTitle(roots: EventItemFormTypeNode[]): string {
+export function eventItemFormSectionTitle(
+  roots: EventItemFormTypeNode[],
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
   const firstRoot = roots[0];
 
   if (!firstRoot) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
   if (roots.some((root) => root.eventItemTypeId !== firstRoot.eventItemTypeId)) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
-  return pluralizeItemTypeName(firstRoot.name);
+  return pluralizeItemTypeName(firstRoot.name, locale);
 }
 
 export function eventItemTypeAllowsMultiple(slug: string): boolean {
@@ -516,6 +521,7 @@ async function loadItemFormTypeNode(
   required: boolean,
   sortOrder: number,
   depth: number,
+  locale: AppLocale,
   cache: Map<string, EventItemFormTypeNode>,
 ): Promise<EventItemFormTypeNode> {
   const cached = cache.get(eventItemTypeId);
@@ -529,9 +535,9 @@ async function loadItemFormTypeNode(
 
   const [childMappings, metrics] = await Promise.all([
     depth < EVENT_ITEMS_MAX_DEPTH
-      ? fetchEventItemTypeChildTypes(eventItemTypeId)
+      ? fetchEventItemTypeChildTypes(eventItemTypeId, locale)
       : Promise.resolve([]),
-    fetchEventItemTypeMetricDefinitions(eventItemTypeId),
+    fetchEventItemTypeMetricDefinitions(eventItemTypeId, locale),
   ]);
 
   const children = await Promise.all(
@@ -544,6 +550,7 @@ async function loadItemFormTypeNode(
           false,
           mapping.sortOrder,
           depth + 1,
+          locale,
           cache,
         ),
       ),
@@ -563,8 +570,11 @@ async function loadItemFormTypeNode(
   return node;
 }
 
-export async function loadEventItemFormCatalog(eventTypeId: string): Promise<EventItemFormCatalog> {
-  const rootMappings = await fetchEventTypeItemTypes(eventTypeId);
+export async function loadEventItemFormCatalog(
+  eventTypeId: string,
+  locale: AppLocale,
+): Promise<EventItemFormCatalog> {
+  const rootMappings = await fetchEventTypeItemTypes(eventTypeId, locale);
   const cache = new Map<string, EventItemFormTypeNode>();
   const roots = await Promise.all(
     [...rootMappings]
@@ -576,6 +586,7 @@ export async function loadEventItemFormCatalog(eventTypeId: string): Promise<Eve
           mapping.required,
           mapping.sortOrder,
           1,
+          locale,
           cache,
         ),
       ),

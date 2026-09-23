@@ -1,3 +1,5 @@
+import { compareCatalogNames, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import type { EventType } from "@/lib/types";
 
 export type EventTypeScope = "general" | "sport";
@@ -18,17 +20,22 @@ function isSportEventType(eventType: EventType): boolean {
 export function filterEventTypesByScope(
   eventTypes: EventType[],
   scope: EventTypeScope,
+  locale: AppLocale,
 ): EventType[] {
   return eventTypes
     .filter((eventType) =>
       scope === "general" ? isGeneralEventType(eventType) : isSportEventType(eventType),
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => compareCatalogNames(a.name, b.name, locale));
 }
 
-export function groupEventTypes(eventTypes: EventType[], focusSportName: string): EventTypeGroup[] {
-  const sportSpecific = filterEventTypesByScope(eventTypes, "sport");
-  const general = filterEventTypesByScope(eventTypes, "general");
+export function groupEventTypes(
+  eventTypes: EventType[],
+  focusSportName: string,
+  locale: AppLocale,
+): EventTypeGroup[] {
+  const sportSpecific = filterEventTypesByScope(eventTypes, "sport", locale);
+  const general = filterEventTypesByScope(eventTypes, "general", locale);
   const groups: EventTypeGroup[] = [];
 
   if (sportSpecific.length > 0) {
@@ -36,7 +43,7 @@ export function groupEventTypes(eventTypes: EventType[], focusSportName: string)
   }
 
   if (general.length > 0) {
-    groups.push({ label: "General", items: general });
+    groups.push({ label: getMessages(locale).common.general, items: general });
   }
 
   return groups;

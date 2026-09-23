@@ -1,15 +1,24 @@
 import { formatEventMetricValue } from "@/lib/event-metric-display";
 import { formatMetricUnit, isSecondsMetric } from "@/lib/event-metric-form";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import { formatZonedTime, formatZonedTimeRange } from "@/lib/time-zone";
 import type { EventItem, EventItemMetric } from "@/lib/types";
 
 const COMPACT_ITEM_METRIC_LIMIT = 3;
 
-export function pluralizeItemTypeName(name: string): string {
+export function pluralizeItemTypeName(
+  name: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
   const trimmed = name.trim();
 
   if (!trimmed) {
-    return "Details";
+    return getMessages(locale).common.details;
+  }
+
+  if (locale === "fi") {
+    return trimmed;
   }
 
   if (/s$/i.test(trimmed)) {
@@ -19,20 +28,23 @@ export function pluralizeItemTypeName(name: string): string {
   return `${trimmed}s`;
 }
 
-export function eventItemsSectionTitle(items: EventItem[]): string {
+export function eventItemsSectionTitle(
+  items: EventItem[],
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
   const firstItem = items[0];
 
   if (!firstItem) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
   const firstTypeId = firstItem.eventItemTypeId;
 
   if (items.some((item) => item.eventItemTypeId !== firstTypeId)) {
-    return "Details";
+    return getMessages(locale).common.details;
   }
 
-  return pluralizeItemTypeName(firstItem.eventItemType.name);
+  return pluralizeItemTypeName(firstItem.eventItemType.name, locale);
 }
 
 export function eventItemSameTypeIndex(siblings: EventItem[], index: number): number {
@@ -117,9 +129,12 @@ export function eventItemIsCollapsible(item: EventItem): boolean {
   );
 }
 
-export function formatEventItemMetricSummary(metrics: EventItemMetric[]): string {
+export function formatEventItemMetricSummary(
+  metrics: EventItemMetric[],
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
   const parts = metrics.map((metric) => {
-    const value = formatEventMetricValue(metric);
+    const value = formatEventMetricValue(metric, locale);
     const unit = formatMetricUnit(metric.unit ?? metric.metricDefinition.canonicalUnit);
 
     if (unit) {
@@ -132,13 +147,16 @@ export function formatEventItemMetricSummary(metrics: EventItemMetric[]): string
   return parts.join(" · ");
 }
 
-export function formatEventItemCollapsedCounts(item: EventItem): string {
+export function formatEventItemCollapsedCounts(
+  item: EventItem,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  const messages = getMessages(locale);
   const parts: string[] = [];
 
-  if (item.metrics.length === 1) {
-    parts.push("1 metric");
-  } else if (item.metrics.length > 1) {
-    parts.push(`${item.metrics.length} metrics`);
+  if (item.metrics.length > 0) {
+    const { singular, plural } = messages.events.aggregateNouns.metric;
+    parts.push(messages.events.aggregateCount(item.metrics.length, singular, plural));
   }
 
   const groups = new Map<string, { name: string; count: number }>();
@@ -166,16 +184,20 @@ export function formatEventItemCollapsedCounts(item: EventItem): string {
     const label =
       group.count === 1
         ? group.name.toLowerCase()
-        : pluralizeItemTypeName(group.name).toLowerCase();
+        : pluralizeItemTypeName(group.name, locale).toLowerCase();
     parts.push(`${group.count} ${label}`);
   }
 
   return parts.join(" · ");
 }
 
-export function formatEventItemTimeRange(item: EventItem, timeZone: string): string | null {
+export function formatEventItemTimeRange(
+  item: EventItem,
+  timeZone: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string | null {
   if (item.startedAt && item.endedAt) {
-    return formatZonedTimeRange(timeZone, new Date(item.startedAt), new Date(item.endedAt));
+    return formatZonedTimeRange(timeZone, new Date(item.startedAt), new Date(item.endedAt), locale);
   }
 
   if (item.startedAt) {

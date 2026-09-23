@@ -28,6 +28,8 @@ import {
   rememberLocalEventVideo,
   rememberLocalEventVideoCaptureIfCached,
 } from "@/lib/local-event-video";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { EventMediaItem, EventMediaReadAssets } from "@/lib/types";
 
 type EventMediaUploadProps = {
@@ -61,13 +63,15 @@ function getStatusLabel(
   uploading: boolean,
   hasInFlightItems: boolean,
   pendingFocusMediaId: string | null,
+  uploadingLabel: string,
+  processingLabel: string,
 ): string | null {
   if (uploading) {
-    return "Uploading media…";
+    return uploadingLabel;
   }
 
   if (pendingFocusMediaId || hasInFlightItems) {
-    return "Processing media…";
+    return processingLabel;
   }
 
   return null;
@@ -83,6 +87,7 @@ export function EventMediaUpload({
   onDeleteSettled,
   embedded = false,
 }: EventMediaUploadProps) {
+  const messages = getMessages(useAppLocale());
   const inputRef = useRef<HTMLInputElement>(null);
   const isActiveRef = useRef(true);
   const [items, setItems] = useState<EventMediaItem[]>([]);
@@ -120,7 +125,13 @@ export function EventMediaUpload({
   }, [readUrls, readUrlErrors, items]);
 
   const hasInFlightItems = shouldPollEventMediaList(items, blockedPlayerMediaIds);
-  const statusLabel = getStatusLabel(uploading, hasInFlightItems, pendingFocusMediaId);
+  const statusLabel = getStatusLabel(
+    uploading,
+    hasInFlightItems,
+    pendingFocusMediaId,
+    messages.media.uploading,
+    messages.media.processing,
+  );
 
   useEffect(() => {
     onUploadingChange?.(uploading);
@@ -219,7 +230,7 @@ export function EventMediaUpload({
         ensureReadUrlInFlightRef.current.delete(mediaId);
       }
     },
-    [athleteId, eventId],
+    [athleteId, eventId, setReadUrls, setReadUrlErrors],
   );
 
   const getReadUrlAssets = useCallback(() => Object.entries(readUrls), [readUrls]);
@@ -318,13 +329,16 @@ export function EventMediaUpload({
       previousItemsRef.current = nextItems;
       hasLoadedInitialMediaRef.current = true;
     },
-    [ensureReadUrl, setPendingFocus],
+    [ensureReadUrl, setPendingFocus, setItems, setReadUrls, setReadUrlErrors],
   );
 
-  const requestGalleryFocus = useCallback((index: number) => {
-    setGalleryFocusIndex(index);
-    setGalleryFocusRequestId((current) => current + 1);
-  }, []);
+  const requestGalleryFocus = useCallback(
+    (index: number) => {
+      setGalleryFocusIndex(index);
+      setGalleryFocusRequestId((current) => current + 1);
+    },
+    [setGalleryFocusIndex, setGalleryFocusRequestId],
+  );
 
   useEffect(() => {
     requestGalleryFocusRef.current = requestGalleryFocus;
@@ -349,7 +363,7 @@ export function EventMediaUpload({
 
     applyMediaItems(result.items);
     return result.items;
-  }, [athleteId, eventId, applyMediaItems]);
+  }, [athleteId, eventId, applyMediaItems, setError]);
 
   useEffect(() => {
     isActiveRef.current = true;
@@ -609,13 +623,13 @@ export function EventMediaUpload({
     <>
       <div>
         {embedded && items.length === 0 ? (
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Media</p>
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
+            {messages.media.title}
+          </p>
         ) : embedded ? null : (
           <>
-            <h2 className="text-sm font-semibold text-white">Media</h2>
-            <p className="mt-1 text-xs text-zinc-500">
-              Swipe or use the dots to browse. Add more from the event menu.
-            </p>
+            <h2 className="text-sm font-semibold text-white">{messages.media.title}</h2>
+            <p className="mt-1 text-xs text-zinc-500">{messages.media.hint}</p>
           </>
         )}
       </div>
@@ -647,7 +661,9 @@ export function EventMediaUpload({
           blockedPlayerMediaIds={blockedPlayerMediaIds}
         />
       ) : (
-        <p className={`text-sm text-zinc-500 ${embedded ? "mt-3" : "mt-4"}`}>No media yet.</p>
+        <p className={`text-sm text-zinc-500 ${embedded ? "mt-3" : "mt-4"}`}>
+          {messages.media.empty}
+        </p>
       )}
     </>
   );

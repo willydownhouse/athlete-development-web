@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateEventItemTypeAction, type ActionState } from "@/app/admin/actions";
@@ -46,7 +47,8 @@ export function UpdateEventItemTypeForm({ eventItemType, sports }: UpdateEventIt
             className={inputClassName}
           />
         </label>
-        <label className="space-y-1 text-sm sm:col-span-2">
+        <FinnishNameField defaultValue={eventItemType.translations?.fi?.name} />
+        <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Sport</span>
           <AdminFormSelect
             name="sportId"

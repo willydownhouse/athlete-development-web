@@ -6,6 +6,8 @@ import { AppShell } from "@/components/app-shell";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type OnboardingAthletePageProps = {
@@ -32,9 +34,10 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
     redirect("/");
   }
 
+  const locale = await getRequestLocale();
   const [athletes, sports, isAdmin] = await Promise.all([
     loadShellAthletes(token),
-    fetchSports(),
+    fetchSports(locale),
     getIsAdminUser(),
   ]);
 
@@ -45,6 +48,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
   }
 
   const sportName = sport.name;
+  const messages = getMessages(locale);
 
   return (
     <AppShell userEmail={session.user.email ?? ""} isAdmin={isAdmin} athletes={athletes}>
@@ -53,7 +57,7 @@ export default async function OnboardingAthletePage({ searchParams }: Onboarding
           <div>
             <p className="text-sm text-zinc-400 lg:text-base">{sportName}</p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
-              Athlete details
+              {messages.onboarding.athleteDetails}
             </h1>
           </div>
 

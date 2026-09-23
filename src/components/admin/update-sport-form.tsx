@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateSportAction, type ActionState } from "@/app/admin/actions";
@@ -39,6 +40,7 @@ export function UpdateSportForm({ sport }: UpdateSportFormProps) {
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={sport.name} className={inputClassName} />
         </label>
+        <FinnishNameField defaultValue={sport.translations?.fi?.name} />
       </div>
 
       <input type="hidden" name="active" value="false" />

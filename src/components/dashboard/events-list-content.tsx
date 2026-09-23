@@ -2,6 +2,8 @@ import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { EventListRow } from "@/components/dashboard/event-list-row";
 import { EventsListPagination } from "@/components/dashboard/events-list-pagination";
 import type { EventsListSearchParams } from "@/lib/events-list-params";
+import type { AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import type { Event } from "@/lib/types";
 
 type EventsListContentProps = {
@@ -10,17 +12,25 @@ type EventsListContentProps = {
   events: Event[];
   timeZone: string;
   total: number;
+  locale: AppLocale;
 };
 
-function resultSummary(params: EventsListSearchParams, total: number, count: number): string {
+function resultSummary(
+  params: EventsListSearchParams,
+  total: number,
+  count: number,
+  locale: AppLocale,
+): string {
+  const messages = getMessages(locale);
+
   if (total === 0) {
-    return "No events found";
+    return messages.events.noEventsFound;
   }
 
   const start = params.offset + 1;
   const end = params.offset + count;
 
-  return `Showing ${start}–${end} of ${total} events`;
+  return messages.events.showingEvents(start, end, total);
 }
 
 export function EventsListContent({
@@ -29,12 +39,17 @@ export function EventsListContent({
   events,
   timeZone,
   total,
+  locale,
 }: EventsListContentProps) {
+  const messages = getMessages(locale);
+
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold text-white">Events</h2>
-        <p className="text-sm text-zinc-400">{resultSummary(params, total, events.length)}</p>
+        <h2 className="text-base font-semibold text-white">{messages.events.showEvents}</h2>
+        <p className="text-sm text-zinc-400">
+          {resultSummary(params, total, events.length, locale)}
+        </p>
       </div>
 
       {events.length > 0 ? (
@@ -50,10 +65,10 @@ export function EventsListContent({
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-zinc-500">Try adjusting your filters.</p>
+        <p className="mt-4 text-sm text-zinc-500">{messages.events.tryAdjustingFilters}</p>
       )}
 
-      <EventsListPagination athleteId={athleteId} params={params} total={total} />
+      <EventsListPagination athleteId={athleteId} params={params} total={total} locale={locale} />
     </section>
   );
 }

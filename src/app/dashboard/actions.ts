@@ -3,13 +3,14 @@
 import { revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { ApiError, createEvent, createEventsBatch, deleteEvent, updateEvent } from "@/lib/api";
+import { createEvent, createEventsBatch, deleteEvent, updateEvent } from "@/lib/api";
 import { CALENDAR_EVENTS_INCLUDE } from "@/lib/calendar-event-data";
 import { fetchDashboardEventsInRange } from "@/lib/dashboard-event-data";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import {
+  EVENT_BATCH_CREATE_MAX_ITEMS,
   buildCopyForDatePreservingTime,
   buildDayCopyForDate,
   type EventCopySource,
@@ -25,6 +26,7 @@ import {
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "@/lib/event-form-schema";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { parseEventItemsFromFormData } from "@/lib/event-item-form";
 import { parseEventMetricsFromFormData } from "@/lib/event-metric-form";
 import { getRequestTimeZoneCookie } from "@/lib/time-zone-server";
@@ -36,16 +38,8 @@ export type DashboardActionState = {
   success?: string;
 };
 
-function actionError(error: unknown): DashboardActionState {
-  if (error instanceof ApiError) {
-    return { error: error.apiError ?? error.message };
-  }
-
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Something went wrong" };
+async function actionError(error: unknown): Promise<DashboardActionState> {
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -74,10 +68,10 @@ export async function createEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
 ): Promise<DashboardActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const fields = await readEventFormFields(formData);
@@ -89,23 +83,23 @@ export async function createEventAction(
   const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
-    return { error: "Athlete is required" };
+    return { error: actions.athleteRequired };
   }
 
   if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
+    return { error: actions.eventTypeRequired };
   }
 
   if (!fields.timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
+    return { error: actions.timeZoneNotReady };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
-    return { error: "Date is required" };
+    return { error: actions.dateRequired };
   }
 
   if (!metricsLoaded) {
-    return { error: "Metric fields are not ready. Refresh the page and try again." };
+    return { error: actions.metricFieldsNotReady };
   }
 
   const metrics = parseEventMetricsFromFormData(formData);
@@ -126,7 +120,7 @@ export async function createEventAction(
 
     updateTag(athleteEventsCacheTag(fields.athleteId));
 
-    return { success: "Event added" };
+    return { success: actions.eventAdded };
   } catch (error) {
     return actionError(error);
   }
@@ -136,10 +130,10 @@ export async function updateEventAction(
   _prevState: DashboardActionState,
   formData: FormData,
 ): Promise<DashboardActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const eventId = readString(formData, "eventId");
@@ -152,27 +146,27 @@ export async function updateEventAction(
   const itemsLoaded = readString(formData, "itemsLoaded") === "1";
 
   if (!fields.athleteId) {
-    return { error: "Athlete is required" };
+    return { error: actions.athleteRequired };
   }
 
   if (!eventId) {
-    return { error: "Event is required" };
+    return { error: actions.eventRequired };
   }
 
   if (!fields.eventTypeId) {
-    return { error: "Event type is required" };
+    return { error: actions.eventTypeRequired };
   }
 
   if (!fields.timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
+    return { error: actions.timeZoneNotReady };
   }
 
   if (!fields.eventDate || !fields.startedAt) {
-    return { error: "Date is required" };
+    return { error: actions.dateRequired };
   }
 
   if (!metricsLoaded) {
-    return { error: "Metric fields are not ready. Refresh the page and try again." };
+    return { error: actions.metricFieldsNotReady };
   }
 
   const metrics = parseEventMetricsFromFormData(formData);
@@ -193,7 +187,7 @@ export async function updateEventAction(
     updateTag(athleteEventsCacheTag(fields.athleteId));
     updateTag(eventCacheTag(eventId));
 
-    return { success: "Event updated" };
+    return { success: actions.eventUpdated };
   } catch (error) {
     return actionError(error);
   }
@@ -204,10 +198,10 @@ export async function deleteEventMenuAction(
   eventId: string,
   redirectTo: string,
 ): Promise<{ error: string }> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const normalizedAthleteId = athleteId.trim();
@@ -215,19 +209,19 @@ export async function deleteEventMenuAction(
   const normalizedRedirectTo = redirectTo.trim();
 
   if (!normalizedAthleteId || !normalizedEventId) {
-    return { error: "Event is required" };
+    return { error: actions.eventRequired };
   }
 
   if (!normalizedRedirectTo.startsWith("/") || normalizedRedirectTo.startsWith("//")) {
-    return { error: "Invalid redirect" };
+    return { error: actions.invalidRedirect };
   }
 
   try {
     await deleteEvent(token, normalizedAthleteId, normalizedEventId);
     revalidateTag(athleteEventsCacheTag(normalizedAthleteId), "max");
   } catch (error) {
-    const result = actionError(error);
-    return { error: result.error ?? "Something went wrong" };
+    const result = await actionError(error);
+    return { error: result.error ?? actions.generic };
   }
 
   redirect(normalizedRedirectTo);
@@ -251,10 +245,10 @@ export async function copyEventAction(
   source: EventCopySource,
   targetDate: string,
 ): Promise<{ error: string } | { redirectTo: string }> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const normalizedAthleteId = athleteId.trim();
@@ -262,23 +256,23 @@ export async function copyEventAction(
   const normalizedTargetDate = targetDate.trim();
 
   if (!normalizedAthleteId || !eventTypeId) {
-    return { error: "Event is required" };
+    return { error: actions.eventRequired };
   }
 
   if (!isLocalDateString(normalizedTargetDate)) {
-    return { error: "Invalid date" };
+    return { error: actions.invalidDate };
   }
 
   const timeZone = await getRequestTimeZoneCookie();
 
   if (!timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
+    return { error: actions.timeZoneNotReady };
   }
 
   const body = buildCopyForDatePreservingTime(source, timeZone, normalizedTargetDate);
 
   if (!body) {
-    return { error: "Unable to build event time" };
+    return { error: actions.unableToBuildEventTime };
   }
 
   try {
@@ -286,8 +280,8 @@ export async function copyEventAction(
 
     return { redirectTo: athleteEventHref(normalizedAthleteId, newEvent.id) };
   } catch (error) {
-    const result = actionError(error);
-    return { error: result.error ?? "Something went wrong" };
+    const result = await actionError(error);
+    return { error: result.error ?? actions.generic };
   }
 }
 
@@ -296,33 +290,41 @@ export async function copyDayEventsAction(
   sources: EventCopySource[],
   targetDate: string,
 ): Promise<{ error: string } | { success: true; count: number }> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const normalizedAthleteId = athleteId.trim();
   const normalizedTargetDate = targetDate.trim();
 
   if (!normalizedAthleteId) {
-    return { error: "Athlete is required" };
+    return { error: actions.athleteRequired };
   }
 
   if (!isLocalDateString(normalizedTargetDate)) {
-    return { error: "Invalid date" };
+    return { error: actions.invalidDate };
   }
 
   const timeZone = await getRequestTimeZoneCookie();
 
   if (!timeZone) {
-    return { error: "Time zone is not ready. Refresh the page and try again." };
+    return { error: actions.timeZoneNotReady };
   }
 
   const prepared = buildDayCopyForDate(sources, timeZone, normalizedTargetDate);
 
   if ("error" in prepared) {
-    return { error: prepared.error };
+    if (prepared.error === "noEventsToCopy") {
+      return { error: actions.noEventsToCopy };
+    }
+
+    if (prepared.error === "copyLimit") {
+      return { error: actions.copyLimit(EVENT_BATCH_CREATE_MAX_ITEMS) };
+    }
+
+    return { error: actions.unableToBuildEventTime };
   }
 
   try {
@@ -332,7 +334,7 @@ export async function copyDayEventsAction(
 
     return { success: true, count: result.items.length };
   } catch (error) {
-    const result = actionError(error);
-    return { error: result.error ?? "Something went wrong" };
+    const result = await actionError(error);
+    return { error: result.error ?? actions.generic };
   }
 }

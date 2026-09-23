@@ -3,6 +3,10 @@
 import { useActionState } from "react";
 
 import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
+import {
+  FinnishDescriptionField,
+  FinnishNameField,
+} from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { updateMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
@@ -41,6 +45,7 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required defaultValue={metric.name} className={inputClassName} />
         </label>
+        <FinnishNameField defaultValue={metric.translations?.fi?.name} />
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Value type</span>
           <AdminFormSelect
@@ -79,6 +84,8 @@ export function UpdateMetricDefinitionForm({ metric, sports }: UpdateMetricDefin
           className={inputClassName}
         />
       </label>
+
+      <FinnishDescriptionField defaultValue={metric.translations?.fi?.description} />
 
       <input type="hidden" name="active" value="false" />
       <label className="flex items-center gap-2 text-sm text-zinc-300">

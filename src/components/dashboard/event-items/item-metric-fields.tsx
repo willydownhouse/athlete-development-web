@@ -18,6 +18,8 @@ import {
   isScale1To10Metric,
   isSecondsMetric,
 } from "@/lib/event-metric-form";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { EventItemTypeMetricDefinition } from "@/lib/types";
 
 const inputClassName =
@@ -30,6 +32,8 @@ type ItemMetricFieldsProps = {
 };
 
 export function ItemMetricFields({ path, mappings, defaultValues = {} }: ItemMetricFieldsProps) {
+  const messages = getMessages(useAppLocale());
+
   if (mappings.length === 0) {
     return null;
   }
@@ -37,7 +41,7 @@ export function ItemMetricFields({ path, mappings, defaultValues = {} }: ItemMet
   const compact = shouldUseCompactItemMetricFields(mappings);
 
   return (
-    <FormSectionDetails title="Metrics">
+    <FormSectionDetails title={messages.common.metrics}>
       <div className={compact ? "grid gap-3 sm:grid-cols-3" : "space-y-4"}>
         {mappings.map((mapping) => {
           const fieldName = itemMetricFieldName(path, mapping.metricDefinitionId);

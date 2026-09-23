@@ -1,19 +1,17 @@
+import { formatEventIntensityLabel } from "@/lib/enum-labels";
 import { formatDurationSeconds } from "@/lib/event-metric-display";
+import type { AppLocale } from "@/lib/locale";
 import { formatZonedShortDate, formatZonedTime } from "@/lib/time-zone";
-import type { Event, EventIntensity } from "@/lib/types";
+import type { Event } from "@/lib/types";
 
 const EVENT_LIST_DESCRIPTION_PREVIEW_LENGTH = 200;
-
-function formatIntensity(intensity: EventIntensity): string {
-  return intensity.charAt(0).toUpperCase() + intensity.slice(1);
-}
 
 function formatTime(startedAt: string, timeZone: string): string {
   return formatZonedTime(timeZone, new Date(startedAt));
 }
 
-function formatEventListDate(startedAt: string, timeZone: string): string {
-  return formatZonedShortDate(timeZone, new Date(startedAt));
+function formatEventListDate(startedAt: string, timeZone: string, locale: AppLocale): string {
+  return formatZonedShortDate(timeZone, new Date(startedAt), new Date(), locale);
 }
 
 export function eventShortLabel(name: string): string {
@@ -46,13 +44,14 @@ function truncateText(text: string, maxLength: number): string {
 type EventDetailOptions = {
   showDate?: boolean;
   timeZone: string;
+  locale: AppLocale;
 };
 
 export function eventDetail(event: Event, options: EventDetailOptions): string {
   const parts: string[] = [];
 
   if (options.showDate) {
-    parts.push(formatEventListDate(event.startedAt, options.timeZone));
+    parts.push(formatEventListDate(event.startedAt, options.timeZone, options.locale));
   }
 
   parts.push(formatTime(event.startedAt, options.timeZone));
@@ -62,7 +61,7 @@ export function eventDetail(event: Event, options: EventDetailOptions): string {
   }
 
   if (event.intensity) {
-    parts.push(formatIntensity(event.intensity));
+    parts.push(formatEventIntensityLabel(event.intensity, options.locale));
   }
 
   if (event.description) {

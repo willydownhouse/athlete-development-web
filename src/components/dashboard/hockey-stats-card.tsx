@@ -1,17 +1,21 @@
 import type { HockeyStatTile } from "@/lib/hockey-stats/build-hockey-stat-tiles";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 type HockeyStatsCardProps = {
   tiles: HockeyStatTile[];
   loadError?: string | null;
 };
 
-export function HockeyStatsCard({ tiles, loadError }: HockeyStatsCardProps) {
+export async function HockeyStatsCard({ tiles, loadError }: HockeyStatsCardProps) {
+  const messages = getMessages(await getRequestLocale());
+
   if (loadError) {
     return <p className="text-sm text-red-300">{loadError}</p>;
   }
 
   if (tiles.length === 0) {
-    return <p className="text-sm text-zinc-400">No stats logged for this period.</p>;
+    return <p className="text-sm text-zinc-400">{messages.stats.empty}</p>;
   }
 
   return (
@@ -23,7 +27,7 @@ export function HockeyStatsCard({ tiles, loadError }: HockeyStatsCardProps) {
             {tile.eventCount !== undefined ? (
               <span className="text-base font-normal text-zinc-500">
                 {" / "}
-                {tile.eventCount} {tile.eventCount === 1 ? "event" : "events"}
+                {tile.eventCount} {messages.stats.eventCount(tile.eventCount)}
               </span>
             ) : null}
           </p>

@@ -50,6 +50,7 @@ describe("isRemovableAccessMember", () => {
 
 describe("formatInvitationExpiry", () => {
   it("formats an ISO timestamp", () => {
-    expect(formatInvitationExpiry("2026-10-18T12:00:00.000Z")).toMatch(/Oct \d{1,2}, 2026/);
+    expect(formatInvitationExpiry("2026-10-18T12:00:00.000Z")).toBe("18 Oct 2026");
+    expect(formatInvitationExpiry("2026-10-18T12:00:00.000Z", "fi")).toBe("18.10.2026");
   });
 });

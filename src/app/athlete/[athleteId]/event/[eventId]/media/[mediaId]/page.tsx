@@ -9,6 +9,7 @@ import { EventMediaPlayerSection } from "@/components/dashboard/event-media-play
 import { EventMediaPlayerSkeleton } from "@/components/dashboard/event-media-player-view";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteEventMediaPageProps = {
@@ -37,7 +38,11 @@ export default async function AthleteEventMediaPage({ params }: AthleteEventMedi
     redirect("/");
   }
 
-  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
+  const [athletes, isAdmin, locale] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    getRequestLocale(),
+  ]);
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
@@ -56,7 +61,7 @@ export default async function AthleteEventMediaPage({ params }: AthleteEventMedi
           href={athleteEventHref(selectedAthlete.id, normalizedEventId)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToEventLabel()}
+          {backToEventLabel(locale)}
         </Link>
 
         <div className="mt-4">

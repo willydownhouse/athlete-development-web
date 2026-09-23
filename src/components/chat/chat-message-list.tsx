@@ -5,6 +5,7 @@ import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content
 import { ChatWaitingBubble } from "@/components/chat/chat-waiting-bubble";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatChatTimestamp } from "@/lib/chat-time";
+import { useAppLocale } from "@/lib/locale-context";
 import type { ChatMessage } from "@/lib/types";
 
 const SKELETON_ROWS = [
@@ -60,6 +61,7 @@ function MessageBubble({
   animate: boolean;
   onTypewriterTick?: () => void;
 }) {
+  const locale = useAppLocale();
   const isUser = message.role === "user";
 
   return (
@@ -79,7 +81,7 @@ function MessageBubble({
           <ChatMarkdown content={message.content} />
         )}
         <p className={`mt-2 text-xs text-zinc-500 ${isUser ? "text-right" : "text-left"}`}>
-          {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso))}
+          {formatChatTimestamp(timeZone, message.createdAt, new Date(nowIso), locale)}
         </p>
       </div>
     </article>

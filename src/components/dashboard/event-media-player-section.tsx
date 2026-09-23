@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { EventMediaPlayerView } from "@/components/dashboard/event-media-player-view";
 import { fetchEventMediaPlayerPageData } from "@/lib/event-media-page-data";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 type EventMediaPlayerSectionProps = {
   athleteId: string;
@@ -16,6 +18,7 @@ export async function EventMediaPlayerSection({
   mediaId,
 }: EventMediaPlayerSectionProps) {
   const result = await fetchEventMediaPlayerPageData(athleteId, eventId, mediaId);
+  const locale = await getRequestLocale();
 
   if ("notFound" in result) {
     notFound();
@@ -28,7 +31,9 @@ export async function EventMediaPlayerSection({
   if ("error" in result) {
     return (
       <>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Video</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-white">
+          {getMessages(locale).nav.video}
+        </h1>
         <p className="mt-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
           {result.error}
         </p>

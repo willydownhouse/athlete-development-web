@@ -7,6 +7,8 @@ import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboar
 import { AppShell } from "@/components/app-shell";
 import { loadCalendarMonthEvents } from "@/lib/calendar-event-data";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
@@ -35,11 +37,13 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
     redirect("/");
   }
 
-  const [athletes, isAdmin, timeZone] = await Promise.all([
+  const [athletes, isAdmin, timeZone, locale] = await Promise.all([
     loadShellAthletes(token),
     getIsAdminUser(),
     getRequestTimeZone(),
+    getRequestLocale(),
   ]);
+  const messages = getMessages(locale);
 
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -61,10 +65,12 @@ export default async function AthleteCalendarPage({ params }: AthleteCalendarPag
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToTodayLabel()}
+          {backToTodayLabel(locale)}
         </Link>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">Calendar</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          {messages.calendar.title}
+        </h1>
 
         <div className="mt-6">
           <CalendarSection

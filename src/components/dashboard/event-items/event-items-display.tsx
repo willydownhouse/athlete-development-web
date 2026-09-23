@@ -1,5 +1,8 @@
+"use client";
+
 import { EventItemDisplay } from "@/components/dashboard/event-items/event-item-display";
 import { eventItemSameTypeIndex, eventItemsSectionTitle } from "@/lib/event-item-display";
+import { useAppLocale } from "@/lib/locale-context";
 import type { EventItem } from "@/lib/types";
 
 type EventItemsDisplayProps = {
@@ -8,6 +11,8 @@ type EventItemsDisplayProps = {
 };
 
 export function EventItemsDisplay({ items, timeZone }: EventItemsDisplayProps) {
+  const locale = useAppLocale();
+
   if (items.length === 0) {
     return null;
   }
@@ -15,7 +20,7 @@ export function EventItemsDisplay({ items, timeZone }: EventItemsDisplayProps) {
   return (
     <div className="mt-4 border-t border-white/5 pt-4">
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">
-        {eventItemsSectionTitle(items)}
+        {eventItemsSectionTitle(items, locale)}
       </p>
       <div className="mt-3 space-y-3">
         {items.map((item, index) => (
@@ -24,6 +29,7 @@ export function EventItemsDisplay({ items, timeZone }: EventItemsDisplayProps) {
               item={item}
               sameTypeIndex={eventItemSameTypeIndex(items, index)}
               timeZone={timeZone}
+              locale={locale}
             />
           </div>
         ))}

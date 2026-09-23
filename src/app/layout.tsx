@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { TimeZoneCookieSync } from "@/components/time-zone-cookie-sync";
+import { getRequestLocale } from "@/lib/locale-server";
 
 import "./globals.css";
 
@@ -20,13 +21,18 @@ export const metadata: Metadata = {
   description: "AI-assisted athlete development for parents, coaches, and young athletes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang={locale}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="min-h-full bg-slate-50 text-slate-900">
         <TimeZoneCookieSync />
         {children}

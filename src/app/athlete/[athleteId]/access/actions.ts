@@ -5,13 +5,14 @@ import { redirect } from "next/navigation";
 
 import { athleteAccessHref, defaultDashboardHref } from "@/components/dashboard/dashboard-nav";
 import {
-  ApiError,
   createAthleteInvitation,
   endAthleteAccessGrant,
   fetchAthletes,
   revokeAthleteInvitation,
 } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import type { AthleteAccessRole } from "@/lib/types";
 
 export type AccessActionState = {
@@ -20,16 +21,8 @@ export type AccessActionState = {
   formKey?: string;
 };
 
-function actionError(error: unknown): AccessActionState {
-  if (error instanceof ApiError) {
-    return { error: error.apiError ?? error.message };
-  }
-
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Something went wrong" };
+async function actionError(error: unknown): Promise<AccessActionState> {
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -46,10 +39,10 @@ export async function createAthleteInvitationAction(
   _prevState: AccessActionState,
   formData: FormData,
 ): Promise<AccessActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const athleteId = readString(formData, "athleteId");
@@ -57,23 +50,23 @@ export async function createAthleteInvitationAction(
   const role = readRole(formData);
 
   if (!athleteId) {
-    return { error: "Athlete is missing" };
+    return { error: actions.athleteRequired };
   }
 
   if (!email) {
-    return { error: "Email is required" };
+    return { error: actions.emailRequired };
   }
 
   if (!role) {
-    return { error: "Choose parent or athlete" };
+    return { error: actions.chooseParentOrAthlete };
   }
 
   try {
     await createAthleteInvitation(token, athleteId, { email, role });
     revalidatePath(athleteAccessHref(athleteId));
-    return { success: "Invitation sent", formKey: crypto.randomUUID() };
+    return { success: actions.invitationSent, formKey: crypto.randomUUID() };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -81,17 +74,17 @@ export async function revokeAthleteInvitationAction(
   _prevState: AccessActionState,
   formData: FormData,
 ): Promise<AccessActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const athleteId = readString(formData, "athleteId");
   const invitationId = readString(formData, "invitationId");
 
   if (!athleteId || !invitationId) {
-    return { error: "Invitation is missing" };
+    return { error: actions.invitationMissing };
   }
 
   try {
@@ -99,7 +92,7 @@ export async function revokeAthleteInvitationAction(
     revalidatePath(athleteAccessHref(athleteId));
     return {};
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -107,29 +100,29 @@ export async function endAthleteAccessGrantAction(
   _prevState: AccessActionState,
   formData: FormData,
 ): Promise<AccessActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const athleteId = readString(formData, "athleteId");
   const accessId = readString(formData, "accessId");
 
   if (!athleteId || !accessId) {
-    return { error: "Access grant is missing" };
+    return { error: actions.accessGrantMissing };
   }
 
   try {
     await endAthleteAccessGrant(token, athleteId, accessId);
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 
   let athletes: Awaited<ReturnType<typeof fetchAthletes>> = [];
 
   try {
-    athletes = await fetchAthletes(token);
+    athletes = await fetchAthletes(token, await getRequestLocale());
   } catch {
     redirect("/dashboard");
   }

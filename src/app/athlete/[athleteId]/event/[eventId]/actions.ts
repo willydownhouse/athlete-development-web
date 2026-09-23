@@ -9,6 +9,7 @@ import {
   getEventMediaReadUrl,
   listEventMedia,
 } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type {
   EventMediaItem,
@@ -21,23 +22,15 @@ import type {
 type ActionError = { error: string };
 type ActionSuccess<T> = T;
 
-function actionError(error: unknown): ActionError {
-  if (error instanceof ApiError) {
-    return { error: error.apiError ?? error.message };
-  }
-
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Something went wrong" };
+async function actionError(error: unknown): Promise<ActionError> {
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
 }
 
 async function requireToken(): Promise<string | ActionError> {
   const token = await getAuthBearerToken();
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: (await getActionMessages()).signInAgain };
   }
 
   return token;
@@ -56,7 +49,7 @@ export async function listEventMediaAction(
   try {
     return await listEventMedia(token, athleteId, eventId);
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -78,7 +71,7 @@ export async function getEventMediaAction(
       return { notFound: true };
     }
 
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -101,7 +94,7 @@ export async function createMediaUploadIntentAction(
   try {
     return await createMediaUploadIntent(token, athleteId, eventId, body);
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -120,7 +113,7 @@ export async function completeMediaUploadAction(
     await completeMediaUpload(token, athleteId, eventId, mediaId);
     return { ok: true };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -138,7 +131,7 @@ export async function getEventMediaReadUrlAction(
   try {
     return await getEventMediaReadUrl(token, athleteId, eventId, mediaId);
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -157,6 +150,6 @@ export async function deleteEventMediaAction(
     await deleteEventMedia(token, athleteId, eventId, mediaId);
     return { ok: true };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }

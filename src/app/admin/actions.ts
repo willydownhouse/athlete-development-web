@@ -27,6 +27,10 @@ import {
   updateAdminMetricDefinition,
   updateAdminSport,
 } from "@/lib/admin-api";
+import {
+  catalogMetricTranslationsFromForm,
+  catalogNameTranslationsFromForm,
+} from "@/lib/admin-catalog-translations";
 import { requireAdmin } from "@/lib/admin-auth";
 import { EVENT_TYPES_CACHE_TAG } from "@/lib/cache-tags";
 
@@ -103,6 +107,7 @@ export async function createSportAction(
       slug: readString(formData, "slug"),
       name: readString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "create"),
     });
 
     revalidatePath("/admin");
@@ -125,6 +130,7 @@ export async function updateSportAction(
       slug: readOptionalString(formData, "slug"),
       name: readOptionalString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "update"),
     });
 
     revalidatePath("/admin");
@@ -189,6 +195,7 @@ export async function createEventTypeAction(
       slug: readString(formData, "slug"),
       name: readString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "create"),
     });
 
     revalidatePath("/admin");
@@ -215,6 +222,7 @@ export async function updateEventTypeAction(
       slug: readOptionalString(formData, "slug"),
       name: readOptionalString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "update"),
     });
 
     revalidatePath("/admin");
@@ -247,6 +255,11 @@ export async function createMetricDefinitionAction(
       valueType: readString(formData, "valueType"),
       canonicalUnit,
       active: readBoolean(formData, "active"),
+      translations: catalogMetricTranslationsFromForm(
+        readString(formData, "nameFi"),
+        readString(formData, "descriptionFi"),
+        "create",
+      ),
     });
 
     revalidatePath("/admin");
@@ -280,6 +293,11 @@ export async function updateMetricDefinitionAction(
       valueType: readOptionalString(formData, "valueType"),
       canonicalUnit,
       active: readBoolean(formData, "active"),
+      translations: catalogMetricTranslationsFromForm(
+        readString(formData, "nameFi"),
+        readString(formData, "descriptionFi"),
+        "update",
+      ),
     });
 
     revalidatePath("/admin");
@@ -359,6 +377,7 @@ export async function createEventItemTypeAction(
       slug: readString(formData, "slug"),
       name: readString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "create"),
     });
 
     revalidatePath("/admin");
@@ -383,6 +402,7 @@ export async function updateEventItemTypeAction(
       slug: readOptionalString(formData, "slug"),
       name: readOptionalString(formData, "name"),
       active: readBoolean(formData, "active"),
+      translations: catalogNameTranslationsFromForm(readString(formData, "nameFi"), "update"),
     });
 
     revalidatePath("/admin");

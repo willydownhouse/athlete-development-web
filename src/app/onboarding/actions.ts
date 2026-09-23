@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { ApiError, createAthlete } from "@/lib/api";
+import { createAthlete } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import {
   isAtLeastAgeYears,
@@ -27,16 +28,8 @@ function isNextRedirect(error: unknown): boolean {
   );
 }
 
-function actionError(error: unknown): OnboardingActionState {
-  if (error instanceof ApiError) {
-    return { error: error.apiError ?? error.message };
-  }
-
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Something went wrong" };
+async function actionError(error: unknown): Promise<OnboardingActionState> {
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -56,10 +49,10 @@ export async function createAthleteBasicsAction(
   _prevState: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   const focusSportId = readString(formData, "focusSportId");
@@ -68,23 +61,23 @@ export async function createAthleteBasicsAction(
   const dateOfBirth = readString(formData, "dateOfBirth");
 
   if (!focusSportId) {
-    return { error: "Focus sport is required" };
+    return { error: actions.focusSportRequired };
   }
 
   if (!relationshipToAthlete) {
-    return { error: "Please choose who this profile is for" };
+    return { error: actions.chooseWhoFor };
   }
 
   if (!name) {
-    return { error: "Athlete name is required" };
+    return { error: actions.athleteNameRequired };
   }
 
   if (!dateOfBirth) {
-    return { error: "Date of birth is required" };
+    return { error: actions.dateOfBirthRequired };
   }
 
   if (!isValidDateOnly(dateOfBirth)) {
-    return { error: "Date of birth must be a valid calendar date" };
+    return { error: actions.dateOfBirthInvalid };
   }
 
   if (
@@ -92,7 +85,7 @@ export async function createAthleteBasicsAction(
     !isAtLeastAgeYears(dateOfBirth, SELF_ATHLETE_MIN_AGE_YEARS)
   ) {
     return {
-      error: `You must be at least ${SELF_ATHLETE_MIN_AGE_YEARS} years old to create your own profile`,
+      error: actions.selfCreateMinAge(SELF_ATHLETE_MIN_AGE_YEARS),
     };
   }
 
@@ -110,6 +103,6 @@ export async function createAthleteBasicsAction(
       throw error;
     }
 
-    return actionError(error);
+    return await actionError(error);
   }
 }

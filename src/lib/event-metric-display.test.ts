@@ -93,4 +93,23 @@ describe("formatEventMetricValue", () => {
     expect(formatEventMetricValue(booleanMetric)).toBe("Yes");
     expect(formatEventMetricValue(textMetric)).toBe("Good session");
   });
+
+  it("formats unset and Finnish boolean labels", () => {
+    const unset = buildMetric(buildMetricDefinition({ valueType: "boolean", name: "Completed" }));
+    const no = buildMetric(buildMetricDefinition({ valueType: "boolean", name: "Completed" }), {
+      booleanValue: false,
+    });
+
+    expect(formatEventMetricValue(unset)).toBe("Not set");
+    expect(formatEventMetricValue(unset, "fi")).toBe("Ei asetettu");
+    expect(formatEventMetricValue(no, "fi")).toBe("Ei");
+    expect(
+      formatEventMetricValue(
+        buildMetric(buildMetricDefinition({ valueType: "boolean", name: "Completed" }), {
+          booleanValue: true,
+        }),
+        "fi",
+      ),
+    ).toBe("Kyllä");
+  });
 });

@@ -1,3 +1,6 @@
+import { intlDateLocale } from "@/lib/date-fns-locale";
+import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
+
 export const TIME_ZONE_COOKIE_NAME = "app_time_zone";
 const DEFAULT_TIME_ZONE = "UTC";
 export const TIME_ZONE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
@@ -178,6 +181,7 @@ export function formatZonedTimeRange(
   timeZone: string,
   startedAt: Date,
   endedAt?: Date | null,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
   const startTime = formatZonedTime(timeZone, startedAt);
 
@@ -191,22 +195,24 @@ export function formatZonedTimeRange(
     return `${startTime} – ${endTime}`;
   }
 
-  return `${formatZonedShortDate(timeZone, startedAt, endedAt)} ${startTime} – ${formatZonedShortDate(timeZone, endedAt, startedAt)} ${endTime}`;
+  return `${formatZonedShortDate(timeZone, startedAt, endedAt, locale)} ${startTime} – ${formatZonedShortDate(timeZone, endedAt, startedAt, locale)} ${endTime}`;
 }
 
 export function formatZonedShortDate(
   timeZone: string,
   date: Date,
   referenceDate = new Date(),
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
   const normalizedTimeZone = normalizeTimeZone(timeZone);
   const eventDate = getZonedParts(date, normalizedTimeZone);
   const reference = getZonedParts(referenceDate, normalizedTimeZone);
-  const month = new Intl.DateTimeFormat("en-GB", {
+  const dateLocale = intlDateLocale(locale);
+  const month = new Intl.DateTimeFormat(dateLocale, {
     timeZone: "UTC",
     month: "short",
   }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));
-  const weekday = new Intl.DateTimeFormat("en-GB", {
+  const weekday = new Intl.DateTimeFormat(dateLocale, {
     timeZone: "UTC",
     weekday: "short",
   }).format(new Date(Date.UTC(eventDate.year, eventDate.month - 1, eventDate.day)));

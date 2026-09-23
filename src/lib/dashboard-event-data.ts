@@ -1,7 +1,9 @@
 import { cache } from "react";
 
-import { ApiError, fetchAllEvents } from "@/lib/api";
+import { fetchAllEvents } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { getRequestLocale } from "@/lib/locale-server";
 import { eventsInHalfOpenRange } from "@/lib/event-grouping";
 import { getZonedDayRange, getZonedWeekRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
@@ -17,30 +19,24 @@ export async function fetchDashboardEventsInRange(
   startedAtTo: string,
   include: DashboardEventsInclude = "metrics",
 ): Promise<DashboardEventsResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { events: [], error: "You need to sign in again" };
+    return { events: [], error: actions.signInAgain };
   }
 
   try {
+    const locale = await getRequestLocale();
     const events = await fetchAllEvents(token, athleteId, {
       startedAtFrom,
       startedAtTo,
       include,
+      locale,
     });
 
     return { events };
   } catch (error) {
-    if (error instanceof ApiError) {
-      return { events: [], error: error.apiError ?? error.message };
-    }
-
-    if (error instanceof Error) {
-      return { events: [], error: error.message };
-    }
-
-    return { events: [], error: "Unable to load events" };
+    return { events: [], error: passthroughOrGeneric(error, actions.loadEvents) };
   }
 }
 

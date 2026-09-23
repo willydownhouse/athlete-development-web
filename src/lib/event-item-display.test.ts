@@ -436,6 +436,35 @@ describe("formatEventItemCollapsedCounts", () => {
       ),
     ).toBe("1 metric · 1 shift");
   });
+
+  it("uses Finnish metric nouns and does not English-pluralize type names", () => {
+    const shiftType = buildItemType({
+      id: "shift-type-id",
+      slug: "shift",
+      name: "Vuoro",
+    });
+
+    expect(
+      formatEventItemCollapsedCounts(
+        buildItem({
+          metrics: [buildMetric(), buildMetric({ id: "metric-2" })],
+          children: [
+            buildItem({
+              id: "shift-1",
+              eventItemTypeId: shiftType.id,
+              eventItemType: shiftType,
+            }),
+            buildItem({
+              id: "shift-2",
+              eventItemTypeId: shiftType.id,
+              eventItemType: shiftType,
+            }),
+          ],
+        }),
+        "fi",
+      ),
+    ).toBe("2 mittaria · 2 vuoro");
+  });
 });
 
 describe("formatEventItemTimeRange", () => {
@@ -465,5 +494,18 @@ describe("formatEventItemTimeRange", () => {
         "Europe/Helsinki",
       ),
     ).toBe("Wed 5 Aug 23:00 – Thu 6 Aug 01:00");
+  });
+
+  it("formats overnight ranges with Finnish dates", () => {
+    expect(
+      formatEventItemTimeRange(
+        buildItem({
+          startedAt: "2026-08-05T20:00:00.000Z",
+          endedAt: "2026-08-05T22:00:00.000Z",
+        }),
+        "Europe/Helsinki",
+        "fi",
+      ),
+    ).toMatch(/ke 5 .+ 23:00 – to 6 .+ 01:00/i);
   });
 });

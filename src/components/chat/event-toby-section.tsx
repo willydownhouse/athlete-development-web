@@ -1,3 +1,4 @@
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { createChatThread } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
@@ -10,7 +11,11 @@ type EventTobySectionProps = {
 };
 
 export async function EventTobySection({ athleteId, eventId }: EventTobySectionProps) {
-  const [token, timeZone] = await Promise.all([getAuthBearerToken(), getRequestTimeZone()]);
+  const [token, timeZone, actions] = await Promise.all([
+    getAuthBearerToken(),
+    getRequestTimeZone(),
+    getActionMessages(),
+  ]);
   const nowIso = new Date().toISOString();
 
   if (!token) {
@@ -21,7 +26,7 @@ export async function EventTobySection({ athleteId, eventId }: EventTobySectionP
         eventId={eventId}
         timeZone={timeZone}
         nowIso={nowIso}
-        loadError="You need to sign in again"
+        loadError={actions.signInAgain}
       />
     );
   }
@@ -33,7 +38,7 @@ export async function EventTobySection({ athleteId, eventId }: EventTobySectionP
     const thread = await createChatThread(token);
     threadId = thread.id;
   } catch (error) {
-    loadError = error instanceof Error ? error.message : "Unable to load chat";
+    loadError = passthroughOrGeneric(error, actions.loadChat);
   }
 
   return (

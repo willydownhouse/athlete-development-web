@@ -5,15 +5,13 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AccessList, AccessListSkeleton } from "@/components/access/access-list";
 import { InviteForm } from "@/components/access/invite-form";
-import {
-  ACCESS_NAV_LABEL,
-  backToTodayLabel,
-  dashboardHref,
-} from "@/components/dashboard/dashboard-nav";
+import { backToTodayLabel, dashboardHref } from "@/components/dashboard/dashboard-nav";
 import { AppShell } from "@/components/app-shell";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteAccessPageProps = {
@@ -40,7 +38,12 @@ export default async function AthleteAccessPage({ params }: AthleteAccessPagePro
     redirect("/");
   }
 
-  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
+  const [athletes, isAdmin, locale] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    getRequestLocale(),
+  ]);
+  const messages = getMessages(locale);
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
@@ -63,14 +66,14 @@ export default async function AthleteAccessPage({ params }: AthleteAccessPagePro
           href={dashboardHref(selectedAthlete.id)}
           className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          {backToTodayLabel()}
+          {backToTodayLabel(locale)}
         </Link>
 
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-          {ACCESS_NAV_LABEL}
+          {messages.nav.access}
         </h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Invite family members to {selectedAthlete.name}&apos;s profile.
+          {messages.access.pageHint(selectedAthlete.name)}
         </p>
 
         <div className="mt-6 space-y-6">

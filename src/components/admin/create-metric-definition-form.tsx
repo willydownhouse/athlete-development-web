@@ -4,6 +4,10 @@ import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
 import { AdminFormSelect, sportScopeOptions } from "@/components/admin/admin-form-select";
+import {
+  FinnishDescriptionField,
+  FinnishNameField,
+} from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createMetricDefinitionAction, type ActionState } from "@/app/admin/actions";
@@ -47,6 +51,7 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Shot count" className={inputClassName} />
         </label>
+        <FinnishNameField placeholder="Laukaukset" />
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Value type</span>
           <AdminFormSelect
@@ -82,6 +87,8 @@ export function CreateMetricDefinitionForm({ sports }: CreateMetricDefinitionFor
           className={inputClassName}
         />
       </label>
+
+      <FinnishDescriptionField />
 
       <label className="flex items-center gap-2 text-sm text-zinc-300">
         <input

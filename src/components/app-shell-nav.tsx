@@ -9,7 +9,6 @@ import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
   activeAthleteIdFromPath,
   CHAT_HREF,
-  CHAT_NAV_LABEL,
   dashboardHref,
   defaultDashboardHref,
   isAthleteDashboardPath,
@@ -18,13 +17,11 @@ import {
   isOnboardingPath,
   isUsagePath,
   INVITES_HREF,
-  INVITES_NAV_LABEL,
   pendingInvitesNavLabel,
-  TODAY_NAV_LABEL,
   USAGE_HREF,
-  USAGE_NAV_LABEL,
-  ADD_ATHLETE_NAV_LABEL,
 } from "@/components/dashboard/dashboard-nav";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { Athlete } from "@/lib/types";
 
 type AppShellNavProps = {
@@ -210,6 +207,8 @@ export function AppShellNav({
   onNavigate,
 }: AppShellNavProps) {
   const pathname = usePathname();
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
   const dashboardLink =
     selectedAthlete !== null ? dashboardHref(selectedAthlete.id) : defaultDashboardHref(athletes);
 
@@ -222,7 +221,7 @@ export function AppShellNav({
           icon={<TodayIcon />}
           onNavigate={onNavigate}
         >
-          {TODAY_NAV_LABEL}
+          {messages.nav.today}
         </NavLink>
 
         {athletes.length > 1 ? (
@@ -238,7 +237,7 @@ export function AppShellNav({
         icon={<ChatIcon />}
         onNavigate={onNavigate}
       >
-        {CHAT_NAV_LABEL}
+        {messages.nav.chat}
       </NavLink>
 
       <NavLink
@@ -246,10 +245,12 @@ export function AppShellNav({
         active={isInvitesPath(pathname)}
         icon={<InvitesIcon />}
         badgeCount={pendingInviteCount}
-        ariaLabel={pendingInviteCount > 0 ? pendingInvitesNavLabel(pendingInviteCount) : undefined}
+        ariaLabel={
+          pendingInviteCount > 0 ? pendingInvitesNavLabel(pendingInviteCount, locale) : undefined
+        }
         onNavigate={onNavigate}
       >
-        {INVITES_NAV_LABEL}
+        {messages.nav.invites}
       </NavLink>
 
       <NavLink
@@ -258,7 +259,7 @@ export function AppShellNav({
         icon={<UsageIcon />}
         onNavigate={onNavigate}
       >
-        {USAGE_NAV_LABEL}
+        {messages.nav.usage}
       </NavLink>
 
       <NavLink
@@ -267,12 +268,12 @@ export function AppShellNav({
         icon={<AddAthleteIcon />}
         onNavigate={onNavigate}
       >
-        {ADD_ATHLETE_NAV_LABEL}
+        {messages.nav.addAthlete}
       </NavLink>
 
       {isAdmin ? (
         <NavLink href="/admin" active={pathname.startsWith("/admin")} icon={<AdminIcon />}>
-          Admin
+          {messages.common.admin}
         </NavLink>
       ) : null}
     </nav>

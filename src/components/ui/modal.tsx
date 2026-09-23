@@ -2,6 +2,9 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
+
 type ModalProps = {
   open: boolean;
   onClose: () => void;
@@ -21,6 +24,7 @@ export function Modal({
   keepMounted = false,
   align = "viewport",
 }: ModalProps) {
+  const messages = getMessages(useAppLocale());
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -60,7 +64,7 @@ export function Modal({
     <div className={open ? overlayClassName : "hidden"} aria-hidden={open ? undefined : true}>
       <button
         type="button"
-        aria-label="Close dialog"
+        aria-label={messages.common.closeDialog}
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
       />
@@ -81,7 +85,7 @@ export function Modal({
             onClick={onClose}
             className="shrink-0 rounded-lg px-2 py-1 text-sm text-zinc-400 transition hover:bg-white/5 hover:text-white"
           >
-            Close
+            {messages.common.close}
           </button>
         </div>
 

@@ -1,5 +1,6 @@
 import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { formatHockeyStatTotal } from "@/lib/hockey-stats/aggregate";
+import { compareCatalogNames, type AppLocale } from "@/lib/locale";
 import type { SportStats } from "@/lib/types";
 
 export type HockeyStatTile = {
@@ -10,10 +11,10 @@ export type HockeyStatTile = {
   subtitle?: string;
 };
 
-export function buildHockeyStatTiles(sportStats: SportStats): HockeyStatTile[] {
+export function buildHockeyStatTiles(sportStats: SportStats, locale: AppLocale): HockeyStatTile[] {
   const eventTypes = Object.entries(sportStats.eventTypes)
     .map(([eventTypeId, stats]) => ({ eventTypeId, ...stats }))
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .sort((left, right) => compareCatalogNames(left.name, right.name, locale));
 
   const tiles: HockeyStatTile[] = [];
 

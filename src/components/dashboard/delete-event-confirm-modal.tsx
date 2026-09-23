@@ -1,6 +1,8 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 
 type DeleteEventConfirmModalProps = {
   open: boolean;
@@ -17,12 +19,12 @@ export function DeleteEventConfirmModal({
   error,
   onConfirm,
 }: DeleteEventConfirmModalProps) {
+  const messages = getMessages(useAppLocale());
+
   return (
-    <Modal open={open} onClose={onClose} title="Delete event?" align="content">
+    <Modal open={open} onClose={onClose} title={messages.events.deleteEventTitle} align="content">
       <div className="space-y-4">
-        <p className="text-sm text-zinc-300">
-          Delete this event permanently? This cannot be undone.
-        </p>
+        <p className="text-sm text-zinc-300">{messages.events.deleteEventBody}</p>
 
         {error ? <p className="text-sm text-red-300">{error}</p> : null}
 
@@ -33,7 +35,7 @@ export function DeleteEventConfirmModal({
             disabled={pending}
             className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-[#252b36] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Cancel
+            {messages.common.cancel}
           </button>
           <button
             type="button"
@@ -41,7 +43,7 @@ export function DeleteEventConfirmModal({
             disabled={pending}
             className="inline-flex items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pending ? "Deleting…" : "Delete event"}
+            {pending ? messages.common.deleting : messages.events.deleteEvent}
           </button>
         </div>
       </div>

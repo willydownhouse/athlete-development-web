@@ -74,18 +74,17 @@ describe("numericMetricsForSelectedEventTypes", () => {
   ];
 
   it("returns numeric metrics for all mappings when no types are selected", () => {
-    expect(numericMetricsForSelectedEventTypes(mappings, []).map((item) => item.key)).toEqual([
-      "plus_minus",
-      "shot_count",
-    ]);
+    expect(numericMetricsForSelectedEventTypes(mappings, [], "en").map((item) => item.key)).toEqual(
+      ["plus_minus", "shot_count"],
+    );
   });
 
   it("returns the union of numeric metrics for selected types", () => {
     expect(
-      numericMetricsForSelectedEventTypes(mappings, [icePracticeId]).map((item) => item.key),
+      numericMetricsForSelectedEventTypes(mappings, [icePracticeId], "en").map((item) => item.key),
     ).toEqual(["shot_count"]);
     expect(
-      numericMetricsForSelectedEventTypes(mappings, [icePracticeId, gameId]).map(
+      numericMetricsForSelectedEventTypes(mappings, [icePracticeId, gameId], "en").map(
         (item) => item.key,
       ),
     ).toEqual(["plus_minus", "shot_count"]);
@@ -108,17 +107,25 @@ describe("numericMetricsForEventsListMeasure", () => {
 
   it("keeps item metrics when event types change", () => {
     expect(
-      numericMetricsForEventsListMeasure("exercise", itemMeasureMetrics, mappings, [
-        icePracticeId,
-      ]).map((item) => item.id),
+      numericMetricsForEventsListMeasure(
+        "exercise",
+        itemMeasureMetrics,
+        mappings,
+        [icePracticeId],
+        "en",
+      ).map((item) => item.id),
     ).toEqual([repCount.id]);
   });
 
   it("scopes event metrics to the selected event types", () => {
     expect(
-      numericMetricsForEventsListMeasure("events", itemMeasureMetrics, mappings, [
-        icePracticeId,
-      ]).map((item) => item.key),
+      numericMetricsForEventsListMeasure(
+        "events",
+        itemMeasureMetrics,
+        mappings,
+        [icePracticeId],
+        "en",
+      ).map((item) => item.key),
     ).toEqual(["shot_count"]);
   });
 });
@@ -155,11 +162,10 @@ describe("numericMetricsFromItemTypeMappings", () => {
     }
 
     expect(
-      numericMetricsFromItemTypeMappings([
-        itemMapping(exerciseId, repCount),
-        itemMapping(setId, repCount),
-        itemMapping(setId, note),
-      ]).map((item) => item.key),
+      numericMetricsFromItemTypeMappings(
+        [itemMapping(exerciseId, repCount), itemMapping(setId, repCount), itemMapping(setId, note)],
+        "en",
+      ).map((item) => item.key),
     ).toEqual(["rep_count"]);
   });
 });
@@ -227,6 +233,7 @@ describe("itemMeasureNumericMetricsFromCatalog", () => {
       ],
       [itemMapping(warmUpId, distance), itemMapping(setId, repCount)],
       childTypes,
+      "en",
     );
 
     expect(result.warm_up.map((item) => item.key)).toEqual(["distance_meters"]);

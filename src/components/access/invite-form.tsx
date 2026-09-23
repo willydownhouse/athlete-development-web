@@ -9,6 +9,8 @@ import {
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { INVITED_EMAIL_MAX_LENGTH } from "@/lib/constants";
+import { useAppLocale } from "@/lib/locale-context";
+import { getMessages } from "@/lib/messages";
 import type { AthleteAccessRole } from "@/lib/types";
 
 const initialState: AccessActionState = {};
@@ -16,18 +18,14 @@ const initialState: AccessActionState = {};
 const inputClassName =
   "w-full rounded-xl border border-white/10 bg-[#1c222c] px-3 py-2.5 text-sm text-white focus:border-[#9ec9e8] focus:outline-none focus:ring-2 focus:ring-[#9ec9e8]/20";
 
-const roleOptions: Array<{ value: AthleteAccessRole; label: string }> = [
-  { value: "parent", label: "Parent" },
-  { value: "athlete", label: "Athlete" },
-];
-
 export function InviteForm({ athleteId }: { athleteId: string }) {
   const [state, formAction] = useActionState(createAthleteInvitationAction, initialState);
+  const messages = getMessages(useAppLocale());
 
   return (
     <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
-      <h2 className="text-base font-semibold text-white">Invite</h2>
-      <p className="mt-1 text-sm text-zinc-400">They will see the invitation after signing in.</p>
+      <h2 className="text-base font-semibold text-white">{messages.access.invite}</h2>
+      <p className="mt-1 text-sm text-zinc-400">{messages.access.inviteHint}</p>
 
       <div className="mt-4 space-y-4">
         <FormMessage error={state.error} success={state.success} />
@@ -49,6 +47,11 @@ function InviteFormFields({
   formAction: (payload: FormData) => void;
 }) {
   const [role, setRole] = useState<AthleteAccessRole>("parent");
+  const messages = getMessages(useAppLocale());
+  const roleOptions: Array<{ value: AthleteAccessRole; label: string }> = [
+    { value: "parent", label: messages.access.parent },
+    { value: "athlete", label: messages.access.athlete },
+  ];
 
   return (
     <form action={formAction} className="space-y-4">
@@ -56,7 +59,7 @@ function InviteFormFields({
       <input type="hidden" name="role" value={role} />
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-zinc-300">Email</span>
+        <span className="font-medium text-zinc-300">{messages.access.email}</span>
         <input
           name="email"
           type="email"
@@ -69,7 +72,7 @@ function InviteFormFields({
       </label>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-zinc-300">Invite as</p>
+        <p className="text-sm font-medium text-zinc-300">{messages.access.inviteAs}</p>
         <div className="grid grid-cols-2 gap-2">
           {roleOptions.map((option) => {
             const selected = role === option.value;
@@ -92,7 +95,9 @@ function InviteFormFields({
         </div>
       </div>
 
-      <SubmitButton pendingLabel="Sending…">Send invite</SubmitButton>
+      <SubmitButton pendingLabel={messages.access.sending}>
+        {messages.access.sendInvite}
+      </SubmitButton>
     </form>
   );
 }

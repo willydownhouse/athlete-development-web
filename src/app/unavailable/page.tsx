@@ -4,6 +4,8 @@ import { Oswald } from "next/font/google";
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/sign-out-button";
 import { DEMO_SUPPORT_EMAIL } from "@/lib/demo-access";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 
 const oswald = Oswald({
   subsets: ["latin"],
@@ -16,6 +18,8 @@ export default async function UnavailablePage() {
   if (!session?.user) {
     redirect("/");
   }
+
+  const messages = getMessages(await getRequestLocale());
 
   return (
     <main className="scheme-dark relative flex min-h-screen bg-[#0b0d10] text-white">
@@ -31,14 +35,14 @@ export default async function UnavailablePage() {
           <h1
             className={`${oswald.className} text-[2.75rem] font-semibold uppercase leading-[1.05] tracking-[0.02em] text-white sm:text-6xl md:text-7xl`}
           >
-            <span className="block">Demo</span>
-            <span className="block">access only</span>
+            <span className="block">{messages.unavailable.line1}</span>
+            <span className="block">{messages.unavailable.line2}</span>
           </h1>
           <p className="landing-fade-up-delayed max-w-md text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            Athlete Development Center is currently available only for demo users.
+            {messages.unavailable.body}
           </p>
           <p className="max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
-            If you would like to try the demo, contact support at{" "}
+            {messages.unavailable.contactPrefix}{" "}
             <a
               href={`mailto:${DEMO_SUPPORT_EMAIL}`}
               className="text-[#b7d7ec] underline decoration-[#b7d7ec]/40 underline-offset-4 transition hover:text-white"
@@ -50,7 +54,10 @@ export default async function UnavailablePage() {
         </div>
 
         <div className="landing-fade-up-late mt-10">
-          <SignOutButton className="rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10" />
+          <SignOutButton
+            className="rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+            label={messages.common.signOut}
+          />
         </div>
       </div>
     </main>
