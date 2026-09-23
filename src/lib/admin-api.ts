@@ -1,5 +1,7 @@
 import { getApiBaseUrl } from "./api";
 import type {
+  CatalogTranslations,
+  CatalogTranslationsPatch,
   DemoAllowedEmail,
   DemoAllowedEmailList,
   EventItemType,
@@ -88,7 +90,7 @@ export async function listAdminSports(token: string, active?: boolean): Promise<
 
 export async function createAdminSport(
   token: string,
-  body: { slug: string; name: string; active?: boolean },
+  body: { slug: string; name: string; active?: boolean; translations?: CatalogTranslations },
 ): Promise<Sport> {
   return adminFetch<Sport>(token, "/api/admin/sports", {
     method: "POST",
@@ -99,7 +101,12 @@ export async function createAdminSport(
 export async function updateAdminSport(
   token: string,
   sportId: string,
-  body: Partial<{ slug: string; name: string; active: boolean }>,
+  body: Partial<{
+    slug: string;
+    name: string;
+    active: boolean;
+    translations: CatalogTranslationsPatch;
+  }>,
 ): Promise<Sport> {
   return adminFetch<Sport>(token, `/api/admin/sports/${sportId}`, {
     method: "PATCH",
@@ -161,6 +168,7 @@ export async function createAdminEventType(
     slug: string;
     name: string;
     active?: boolean;
+    translations?: CatalogTranslations;
   },
 ): Promise<EventType> {
   return adminFetch<EventType>(token, "/api/admin/event-types", {
@@ -178,6 +186,7 @@ export async function updateAdminEventType(
     slug: string;
     name: string;
     active: boolean;
+    translations: CatalogTranslationsPatch;
   }>,
 ): Promise<EventType> {
   return adminFetch<EventType>(token, `/api/admin/event-types/${eventTypeId}`, {
@@ -212,6 +221,7 @@ export async function createAdminMetricDefinition(
     valueType: string;
     canonicalUnit?: string;
     active?: boolean;
+    translations?: CatalogTranslations;
   },
 ): Promise<MetricDefinition> {
   return adminFetch<MetricDefinition>(token, "/api/admin/metric-definitions", {
@@ -231,6 +241,7 @@ export async function updateAdminMetricDefinition(
     valueType: string;
     canonicalUnit: string | null;
     active: boolean;
+    translations: CatalogTranslationsPatch;
   }>,
 ): Promise<MetricDefinition> {
   return adminFetch<MetricDefinition>(
@@ -322,6 +333,7 @@ export async function createAdminEventItemType(
     slug: string;
     name: string;
     active?: boolean;
+    translations?: CatalogTranslations;
   },
 ): Promise<EventItemType> {
   return adminFetch<EventItemType>(token, "/api/admin/event-item-types", {
@@ -338,6 +350,7 @@ export async function updateAdminEventItemType(
     slug: string;
     name: string;
     active: boolean;
+    translations: CatalogTranslationsPatch;
   }>,
 ): Promise<EventItemType> {
   return adminFetch<EventItemType>(token, `/api/admin/event-item-types/${eventItemTypeId}`, {

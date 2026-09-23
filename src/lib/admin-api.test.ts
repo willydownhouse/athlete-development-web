@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AdminApiError,
   createAdminDemoAllowedEmail,
+  createAdminSport,
   deleteAdminDemoAllowedEmail,
   listAdminDemoAllowedEmails,
   listAdminSports,
@@ -46,6 +47,45 @@ describe("admin api client", () => {
     expect(headers.get("Authorization")).toBe("Bearer admin-token");
     expect(sports).toHaveLength(1);
     expect(sports[0]?.slug).toBe("hockey");
+  });
+
+  it("creates a sport with Finnish translations", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const created = {
+      id: "11111111-1111-4111-8111-111111111111",
+      slug: "floorball",
+      name: "Floorball",
+      active: true,
+      createdAt: "2026-07-28T12:00:00.000Z",
+      updatedAt: "2026-07-28T12:00:00.000Z",
+      translations: { fi: { name: "Salibandy" } },
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => created,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createAdminSport("admin-token", {
+        slug: "floorball",
+        name: "Floorball",
+        translations: { fi: { name: "Salibandy" } },
+      }),
+    ).resolves.toEqual(created);
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/api/admin/sports", {
+      method: "POST",
+      body: JSON.stringify({
+        slug: "floorball",
+        name: "Floorball",
+        translations: { fi: { name: "Salibandy" } },
+      }),
+      headers: expect.any(Headers),
+      cache: "no-store",
+    });
   });
 
   it("throws AdminApiError with API message on failure", async () => {

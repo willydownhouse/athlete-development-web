@@ -8,6 +8,7 @@ import {
   eventCategoryOptions,
   sportScopeOptions,
 } from "@/components/admin/admin-form-select";
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createEventTypeAction, type ActionState } from "@/app/admin/actions";
@@ -51,6 +52,7 @@ export function CreateEventTypeForm({ sports }: CreateEventTypeFormProps) {
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Ice practice" className={inputClassName} />
         </label>
+        <FinnishNameField placeholder="Jääharjoitus" />
         <label className="space-y-1 text-sm">
           <span className="font-medium text-zinc-300">Category</span>
           <AdminFormSelect

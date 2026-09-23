@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import { useAdminCreateModalClose } from "@/components/admin/admin-create-modal";
+import { FinnishNameField } from "@/components/admin/catalog-translation-fields";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { createSportAction, type ActionState } from "@/app/admin/actions";
@@ -41,6 +42,7 @@ export function CreateSportForm() {
           <span className="font-medium text-zinc-300">Name</span>
           <input name="name" required placeholder="Hockey" className={inputClassName} />
         </label>
+        <FinnishNameField placeholder="Jääkiekko" />
       </div>
 
       <label className="flex items-center gap-2 text-sm text-zinc-300">

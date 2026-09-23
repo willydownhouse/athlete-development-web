@@ -118,6 +118,17 @@ export type EventCategory =
 
 export type MetricValueType = "number" | "text" | "boolean";
 
+export type CatalogTranslations = {
+  fi?: {
+    name: string;
+    description?: string;
+  };
+};
+
+export type CatalogTranslationsPatch = {
+  fi?: CatalogTranslations["fi"] | null;
+};
+
 export type Sport = {
   id: string;
   slug: string;
@@ -125,6 +136,7 @@ export type Sport = {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  translations?: CatalogTranslations;
 };
 
 export type DemoAllowedEmail = {
@@ -148,6 +160,7 @@ export type EventType = {
   createdAt: string;
   updatedAt: string;
   sport: Sport | null;
+  translations?: CatalogTranslations;
 };
 
 export type EventIntensity = "light" | "moderate" | "hard";
@@ -320,6 +333,7 @@ export type MetricDefinition = {
   createdAt: string;
   updatedAt: string;
   sport: Sport | null;
+  translations?: CatalogTranslations;
 };
 
 export type EventTypeMetricDefinition = {
@@ -340,6 +354,7 @@ export type EventItemType = {
   createdAt: string;
   updatedAt: string;
   sport: Sport | null;
+  translations?: CatalogTranslations;
 };
 
 export type EventTypeItemType = {
