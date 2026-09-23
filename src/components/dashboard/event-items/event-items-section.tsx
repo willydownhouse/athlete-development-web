@@ -312,7 +312,7 @@ export function EventItemsSection({
           return;
         }
 
-        const message = error instanceof Error ? error.message : "Unable to load item fields";
+        const message = error instanceof Error ? error.message : messages.actions.loadItemFields;
         setCatalog(null);
         onCatalogChange(null);
         setItems([]);

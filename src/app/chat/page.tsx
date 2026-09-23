@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { ChatView } from "@/components/chat/chat-view";
 import { AppShell } from "@/components/app-shell";
 import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
@@ -26,10 +27,11 @@ export default async function ChatPage() {
     redirect("/");
   }
 
-  const [athletes, isAdmin, timeZone] = await Promise.all([
+  const [athletes, isAdmin, timeZone, actions] = await Promise.all([
     loadShellAthletes(token),
     getIsAdminUser(),
     getRequestTimeZone(),
+    getActionMessages(),
   ]);
 
   let threadId: string | null = null;
@@ -41,7 +43,7 @@ export default async function ChatPage() {
     const thread = await createChatThread(token);
     threadId = thread.id;
   } catch (error) {
-    loadError = error instanceof Error ? error.message : "Unable to load chat";
+    loadError = passthroughOrGeneric(error, actions.loadChat);
   }
 
   if (threadId) {
@@ -50,7 +52,7 @@ export default async function ChatPage() {
       messages = latest.items;
       hasMore = latest.pagination.hasMore;
     } catch (error) {
-      loadError = error instanceof Error ? error.message : "Unable to load messages";
+      loadError = passthroughOrGeneric(error, actions.loadMessages);
     }
   }
 

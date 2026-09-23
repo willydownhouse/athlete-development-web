@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { OnboardingView } from "@/components/onboarding/onboarding-view";
+import { getActionMessages } from "@/lib/action-messages";
 import { fetchSports } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestLocale } from "@/lib/locale-server";
@@ -14,10 +15,13 @@ export default async function OnboardingPage() {
     redirect("/");
   }
 
-  const token = await getAuthBearerToken();
-  const locale = await getRequestLocale();
+  const [token, locale, actions] = await Promise.all([
+    getAuthBearerToken(),
+    getRequestLocale(),
+    getActionMessages(),
+  ]);
   const [athletes, sports] = await Promise.all([loadShellAthletes(token), fetchSports(locale)]);
-  const loadError = sports === null ? "Unable to load sports" : null;
+  const loadError = sports === null ? actions.loadSports : null;
 
   return (
     <OnboardingView

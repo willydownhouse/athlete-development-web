@@ -154,7 +154,7 @@ describe("copy-event helpers", () => {
     }));
 
     expect(buildDayCopyForDate(sources, "Europe/Oslo", "2026-08-15")).toEqual({
-      error: `You can copy up to ${EVENT_BATCH_CREATE_MAX_ITEMS} events at a time`,
+      error: "copyLimit",
     });
   });
 

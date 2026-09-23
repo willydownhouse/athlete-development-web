@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { fetchAthletes, fetchEventTypes } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestLocale } from "@/lib/locale-server";
@@ -25,8 +26,11 @@ export default async function AthleteDashboardPage({ params }: AthleteDashboardP
     redirect("/dashboard");
   }
 
-  const token = await getAuthBearerToken();
-  const locale = await getRequestLocale();
+  const [token, locale, actions] = await Promise.all([
+    getAuthBearerToken(),
+    getRequestLocale(),
+    getActionMessages(),
+  ]);
 
   const [athletesResult, eventTypesResult] = await Promise.all([
     token
@@ -34,17 +38,17 @@ export default async function AthleteDashboardPage({ params }: AthleteDashboardP
           .then((items) => ({ items, error: null }))
           .catch((error) => ({
             items: [] as Athlete[],
-            error: error instanceof Error ? error.message : "Unable to load athletes",
+            error: passthroughOrGeneric(error, actions.loadAthletes),
           }))
       : Promise.resolve({
           items: [] as Athlete[],
-          error: "Missing Auth.js session token",
+          error: actions.signInAgain,
         }),
     fetchEventTypes(locale)
       .then((items) => ({ items, error: null }))
       .catch((error) => ({
         items: [] as EventType[],
-        error: error instanceof Error ? error.message : "Unable to load event types",
+        error: passthroughOrGeneric(error, actions.loadEventTypes),
       })),
   ]);
 

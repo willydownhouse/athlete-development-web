@@ -1,4 +1,5 @@
-import { ApiError, fetchAthleteAccess, fetchCurrentAppUser } from "@/lib/api";
+import { fetchAthleteAccess, fetchCurrentAppUser } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type { AthleteAccessMember, AthleteInvitation } from "@/lib/types";
 
@@ -17,14 +18,14 @@ export type AthleteAccessResult =
     };
 
 export async function loadAthleteAccess(athleteId: string): Promise<AthleteAccessResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
     return {
       members: [],
       invitations: [],
       currentUserId: null,
-      error: "Unable to load access",
+      error: actions.loadAccess,
     };
   }
 
@@ -40,29 +41,11 @@ export async function loadAthleteAccess(athleteId: string): Promise<AthleteAcces
       currentUserId: currentUser.id,
     };
   } catch (error) {
-    if (error instanceof ApiError) {
-      return {
-        members: [],
-        invitations: [],
-        currentUserId: null,
-        error: error.apiError ?? error.message,
-      };
-    }
-
-    if (error instanceof Error) {
-      return {
-        members: [],
-        invitations: [],
-        currentUserId: null,
-        error: error.message,
-      };
-    }
-
     return {
       members: [],
       invitations: [],
       currentUserId: null,
-      error: "Unable to load access",
+      error: passthroughOrGeneric(error, actions.loadAccess),
     };
   }
 }

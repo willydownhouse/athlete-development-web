@@ -90,6 +90,8 @@ export function ChatView({
   const [olderError, setOlderError] = useState<string | null>(null);
   const [pendingContent, setPendingContent] = useState<string | null>(null);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
+  const locale = useAppLocale();
+  const copy = getMessages(locale);
   const listRef = useRef<HTMLDivElement>(null);
   const didInitialScroll = useRef(false);
   const loadingOlderRef = useRef(false);
@@ -170,7 +172,7 @@ export function ChatView({
     const result = await loadOlderChatMessagesAction(threadId, beforeId);
 
     if (result.error || !result.items) {
-      setOlderError(result.error ?? "Could not load older messages");
+      setOlderError(result.error ?? copy.actions.loadOlderMessages);
       loadingOlderRef.current = false;
       setLoadingOlder(false);
       return;
@@ -188,7 +190,7 @@ export function ChatView({
 
       list.scrollTop = previousTop + (list.scrollHeight - previousHeight);
     });
-  }, [hasMore, messages, threadId]);
+  }, [copy.actions.loadOlderMessages, hasMore, messages, threadId]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -210,8 +212,6 @@ export function ChatView({
     void loadOlder();
   }
 
-  const locale = useAppLocale();
-  const copy = getMessages(locale);
   const showEmpty = displayedMessages.length === 0 && !isPending && !loadError;
   const composerKey = state.turn?.id ?? "draft";
 

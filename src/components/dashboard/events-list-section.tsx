@@ -70,7 +70,7 @@ export async function EventsListSection({
       }
 
       if (!result.data) {
-        return resultError("Unable to load items");
+        return resultError(messages.actions.loadItems);
       }
 
       return (
@@ -105,7 +105,7 @@ export async function EventsListSection({
     }
 
     if (!result.data) {
-      return resultError("Unable to load total");
+      return resultError(messages.actions.loadTotal);
     }
 
     return (
@@ -143,7 +143,7 @@ export async function EventsListSection({
     }
 
     if (!result.data) {
-      return resultError("Unable to load total");
+      return resultError(messages.actions.loadTotal);
     }
 
     return <EventsAggregateContent result={result.data} locale={locale} />;
@@ -156,7 +156,7 @@ export async function EventsListSection({
   }
 
   if (!result.data) {
-    return resultError("Unable to load events");
+    return resultError(messages.actions.loadEvents);
   }
 
   return (

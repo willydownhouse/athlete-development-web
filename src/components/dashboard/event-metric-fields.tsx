@@ -214,7 +214,8 @@ export function EventTypeMetricsSection({
           return;
         }
 
-        const message = error instanceof Error ? error.message : "Unable to load metrics";
+        const message =
+          error instanceof Error ? error.message : getMessages(locale).actions.loadMetrics;
         setMappings([]);
         onMappingsChange([]);
         setLoadError(message);

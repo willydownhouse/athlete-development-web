@@ -88,7 +88,7 @@ export function EventTobyDock({
     const result = await loadFocusedEventChatMessagesAction(threadId, eventId, before);
 
     if (result.error || !result.items) {
-      setHistoryError(result.error ?? "Could not load earlier updates");
+      setHistoryError(result.error ?? messages.actions.loadEarlierUpdates);
       loadingOlderRef.current = false;
       setHistoryLoading(false);
       setHistoryLoadingOlder(false);

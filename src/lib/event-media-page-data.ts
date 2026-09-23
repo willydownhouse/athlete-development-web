@@ -1,4 +1,5 @@
 import { ApiError, getEventMedia, getEventMediaReadUrl } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type { EventMediaItem, MediaReadUrlResponse } from "@/lib/types";
 
@@ -8,20 +9,12 @@ export type EventMediaPlayerPageDataResult =
   | { notFound: true }
   | { redirectToEvent: true };
 
-function toErrorResult(error: unknown): EventMediaPlayerPageDataResult {
-  if (error instanceof ApiError) {
-    if (error.status === 404) {
-      return { notFound: true };
-    }
-
-    return { error: error.apiError ?? error.message };
+async function toErrorResult(error: unknown): Promise<EventMediaPlayerPageDataResult> {
+  if (error instanceof ApiError && error.status === 404) {
+    return { notFound: true };
   }
 
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Unable to load video" };
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).loadVideo) };
 }
 
 export async function fetchEventMediaPlayerPageData(
@@ -29,10 +22,10 @@ export async function fetchEventMediaPlayerPageData(
   eventId: string,
   mediaId: string,
 ): Promise<EventMediaPlayerPageDataResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "You need to sign in again" };
+    return { error: actions.signInAgain };
   }
 
   try {
@@ -56,9 +49,9 @@ export async function fetchEventMediaPlayerPageData(
         return { item, assets: null };
       }
 
-      return toErrorResult(error);
+      return await toErrorResult(error);
     }
   } catch (error) {
-    return toErrorResult(error);
+    return await toErrorResult(error);
   }
 }

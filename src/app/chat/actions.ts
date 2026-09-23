@@ -3,13 +3,13 @@
 import { updateTag } from "next/cache";
 
 import {
-  ApiError,
   fetchFocusedEventChatMessages,
   fetchOlderChatMessages,
   submitChatMessage,
 } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, chatMessagesCacheTag, eventCacheTag } from "@/lib/cache-tags";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
@@ -22,16 +22,8 @@ export type SendChatMessageState = {
   turn?: ChatTurn;
 };
 
-function actionError(error: unknown): SendChatMessageState {
-  if (error instanceof ApiError) {
-    return { error: error.apiError ?? error.message };
-  }
-
-  if (error instanceof Error) {
-    return { error: error.message };
-  }
-
-  return { error: "Something went wrong" };
+async function actionError(error: unknown): Promise<{ error: string }> {
+  return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
 }
 
 function readString(formData: FormData, key: string): string {
@@ -43,10 +35,10 @@ export async function sendChatMessageAction(
   _prevState: SendChatMessageState,
   formData: FormData,
 ): Promise<SendChatMessageState> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "Missing Auth.js session token" };
+    return { error: actions.signInAgain };
   }
 
   const threadId = readString(formData, "threadId");
@@ -56,27 +48,27 @@ export async function sendChatMessageAction(
   const athleteId = readString(formData, "athleteId");
 
   if (!threadId || !UUID_PATTERN.test(threadId)) {
-    return { error: "Chat thread is missing" };
+    return { error: actions.chatThreadMissing };
   }
 
   if (!UUID_PATTERN.test(clientRequestId)) {
-    return { error: "Could not send that message" };
+    return { error: actions.couldNotSendMessage };
   }
 
   if (!content) {
-    return { error: "Write a message first" };
+    return { error: actions.writeMessageFirst };
   }
 
   if (content.length > CHAT_MESSAGE_CONTENT_MAX_LENGTH) {
-    return { error: `Keep messages under ${CHAT_MESSAGE_CONTENT_MAX_LENGTH} characters` };
+    return { error: actions.messageTooLong(CHAT_MESSAGE_CONTENT_MAX_LENGTH) };
   }
 
   if (eventId && !UUID_PATTERN.test(eventId)) {
-    return { error: "Could not send that message" };
+    return { error: actions.couldNotSendMessage };
   }
 
   if (athleteId && !UUID_PATTERN.test(athleteId)) {
-    return { error: "Could not send that message" };
+    return { error: actions.couldNotSendMessage };
   }
 
   const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
@@ -99,12 +91,12 @@ export async function sendChatMessageAction(
     }
 
     if (turn.status === "failed") {
-      return { turn, error: turn.failureMessage ?? "Could not complete that reply" };
+      return { turn, error: turn.failureMessage ?? actions.couldNotCompleteReply };
     }
 
     return { turn };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -118,14 +110,14 @@ export async function loadOlderChatMessagesAction(
   threadId: string,
   before: string,
 ): Promise<LoadOlderChatMessagesResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "Missing Auth.js session token" };
+    return { error: actions.signInAgain };
   }
 
   if (!UUID_PATTERN.test(threadId) || !UUID_PATTERN.test(before)) {
-    return { error: "Could not load older messages" };
+    return { error: actions.loadOlderMessages };
   }
 
   try {
@@ -135,7 +127,7 @@ export async function loadOlderChatMessagesAction(
       hasMore: result.pagination.hasMore,
     };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }
 
@@ -144,18 +136,18 @@ export async function loadFocusedEventChatMessagesAction(
   focusedEventId: string,
   before?: string,
 ): Promise<LoadOlderChatMessagesResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { error: "Missing Auth.js session token" };
+    return { error: actions.signInAgain };
   }
 
   if (!UUID_PATTERN.test(threadId) || !UUID_PATTERN.test(focusedEventId)) {
-    return { error: "Could not load earlier updates" };
+    return { error: actions.loadEarlierUpdates };
   }
 
   if (before && !UUID_PATTERN.test(before)) {
-    return { error: "Could not load earlier updates" };
+    return { error: actions.loadEarlierUpdates };
   }
 
   try {
@@ -167,6 +159,6 @@ export async function loadFocusedEventChatMessagesAction(
       hasMore: result.pagination.hasMore,
     };
   } catch (error) {
-    return actionError(error);
+    return await actionError(error);
   }
 }

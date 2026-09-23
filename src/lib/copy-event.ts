@@ -143,19 +143,19 @@ export function buildCopyForDatePreservingTime(
   return buildEventCopyCreateBody(source, timeZone, targetDate, new Date(source.startedAt));
 }
 
+export type DayCopyErrorCode = "noEventsToCopy" | "copyLimit" | "unableToBuildEventTime";
+
 export function buildDayCopyForDate(
   sources: EventCopySource[],
   timeZone: string,
   targetDate: string,
-): { events: EventCopyCreateBody[] } | { error: string } {
+): { events: EventCopyCreateBody[] } | { error: DayCopyErrorCode } {
   if (sources.length === 0) {
-    return { error: "No events to copy" };
+    return { error: "noEventsToCopy" };
   }
 
   if (sources.length > EVENT_BATCH_CREATE_MAX_ITEMS) {
-    return {
-      error: `You can copy up to ${EVENT_BATCH_CREATE_MAX_ITEMS} events at a time`,
-    };
+    return { error: "copyLimit" };
   }
 
   const events: EventCopyCreateBody[] = [];
@@ -164,7 +164,7 @@ export function buildDayCopyForDate(
     const body = buildCopyForDatePreservingTime(source, timeZone, targetDate);
 
     if (!body) {
-      return { error: "Unable to build event time" };
+      return { error: "unableToBuildEventTime" };
     }
 
     events.push(body);

@@ -26,4 +26,15 @@ describe("getMessages", () => {
     expect(getMessages("fi").dashboard.eventsThisWeek(1)).toBe("1 tapahtuma tällä viikolla");
     expect(getMessages("fi").dashboard.eventsThisWeek(3)).toBe("3 tapahtumaa tällä viikolla");
   });
+
+  it("localizes web-owned action and load errors", () => {
+    expect(getMessages("en").actions.signInAgain).toBe("You need to sign in again");
+    expect(getMessages("fi").actions.signInAgain).toBe("Kirjaudu sisään uudelleen");
+    expect(getMessages("en").actions.loadAthletes).toBe("Unable to load athletes");
+    expect(getMessages("fi").actions.loadAthletes).toBe("Urheilijoita ei voitu ladata");
+    expect(getMessages("en").actions.copyLimit(20)).toBe("You can copy up to 20 events at a time");
+    expect(getMessages("fi").actions.copyLimit(20)).toBe(
+      "Voit kopioida enintään 20 tapahtumaa kerralla",
+    );
+  });
 });

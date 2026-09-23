@@ -1,4 +1,5 @@
-import { ApiError, fetchSportStats } from "@/lib/api";
+import { fetchSportStats } from "@/lib/api";
+import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type { AppLocale } from "@/lib/locale";
 import type { SportStats } from "@/lib/types";
@@ -13,10 +14,10 @@ export async function fetchHockeySportStats(
   startedAtTo: string,
   locale: AppLocale,
 ): Promise<HockeySportStatsResult> {
-  const token = await getAuthBearerToken();
+  const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
   if (!token) {
-    return { sportStats: null, error: "You need to sign in again" };
+    return { sportStats: null, error: actions.signInAgain };
   }
 
   try {
@@ -28,14 +29,6 @@ export async function fetchHockeySportStats(
 
     return { sportStats };
   } catch (error) {
-    if (error instanceof ApiError) {
-      return { sportStats: null, error: error.apiError ?? error.message };
-    }
-
-    if (error instanceof Error) {
-      return { sportStats: null, error: error.message };
-    }
-
-    return { sportStats: null, error: "Unable to load hockey stats" };
+    return { sportStats: null, error: passthroughOrGeneric(error, actions.loadStats) };
   }
 }
