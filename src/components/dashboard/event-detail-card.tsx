@@ -124,7 +124,7 @@ export function EventDetailCard({
               >
                 <dt className="min-w-0 text-sm text-zinc-400">{metric.metricDefinition.name}</dt>
                 <dd className="shrink-0 text-sm font-medium text-white">
-                  {formatEventMetricValue(metric)}
+                  {formatEventMetricValue(metric, locale)}
                 </dd>
               </div>
             ))}

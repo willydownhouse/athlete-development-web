@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { DayPicker } from "react-day-picker";
 
 import { dayPickerClassNames } from "@/components/day-picker-styles";

@@ -11,12 +11,15 @@ import {
   shouldUseCompactItemMetrics,
 } from "@/lib/event-item-display";
 import { formatDurationSeconds, formatEventMetricValue } from "@/lib/event-metric-display";
+import type { AppLocale } from "@/lib/locale";
+import { getMessages } from "@/lib/messages";
 import type { EventItem, EventItemMetric } from "@/lib/types";
 
 type EventItemDisplayProps = {
   item: EventItem;
   sameTypeIndex: number;
   timeZone: string;
+  locale: AppLocale;
   nested?: boolean;
 };
 
@@ -47,7 +50,7 @@ function ItemScalarField({ caption, value }: { caption: string; value: string })
   );
 }
 
-function ItemMetricRows({ metrics }: { metrics: EventItemMetric[] }) {
+function ItemMetricRows({ metrics, locale }: { metrics: EventItemMetric[]; locale: AppLocale }) {
   if (metrics.length === 0) {
     return null;
   }
@@ -61,7 +64,7 @@ function ItemMetricRows({ metrics }: { metrics: EventItemMetric[] }) {
         >
           <dt className="min-w-0 text-sm text-zinc-400">{metric.metricDefinition.name}</dt>
           <dd className="shrink-0 text-sm font-medium text-white">
-            {formatEventMetricValue(metric)}
+            {formatEventMetricValue(metric, locale)}
           </dd>
         </div>
       ))}
@@ -86,8 +89,16 @@ function ItemLabelAndDuration({ item }: { item: EventItem }) {
   );
 }
 
-function ItemScalars({ item, timeZone }: { item: EventItem; timeZone: string }) {
-  const timeRange = formatEventItemTimeRange(item, timeZone);
+function ItemScalars({
+  item,
+  timeZone,
+  locale,
+}: {
+  item: EventItem;
+  timeZone: string;
+  locale: AppLocale;
+}) {
+  const timeRange = formatEventItemTimeRange(item, timeZone, locale);
   const notes = item.notes?.trim();
 
   if (!timeRange && !notes) {
@@ -96,7 +107,9 @@ function ItemScalars({ item, timeZone }: { item: EventItem; timeZone: string }) 
 
   return (
     <div className="mt-2 space-y-2">
-      {timeRange ? <ItemScalarField caption="Time" value={timeRange} /> : null}
+      {timeRange ? (
+        <ItemScalarField caption={getMessages(locale).events.time} value={timeRange} />
+      ) : null}
       {notes ? (
         <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-200">{notes}</p>
       ) : null}
@@ -104,7 +117,15 @@ function ItemScalars({ item, timeZone }: { item: EventItem; timeZone: string }) 
   );
 }
 
-function ItemChildren({ items, timeZone }: { items: EventItem[]; timeZone: string }) {
+function ItemChildren({
+  items,
+  timeZone,
+  locale,
+}: {
+  items: EventItem[];
+  timeZone: string;
+  locale: AppLocale;
+}) {
   if (items.length === 0) {
     return null;
   }
@@ -117,6 +138,7 @@ function ItemChildren({ items, timeZone }: { items: EventItem[]; timeZone: strin
             item={child}
             sameTypeIndex={eventItemSameTypeIndex(items, index)}
             timeZone={timeZone}
+            locale={locale}
             nested
           />
         </div>
@@ -125,13 +147,21 @@ function ItemChildren({ items, timeZone }: { items: EventItem[]; timeZone: strin
   );
 }
 
-function ItemBody({ item, timeZone }: { item: EventItem; timeZone: string }) {
+function ItemBody({
+  item,
+  timeZone,
+  locale,
+}: {
+  item: EventItem;
+  timeZone: string;
+  locale: AppLocale;
+}) {
   return (
     <>
       <ItemLabelAndDuration item={item} />
-      <ItemScalars item={item} timeZone={timeZone} />
-      <ItemMetricRows metrics={item.metrics} />
-      <ItemChildren items={item.children} timeZone={timeZone} />
+      <ItemScalars item={item} timeZone={timeZone} locale={locale} />
+      <ItemMetricRows metrics={item.metrics} locale={locale} />
+      <ItemChildren items={item.children} timeZone={timeZone} locale={locale} />
     </>
   );
 }
@@ -140,6 +170,7 @@ export function EventItemDisplay({
   item,
   sameTypeIndex,
   timeZone,
+  locale,
   nested = false,
 }: EventItemDisplayProps) {
   const heading = eventItemHeading(item, sameTypeIndex);
@@ -154,9 +185,9 @@ export function EventItemDisplay({
   const labelClassName = "shrink-0 text-sm font-medium text-zinc-200";
   const headingDurationClassName = "shrink-0 text-sm text-zinc-200";
   const compact = shouldUseCompactItemMetrics(item);
-  const compactSummary = compact ? formatEventItemMetricSummary(item.metrics) : null;
+  const compactSummary = compact ? formatEventItemMetricSummary(item.metrics, locale) : null;
   const collapsible = eventItemIsCollapsible(item);
-  const collapsedCounts = formatEventItemCollapsedCounts(item);
+  const collapsedCounts = formatEventItemCollapsedCounts(item, locale);
   const summaryLabel = usesLabelAsHeading ? null : label;
 
   if (!collapsible) {
@@ -175,7 +206,7 @@ export function EventItemDisplay({
         {label && compactSummary ? (
           <p className="text-sm text-zinc-200 sm:text-right">{compactSummary}</p>
         ) : null}
-        <ItemScalars item={item} timeZone={timeZone} />
+        <ItemScalars item={item} timeZone={timeZone} locale={locale} />
       </div>
     );
   }
@@ -204,7 +235,7 @@ export function EventItemDisplay({
           </span>
         ) : null}
       </summary>
-      <ItemBody item={item} timeZone={timeZone} />
+      <ItemBody item={item} timeZone={timeZone} locale={locale} />
     </details>
   );
 }

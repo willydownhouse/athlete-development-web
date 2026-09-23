@@ -29,6 +29,7 @@ export function EventItemsDisplay({ items, timeZone }: EventItemsDisplayProps) {
               item={item}
               sameTypeIndex={eventItemSameTypeIndex(items, index)}
               timeZone={timeZone}
+              locale={locale}
             />
           </div>
         ))}
