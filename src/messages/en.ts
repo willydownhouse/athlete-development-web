@@ -172,7 +172,7 @@ export const en = {
     loadingMetrics: "Loading metric fields…",
     loadingItems: "Loading item fields…",
     addItem: (name: string) => `Add ${name.toLowerCase()}`,
-    removeItem: (name: string) => `Remove ${name.toLowerCase()}`,
+    removeItem: "Remove",
     noneAddedYet: (section: string) => `No ${section.toLowerCase()} added yet.`,
     rpeTitle: "RPE scale guide",
     rpeShow: "Show RPE scale guide",

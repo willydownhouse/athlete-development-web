@@ -213,7 +213,7 @@ function EventItemNode({
           }
           className="absolute right-0 top-0 text-sm font-medium text-red-300 transition hover:text-red-200 sm:static"
         >
-          {messages.events.removeItem(typeName)}
+          {messages.events.removeItem}
         </button>
       </div>
 

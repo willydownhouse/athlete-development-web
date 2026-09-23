@@ -178,7 +178,7 @@ export const fi = {
     loadingMetrics: "Ladataan mittarikenttiä…",
     loadingItems: "Ladataan kohteiden kenttiä…",
     addItem: (name: string) => `Lisää ${name.toLowerCase()}`,
-    removeItem: (name: string) => `Poista ${name.toLowerCase()}`,
+    removeItem: "Poista",
     noneAddedYet: (section: string) => `${section}: ei lisätty vielä.`,
     rpeTitle: "RPE-asteikon ohje",
     rpeShow: "Näytä RPE-asteikon ohje",
