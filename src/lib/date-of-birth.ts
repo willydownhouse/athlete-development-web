@@ -90,3 +90,54 @@ export function latestSelfAthleteBirthDate(now = new Date()): Date {
     now.getUTCDate(),
   );
 }
+
+/** A parent can set any date. An athlete login can change the date only while the saved age is already at least 18. */
+export function canChangeProfileDateOfBirth(
+  relationshipToAthlete: string,
+  savedDateOfBirth: string,
+  now = new Date(),
+): boolean {
+  if (relationshipToAthlete === "parent") {
+    return true;
+  }
+
+  return isAtLeastAgeYears(savedDateOfBirth, SELF_ATHLETE_MIN_AGE_YEARS, now);
+}
+
+export type ProfileDateOfBirthUpdate =
+  | { status: "omit" }
+  | { status: "include"; dateOfBirth: string }
+  | { status: "error"; error: "required" | "invalid" | "underAge" };
+
+/**
+ * Omit an unchanged date so a name-only save does not resubmit it.
+ * A non-parent change is allowed only when the saved date is already at least 18 and the new date stays there.
+ */
+export function resolveProfileDateOfBirthUpdate(input: {
+  dateOfBirth: string | null;
+  savedDateOfBirth: string;
+  relationshipToAthlete: string;
+  now?: Date;
+}): ProfileDateOfBirthUpdate {
+  if (input.dateOfBirth === null || input.dateOfBirth === input.savedDateOfBirth) {
+    return { status: "omit" };
+  }
+
+  if (!input.dateOfBirth) {
+    return { status: "error", error: "required" };
+  }
+
+  if (!isValidDateOnly(input.dateOfBirth)) {
+    return { status: "error", error: "invalid" };
+  }
+
+  if (
+    input.relationshipToAthlete !== "parent" &&
+    (!canChangeProfileDateOfBirth(input.relationshipToAthlete, input.savedDateOfBirth, input.now) ||
+      !isAtLeastAgeYears(input.dateOfBirth, SELF_ATHLETE_MIN_AGE_YEARS, input.now))
+  ) {
+    return { status: "error", error: "underAge" };
+  }
+
+  return { status: "include", dateOfBirth: input.dateOfBirth };
+}

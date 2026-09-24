@@ -1,5 +1,6 @@
 "use client";
 
+import { format, isValid, parseISO } from "date-fns";
 import { useActionState, useState } from "react";
 
 import {
@@ -10,7 +11,13 @@ import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { DatePickerInput } from "@/components/date-picker-input";
 import { ATHLETE_NAME_MAX_LENGTH } from "@/lib/constants";
-import { latestSelfAthleteBirthDate, SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
+import { dateFnsLocale, datePickerDisplayFormat } from "@/lib/date-fns-locale";
+import {
+  canChangeProfileDateOfBirth,
+  latestSelfAthleteBirthDate,
+  SELF_ATHLETE_MIN_AGE_YEARS,
+} from "@/lib/date-of-birth";
+import type { AppLocale } from "@/lib/locale";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 import type { AthleteAccessRole } from "@/lib/types";
@@ -39,10 +46,13 @@ export function AthleteProfileForm({
   const [savedValues, setSavedValues] = useState({ name, dateOfBirth });
   const [nameValue, setNameValue] = useState(name);
   const [dateOfBirthValue, setDateOfBirthValue] = useState(dateOfBirth);
-  const messages = getMessages(useAppLocale());
-  const isSelfProfile = relationshipToAthlete === "athlete";
+  const locale = useAppLocale();
+  const messages = getMessages(locale);
+  const canChangeDateOfBirth = canChangeProfileDateOfBirth(relationshipToAthlete, dateOfBirth);
+  const isAdultAthlete = relationshipToAthlete === "athlete" && canChangeDateOfBirth;
   const isDirty =
-    nameValue.trim() !== savedValues.name.trim() || dateOfBirthValue !== savedValues.dateOfBirth;
+    nameValue.trim() !== savedValues.name.trim() ||
+    (canChangeDateOfBirth && dateOfBirthValue !== savedValues.dateOfBirth);
 
   if (name !== savedValues.name || dateOfBirth !== savedValues.dateOfBirth) {
     setSavedValues({ name, dateOfBirth });
@@ -54,6 +64,7 @@ export function AthleteProfileForm({
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="athleteId" value={athleteId} />
       <input type="hidden" name="relationshipToAthlete" value={relationshipToAthlete} />
+      <input type="hidden" name="savedDateOfBirth" value={dateOfBirth} />
       <FormMessage error={state.error} success={state.success} />
 
       <div className="flex flex-col gap-1 text-sm lg:text-base">
@@ -76,15 +87,19 @@ export function AthleteProfileForm({
 
       <label className="flex flex-col gap-1 text-sm lg:text-base">
         <span className="font-medium text-zinc-300">{messages.onboarding.dateOfBirth}</span>
-        <DatePickerInput
-          name="dateOfBirth"
-          value={dateOfBirthValue}
-          onChange={setDateOfBirthValue}
-          placeholder={messages.events.selectDate}
-          className={inputClassName}
-          disabledDates={{ after: isSelfProfile ? latestSelfAthleteBirthDate() : new Date() }}
-        />
-        {isSelfProfile ? (
+        {canChangeDateOfBirth ? (
+          <DatePickerInput
+            name="dateOfBirth"
+            value={dateOfBirthValue}
+            onChange={setDateOfBirthValue}
+            placeholder={messages.events.selectDate}
+            className={inputClassName}
+            disabledDates={{ after: isAdultAthlete ? latestSelfAthleteBirthDate() : new Date() }}
+          />
+        ) : (
+          <p className="text-white">{formatProfileDateOfBirth(dateOfBirth, locale)}</p>
+        )}
+        {isAdultAthlete ? (
           <span className="text-xs text-zinc-500 lg:text-sm">
             {messages.onboarding.minAgeHint(SELF_ATHLETE_MIN_AGE_YEARS)}
           </span>
@@ -103,4 +118,16 @@ export function AthleteProfileForm({
       ) : null}
     </form>
   );
+}
+
+function formatProfileDateOfBirth(value: string, locale: AppLocale): string {
+  const parsed = parseISO(value);
+
+  if (!isValid(parsed)) {
+    return value;
+  }
+
+  return format(parsed, datePickerDisplayFormat(locale, false), {
+    locale: dateFnsLocale(locale),
+  });
 }

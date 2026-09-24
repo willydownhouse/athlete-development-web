@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canChangeProfileDateOfBirth,
   dateOnlyInputValue,
   isAtLeastAgeYears,
   isValidDateOnly,
   latestSelfAthleteBirthDate,
+  resolveProfileDateOfBirthUpdate,
 } from "./date-of-birth";
 
 describe("isValidDateOnly", () => {
@@ -60,5 +62,105 @@ describe("latestSelfAthleteBirthDate", () => {
     const now = new Date("2024-02-29T12:00:00.000Z");
 
     expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2006, 1, 28));
+  });
+});
+
+describe("canChangeProfileDateOfBirth", () => {
+  const now = new Date("2026-09-19T15:00:00.000Z");
+
+  it("lets a parent change any saved date", () => {
+    expect(canChangeProfileDateOfBirth("parent", "2016-09-19", now)).toBe(true);
+  });
+
+  it("lets an adult athlete change a date that is already at least 18", () => {
+    expect(canChangeProfileDateOfBirth("athlete", "2008-09-19", now)).toBe(true);
+  });
+
+  it("keeps an under-18 athlete date locked", () => {
+    expect(canChangeProfileDateOfBirth("athlete", "2016-09-19", now)).toBe(false);
+    expect(canChangeProfileDateOfBirth("athlete", "", now)).toBe(false);
+  });
+});
+
+describe("resolveProfileDateOfBirthUpdate", () => {
+  const now = new Date("2026-09-19T15:00:00.000Z");
+
+  it("omits an unchanged date and a missing field", () => {
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2016-09-19",
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "athlete",
+        now,
+      }),
+    ).toEqual({ status: "omit" });
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: null,
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "athlete",
+        now,
+      }),
+    ).toEqual({ status: "omit" });
+  });
+
+  it("rejects an under-18 athlete changing the date", () => {
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2000-01-01",
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "athlete",
+        now,
+      }),
+    ).toEqual({ status: "error", error: "underAge" });
+  });
+
+  it("keeps an adult athlete date at least 18", () => {
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2007-09-19",
+        savedDateOfBirth: "2000-01-01",
+        relationshipToAthlete: "athlete",
+        now,
+      }),
+    ).toEqual({ status: "include", dateOfBirth: "2007-09-19" });
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2016-09-19",
+        savedDateOfBirth: "2000-01-01",
+        relationshipToAthlete: "athlete",
+        now,
+      }),
+    ).toEqual({ status: "error", error: "underAge" });
+  });
+
+  it("lets a parent set a younger date", () => {
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2018-01-01",
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "parent",
+        now,
+      }),
+    ).toEqual({ status: "include", dateOfBirth: "2018-01-01" });
+  });
+
+  it("rejects a cleared or invalid date", () => {
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "",
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "parent",
+        now,
+      }),
+    ).toEqual({ status: "error", error: "required" });
+    expect(
+      resolveProfileDateOfBirthUpdate({
+        dateOfBirth: "2016-02-31",
+        savedDateOfBirth: "2016-09-19",
+        relationshipToAthlete: "parent",
+        now,
+      }),
+    ).toEqual({ status: "error", error: "invalid" });
   });
 });

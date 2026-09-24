@@ -13,11 +13,7 @@ import {
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import type { AthleteMediaItem, AthleteMediaUploadIntentResponse } from "@/lib/types";
-import {
-  isAtLeastAgeYears,
-  isValidDateOnly,
-  SELF_ATHLETE_MIN_AGE_YEARS,
-} from "@/lib/date-of-birth";
+import { resolveProfileDateOfBirthUpdate, SELF_ATHLETE_MIN_AGE_YEARS } from "@/lib/date-of-birth";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
 
@@ -49,7 +45,9 @@ export async function updateAthleteProfileAction(
 
   const athleteId = readString(formData, "athleteId");
   const name = readString(formData, "athleteName");
-  const dateOfBirth = readString(formData, "dateOfBirth");
+  const dateField = formData.get("dateOfBirth");
+  const dateOfBirth = typeof dateField === "string" ? dateField.trim() : null;
+  const savedDateOfBirth = readString(formData, "savedDateOfBirth");
   const relationshipToAthlete = readString(formData, "relationshipToAthlete");
 
   if (!athleteId) {
@@ -60,25 +58,28 @@ export async function updateAthleteProfileAction(
     return { error: actions.athleteNameRequired };
   }
 
-  if (!dateOfBirth) {
-    return { error: actions.dateOfBirthRequired };
-  }
+  const dateUpdate = resolveProfileDateOfBirthUpdate({
+    dateOfBirth,
+    savedDateOfBirth,
+    relationshipToAthlete,
+  });
 
-  if (!isValidDateOnly(dateOfBirth)) {
-    return { error: actions.dateOfBirthInvalid };
-  }
+  if (dateUpdate.status === "error") {
+    if (dateUpdate.error === "required") {
+      return { error: actions.dateOfBirthRequired };
+    }
 
-  if (
-    relationshipToAthlete === "athlete" &&
-    !isAtLeastAgeYears(dateOfBirth, SELF_ATHLETE_MIN_AGE_YEARS)
-  ) {
+    if (dateUpdate.error === "invalid") {
+      return { error: actions.dateOfBirthInvalid };
+    }
+
     return { error: messages.onboarding.minAgeHint(SELF_ATHLETE_MIN_AGE_YEARS) };
   }
 
   try {
     await updateAthlete(token, athleteId, {
       name,
-      dateOfBirth,
+      ...(dateUpdate.status === "include" ? { dateOfBirth: dateUpdate.dateOfBirth } : {}),
     });
     revalidatePath(athleteProfileHref(athleteId));
     revalidatePath(dashboardHref(athleteId));
