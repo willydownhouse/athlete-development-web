@@ -224,7 +224,7 @@ export function AppShellNav({
           {messages.nav.today}
         </NavLink>
 
-        {athletes.length > 1 ? (
+        {athletes.length > 0 ? (
           <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
             <AthleteNavList athletes={athletes} onNavigate={onNavigate} />
           </div>
