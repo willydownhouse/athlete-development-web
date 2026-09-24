@@ -23,6 +23,9 @@ import type {
   EventItemType,
   EventItemTypeChildType,
   EventItemTypeMetricDefinition,
+  AthleteMediaItem,
+  AthleteMediaSlot,
+  AthleteMediaUploadIntentResponse,
   EventMediaItem,
   EventMediaListResponse,
   EventType,
@@ -975,6 +978,77 @@ export async function deleteEventMedia(
   await apiFetch<void>(token, `/api/athletes/${athleteId}/events/${eventId}/media/${mediaId}`, {
     method: "DELETE",
   });
+}
+
+export async function getCurrentAthleteMedia(
+  token: string,
+  athleteId: string,
+  slot: AthleteMediaSlot,
+): Promise<AthleteMediaItem> {
+  return apiFetch<AthleteMediaItem>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/media?slot=${encodeURIComponent(slot)}`,
+  );
+}
+
+export async function getAthleteMedia(
+  token: string,
+  athleteId: string,
+  mediaId: string,
+): Promise<AthleteMediaItem> {
+  return apiFetch<AthleteMediaItem>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/media/${encodeURIComponent(mediaId)}`,
+  );
+}
+
+export async function createAthleteMediaUploadIntent(
+  token: string,
+  athleteId: string,
+  body: {
+    slot: AthleteMediaSlot;
+    kind: "image";
+    declaredMimeType: string;
+    declaredByteSize: number;
+    originalFilename?: string;
+  },
+): Promise<AthleteMediaUploadIntentResponse> {
+  return apiFetch<AthleteMediaUploadIntentResponse>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/media/upload-intents`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function completeAthleteMediaUpload(
+  token: string,
+  athleteId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/media/${encodeURIComponent(mediaId)}/complete-upload`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export async function deleteAthleteMedia(
+  token: string,
+  athleteId: string,
+  mediaId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/media/${encodeURIComponent(mediaId)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function createChatThread(token: string): Promise<ChatThread> {

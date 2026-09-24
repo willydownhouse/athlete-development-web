@@ -11,12 +11,14 @@ import {
   dashboardHref,
 } from "@/components/dashboard/dashboard-nav";
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
+import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { dateOnlyInputValue } from "@/lib/date-of-birth";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
+import { loadAthleteProfileMedia } from "@/lib/load-athlete-profile-media";
 import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteProfilePageProps = {
@@ -44,7 +46,12 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
   }
 
   const locale = await getRequestLocale();
-  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
+  const [athletes, isAdmin, profileMedia] = await Promise.all([
+    loadShellAthletes(token),
+    getIsAdminUser(),
+    loadAthleteProfileMedia(token, normalizedAthleteId),
+  ]);
+
   const messages = getMessages(locale);
   const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
@@ -89,18 +96,15 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
           ) : null}
         </div>
 
-        <section className="mt-6 rounded-[1.35rem] bg-[#171b22] px-4 py-5 sm:px-5 lg:flex lg:items-start lg:gap-8">
-          <div className="relative flex aspect-[3/4] w-full items-center justify-center rounded-[1.35rem] bg-[#2a2f38] text-2xl font-semibold text-white lg:w-56 lg:shrink-0">
-            {athleteInitials(selectedAthlete.name)}
-            <button
-              type="button"
-              className="absolute bottom-3 right-3 inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#1c222c] px-3 py-1.5 text-xs font-medium text-zinc-200"
-            >
-              {messages.profile.addPhoto}
-            </button>
-          </div>
+        <section className="relative mt-6 rounded-[1.35rem] bg-[#171b22] px-4 py-5 sm:px-5 lg:flex lg:items-start lg:gap-8">
+          <AthleteProfilePhoto
+            athleteId={selectedAthlete.id}
+            athleteName={selectedAthlete.name}
+            initials={athleteInitials(selectedAthlete.name)}
+            initialMedia={profileMedia}
+          />
 
-          <div className="mt-6 min-w-0 flex-1 lg:mt-0">
+          <div className="mt-6 min-w-0 flex-1 lg:mt-0 lg:pr-12">
             <AthleteProfileForm
               athleteId={selectedAthlete.id}
               name={selectedAthlete.name}

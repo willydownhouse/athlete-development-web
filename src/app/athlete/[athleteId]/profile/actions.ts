@@ -3,9 +3,16 @@
 import { revalidatePath } from "next/cache";
 
 import { athleteProfileHref, dashboardHref } from "@/components/dashboard/dashboard-nav";
-import { updateAthlete } from "@/lib/api";
+import {
+  completeAthleteMediaUpload,
+  createAthleteMediaUploadIntent,
+  deleteAthleteMedia,
+  getAthleteMedia,
+  updateAthlete,
+} from "@/lib/api";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import type { AthleteMediaItem, AthleteMediaUploadIntentResponse } from "@/lib/types";
 import {
   isAtLeastAgeYears,
   isValidDateOnly,
@@ -78,5 +85,98 @@ export async function updateAthleteProfileAction(
     return { success: actions.profileSaved };
   } catch (error) {
     return await actionError(error);
+  }
+}
+
+type ActionError = { error: string };
+
+async function requireToken(): Promise<string | ActionError> {
+  const token = await getAuthBearerToken();
+
+  if (!token) {
+    return { error: (await getActionMessages()).signInAgain };
+  }
+
+  return token;
+}
+
+export async function getAthleteMediaAction(
+  athleteId: string,
+  mediaId: string,
+): Promise<AthleteMediaItem | ActionError> {
+  const token = await requireToken();
+
+  if (typeof token !== "string") {
+    return token;
+  }
+
+  try {
+    return await getAthleteMedia(token, athleteId, mediaId);
+  } catch (error) {
+    return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
+  }
+}
+
+export async function createAthleteMediaUploadIntentAction(
+  athleteId: string,
+  body: {
+    declaredMimeType: string;
+    declaredByteSize: number;
+    originalFilename?: string;
+  },
+): Promise<AthleteMediaUploadIntentResponse | ActionError> {
+  const token = await requireToken();
+
+  if (typeof token !== "string") {
+    return token;
+  }
+
+  try {
+    return await createAthleteMediaUploadIntent(token, athleteId, {
+      slot: "profile",
+      kind: "image",
+      declaredMimeType: body.declaredMimeType,
+      declaredByteSize: body.declaredByteSize,
+      originalFilename: body.originalFilename,
+    });
+  } catch (error) {
+    return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
+  }
+}
+
+export async function completeAthleteMediaUploadAction(
+  athleteId: string,
+  mediaId: string,
+): Promise<{ ok: true } | ActionError> {
+  const token = await requireToken();
+
+  if (typeof token !== "string") {
+    return token;
+  }
+
+  try {
+    await completeAthleteMediaUpload(token, athleteId, mediaId);
+    return { ok: true };
+  } catch (error) {
+    return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
+  }
+}
+
+export async function deleteAthleteMediaAction(
+  athleteId: string,
+  mediaId: string,
+): Promise<{ ok: true } | ActionError> {
+  const token = await requireToken();
+
+  if (typeof token !== "string") {
+    return token;
+  }
+
+  try {
+    await deleteAthleteMedia(token, athleteId, mediaId);
+    revalidatePath(athleteProfileHref(athleteId));
+    return { ok: true };
+  } catch (error) {
+    return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
   }
 }

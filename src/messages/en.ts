@@ -247,7 +247,17 @@ export const en = {
     athleteDetails: "Athlete details",
   },
   profile: {
+    photoActions: "Photo actions",
     addPhoto: "Add photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove photo",
+    removingPhoto: "Removing…",
+    photoAlt: (name: string) => `${name} profile photo`,
+    photoEmpty: "File is empty.",
+    photoUnsupported: "Use a JPEG, PNG, or WebP file.",
+    photoOversize: "Image must be 15 MB or smaller.",
+    photoUploadFailed: "Photo upload failed.",
+    photoProcessingFailed: "Photo processing failed.",
     sport: "Sport",
   },
   invites: {

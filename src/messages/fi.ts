@@ -252,7 +252,17 @@ export const fi = {
     athleteDetails: "Urheilijan tiedot",
   },
   profile: {
+    photoActions: "Kuvatoiminnot",
     addPhoto: "Lisää kuva",
+    changePhoto: "Vaihda kuva",
+    removePhoto: "Poista kuva",
+    removingPhoto: "Poistetaan…",
+    photoAlt: (name: string) => `Urheilijan ${name} profiilikuva`,
+    photoEmpty: "Tiedosto on tyhjä.",
+    photoUnsupported: "Käytä JPEG-, PNG- tai WebP-tiedostoa.",
+    photoOversize: "Kuvan on oltava enintään 15 Mt.",
+    photoUploadFailed: "Kuvan lataus epäonnistui.",
+    photoProcessingFailed: "Kuvan käsittely epäonnistui.",
     sport: "Laji",
   },
   invites: {
