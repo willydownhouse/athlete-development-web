@@ -6,7 +6,7 @@ import { useActionState, useCallback, useEffect, useMemo, useRef, useState } fro
 import { loadOlderChatMessagesAction, sendChatMessageAction } from "@/app/chat/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
-import { ChatMessageList, ChatMessageListSkeleton } from "@/components/chat/chat-message-list";
+import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
@@ -266,11 +266,7 @@ export function ChatView({
             />
           )}
         </div>
-        {!listReady ? (
-          <div className="absolute inset-0 overflow-hidden bg-[#0b0d10]">
-            <ChatMessageListSkeleton />
-          </div>
-        ) : null}
+        {!listReady ? <div className="absolute inset-0 overflow-hidden bg-[#0b0d10]" /> : null}
       </div>
 
       {state.error ? (

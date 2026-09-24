@@ -1,16 +1,14 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { auth } from "@/auth";
-import { ChatView } from "@/components/chat/chat-view";
 import { AppShell } from "@/components/app-shell";
+import { ChatSection } from "@/components/chat/chat-section";
+import { ChatSectionSkeleton } from "@/components/chat/chat-section-skeleton";
 import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
-import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
-import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { getIsAdminUser } from "@/lib/is-admin-user";
 import { loadShellAthletes } from "@/lib/shell-data";
-import { getRequestTimeZone } from "@/lib/time-zone-server";
-import type { ChatMessage } from "@/lib/types";
 
 export const maxDuration = 240;
 
@@ -27,34 +25,7 @@ export default async function ChatPage() {
     redirect("/");
   }
 
-  const [athletes, isAdmin, timeZone, actions] = await Promise.all([
-    loadShellAthletes(token),
-    getIsAdminUser(),
-    getRequestTimeZone(),
-    getActionMessages(),
-  ]);
-
-  let threadId: string | null = null;
-  let messages: ChatMessage[] = [];
-  let hasMore = false;
-  let loadError: string | null = null;
-
-  try {
-    const thread = await createChatThread(token);
-    threadId = thread.id;
-  } catch (error) {
-    loadError = passthroughOrGeneric(error, actions.loadChat);
-  }
-
-  if (threadId) {
-    try {
-      const latest = await fetchLatestChatMessages(token, threadId);
-      messages = latest.items;
-      hasMore = latest.pagination.hasMore;
-    } catch (error) {
-      loadError = passthroughOrGeneric(error, actions.loadMessages);
-    }
-  }
+  const [athletes, isAdmin] = await Promise.all([loadShellAthletes(token), getIsAdminUser()]);
 
   return (
     <AppShell
@@ -64,16 +35,9 @@ export default async function ChatPage() {
       selectedAthlete={null}
     >
       <VisibleViewportFrame className="relative mx-auto flex h-[calc(100svh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-svh lg:max-w-3xl lg:px-10">
-        <ChatView
-          threadId={threadId}
-          messages={messages}
-          hasMore={hasMore}
-          timeZone={timeZone}
-          nowIso={new Date().toISOString()}
-          exampleAthleteName={athletes[0]?.name ?? ""}
-          canSend={athletes.length > 0}
-          loadError={loadError}
-        />
+        <Suspense fallback={<ChatSectionSkeleton />}>
+          <ChatSection exampleAthleteName={athletes[0]?.name ?? ""} canSend={athletes.length > 0} />
+        </Suspense>
       </VisibleViewportFrame>
     </AppShell>
   );
