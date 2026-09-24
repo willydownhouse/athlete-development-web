@@ -41,7 +41,7 @@ export function QuickLogCard({
     scope === "sport" ? focusSportName.toLowerCase() : messages.common.general.toLowerCase();
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-white">{messages.dashboard.quickLog}</h2>
 

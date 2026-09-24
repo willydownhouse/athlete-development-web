@@ -8,7 +8,7 @@ import type { MonthlyUsage } from "@/lib/types";
 
 export function UsageMetersSkeleton() {
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <Skeleton className="h-4 w-40" />
       <div className="mt-5 space-y-5">
         <UsageBarSkeleton />
@@ -40,7 +40,7 @@ export async function UsageMeters() {
 
 function UsageMetersError({ message }: { message: string }) {
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <p className="text-sm text-red-300">{message}</p>
     </section>
   );
@@ -51,7 +51,7 @@ async function UsageMetersCard({ usage }: { usage: MonthlyUsage }) {
   const messages = getMessages(locale);
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold text-white sm:text-base">
           {messages.usage.thisMonth}

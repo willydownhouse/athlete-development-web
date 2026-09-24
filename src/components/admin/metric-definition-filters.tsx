@@ -23,7 +23,7 @@ export function MetricDefinitionFilters({
   return (
     <form
       method="get"
-      className="flex flex-col gap-3 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:flex-row sm:flex-wrap sm:items-end"
+      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#171b22] p-4 sm:flex-row sm:flex-wrap sm:items-end"
     >
       <label className="w-full space-y-1 text-sm sm:w-auto sm:min-w-[10rem]">
         <span className="font-medium text-zinc-300">Sport</span>

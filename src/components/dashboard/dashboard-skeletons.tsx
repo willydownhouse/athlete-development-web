@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-const CARD_CLASS = "rounded-[1.35rem] bg-[#171b22] px-4 py-4";
+const CARD_CLASS = "rounded-2xl bg-[#171b22] px-4 py-4";
 
 function EventListRowSkeleton() {
   return (

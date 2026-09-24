@@ -44,7 +44,7 @@ export function AccessMemberCard({
   }
 
   return (
-    <article className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <article className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-base font-semibold text-white">{name}</h3>

@@ -48,7 +48,7 @@ export async function DashboardView({
         {hasAthlete ? (
           <>
             {loadError ? (
-              <p className="mb-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
+              <p className="mb-6 rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">
                 {loadError}
               </p>
             ) : null}
@@ -61,7 +61,7 @@ export async function DashboardView({
         ) : (
           <>
             {loadError ? (
-              <p className="mb-6 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
+              <p className="mb-6 rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">
                 {loadError}
               </p>
             ) : null}

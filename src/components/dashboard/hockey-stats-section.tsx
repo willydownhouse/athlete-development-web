@@ -35,7 +35,7 @@ export async function HockeyStatsSection({
   ];
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4">
       <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
         <h2 className="min-w-0 truncate text-sm font-semibold text-white sm:text-base">
           {messages.stats.sportStats(sportName)}

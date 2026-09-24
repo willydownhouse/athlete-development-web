@@ -67,7 +67,7 @@ export default async function AdminOverviewPage() {
           <Link
             key={section.href}
             href={section.href}
-            className="group rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 transition hover:border-[#9ec9e8]/40 hover:bg-[#1c222c] sm:p-5"
+            className="group rounded-2xl border border-white/10 bg-[#171b22] p-4 transition hover:border-[#9ec9e8]/40 hover:bg-[#1c222c] sm:p-5"
           >
             <p className="text-sm font-medium text-zinc-400 group-hover:text-[#9ec9e8]">
               {section.title}

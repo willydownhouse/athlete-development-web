@@ -220,7 +220,7 @@ export function ChatView({
       <h1 className="sr-only">{copy.nav.chat}</h1>
 
       {loadError ? (
-        <p className="mb-4 shrink-0 rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
+        <p className="mb-4 shrink-0 rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">
           {loadError}
         </p>
       ) : null}

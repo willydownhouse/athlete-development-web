@@ -43,7 +43,7 @@ export function SportSelect({ sports }: SportSelectProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-[1.35rem] bg-[#171b22] p-4 sm:p-5 lg:p-6">
+    <div className="flex flex-col gap-4 rounded-2xl bg-[#171b22] p-4 sm:p-5 lg:p-6">
       <div className="flex flex-col gap-1">
         {singleSport && selectedSport ? (
           <div className="rounded-xl border border-[#9ec9e8]/35 bg-[#1c222c] px-4 py-3 lg:px-5 lg:py-4">

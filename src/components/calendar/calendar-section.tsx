@@ -213,7 +213,7 @@ export function CalendarSection({
 
   return (
     <>
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4">
         <div className="flex items-center gap-3">
           <h2 className="hidden shrink-0 text-base font-semibold text-white sm:block">
             {messages.calendar.title}

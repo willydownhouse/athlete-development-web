@@ -260,7 +260,7 @@ export function AthleteProfilePhoto({
         />
       </div>
       <div className="w-full lg:w-56 lg:shrink-0">
-        <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-[1.35rem] bg-[#2a2f38] text-2xl font-semibold text-white">
+        <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-lg bg-[#2a2f38] text-2xl font-semibold text-white">
           {displaySrc ? (
             // Same-origin contentUrl is proxied by Next.js with cache headers.
             // eslint-disable-next-line @next/next/no-img-element

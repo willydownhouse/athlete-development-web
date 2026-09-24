@@ -44,7 +44,7 @@ export default async function AdminEventTypesPage({ searchParams }: AdminEventTy
         defaultActive={params.active ?? ""}
       />
 
-      <section className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">Event types ({eventTypes.length})</h2>
         </div>

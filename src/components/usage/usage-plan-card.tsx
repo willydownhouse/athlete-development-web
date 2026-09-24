@@ -5,7 +5,7 @@ export async function UsagePlanCard() {
   const messages = getMessages(await getRequestLocale());
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-zinc-400">{messages.usage.currentPlan}</p>

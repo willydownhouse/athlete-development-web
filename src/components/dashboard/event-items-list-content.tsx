@@ -48,7 +48,7 @@ export function EventItemsListContent({
   const messages = getMessages(locale);
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-base font-semibold text-white">{heading}</h2>
         <p className="text-sm text-zinc-400">
