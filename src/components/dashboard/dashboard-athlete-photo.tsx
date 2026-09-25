@@ -20,11 +20,13 @@ export function DashboardAthletePhoto({
   avatarUrl,
   photoAlt,
 }: DashboardAthletePhotoProps) {
-  const initials = athleteInitials(athleteName);
+  if (!avatarUrl) {
+    return null;
+  }
 
   return (
     <Link href={profileHref} className={avatarClassName} aria-label={photoAlt}>
-      {avatarUrl ? <AthleteAvatarImage src={avatarUrl} alt="" initials={initials} /> : initials}
+      <AthleteAvatarImage src={avatarUrl} alt="" initials={athleteInitials(athleteName)} />
     </Link>
   );
 }

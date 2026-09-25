@@ -13,6 +13,7 @@ import {
   ATHLETE_MEDIA_STATUS_POLL_MS,
   classifyProfilePhotoFile,
   PROFILE_PHOTO_FILE_ACCEPT,
+  profileUploadFailureAction,
   shouldPollAthleteMedia,
 } from "@/lib/athlete-media";
 import { useAppLocale } from "@/lib/locale-context";
@@ -134,6 +135,45 @@ export function AthleteProfilePhoto({
     setLocalPreviewUrl(nextUrl);
   }
 
+  function clearLocalPreview() {
+    if (localPreviewUrlRef.current) {
+      URL.revokeObjectURL(localPreviewUrlRef.current);
+      localPreviewUrlRef.current = null;
+    }
+
+    setLocalPreviewUrl(null);
+  }
+
+  async function continueUploadAfterCompleteError(mediaId: string): Promise<boolean> {
+    const result = await getAthleteMediaAction(athleteId, mediaId);
+
+    if ("error" in result) {
+      return false;
+    }
+
+    const action = profileUploadFailureAction(result.status);
+
+    if (action === "delete") {
+      await deleteAthleteMediaAction(athleteId, mediaId).catch(() => undefined);
+      return false;
+    }
+
+    if (action === "poll") {
+      setMedia(result);
+      return true;
+    }
+
+    clearLocalPreview();
+    setBusy(false);
+    setMedia(result);
+
+    if (action === "failed") {
+      setError(messages.profile.photoProcessingFailed);
+    }
+
+    return true;
+  }
+
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -153,6 +193,9 @@ export function AthleteProfilePhoto({
     setBusy(true);
     replaceLocalPreview(file);
 
+    let intentId: string | null = null;
+    let fileSent = false;
+
     try {
       const intent = await createAthleteMediaUploadIntentAction(athleteId, {
         declaredMimeType: classified.value.declaredMimeType,
@@ -163,6 +206,8 @@ export function AthleteProfilePhoto({
       if ("error" in intent) {
         throw new Error(intent.error);
       }
+
+      intentId = intent.id;
 
       const putResponse = await fetch(intent.uploadUrl, {
         method: "PUT",
@@ -178,9 +223,17 @@ export function AthleteProfilePhoto({
         throw new Error(messages.profile.photoUploadFailed);
       }
 
+      fileSent = true;
+
       const completeResult = await completeAthleteMediaUploadAction(athleteId, intent.id);
 
       if ("error" in completeResult) {
+        const continued = await continueUploadAfterCompleteError(intent.id);
+
+        if (continued) {
+          return;
+        }
+
         throw new Error(completeResult.error);
       }
 
@@ -200,11 +253,11 @@ export function AthleteProfilePhoto({
         updatedAt: new Date().toISOString(),
       });
     } catch (uploadError) {
-      if (localPreviewUrlRef.current) {
-        URL.revokeObjectURL(localPreviewUrlRef.current);
-        localPreviewUrlRef.current = null;
+      if (intentId && !fileSent) {
+        await deleteAthleteMediaAction(athleteId, intentId).catch(() => undefined);
       }
-      setLocalPreviewUrl(null);
+
+      clearLocalPreview();
       setBusy(false);
       setError(
         uploadError instanceof Error ? uploadError.message : messages.profile.photoUploadFailed,

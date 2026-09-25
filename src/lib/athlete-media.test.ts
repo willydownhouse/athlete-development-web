@@ -5,6 +5,7 @@ import { EVENT_MEDIA_MAX_IMAGE_BYTES } from "@/lib/event-media-file";
 import {
   classifyProfilePhotoFile,
   PROFILE_PHOTO_FILE_ACCEPT,
+  profileUploadFailureAction,
   shouldPollAthleteMedia,
 } from "./athlete-media";
 
@@ -55,5 +56,21 @@ describe("shouldPollAthleteMedia", () => {
     expect(shouldPollAthleteMedia("processing")).toBe(true);
     expect(shouldPollAthleteMedia("ready")).toBe(false);
     expect(shouldPollAthleteMedia("failed")).toBe(false);
+  });
+});
+
+describe("profileUploadFailureAction", () => {
+  it("drops a row that is still waiting for the file to be completed", () => {
+    expect(profileUploadFailureAction("uploading")).toBe("delete");
+  });
+
+  it("keeps polling once processing has started", () => {
+    expect(profileUploadFailureAction("queued")).toBe("poll");
+    expect(profileUploadFailureAction("processing")).toBe("poll");
+  });
+
+  it("keeps a finished row", () => {
+    expect(profileUploadFailureAction("ready")).toBe("ready");
+    expect(profileUploadFailureAction("failed")).toBe("failed");
   });
 });

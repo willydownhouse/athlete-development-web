@@ -53,3 +53,20 @@ export function classifyProfilePhotoFile(file: {
 export function shouldPollAthleteMedia(status: MediaStatus): boolean {
   return status === "uploading" || status === "queued" || status === "processing";
 }
+
+/** What to do when the file was sent but complete-upload did not return success. */
+export function profileUploadFailureAction(
+  status: MediaStatus,
+): "delete" | "poll" | "ready" | "failed" {
+  switch (status) {
+    case "uploading":
+      return "delete";
+    case "queued":
+    case "processing":
+      return "poll";
+    case "ready":
+      return "ready";
+    case "failed":
+      return "failed";
+  }
+}

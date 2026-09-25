@@ -112,7 +112,13 @@ export async function getAthleteMediaAction(
   }
 
   try {
-    return await getAthleteMedia(token, athleteId, mediaId);
+    const media = await getAthleteMedia(token, athleteId, mediaId);
+
+    if (media.status === "ready") {
+      revalidatePath(athleteProfileHref(athleteId));
+    }
+
+    return media;
   } catch (error) {
     return { error: passthroughOrGeneric(error, (await getActionMessages()).generic) };
   }
