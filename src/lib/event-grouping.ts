@@ -1,3 +1,4 @@
+import { EVENT_TONE_ORDER, getEventTone, type EventTone } from "@/lib/event-tone";
 import type { Event } from "@/lib/types";
 import { getZonedDateString } from "@/lib/time-zone";
 
@@ -24,18 +25,39 @@ export function eventsForLocalDate(events: Event[], date: Date, timeZone: string
   return events.filter((event) => zonedDateKey(new Date(event.startedAt), timeZone) === key);
 }
 
-export function datesWithEvents(events: Event[], timeZone: string): Date[] {
-  const keys = new Set<string>();
+export function localDateKey(date: Date): string {
+  const year = String(date.getFullYear()).padStart(4, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateFromLocalKey(key: string): Date {
+  const [yearText = "0", monthText = "0", dayText = "0"] = key.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  return new Date(year, month - 1, day);
+}
+
+export function eventTonesByLocalDate(events: Event[], timeZone: string): Map<string, EventTone[]> {
+  const tonesByDate = new Map<string, Set<EventTone>>();
 
   for (const event of events) {
-    keys.add(zonedDateKey(new Date(event.startedAt), timeZone));
+    const key = zonedDateKey(new Date(event.startedAt), timeZone);
+    const tones = tonesByDate.get(key) ?? new Set<EventTone>();
+    tones.add(getEventTone(event));
+    tonesByDate.set(key, tones);
   }
 
-  return [...keys].map((key) => {
-    const [yearText = "0", monthText = "0", dayText = "0"] = key.split("-");
-    const year = Number(yearText);
-    const month = Number(monthText);
-    const day = Number(dayText);
-    return new Date(year, month - 1, day);
-  });
+  return new Map(
+    [...tonesByDate].map(([key, tones]) => [
+      key,
+      EVENT_TONE_ORDER.filter((tone) => tones.has(tone)),
+    ]),
+  );
+}
+
+export function datesWithEvents(events: Event[], timeZone: string): Date[] {
+  return [...eventTonesByLocalDate(events, timeZone).keys()].map(dateFromLocalKey);
 }

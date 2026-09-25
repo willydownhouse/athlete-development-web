@@ -14,7 +14,7 @@ import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { addLocalMonths, parseLocalDateString, startOfLocalDay } from "@/lib/date-range";
 import { eventToCopySource } from "@/lib/copy-event";
-import { datesWithEvents, eventsForLocalDate } from "@/lib/event-grouping";
+import { eventTonesByLocalDate, eventsForLocalDate } from "@/lib/event-grouping";
 import {
   getZonedDateString,
   getZonedMonthRange,
@@ -126,8 +126,8 @@ export function CalendarSection({
     );
   }, [timeZone, visibleCalendarMonth, selectedCalendarDate]);
 
-  const daysWithEvents = useMemo(
-    () => datesWithEvents(monthEvents, timeZone),
+  const eventTonesByDate = useMemo(
+    () => eventTonesByLocalDate(monthEvents, timeZone),
     [monthEvents, timeZone],
   );
   const selectedDayEvents = useMemo(
@@ -254,7 +254,7 @@ export function CalendarSection({
             month={visibleCalendarMonth}
             selected={selectedCalendarDate}
             onSelect={handleSelect}
-            daysWithEvents={daysWithEvents}
+            eventTonesByDate={eventTonesByDate}
           />
         </div>
 

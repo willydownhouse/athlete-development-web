@@ -1,54 +1,112 @@
 "use client";
 
-import { DayPicker } from "react-day-picker";
+import { createContext, useContext, useEffect, useRef } from "react";
+import { DayPicker, type DayButtonProps } from "react-day-picker";
 
 import { dayPickerClassNames } from "@/components/day-picker-styles";
 import { dateFnsLocale } from "@/lib/date-fns-locale";
+import { localDateKey } from "@/lib/event-grouping";
+import { EVENT_TONE_BG_CLASS, type EventTone } from "@/lib/event-tone";
 import { useAppLocale } from "@/lib/locale-context";
 
-const calendarHasEventsClass =
-  "[&>button]:relative [&>button]:pb-1 [&>button]:after:absolute [&>button]:after:bottom-0.5 [&>button]:after:left-1/2 [&>button]:after:h-1.5 [&>button]:after:w-5 [&>button]:after:-translate-x-1/2 [&>button]:after:rounded-full [&>button]:after:bg-[#9ec9e8] [&>button]:after:content-[''] [&[data-selected=true]>button]:after:bg-[#111827]";
+const CalendarEventTonesContext = createContext<Map<string, EventTone[]>>(new Map());
 
 type CalendarMonthGridProps = {
   month: Date;
   selected: Date;
   onSelect: (date: Date) => void;
-  daysWithEvents: Date[];
+  eventTonesByDate: Map<string, EventTone[]>;
 };
+
+function toneRows(tones: EventTone[]): EventTone[][] {
+  if (tones.length <= 4) {
+    return [tones];
+  }
+
+  const firstCount = Math.ceil(tones.length / 2);
+  return [tones.slice(0, firstCount), tones.slice(firstCount)];
+}
+
+function CalendarDayButton({
+  day,
+  modifiers,
+  children,
+  className,
+  ...buttonProps
+}: DayButtonProps) {
+  const tonesByDate = useContext(CalendarEventTonesContext);
+  const tones = tonesByDate.get(localDateKey(day.date)) ?? [];
+  const rows = toneRows(tones);
+  const focused = Boolean(modifiers["focused"]);
+  const ref = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (focused) {
+      ref.current?.focus();
+    }
+  }, [focused]);
+
+  return (
+    <button ref={ref} {...buttonProps} type="button" className={`${className ?? ""} relative`}>
+      {children}
+      {tones.length > 0 ? (
+        <span
+          aria-hidden
+          className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 flex-col items-center gap-0.5"
+        >
+          {rows.map((row) => (
+            <span key={row.join("-")} className="flex gap-0.5">
+              {row.map((tone) => (
+                <span
+                  key={tone}
+                  className={`h-1.5 rounded-full ${tones.length === 1 ? "w-5" : "w-1.5"} ${EVENT_TONE_BG_CLASS[tone]}`}
+                />
+              ))}
+            </span>
+          ))}
+        </span>
+      ) : null}
+    </button>
+  );
+}
 
 export function CalendarMonthGrid({
   month,
   selected,
   onSelect,
-  daysWithEvents,
+  eventTonesByDate,
 }: CalendarMonthGridProps) {
   const locale = useAppLocale();
 
   return (
-    <DayPicker
-      mode="single"
-      locale={dateFnsLocale(locale)}
-      month={month}
-      hideNavigation
-      weekStartsOn={1}
-      selected={selected}
-      onSelect={(date) => {
-        if (date) {
-          onSelect(date);
-        }
-      }}
-      showOutsideDays
-      fixedWeeks
-      classNames={{
-        ...dayPickerClassNames,
-        root: `${dayPickerClassNames.root} w-full`,
-        month_caption: "hidden",
-        nav: "hidden",
-      }}
-      modifiers={{ has_events: daysWithEvents }}
-      modifiersClassNames={{
-        has_events: calendarHasEventsClass,
-      }}
-    />
+    <CalendarEventTonesContext.Provider value={eventTonesByDate}>
+      <DayPicker
+        mode="single"
+        locale={dateFnsLocale(locale)}
+        month={month}
+        hideNavigation
+        weekStartsOn={1}
+        selected={selected}
+        onSelect={(date) => {
+          if (date) {
+            onSelect(date);
+          }
+        }}
+        showOutsideDays
+        fixedWeeks
+        classNames={{
+          ...dayPickerClassNames,
+          root: `${dayPickerClassNames.root} w-full`,
+          month_caption: "hidden",
+          nav: "hidden",
+          day_button: `${dayPickerClassNames.day_button} items-start pt-1`,
+          selected:
+            "[&>button]:bg-[#2e3642] [&>button]:font-medium [&>button]:text-white [&>button]:hover:bg-[#38414f]",
+        }}
+        components={{
+          DayButton: CalendarDayButton,
+        }}
+      />
+    </CalendarEventTonesContext.Provider>
   );
 }
