@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { EventItemsDisplay } from "@/components/dashboard/event-items/event-items-display";
@@ -40,6 +41,7 @@ function DetailField({ label, value }: DetailFieldProps) {
 type EventDetailCardProps = {
   event: Event;
   timeZone: string;
+  href?: string;
   editAction?: ReactNode;
   afterBasicInfo?: ReactNode;
 };
@@ -47,6 +49,7 @@ type EventDetailCardProps = {
 export function EventDetailCard({
   event,
   timeZone,
+  href,
   editAction,
   afterBasicInfo,
 }: EventDetailCardProps) {
@@ -55,25 +58,42 @@ export function EventDetailCard({
   const title = eventTitle(event);
   const shortLabel = eventShortLabel(event.eventType.name);
   const metrics = event.metrics ?? [];
+  const typeTile = (
+    <div
+      className={`flex h-12 w-12 shrink-0 items-center justify-center text-xs font-semibold ${roundedTileClassName} ${eventIconClassName(event)}`}
+    >
+      {shortLabel}
+    </div>
+  );
+  const titleBlock = (
+    <div className="min-w-0">
+      <h4 className="text-[15px] font-semibold text-white">{title}</h4>
+      <p className="mt-0.5 text-sm text-zinc-400">{event.eventType.name}</p>
+    </div>
+  );
 
   return (
     <article className="rounded-2xl bg-[#12161d] p-4">
       <div className="flex items-start gap-3">
-        <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center text-xs font-semibold ${roundedTileClassName} ${eventIconClassName(event)}`}
-        >
-          {shortLabel}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h4 className="text-[15px] font-semibold text-white">{title}</h4>
-              <p className="mt-0.5 text-sm text-zinc-400">{event.eventType.name}</p>
+        {href ? (
+          <Link
+            href={href}
+            className="-m-2 flex min-w-0 flex-1 items-start gap-3 rounded-xl p-2 transition hover:bg-white/[0.04]"
+          >
+            {typeTile}
+            {titleBlock}
+          </Link>
+        ) : (
+          <>
+            {typeTile}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
+                {titleBlock}
+                {editAction}
+              </div>
             </div>
-            {editAction}
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">

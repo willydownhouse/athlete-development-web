@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { format } from "date-fns";
 
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
@@ -51,13 +50,12 @@ export function CalendarDayEvents({
       ) : events.length > 0 ? (
         <div className="mt-4 space-y-3">
           {events.map((event) => (
-            <Link
+            <EventDetailCard
               key={event.id}
+              event={event}
+              timeZone={timeZone}
               href={athleteEventHref(athleteId, event.id)}
-              className="block rounded-2xl transition hover:bg-white/[0.02]"
-            >
-              <EventDetailCard event={event} timeZone={timeZone} />
-            </Link>
+            />
           ))}
         </div>
       ) : (
