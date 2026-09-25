@@ -124,7 +124,7 @@ export const fi = {
     metric: "Mittari",
     selectMetric: "Valitse mittari",
     pageSize: "Sivukoko",
-    applyFilters: "Käytä suodattimia",
+    applyFilters: "Suodata",
     clear: "Tyhjennä",
     exerciseName: "Nimi",
     exerciseNameAria: "Liikkeen nimi",
