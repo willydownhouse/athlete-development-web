@@ -10,6 +10,7 @@ import type { AppLocale } from "@/lib/locale";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 import { eventIconClassName } from "@/lib/event-tone";
+import { roundedTileClassName } from "@/lib/rounded-tile";
 import { formatZonedTimeRange } from "@/lib/time-zone";
 import type { Event } from "@/lib/types";
 
@@ -59,7 +60,7 @@ export function EventDetailCard({
     <article className="rounded-2xl bg-[#12161d] p-4">
       <div className="flex items-start gap-3">
         <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${eventIconClassName(event)}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center text-xs font-semibold ${roundedTileClassName} ${eventIconClassName(event)}`}
         >
           {shortLabel}
         </div>

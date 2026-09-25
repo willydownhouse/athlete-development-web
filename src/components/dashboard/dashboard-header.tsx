@@ -9,6 +9,7 @@ import { ageGroupFromDateOfBirth } from "./athlete-meta";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
+  photo?: ReactNode;
   eventsMeta?: ReactNode;
   calendarHref?: string;
   statsHref?: string;
@@ -18,6 +19,7 @@ type DashboardHeaderProps = {
 
 export async function DashboardHeader({
   selectedAthlete,
+  photo,
   eventsMeta,
   calendarHref,
   statsHref,
@@ -34,9 +36,12 @@ export async function DashboardHeader({
       <p className="text-sm text-zinc-400">{messages.dashboard.todayEyebrow}</p>
       {selectedAthlete ? (
         <>
-          <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
-            {selectedAthlete.name}
-          </h1>
+          <div className="mt-1 flex items-center gap-3">
+            {photo}
+            <h1 className="min-w-0 truncate text-3xl font-semibold tracking-tight text-white">
+              {selectedAthlete.name}
+            </h1>
+          </div>
           {showMetaRow ? (
             <div className="mt-1 flex items-center justify-between gap-3 text-sm text-zinc-400">
               <div className="min-w-0 truncate">

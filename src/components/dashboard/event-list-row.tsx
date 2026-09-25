@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { eventDetail, eventShortLabel, eventTitle } from "@/lib/event-display";
 import { eventIconClassName } from "@/lib/event-tone";
+import { roundedTileClassName } from "@/lib/rounded-tile";
 import { getRequestLocale } from "@/lib/locale-server";
 import type { Event } from "@/lib/types";
 
@@ -23,7 +24,7 @@ export async function EventListRow({ event, href, timeZone, showDate = false }: 
       className="flex w-full min-w-0 items-start gap-3 rounded-xl px-1 py-1 text-left transition hover:bg-white/5"
     >
       <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${eventIconClassName(event)}`}
+        className={`flex h-12 w-12 shrink-0 items-center justify-center text-xs font-semibold ${roundedTileClassName} ${eventIconClassName(event)}`}
       >
         {shortLabel}
       </div>

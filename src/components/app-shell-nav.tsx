@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { AthleteAvatarImage } from "@/components/dashboard/athlete-avatar-image";
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
@@ -22,21 +23,25 @@ import {
 } from "@/components/dashboard/dashboard-nav";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
+import { roundedTileClassName } from "@/lib/rounded-tile";
 import type { Athlete } from "@/lib/types";
 
 type AppShellNavProps = {
   isAdmin?: boolean;
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
+  athleteAvatarUrls?: Record<string, string>;
   pendingInviteCount?: number;
   onNavigate?: () => void;
 };
 
 function AthleteNavList({
   athletes,
+  athleteAvatarUrls,
   onNavigate,
 }: {
   athletes: Athlete[];
+  athleteAvatarUrls: Record<string, string>;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -46,6 +51,7 @@ function AthleteNavList({
     <AthleteNavLink
       key={athlete.id}
       athlete={athlete}
+      avatarUrl={athleteAvatarUrls[athlete.id] ?? null}
       onNavigate={onNavigate}
       active={activeAthleteId === athlete.id}
     />
@@ -54,13 +60,17 @@ function AthleteNavList({
 
 function AthleteNavLink({
   athlete,
+  avatarUrl,
   onNavigate,
   active,
 }: {
   athlete: Athlete;
+  avatarUrl: string | null;
   onNavigate?: () => void;
   active: boolean;
 }) {
+  const initials = athleteInitials(athlete.name);
+
   return (
     <Link
       href={dashboardHref(athlete.id)}
@@ -69,8 +79,10 @@ function AthleteNavLink({
         active ? "bg-white/5 text-white" : "text-zinc-300 hover:text-white"
       }`}
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a2f38] text-xs font-semibold">
-        {athleteInitials(athlete.name)}
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden bg-[#2a2f38] text-xs font-semibold ${roundedTileClassName}`}
+      >
+        {avatarUrl ? <AthleteAvatarImage src={avatarUrl} alt="" initials={initials} /> : initials}
       </span>
       <span className="min-w-0 flex-1 truncate font-medium">{athlete.name}</span>
     </Link>
@@ -203,6 +215,7 @@ export function AppShellNav({
   isAdmin = false,
   athletes = [],
   selectedAthlete = null,
+  athleteAvatarUrls = {},
   pendingInviteCount = 0,
   onNavigate,
 }: AppShellNavProps) {
@@ -226,7 +239,11 @@ export function AppShellNav({
 
         {athletes.length > 0 ? (
           <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
-            <AthleteNavList athletes={athletes} onNavigate={onNavigate} />
+            <AthleteNavList
+              athletes={athletes}
+              athleteAvatarUrls={athleteAvatarUrls}
+              onNavigate={onNavigate}
+            />
           </div>
         ) : null}
       </div>

@@ -32,7 +32,11 @@ export async function GET(
   }
 
   const upstream = await fetch(
-    `${getApiBaseUrl()}${athleteMediaContentUpstreamPath(athleteId, mediaId)}`,
+    `${getApiBaseUrl()}${athleteMediaContentUpstreamPath(
+      athleteId,
+      mediaId,
+      new URL(request.url).searchParams,
+    )}`,
     {
       headers,
       cache: "no-store",

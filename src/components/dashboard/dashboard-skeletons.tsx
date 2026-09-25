@@ -1,11 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { roundedTileClassName } from "@/lib/rounded-tile";
 
 const CARD_CLASS = "rounded-2xl bg-[#171b22] px-4 py-4";
 
 function EventListRowSkeleton() {
   return (
     <div className="flex items-start gap-3 px-1 py-1.5">
-      <Skeleton className="h-14 w-14 shrink-0 rounded-xl" />
+      <Skeleton className={`h-14 w-14 shrink-0 ${roundedTileClassName}`} />
       <div className="min-w-0 flex-1 space-y-2.5 pt-1">
         <Skeleton className="h-4 w-[68%]" />
         <Skeleton className="h-3.5 w-[44%]" />
@@ -65,7 +66,7 @@ export function EventDetailSkeleton() {
   return (
     <article className="rounded-2xl border border-white/5 bg-[#12161d] p-4">
       <div className="flex items-start gap-3">
-        <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
+        <Skeleton className={`h-12 w-12 shrink-0 ${roundedTileClassName}`} />
         <div className="min-w-0 flex-1 space-y-2 pt-0.5">
           <Skeleton className="h-4 w-[60%]" />
           <Skeleton className="h-3.5 w-[40%]" />

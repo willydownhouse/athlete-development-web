@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  athleteMediaAvatarUrl,
   athleteMediaContentResponseHeaders,
   athleteMediaContentUpstreamPath,
   isAthleteMediaRouteId,
@@ -12,6 +13,40 @@ describe("athlete media content proxy helpers", () => {
       athleteMediaContentUpstreamPath(
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
+      ),
+    ).toBe(
+      "/api/athletes/11111111-1111-4111-8111-111111111111/media/22222222-2222-4222-8222-222222222222/content",
+    );
+  });
+
+  it("forwards the content variant query", () => {
+    expect(
+      athleteMediaContentUpstreamPath(
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        new URLSearchParams("variant=avatar"),
+      ),
+    ).toBe(
+      "/api/athletes/11111111-1111-4111-8111-111111111111/media/22222222-2222-4222-8222-222222222222/content?variant=avatar",
+    );
+  });
+
+  it("appends variant=avatar to a content path", () => {
+    expect(
+      athleteMediaAvatarUrl(
+        "/api/athletes/11111111-1111-4111-8111-111111111111/media/22222222-2222-4222-8222-222222222222/content",
+      ),
+    ).toBe(
+      "/api/athletes/11111111-1111-4111-8111-111111111111/media/22222222-2222-4222-8222-222222222222/content?variant=avatar",
+    );
+  });
+
+  it("ignores unrelated query parameters", () => {
+    expect(
+      athleteMediaContentUpstreamPath(
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        new URLSearchParams("foo=1"),
       ),
     ).toBe(
       "/api/athletes/11111111-1111-4111-8111-111111111111/media/22222222-2222-4222-8222-222222222222/content",
