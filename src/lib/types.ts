@@ -403,6 +403,38 @@ export type MediaKind = "image" | "video";
 
 export type MediaStatus = "uploading" | "queued" | "processing" | "ready" | "failed";
 
+export type AthleteMediaSlot = "profile";
+
+export type AthleteMediaItem = {
+  id: string;
+  slot: AthleteMediaSlot;
+  kind: MediaKind;
+  status: MediaStatus;
+  originalFilename: string | null;
+  width: number | null;
+  height: number | null;
+  originalWidth: number | null;
+  originalHeight: number | null;
+  durationSeconds: number | null;
+  failureCode: string | null;
+  contentUrl: string | null;
+  updatedAt: string;
+};
+
+export type AthleteMediaUploadIntentResponse = {
+  id: string;
+  athleteId: string;
+  slot: AthleteMediaSlot;
+  kind: MediaKind;
+  status: MediaStatus;
+  declaredMimeType: string;
+  declaredByteSize: number;
+  originalFilename: string | null;
+  uploadUrl: string;
+  uploadExpiresAt: string;
+  createdAt: string;
+};
+
 export type EventMediaItem = {
   id: string;
   kind: MediaKind;

@@ -31,7 +31,7 @@ export default async function AdminDemoUsersPage() {
         </AdminCreateModal>
       </div>
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] px-4 py-4 sm:px-6">
+      <section className="rounded-2xl border border-white/10 bg-[#171b22] px-4 py-4 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-medium text-white">Demo access</h2>
           <span
@@ -49,7 +49,7 @@ export default async function AdminDemoUsersPage() {
         </p>
       </section>
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22]">
+      <section className="rounded-2xl border border-white/10 bg-[#171b22]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-medium text-white">Allowed emails ({items.length})</h2>
         </div>

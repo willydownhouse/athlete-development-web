@@ -31,7 +31,7 @@ type EventsListSectionProps = {
 };
 
 function resultError(message: string) {
-  return <p className="rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">{message}</p>;
+  return <p className="rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">{message}</p>;
 }
 
 export async function EventsListSection({
@@ -54,7 +54,7 @@ export async function EventsListSection({
         );
 
     return (
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4">
         <h2 className="text-base font-semibold text-white">{heading}</h2>
         <p className="mt-4 text-sm text-zinc-500">{messages.events.enterExerciseName}</p>
       </section>
@@ -88,7 +88,7 @@ export async function EventsListSection({
 
     if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
       return (
-        <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+        <section className="rounded-2xl bg-[#171b22] px-4 py-4">
           <h2 className="text-base font-semibold text-white">
             {params.show === "metricAverage"
               ? messages.events.showMetricAverage
@@ -124,7 +124,7 @@ export async function EventsListSection({
 
   if (isEventsListMetricShow(params.show) && !params.metricDefinitionId) {
     return (
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4">
         <h2 className="text-base font-semibold text-white">
           {params.show === "metricAverage"
             ? messages.events.showMetricAverage

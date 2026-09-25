@@ -9,34 +9,39 @@ import { ageGroupFromDateOfBirth } from "./athlete-meta";
 
 type DashboardHeaderProps = {
   selectedAthlete: Athlete | null;
+  photo?: ReactNode;
   eventsMeta?: ReactNode;
   calendarHref?: string;
   statsHref?: string;
   historyHref?: string;
-  accessHref?: string;
+  profileHref?: string;
 };
 
 export async function DashboardHeader({
   selectedAthlete,
+  photo,
   eventsMeta,
   calendarHref,
   statsHref,
   historyHref,
-  accessHref,
+  profileHref,
 }: DashboardHeaderProps) {
   const messages = getMessages(await getRequestLocale());
   const ageGroup = selectedAthlete ? ageGroupFromDateOfBirth(selectedAthlete.dateOfBirth) : null;
   const showMetaRow =
-    ageGroup || eventsMeta || calendarHref || statsHref || historyHref || accessHref;
+    ageGroup || eventsMeta || calendarHref || statsHref || historyHref || profileHref;
 
   return (
     <header>
       <p className="text-sm text-zinc-400">{messages.dashboard.todayEyebrow}</p>
       {selectedAthlete ? (
         <>
-          <h1 className="mt-1 truncate text-3xl font-semibold tracking-tight text-white">
-            {selectedAthlete.name}
-          </h1>
+          <div className="mt-1 flex items-center gap-3">
+            {photo}
+            <h1 className="min-w-0 truncate text-3xl font-semibold tracking-tight text-white">
+              {selectedAthlete.name}
+            </h1>
+          </div>
           {showMetaRow ? (
             <div className="mt-1 flex items-center justify-between gap-3 text-sm text-zinc-400">
               <div className="min-w-0 truncate">
@@ -48,7 +53,7 @@ export async function DashboardHeader({
                 ) : null}
                 {eventsMeta}
               </div>
-              {calendarHref || statsHref || historyHref || accessHref ? (
+              {calendarHref || statsHref || historyHref || profileHref ? (
                 <nav className="hidden shrink-0 items-center gap-3 lg:flex">
                   {statsHref ? (
                     <Link
@@ -74,12 +79,12 @@ export async function DashboardHeader({
                       {messages.nav.history}
                     </Link>
                   ) : null}
-                  {accessHref ? (
+                  {profileHref ? (
                     <Link
-                      href={accessHref}
+                      href={profileHref}
                       className="font-medium text-zinc-300 transition hover:text-white"
                     >
-                      {messages.nav.access}
+                      {messages.nav.profile}
                     </Link>
                   ) : null}
                 </nav>

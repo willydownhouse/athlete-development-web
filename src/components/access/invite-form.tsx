@@ -23,7 +23,7 @@ export function InviteForm({ athleteId }: { athleteId: string }) {
   const messages = getMessages(useAppLocale());
 
   return (
-    <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+    <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
       <h2 className="text-base font-semibold text-white">{messages.access.invite}</h2>
       <p className="mt-1 text-sm text-zinc-400">{messages.access.inviteHint}</p>
 

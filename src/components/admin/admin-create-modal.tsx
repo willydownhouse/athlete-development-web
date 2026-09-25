@@ -76,7 +76,7 @@ export function AdminCreateModal({ title, buttonLabel, children }: AdminCreateMo
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="relative z-10 flex max-h-[min(85vh,85dvh)] w-full max-w-xl flex-col rounded-[1.35rem] border border-white/10 bg-[#171b22] shadow-2xl"
+            className="relative z-10 flex max-h-[min(85vh,85dvh)] w-full max-w-xl flex-col rounded-2xl border border-white/10 bg-[#171b22] shadow-2xl"
           >
             <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-6">
               <h2 id={titleId} className="text-lg font-medium text-white">

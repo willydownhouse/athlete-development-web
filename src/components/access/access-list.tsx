@@ -8,11 +8,11 @@ import { getMessages } from "@/lib/messages";
 export function AccessListSkeleton() {
   return (
     <div className="space-y-4">
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="mt-3 h-4 w-48" />
       </section>
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="mt-3 h-4 w-56" />
       </section>
@@ -26,7 +26,7 @@ export async function AccessList({ athleteId }: { athleteId: string }) {
 
   if (result.error) {
     return (
-      <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+      <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
         <p className="text-sm text-red-300">{result.error}</p>
       </section>
     );
@@ -49,7 +49,7 @@ export async function AccessList({ athleteId }: { athleteId: string }) {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-white">{messages.access.pendingInvitations}</h2>
         {result.invitations.length === 0 ? (
-          <section className="rounded-[1.35rem] bg-[#171b22] px-4 py-4 sm:px-5">
+          <section className="rounded-2xl bg-[#171b22] px-4 py-4 sm:px-5">
             <p className="text-sm text-zinc-400">{messages.access.noPending}</p>
           </section>
         ) : (

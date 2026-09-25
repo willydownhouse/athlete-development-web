@@ -49,7 +49,7 @@ function PendingInvitesEmptyState({
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#171b22] p-4 sm:p-5 lg:p-6">
         <p className="text-sm font-medium text-zinc-300 lg:text-base">{messages.invites.title}</p>
         <Link
           href={INVITES_HREF}
@@ -75,7 +75,7 @@ function CreateAthleteEmptyState({ messages }: { messages: ReturnType<typeof get
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#171b22] p-4 sm:p-5 lg:p-6">
         <p className="text-sm font-medium text-zinc-300 lg:text-base">
           {messages.dashboard.getStartedCard}
         </p>

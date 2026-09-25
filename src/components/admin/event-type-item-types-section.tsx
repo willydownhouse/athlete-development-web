@@ -147,7 +147,7 @@ export function EventTypeItemTypesSection({
 }: EventTypeItemTypesSectionProps) {
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+      <section className="rounded-2xl border border-white/10 bg-[#171b22] p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-medium text-white">

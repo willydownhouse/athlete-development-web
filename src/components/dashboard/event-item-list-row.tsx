@@ -4,6 +4,7 @@ import { eventShortLabel } from "@/lib/event-display";
 import { eventItemListTitle } from "@/lib/event-item-display";
 import { formatDurationSeconds } from "@/lib/event-metric-display";
 import { eventIconClassName } from "@/lib/event-tone";
+import { roundedTileClassName } from "@/lib/rounded-tile";
 import { getRequestLocale } from "@/lib/locale-server";
 import { formatZonedShortDate } from "@/lib/time-zone";
 import type { EventItemListItem } from "@/lib/types";
@@ -32,7 +33,7 @@ export async function EventItemListRow({ item, href, timeZone }: EventItemListRo
       className="flex w-full min-w-0 items-start gap-3 rounded-xl px-1 py-1 text-left transition hover:bg-white/5"
     >
       <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${eventIconClassName(
+        className={`flex h-12 w-12 shrink-0 items-center justify-center text-xs font-semibold ${roundedTileClassName} ${eventIconClassName(
           {
             category: item.event.eventType.category,
             sportId: item.event.eventType.sportId,

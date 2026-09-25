@@ -2,9 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   acceptInvitation,
+  completeAthleteMediaUpload,
   createAthleteInvitation,
+  createAthleteMediaUploadIntent,
   createChatThread,
   createEventsBatch,
+  deleteAthleteMedia,
   declineInvitation,
   endAthleteAccessGrant,
   fetchAllEvents,
@@ -26,9 +29,12 @@ import {
   fetchMonthlyUsage,
   fetchOlderChatMessages,
   fetchSports,
+  getAthleteMedia,
   getApiBaseUrl,
+  getCurrentAthleteMedia,
   revokeAthleteInvitation,
   submitChatMessage,
+  updateAthlete,
 } from "./api";
 
 describe("api client", () => {
@@ -130,6 +136,41 @@ describe("api client", () => {
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athletes).toHaveLength(1);
     expect(athletes[0]?.name).toBe("Leo Laine");
+  });
+
+  it("updates an athlete profile", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "22222222-2222-4222-8222-222222222222",
+        name: "Leo Updated",
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const athlete = await updateAthlete("test-token", "22222222-2222-4222-8222-222222222222", {
+      name: "Leo Updated",
+      dateOfBirth: "2012-05-14",
+      focusSportId: "33333333-3333-4333-8333-333333333333",
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://api.test/api/athletes/22222222-2222-4222-8222-222222222222",
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.method).toBe("PATCH");
+    expect(options.body).toBe(
+      JSON.stringify({
+        name: "Leo Updated",
+        dateOfBirth: "2012-05-14",
+        focusSportId: "33333333-3333-4333-8333-333333333333",
+      }),
+    );
+    expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
+    expect(athlete.name).toBe("Leo Updated");
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {
@@ -1156,5 +1197,98 @@ describe("api client", () => {
     await expect(fetchCurrentAppUser("bad-token")).rejects.toThrow(
       "API request failed with status 401",
     );
+  });
+
+  it("fetches the current athlete media row", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    const athleteId = "11111111-1111-4111-8111-111111111111";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "22222222-2222-4222-8222-222222222222",
+        slot: "profile",
+        status: "ready",
+        contentUrl: `/api/athletes/${athleteId}/media/22222222-2222-4222-8222-222222222222/content`,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getCurrentAthleteMedia("test-token", athleteId, "profile");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/media?slot=profile`,
+    );
+    expect(result.status).toBe("ready");
+  });
+
+  it("fetches one athlete media row", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    const athleteId = "11111111-1111-4111-8111-111111111111";
+    const mediaId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: mediaId, status: "processing" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getAthleteMedia("test-token", athleteId, mediaId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/media/${mediaId}`,
+    );
+  });
+
+  it("creates an athlete media upload intent", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    const athleteId = "11111111-1111-4111-8111-111111111111";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: "media-1", uploadUrl: "https://storage.test/put" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createAthleteMediaUploadIntent("test-token", athleteId, {
+      slot: "profile",
+      kind: "image",
+      declaredMimeType: "image/jpeg",
+      declaredByteSize: 2048,
+      originalFilename: "portrait.jpg",
+    });
+
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/media/upload-intents`,
+    );
+    expect(options.method).toBe("POST");
+    expect(JSON.parse(String(options.body))).toEqual({
+      slot: "profile",
+      kind: "image",
+      declaredMimeType: "image/jpeg",
+      declaredByteSize: 2048,
+      originalFilename: "portrait.jpg",
+    });
+  });
+
+  it("completes and deletes athlete media", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    const athleteId = "11111111-1111-4111-8111-111111111111";
+    const mediaId = "22222222-2222-4222-8222-222222222222";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: mediaId, status: "queued" }) })
+      .mockResolvedValueOnce({ ok: true, status: 204 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await completeAthleteMediaUpload("test-token", athleteId, mediaId);
+    await deleteAthleteMedia("test-token", athleteId, mediaId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/media/${mediaId}/complete-upload`,
+    );
+    expect((fetchMock.mock.calls[0]?.[1] as RequestInit).method).toBe("POST");
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/media/${mediaId}`,
+    );
+    expect((fetchMock.mock.calls[1]?.[1] as RequestInit).method).toBe("DELETE");
   });
 });

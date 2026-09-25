@@ -235,10 +235,7 @@ export function EventsListFilters({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-[1.35rem] bg-[#171b22] p-4"
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl bg-[#171b22] p-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 [&>*]:min-w-0">
         <label className="flex min-w-0 flex-col gap-1 text-sm">
           <span className="font-medium text-zinc-300">{messages.events.fromDate}</span>

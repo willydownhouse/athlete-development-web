@@ -1,21 +1,23 @@
 import { Suspense } from "react";
 
-import { isParentRelationship } from "@/lib/athlete-access-display";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import { loadAthleteAvatarUrl } from "@/lib/load-athlete-avatar-url";
 import { loadDashboardEventsBundle } from "@/lib/dashboard-event-data";
 import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { Athlete, EventType } from "@/lib/types";
 
 import { athleteEventsThisWeekLabel } from "./athlete-meta";
 import {
-  athleteAccessHref,
   athleteCalendarHref,
   athleteEventsHref,
+  athleteProfileHref,
   athleteStatsHref,
 } from "./dashboard-nav";
-import { DashboardInteractionsProvider } from "./dashboard-interactions";
+import { DashboardAthletePhoto } from "./dashboard-athlete-photo";
 import { DashboardHeader } from "./dashboard-header";
+import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { QuickLogSection } from "./quick-log-section";
 import { TodaysEventsSkeleton } from "./dashboard-skeletons";
 import { TodaysEventsCard } from "./todays-events-card";
@@ -65,7 +67,11 @@ export async function DashboardAthleteContent({
   eventTypes,
   eventTypesError,
 }: DashboardAthleteContentProps) {
-  const timeZone = await getRequestTimeZone();
+  const [timeZone, avatarUrl, locale] = await Promise.all([
+    getRequestTimeZone(),
+    loadAthleteAvatarUrl(selectedAthlete.id),
+    getRequestLocale(),
+  ]);
   const statsHref =
     selectedAthlete.focusSport.slug === HOCKEY_SPORT_SLUG
       ? athleteStatsHref(selectedAthlete.id)
@@ -85,10 +91,14 @@ export async function DashboardAthleteContent({
         calendarHref={athleteCalendarHref(selectedAthlete.id)}
         statsHref={statsHref}
         historyHref={athleteEventsHref(selectedAthlete.id)}
-        accessHref={
-          isParentRelationship(selectedAthlete.relationshipToAthlete)
-            ? athleteAccessHref(selectedAthlete.id)
-            : undefined
+        profileHref={athleteProfileHref(selectedAthlete.id)}
+        photo={
+          <DashboardAthletePhoto
+            athleteName={selectedAthlete.name}
+            profileHref={athleteProfileHref(selectedAthlete.id)}
+            avatarUrl={avatarUrl}
+            photoAlt={getMessages(locale).profile.photoAlt(selectedAthlete.name)}
+          />
         }
         eventsMeta={
           <Suspense fallback={<span aria-hidden="true" className={inlineSkeletonClassName} />}>

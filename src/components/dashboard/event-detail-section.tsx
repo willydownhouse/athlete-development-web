@@ -29,9 +29,7 @@ export async function EventDetailSection({
 
   if (!eventResult.event) {
     return (
-      <p className="rounded-[1.35rem] bg-[#2a1717] px-4 py-3 text-sm text-red-300">
-        {eventResult.error}
-      </p>
+      <p className="rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">{eventResult.error}</p>
     );
   }
 

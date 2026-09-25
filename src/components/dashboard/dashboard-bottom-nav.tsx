@@ -4,13 +4,16 @@ import type { ReactNode } from "react";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
 
-const linkClassName =
-  "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-zinc-300 transition hover:text-white";
+const sharedLinkClassName =
+  "flex flex-col items-center justify-center gap-0.5 py-2 text-zinc-300 transition hover:text-white";
+const stretchedLinkClassName = `${sharedLinkClassName} flex-1`;
+const compactLinkClassName = `${sharedLinkClassName} min-w-16`;
 
 type DashboardBottomNavProps = {
   statsHref?: string;
-  calendarHref: string;
-  historyHref: string;
+  calendarHref?: string;
+  historyHref?: string;
+  profileHref?: string;
   accessHref?: string;
 };
 
@@ -18,32 +21,83 @@ export async function DashboardBottomNav({
   statsHref,
   calendarHref,
   historyHref,
+  profileHref,
   accessHref,
 }: DashboardBottomNavProps) {
   const messages = getMessages(await getRequestLocale());
+  const itemCount = [statsHref, calendarHref, historyHref, profileHref, accessHref].filter(
+    Boolean,
+  ).length;
+  const singleItem = itemCount === 1;
 
   return (
     <nav
       aria-label={messages.nav.athletePages}
       className="fixed inset-x-0 bottom-0 z-30 bg-[#0b0d10]/95 backdrop-blur lg:hidden"
     >
-      <div className="flex px-4 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10">
+      <div
+        className={`flex px-4 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10 ${
+          singleItem ? "justify-end" : ""
+        }`}
+      >
         {statsHref ? (
-          <NavLink href={statsHref} icon={<StatsIcon />} label={messages.nav.stats} />
+          <NavLink
+            href={statsHref}
+            icon={<StatsIcon />}
+            label={messages.nav.stats}
+            compact={singleItem}
+          />
         ) : null}
-        <NavLink href={calendarHref} icon={<CalendarIcon />} label={messages.nav.calendar} />
-        <NavLink href={historyHref} icon={<HistoryIcon />} label={messages.nav.history} />
+        {calendarHref ? (
+          <NavLink
+            href={calendarHref}
+            icon={<CalendarIcon />}
+            label={messages.nav.calendar}
+            compact={singleItem}
+          />
+        ) : null}
+        {historyHref ? (
+          <NavLink
+            href={historyHref}
+            icon={<HistoryIcon />}
+            label={messages.nav.history}
+            compact={singleItem}
+          />
+        ) : null}
+        {profileHref ? (
+          <NavLink
+            href={profileHref}
+            icon={<ProfileIcon />}
+            label={messages.nav.profile}
+            compact={singleItem}
+          />
+        ) : null}
         {accessHref ? (
-          <NavLink href={accessHref} icon={<AccessIcon />} label={messages.nav.access} />
+          <NavLink
+            href={accessHref}
+            icon={<AccessIcon />}
+            label={messages.nav.access}
+            compact={singleItem}
+          />
         ) : null}
       </div>
     </nav>
   );
 }
 
-function NavLink({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
+function NavLink({
+  href,
+  icon,
+  label,
+  compact = false,
+}: {
+  href: string;
+  icon: ReactNode;
+  label: string;
+  compact?: boolean;
+}) {
   return (
-    <Link href={href} className={linkClassName}>
+    <Link href={href} className={compact ? compactLinkClassName : stretchedLinkClassName}>
       {icon}
       <span className="text-[11px] font-medium leading-none">{label}</span>
     </Link>
@@ -121,6 +175,25 @@ function AccessIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M9.5 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3.5 19.5v-1.25A3.25 3.25 0 0 1 6.75 15h5.5A3.25 3.25 0 0 1 15.5 18.25V19.5M16.75 8.1a2.75 2.75 0 1 1 0 5.15M20.5 19.5v-1.1a2.9 2.9 0 0 0-2.15-2.8"
+      />
+    </svg>
+  );
+}
+
+function ProfileIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.75 19.25a7.25 7.25 0 0 1 14.5 0"
       />
     </svg>
   );

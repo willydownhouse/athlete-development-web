@@ -23,6 +23,7 @@ type AppShellClientProps = {
   isAdmin?: boolean;
   athletes?: Athlete[];
   selectedAthlete?: Athlete | null;
+  athleteAvatarUrls?: Record<string, string>;
   pendingInviteCount: number;
   locale: AppLocale;
   children: React.ReactNode;
@@ -49,6 +50,7 @@ export function AppShellClient({
   isAdmin = false,
   athletes = [],
   selectedAthlete = null,
+  athleteAvatarUrls = {},
   pendingInviteCount,
   locale,
   children,
@@ -129,6 +131,7 @@ export function AppShellClient({
               isAdmin={isAdmin}
               athletes={athletes}
               selectedAthlete={selectedAthlete}
+              athleteAvatarUrls={athleteAvatarUrls}
               pendingInviteCount={pendingInviteCount}
               onNavigate={closeMobile}
             />

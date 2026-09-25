@@ -104,7 +104,7 @@ export default async function AdminEventTypeDetailPage({ params }: AdminEventTyp
         </div>
       </div>
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-[#171b22] p-4 sm:p-6">
+      <section className="rounded-2xl border border-white/10 bg-[#171b22] p-4 sm:p-6">
         <h2 className="text-lg font-medium text-white">Event type settings</h2>
         <div className="mt-4">
           <UpdateEventTypeForm eventType={eventType} sports={sports} />
