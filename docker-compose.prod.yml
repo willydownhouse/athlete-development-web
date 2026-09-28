@@ -1,0 +1,50 @@
+name: athlete-web-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  web:
+    image: ${ATHLETE_DEVELOPMENT_WEB_IMAGE:?Set ATHLETE_DEVELOPMENT_WEB_IMAGE}
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      AUTH_TOKEN_SALT: ${AUTH_TOKEN_SALT:?Set AUTH_TOKEN_SALT}
+      AUTH_URL: ${AUTH_URL:?Set AUTH_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+      start_interval: 5s
+    logging: *logging
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${NGINX_HTTP_PORT:?Set NGINX_HTTP_PORT}:80"
+      - "${NGINX_HTTPS_PORT:?Set NGINX_HTTPS_PORT}:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${LETSENCRYPT_DIR:?Set LETSENCRYPT_DIR}:/etc/letsencrypt:ro
+      - ${CERTBOT_WEBROOT_DIR:?Set CERTBOT_WEBROOT_DIR}:/var/www/certbot:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    logging: *logging
+    restart: unless-stopped

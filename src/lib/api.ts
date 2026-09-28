@@ -81,7 +81,9 @@ export class ApiError extends Error {
 }
 
 export function getApiBaseUrl(): string {
-  return process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
+  // Next.js inlines NEXT_PUBLIC_* only as process.env.NAME, not brackets (TS4111).
+  // @ts-expect-error TS4111
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 }
 
 async function parseApiError(response: Response): Promise<ApiError> {

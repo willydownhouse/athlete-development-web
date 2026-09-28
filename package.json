@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "concurrently -n typecheck,lint,format,knip,test -c blue,green,cyan,yellow,magenta \"yarn typecheck\" \"yarn lint\" \"yarn format:check\" \"yarn knip\" \"yarn test\"",
-    "audit:ci": "yarn audit --groups dependencies"
+    "audit:ci": "yarn audit --groups dependencies",
+    "compose:prod:up": "docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --wait",
+    "compose:prod:down": "docker compose --env-file .env.prod -f docker-compose.prod.yml down"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
