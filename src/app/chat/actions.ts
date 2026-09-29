@@ -82,7 +82,6 @@ export async function sendChatMessageAction(
       ...(eventId ? { eventId } : {}),
     });
 
-    updateTag(chatMessagesCacheTag(threadId));
     if (eventId) {
       updateTag(eventCacheTag(eventId));
     }
