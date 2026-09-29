@@ -117,3 +117,52 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
+
+  deploy-web:
+    name: Deploy Web to Hetzner
+    needs:
+      - verify
+      - build-web
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[deploy]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy production deployment files
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: deploy
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          source: "docker-compose.prod.yml,docker/nginx/default.conf"
+          target: "/opt/athlete-development-web/"
+
+      - name: Deploy production stack
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GITHUB_USER: ${{ github.repository_owner }}
+          ATHLETE_DEVELOPMENT_WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/athlete-development-web:${{ needs.build-web.outputs.image_tag }}
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: deploy
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          envs: GHCR_TOKEN,GITHUB_USER,ATHLETE_DEVELOPMENT_WEB_IMAGE
+          script: |
+            set -eu
+            cd /opt/athlete-development-web
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
+            echo "Deploying web image: $ATHLETE_DEVELOPMENT_WEB_IMAGE"
+
+            export ATHLETE_DEVELOPMENT_WEB_IMAGE
+            docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --wait
+            # Recreate nginx after SCP because a file bind-mount retains the
+            # previous inode, and to re-resolve the recreated web container.
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --force-recreate --no-deps nginx
+            curl -fsS https://acent.app/
+
+            docker image prune -af --filter "until=168h"

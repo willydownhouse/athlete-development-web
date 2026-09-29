@@ -124,9 +124,14 @@ https://acent.app/api/auth/callback/google
 
 This stack is **web + nginx only**. Run it on a **separate VPS** from the API: the API host already binds 80 and 443. `NEXT_PUBLIC_API_URL` is baked into the image at build time (`https://api.acent.app`). Auth and Google secrets are runtime-only in `.env.prod`.
 
+nginx adds HSTS, content-type, referrer, framing, partial CSP, and permissions-policy
+headers to HTTPS responses. The partial CSP blocks framing, plugins, and untrusted
+base URLs without imposing script rules that would break Next.js inline bootstrap
+scripts. Next.js also disables its `X-Powered-By` response header.
+
 1. Copy `.env.prod.example` to `.env.prod` and set `AUTH_SECRET`, `AUTH_TOKEN_SALT` (must match the API), `AUTH_URL=https://acent.app`, and Google OAuth credentials. Point DNS for `acent.app` at this VPS.
 2. Issue a Let's Encrypt cert for `acent.app` **before** nginx HTTPS will start (`certbot certonly --standalone` if nothing is on port 80 yet). Mount paths are `LETSENCRYPT_DIR` and `CERTBOT_WEBROOT_DIR`, same pattern as the API.
-3. Set `ATHLETE_DEVELOPMENT_WEB_IMAGE` when starting manually. A `[deploy]` commit on `main` builds and pushes `ghcr.io/<owner>/athlete-development-web` with `NEXT_PUBLIC_API_URL=https://api.acent.app`. VPS SSH deploy is not wired yet.
+3. Set `ATHLETE_DEVELOPMENT_WEB_IMAGE` when starting manually. A `[deploy]` commit on `main` builds and pushes `ghcr.io/<owner>/athlete-development-web` with `NEXT_PUBLIC_API_URL=https://api.acent.app`, then deploys that immutable image tag to the VPS.
 
 ```bash
 echo "$GHCR_TOKEN" | docker login ghcr.io -u "<github-user>" --password-stdin
@@ -141,8 +146,6 @@ curl -fsS https://acent.app/
 
 After nginx is up, switch Certbot to webroot (`-w /var/www/certbot -d acent.app`) so renewals do not need `--standalone`. Copy a deploy hook later so nginx reloads after renew (directory mount of `/etc/letsencrypt`; reload is enough).
 
-When VPS deploy is added, recreate nginx after SCP so a replaced `default.conf` is mounted (same inode issue as the API).
-
 Set API `CORS_ORIGIN` to `https://acent.app` when this origin is live.
 
 ### CI
@@ -154,6 +157,13 @@ Pushes to `dev` and pull requests run verify (tests, production compose, nginx).
 | Push to `dev`        | skipped                        |
 | `[deploy]` on `main` | push `main-<sha>` and `latest` |
 | Pull request         | build only; do not push        |
+
+The `[deploy]` workflow uses the `HETZNER_HOST`, `HETZNER_SSH_KEY`, and
+`GHCR_TOKEN` repository secrets. It copies the Compose and nginx files to
+`/opt/athlete-development-web/`, pulls the exact image tag, starts the stack,
+recreates nginx so the copied config is mounted, checks `https://acent.app/`,
+and prunes images older than seven days. The target VPS must allow the `deploy`
+user to connect over SSH and access Docker.
 
 ### Vercel
 
