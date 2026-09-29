@@ -7,7 +7,10 @@ import { dateFnsLocale } from "@/lib/date-fns-locale";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 
-import { copyDayEventsAction, fetchEventsInRangeAction } from "@/app/dashboard/actions";
+import {
+  copyDayEventsAction,
+  fetchEventsInRangeAction,
+} from "@/app/(authenticated)/dashboard/actions";
 import { CalendarDayEvents } from "@/components/dashboard/calendar-day-events";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { CalendarMonthGrid } from "@/components/dashboard/calendar-month-grid";

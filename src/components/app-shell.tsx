@@ -9,7 +9,6 @@ type AppShellProps = {
   userEmail: string;
   isAdmin?: boolean;
   athletes?: Athlete[];
-  selectedAthlete?: Athlete | null;
   children: React.ReactNode;
 };
 

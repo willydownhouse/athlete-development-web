@@ -5,7 +5,7 @@ import { startTransition, useActionState, useState } from "react";
 import {
   endAthleteAccessGrantAction,
   type AccessActionState,
-} from "@/app/athlete/[athleteId]/access/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/access/actions";
 import { RemoveAccessConfirmModal } from "@/components/access/remove-access-confirm-modal";
 import { athleteAccessRoleLabel, isRemovableAccessMember } from "@/lib/athlete-access-display";
 import { useAppLocale } from "@/lib/locale-context";

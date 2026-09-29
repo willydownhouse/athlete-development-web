@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import {
   revokeAthleteInvitationAction,
   type AccessActionState,
-} from "@/app/athlete/[athleteId]/access/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/access/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { formatInvitationExpiry } from "@/lib/athlete-access-display";
