@@ -127,7 +127,9 @@ This stack is **web + nginx only**. Run it on a **separate VPS** from the API: t
 nginx adds HSTS, content-type, referrer, framing, partial CSP, and permissions-policy
 headers to HTTPS responses. The partial CSP blocks framing, plugins, and untrusted
 base URLs without imposing script rules that would break Next.js inline bootstrap
-scripts. Next.js also disables its `X-Powered-By` response header.
+scripts. Response proxy buffering is disabled so Next.js can stream React Server
+Component and Suspense boundary chunks as soon as they are ready. Next.js also
+disables its `X-Powered-By` response header.
 
 1. Copy `.env.prod.example` to `.env.prod` and set `AUTH_SECRET`, `AUTH_TOKEN_SALT` (must match the API), `AUTH_URL=https://acent.app`, and Google OAuth credentials. Point DNS for `acent.app` at this VPS.
 2. Issue a Let's Encrypt cert for `acent.app` **before** nginx HTTPS will start (`certbot certonly --standalone` if nothing is on port 80 yet). Mount paths are `LETSENCRYPT_DIR` and `CERTBOT_WEBROOT_DIR`, same pattern as the API.
