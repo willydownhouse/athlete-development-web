@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/dashboard-nav";
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
 import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
@@ -20,7 +21,6 @@ import { dateOnlyInputValue } from "@/lib/date-of-birth";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
 import { loadAthleteProfileMedia } from "@/lib/load-athlete-profile-media";
-import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteProfilePageProps = {
   params: Promise<{ athleteId: string }>;
@@ -28,30 +28,22 @@ type AthleteProfilePageProps = {
 
 export default async function AthleteProfilePage({ params }: AthleteProfilePageProps) {
   const { athleteId } = await params;
-  const normalizedAthleteId = athleteId.trim();
-
-  if (!normalizedAthleteId) {
-    redirect("/dashboard");
-  }
-
-  const token = await getAuthBearerToken();
+  const [token, locale, selectedAthlete] = await Promise.all([
+    getAuthBearerToken(),
+    getRequestLocale(),
+    loadAccessibleAthlete(athleteId),
+  ]);
 
   if (!token) {
     redirect("/");
   }
 
-  const locale = await getRequestLocale();
-  const [athletes, profileMedia] = await Promise.all([
-    loadShellAthletes(token),
-    loadAthleteProfileMedia(token, normalizedAthleteId),
-  ]);
-
-  const messages = getMessages(locale);
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
-
   if (!selectedAthlete) {
     redirect("/dashboard");
   }
+
+  const profileMedia = await loadAthleteProfileMedia(token, selectedAthlete.id);
+  const messages = getMessages(locale);
 
   const dateOfBirth = dateOnlyInputValue(selectedAthlete.dateOfBirth);
   const showAccess = isParentRelationship(selectedAthlete.relationshipToAthlete);

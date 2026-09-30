@@ -5,11 +5,10 @@ import { Suspense } from "react";
 import { AccessList, AccessListSkeleton } from "@/components/access/access-list";
 import { InviteForm } from "@/components/access/invite-form";
 import { backToTodayLabel, dashboardHref } from "@/components/dashboard/dashboard-nav";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { isParentRelationship } from "@/lib/athlete-access-display";
-import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
-import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteAccessPageProps = {
   params: Promise<{ athleteId: string }>;
@@ -17,21 +16,11 @@ type AthleteAccessPageProps = {
 
 export default async function AthleteAccessPage({ params }: AthleteAccessPageProps) {
   const { athleteId } = await params;
-  const normalizedAthleteId = athleteId.trim();
-
-  if (!normalizedAthleteId) {
-    redirect("/dashboard");
-  }
-
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    redirect("/");
-  }
-
-  const [athletes, locale] = await Promise.all([loadShellAthletes(token), getRequestLocale()]);
+  const [selectedAthlete, locale] = await Promise.all([
+    loadAccessibleAthlete(athleteId),
+    getRequestLocale(),
+  ]);
   const messages = getMessages(locale);
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");

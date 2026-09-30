@@ -6,10 +6,9 @@ import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboar
 import { HockeyStats } from "@/components/dashboard/hockey-stats";
 import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
 import { HockeyStatsGridSkeleton } from "@/components/dashboard/dashboard-skeletons";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
-import { loadShellAthletes } from "@/lib/shell-data";
-import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
@@ -22,26 +21,13 @@ type AthleteStatsPageProps = {
 export default async function AthleteStatsPage({ params, searchParams }: AthleteStatsPageProps) {
   const { athleteId } = await params;
   const { statsPeriod } = await searchParams;
-  const normalizedAthleteId = athleteId.trim();
 
-  if (!normalizedAthleteId) {
-    redirect("/dashboard");
-  }
-
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    redirect("/");
-  }
-
-  const [athletes, timeZone, locale] = await Promise.all([
-    loadShellAthletes(token),
+  const [selectedAthlete, timeZone, locale] = await Promise.all([
+    loadAccessibleAthlete(athleteId),
     getRequestTimeZone(),
     getRequestLocale(),
   ]);
   const messages = getMessages(locale);
-
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");

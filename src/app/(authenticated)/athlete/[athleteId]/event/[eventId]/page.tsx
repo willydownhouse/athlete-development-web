@@ -7,10 +7,9 @@ import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboar
 import { EventDetailSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventDetailSection } from "@/components/dashboard/event-detail-section";
 import { EventPageFrame } from "@/components/dashboard/event-page-frame";
-import { getAuthBearerToken } from "@/lib/auth-token";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
-import { loadShellAthletes } from "@/lib/shell-data";
 
 type AthleteEventPageProps = {
   params: Promise<{ athleteId: string; eventId: string }>;
@@ -20,23 +19,17 @@ export const maxDuration = 240;
 
 export default async function AthleteEventPage({ params }: AthleteEventPageProps) {
   const { athleteId, eventId } = await params;
-  const normalizedAthleteId = athleteId.trim();
   const normalizedEventId = eventId.trim();
 
-  if (!normalizedAthleteId || !normalizedEventId) {
+  if (!normalizedEventId) {
     redirect("/dashboard");
   }
 
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    redirect("/");
-  }
-
-  const [athletes, locale] = await Promise.all([loadShellAthletes(token), getRequestLocale()]);
+  const [selectedAthlete, locale] = await Promise.all([
+    loadAccessibleAthlete(athleteId),
+    getRequestLocale(),
+  ]);
   const messages = getMessages(locale);
-
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");
@@ -46,7 +39,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
     <EventPageFrame
       dock={
         <Suspense fallback={<EventTobyDockSkeleton />}>
-          <EventTobySection athleteId={normalizedAthleteId} eventId={normalizedEventId} />
+          <EventTobySection athleteId={selectedAthlete.id} eventId={normalizedEventId} />
         </Suspense>
       }
     >
@@ -64,7 +57,7 @@ export default async function AthleteEventPage({ params }: AthleteEventPageProps
       <div className="mt-6">
         <Suspense fallback={<EventDetailSkeleton />}>
           <EventDetailSection
-            athleteId={normalizedAthleteId}
+            athleteId={selectedAthlete.id}
             eventId={normalizedEventId}
             focusSportId={selectedAthlete.focusSportId}
             focusSportName={selectedAthlete.focusSport.name}

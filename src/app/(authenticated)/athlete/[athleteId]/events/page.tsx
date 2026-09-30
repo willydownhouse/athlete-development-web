@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
@@ -13,7 +13,7 @@ import {
   fetchEventTypes,
   fetchEventTypesMetricDefinitions,
 } from "@/lib/api";
-import { getAuthBearerToken } from "@/lib/auth-token";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { itemMeasureNumericMetricsFromCatalog } from "@/lib/events-list-metrics";
 import {
   eventsListFilterKey,
@@ -23,7 +23,6 @@ import {
 } from "@/lib/events-list-params";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
-import { loadShellAthletes } from "@/lib/shell-data";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 
 type AthleteEventsPageProps = {
@@ -33,20 +32,9 @@ type AthleteEventsPageProps = {
 
 export default async function AthleteEventsPage({ params, searchParams }: AthleteEventsPageProps) {
   const { athleteId } = await params;
-  const normalizedAthleteId = athleteId.trim();
 
-  if (!normalizedAthleteId) {
-    redirect("/dashboard");
-  }
-
-  const token = await getAuthBearerToken();
-
-  if (!token) {
-    redirect("/");
-  }
-
-  const [athletes, rawSearchParams, timeZone, locale] = await Promise.all([
-    loadShellAthletes(token),
+  const [selectedAthlete, rawSearchParams, timeZone, locale] = await Promise.all([
+    loadAccessibleAthlete(athleteId),
     searchParams,
     getRequestTimeZone(),
     getRequestLocale(),
@@ -56,8 +44,6 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
     parseEventsListSearchParams(rawSearchParams),
     timeZone,
   );
-
-  const selectedAthlete = athletes.find((athlete) => athlete.id === normalizedAthleteId) ?? null;
 
   if (!selectedAthlete) {
     redirect("/dashboard");
@@ -105,7 +91,7 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
 
         <Suspense key={eventsListSuspenseKey(listParams)} fallback={<EventsListSkeleton />}>
           <EventsListSection
-            athleteId={normalizedAthleteId}
+            athleteId={selectedAthlete.id}
             timeZone={timeZone}
             params={listParams}
             itemTypes={itemTypes}
