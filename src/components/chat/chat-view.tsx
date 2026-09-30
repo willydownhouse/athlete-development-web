@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { loadOlderChatMessagesAction, sendChatMessageAction } from "@/app/chat/actions";
+import {
+  loadOlderChatMessagesAction,
+  sendChatMessageAction,
+} from "@/app/(authenticated)/chat/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content";
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
+import { useAppShellAthletes } from "@/lib/app-shell-context";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
 import { chatEmptyIntro, chatEventLoggingExample } from "@/lib/chat-intro";
 import { useAppLocale } from "@/lib/locale-context";
@@ -21,8 +25,6 @@ type ChatViewProps = {
   hasMore: boolean;
   timeZone: string;
   nowIso: string;
-  exampleAthleteName?: string;
-  canSend?: boolean;
   loadError?: string | null;
 };
 
@@ -78,10 +80,11 @@ export function ChatView({
   hasMore: initialHasMore,
   timeZone,
   nowIso,
-  exampleAthleteName = "",
-  canSend = true,
   loadError,
 }: ChatViewProps) {
+  const athletes = useAppShellAthletes();
+  const exampleAthleteName = athletes[0]?.name ?? "";
+  const canSend = athletes.length > 0;
   const [state, formAction, isPending] = useActionState(sendChatMessageAction, {});
   const [messages, setMessages] = useState(initialMessages);
   const [hasMore, setHasMore] = useState(initialHasMore);

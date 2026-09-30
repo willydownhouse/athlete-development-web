@@ -15,7 +15,7 @@ import {
   createEventAction,
   updateEventAction,
   type DashboardActionState,
-} from "@/app/dashboard/actions";
+} from "@/app/(authenticated)/dashboard/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { EventTypeMetricsSection } from "@/components/dashboard/event-metric-fields";

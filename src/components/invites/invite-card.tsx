@@ -6,7 +6,7 @@ import {
   acceptInvitationAction,
   declineInvitationAction,
   type InviteActionState,
-} from "@/app/invites/actions";
+} from "@/app/(authenticated)/invites/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { formatInvitationExpiry } from "@/lib/athlete-access-display";

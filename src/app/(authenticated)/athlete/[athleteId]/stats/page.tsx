@@ -1,0 +1,73 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+
+import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
+import { HockeyStats } from "@/components/dashboard/hockey-stats";
+import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
+import { HockeyStatsGridSkeleton } from "@/components/dashboard/dashboard-skeletons";
+import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
+import { parseHockeyStatsPeriod } from "@/lib/hockey-stats/period";
+import { getRequestLocale } from "@/lib/locale-server";
+import { getMessages } from "@/lib/messages";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
+
+type AthleteStatsPageProps = {
+  params: Promise<{ athleteId: string }>;
+  searchParams: Promise<{ statsPeriod?: string }>;
+};
+
+export default async function AthleteStatsPage({ params, searchParams }: AthleteStatsPageProps) {
+  const { athleteId } = await params;
+  const { statsPeriod } = await searchParams;
+
+  const [selectedAthlete, timeZone, locale] = await Promise.all([
+    loadAccessibleAthlete(athleteId),
+    getRequestTimeZone(),
+    getRequestLocale(),
+  ]);
+  const messages = getMessages(locale);
+
+  if (!selectedAthlete) {
+    redirect("/dashboard");
+  }
+
+  if (selectedAthlete.focusSport.slug !== HOCKEY_SPORT_SLUG) {
+    redirect(dashboardHref(selectedAthlete.id));
+  }
+
+  const period = parseHockeyStatsPeriod(statsPeriod);
+
+  return (
+    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
+      <Link
+        href={dashboardHref(selectedAthlete.id)}
+        className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+      >
+        {backToTodayLabel(locale)}
+      </Link>
+
+      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+        {messages.stats.title}
+      </h1>
+
+      <div className="mt-6">
+        <HockeyStatsSection
+          athleteId={selectedAthlete.id}
+          sportName={selectedAthlete.focusSport.name}
+          period={period}
+        >
+          <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
+            <HockeyStats
+              athleteId={selectedAthlete.id}
+              sportId={selectedAthlete.focusSportId}
+              period={period}
+              timeZone={timeZone}
+            />
+          </Suspense>
+        </HockeyStatsSection>
+      </div>
+    </div>
+  );
+}

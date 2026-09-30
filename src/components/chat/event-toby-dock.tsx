@@ -2,7 +2,10 @@
 
 import { useActionState, useMemo, useRef, useState } from "react";
 
-import { loadFocusedEventChatMessagesAction, sendChatMessageAction } from "@/app/chat/actions";
+import {
+  loadFocusedEventChatMessagesAction,
+  sendChatMessageAction,
+} from "@/app/(authenticated)/chat/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMarkdown } from "@/components/chat/chat-markdown";

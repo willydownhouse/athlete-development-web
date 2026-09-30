@@ -6,7 +6,7 @@ import { useActionState, useState } from "react";
 import {
   updateAthleteProfileAction,
   type ProfileActionState,
-} from "@/app/athlete/[athleteId]/profile/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/profile/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { DatePickerInput } from "@/components/date-picker-input";

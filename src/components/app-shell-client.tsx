@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
 import {
+  activeAthleteIdFromPath,
   appShellMobileTitle,
   athleteEventIdFromPath,
   isOnboardingPath,
@@ -12,6 +13,7 @@ import {
 } from "@/components/dashboard/dashboard-nav";
 import { LanguageToggle } from "@/components/language-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
+import { AppShellAthletesProvider } from "@/lib/app-shell-context";
 import type { AppLocale } from "@/lib/locale";
 import { LocaleProvider } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
@@ -22,7 +24,6 @@ type AppShellClientProps = {
   userEmail: string;
   isAdmin?: boolean;
   athletes?: Athlete[];
-  selectedAthlete?: Athlete | null;
   athleteAvatarUrls?: Record<string, string>;
   pendingInviteCount: number;
   locale: AppLocale;
@@ -49,13 +50,14 @@ export function AppShellClient({
   userEmail,
   isAdmin = false,
   athletes = [],
-  selectedAthlete = null,
   athleteAvatarUrls = {},
   pendingInviteCount,
   locale,
   children,
 }: AppShellClientProps) {
   const pathname = usePathname();
+  const activeAthleteId = activeAthleteIdFromPath(pathname);
+  const selectedAthlete = athletes.find((athlete) => athlete.id === activeAthleteId) ?? null;
   const [mobileOpen, setMobileOpen] = useState(false);
   const onboarding = isOnboardingPath(pathname);
   const messages = getMessages(locale);
@@ -172,7 +174,7 @@ export function AppShellClient({
             </div>
           </header>
 
-          {children}
+          <AppShellAthletesProvider athletes={athletes}>{children}</AppShellAthletesProvider>
         </div>
       </div>
     </LocaleProvider>

@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import {
   createAthleteInvitationAction,
   type AccessActionState,
-} from "@/app/athlete/[athleteId]/access/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/access/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { INVITED_EMAIL_MAX_LENGTH } from "@/lib/constants";

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 
-import { copyEventAction, deleteEventMenuAction } from "@/app/dashboard/actions";
+import { copyEventAction, deleteEventMenuAction } from "@/app/(authenticated)/dashboard/actions";
 import { CopyEventsConfirmModal } from "@/components/dashboard/copy-events-confirm-modal";
 import { DeleteEventConfirmModal } from "@/components/dashboard/delete-event-confirm-modal";
 import { DeleteEventMediaConfirmModal } from "@/components/dashboard/delete-event-media-confirm-modal";

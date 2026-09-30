@@ -7,7 +7,7 @@ import {
   deleteEventMediaAction,
   getEventMediaAction,
   getEventMediaReadUrlAction,
-} from "@/app/athlete/[athleteId]/event/[eventId]/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/event/[eventId]/actions";
 import { athleteEventHref } from "@/components/dashboard/dashboard-nav";
 import { DeleteEventMediaConfirmModal } from "@/components/dashboard/delete-event-media-confirm-modal";
 import { EventActionMenu } from "@/components/dashboard/event-action-menu";

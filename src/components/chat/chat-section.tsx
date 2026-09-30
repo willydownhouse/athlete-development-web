@@ -5,12 +5,7 @@ import { getAuthBearerToken } from "@/lib/auth-token";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { ChatMessage } from "@/lib/types";
 
-type ChatSectionProps = {
-  exampleAthleteName: string;
-  canSend: boolean;
-};
-
-export async function ChatSection({ exampleAthleteName, canSend }: ChatSectionProps) {
+export async function ChatSection() {
   const [token, timeZone, actions] = await Promise.all([
     getAuthBearerToken(),
     getRequestTimeZone(),
@@ -26,8 +21,6 @@ export async function ChatSection({ exampleAthleteName, canSend }: ChatSectionPr
         hasMore={false}
         timeZone={timeZone}
         nowIso={nowIso}
-        exampleAthleteName={exampleAthleteName}
-        canSend={canSend}
         loadError={actions.signInAgain}
       />
     );
@@ -62,8 +55,6 @@ export async function ChatSection({ exampleAthleteName, canSend }: ChatSectionPr
       hasMore={hasMore}
       timeZone={timeZone}
       nowIso={nowIso}
-      exampleAthleteName={exampleAthleteName}
-      canSend={canSend}
       loadError={loadError}
     />
   );

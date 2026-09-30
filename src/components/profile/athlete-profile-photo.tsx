@@ -7,7 +7,7 @@ import {
   createAthleteMediaUploadIntentAction,
   deleteAthleteMediaAction,
   getAthleteMediaAction,
-} from "@/app/athlete/[athleteId]/profile/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/profile/actions";
 import { EventActionMenu } from "@/components/dashboard/event-action-menu";
 import {
   ATHLETE_MEDIA_STATUS_POLL_MS,

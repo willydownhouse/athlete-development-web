@@ -8,7 +8,7 @@ import {
   deleteEventMediaAction,
   getEventMediaReadUrlAction,
   listEventMediaAction,
-} from "@/app/athlete/[athleteId]/event/[eventId]/actions";
+} from "@/app/(authenticated)/athlete/[athleteId]/event/[eventId]/actions";
 import {
   EventMediaGallery,
   EventMediaGallerySkeleton,

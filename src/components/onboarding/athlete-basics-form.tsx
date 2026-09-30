@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 
-import { createAthleteBasicsAction, type OnboardingActionState } from "@/app/onboarding/actions";
+import {
+  createAthleteBasicsAction,
+  type OnboardingActionState,
+} from "@/app/(authenticated)/onboarding/actions";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { DatePickerInput } from "@/components/date-picker-input";
