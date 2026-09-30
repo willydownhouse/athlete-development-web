@@ -117,7 +117,7 @@ function parseDateOnly(value: string): CalendarDate | null {
 
 function parseTime(value: string): { hour: number; minute: number } | null {
   if (value === "") {
-    return { hour: 12, minute: 0 };
+    return { hour: 0, minute: 0 };
   }
 
   const match = timePattern.exec(value);

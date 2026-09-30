@@ -11,9 +11,10 @@ type OptionPillsProps = {
   name: string;
   options: OptionPill[];
   defaultValue?: string;
+  onValueChange?: (value: string) => void;
 };
 
-export function OptionPills({ name, options, defaultValue = "" }: OptionPillsProps) {
+export function OptionPills({ name, options, defaultValue = "", onValueChange }: OptionPillsProps) {
   const [value, setValue] = useState(defaultValue);
 
   return (
@@ -28,7 +29,10 @@ export function OptionPills({ name, options, defaultValue = "" }: OptionPillsPro
               key={option.value || "empty"}
               type="button"
               aria-pressed={selected}
-              onClick={() => setValue(option.value)}
+              onClick={() => {
+                setValue(option.value);
+                onValueChange?.(option.value);
+              }}
               className={
                 selected
                   ? "rounded-full bg-[#b7d7ec] px-3.5 py-2 text-sm font-semibold text-[#1a2430]"

@@ -5,8 +5,10 @@ import {
   readEventDescriptionForUpdate,
   readEventDurationSecondsForCreate,
   readEventDurationSecondsForUpdate,
+  readEventEndedAt,
   readEventIntensityForCreate,
   readEventIntensityForUpdate,
+  readEventTimingMode,
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "./event-form-schema";
@@ -71,6 +73,20 @@ describe("eventToFormValues duration parts", () => {
     });
   });
 
+  it("formats a stored end timestamp in the provided time zone", () => {
+    expect(
+      eventToFormValues(
+        buildEvent({
+          endedAt: "2026-08-05T16:30:00.000Z",
+        }),
+        "Europe/Oslo",
+      ),
+    ).toMatchObject({
+      endDate: "2026-08-05",
+      endTime: "18:30",
+    });
+  });
+
   it("leaves duration fields empty when no duration is stored", () => {
     expect(eventToFormValues(buildEvent())).toMatchObject({
       durationHours: "",
@@ -107,6 +123,33 @@ describe("readEventDurationSecondsForCreate", () => {
 describe("readEventDurationSecondsForUpdate", () => {
   it("returns null when all duration parts are empty", () => {
     expect(readEventDurationSecondsForUpdate(new FormData())).toBeNull();
+  });
+});
+
+describe("event timing fields", () => {
+  it("defaults to duration mode", () => {
+    expect(readEventTimingMode(new FormData())).toBe("duration");
+  });
+
+  it("reads an end timestamp in the requested time zone", () => {
+    const formData = new FormData();
+    formData.set("timingMode", "endTime");
+    formData.set("endDate", "2026-08-05");
+    formData.set("endTime", "18:30");
+
+    expect(readEventTimingMode(formData)).toBe("endTime");
+    expect(readEventEndedAt(formData, "Europe/Oslo")).toBe("2026-08-05T16:30:00.000Z");
+  });
+
+  it("uses local midnight when the end time is empty", () => {
+    const formData = new FormData();
+    formData.set("endDate", "2026-08-05");
+
+    expect(readEventEndedAt(formData, "Europe/Oslo")).toBe("2026-08-04T22:00:00.000Z");
+  });
+
+  it("returns null when the end fields are empty", () => {
+    expect(readEventEndedAt(new FormData(), "Europe/Oslo")).toBeNull();
   });
 });
 

@@ -21,8 +21,10 @@ import {
   readEventDescriptionForUpdate,
   readEventDurationSecondsForCreate,
   readEventDurationSecondsForUpdate,
+  readEventEndedAt,
   readEventIntensityForCreate,
   readEventIntensityForUpdate,
+  readEventTimingMode,
   readEventTitleForCreate,
   readEventTitleForUpdate,
 } from "@/lib/event-form-schema";
@@ -52,8 +54,16 @@ async function readEventFormFields(formData: FormData) {
   const eventTypeId = readString(formData, "eventTypeId");
   const eventDate = readString(formData, "eventDate");
   const eventTime = readString(formData, "eventTime");
+  const endDate = readString(formData, "endDate");
+  const endTime = readString(formData, "endTime");
+  const timingMode = readEventTimingMode(formData);
   const timeZone = await getRequestTimeZoneCookie();
   const startedAt = timeZone ? zonedDateTimeToUtcIso(eventDate, eventTime, timeZone) : null;
+  const hasEndInput = Boolean(endDate || endTime);
+  const endedAt =
+    timingMode === "endTime" && timeZone && hasEndInput
+      ? readEventEndedAt(formData, timeZone)
+      : null;
 
   return {
     athleteId,
@@ -61,6 +71,9 @@ async function readEventFormFields(formData: FormData) {
     eventDate,
     timeZone,
     startedAt,
+    timingMode,
+    hasEndInput,
+    endedAt,
   };
 }
 
@@ -75,7 +88,8 @@ export async function createEventAction(
   }
 
   const fields = await readEventFormFields(formData);
-  const durationSeconds = readEventDurationSecondsForCreate(formData);
+  const durationSeconds =
+    fields.timingMode === "duration" ? readEventDurationSecondsForCreate(formData) : undefined;
   const title = readEventTitleForCreate(formData);
   const description = readEventDescriptionForCreate(formData);
   const intensity = readEventIntensityForCreate(formData);
@@ -98,6 +112,10 @@ export async function createEventAction(
     return { error: actions.dateRequired };
   }
 
+  if (fields.timingMode === "endTime" && fields.hasEndInput && !fields.endedAt) {
+    return { error: actions.invalidEndDateTime };
+  }
+
   if (!metricsLoaded) {
     return { error: actions.metricFieldsNotReady };
   }
@@ -112,6 +130,7 @@ export async function createEventAction(
       source: "form",
       title,
       description,
+      ...(fields.timingMode === "endTime" && fields.endedAt ? { endedAt: fields.endedAt } : {}),
       durationSeconds,
       intensity,
       metrics,
@@ -138,7 +157,8 @@ export async function updateEventAction(
 
   const eventId = readString(formData, "eventId");
   const fields = await readEventFormFields(formData);
-  const durationSeconds = readEventDurationSecondsForUpdate(formData);
+  const durationSeconds =
+    fields.timingMode === "duration" ? readEventDurationSecondsForUpdate(formData) : undefined;
   const title = readEventTitleForUpdate(formData);
   const description = readEventDescriptionForUpdate(formData);
   const intensity = readEventIntensityForUpdate(formData);
@@ -165,6 +185,10 @@ export async function updateEventAction(
     return { error: actions.dateRequired };
   }
 
+  if (fields.timingMode === "endTime" && fields.hasEndInput && !fields.endedAt) {
+    return { error: actions.invalidEndDateTime };
+  }
+
   if (!metricsLoaded) {
     return { error: actions.metricFieldsNotReady };
   }
@@ -178,7 +202,7 @@ export async function updateEventAction(
       startedAt: fields.startedAt,
       title,
       description,
-      durationSeconds,
+      ...(fields.timingMode === "endTime" ? { endedAt: fields.endedAt } : { durationSeconds }),
       intensity,
       metrics,
       ...(itemsLoaded ? { items } : {}),
