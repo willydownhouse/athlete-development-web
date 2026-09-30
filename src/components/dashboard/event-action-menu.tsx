@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { useAppLocale } from "@/lib/locale-context";
@@ -47,7 +47,7 @@ export function EventActionMenu({
     minWidth: 0,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || !triggerRef.current) {
       return;
     }
