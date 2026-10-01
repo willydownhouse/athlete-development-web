@@ -68,6 +68,51 @@ describe("getEventFormValidationError", () => {
       ),
     ).toBe("Exercise 1 · Name must be 100 characters or less");
   });
+
+  it("allows an end date without an end time", () => {
+    const formData = new FormData();
+    formData.set("athleteId", "athlete-1");
+    formData.set("eventTypeId", "event-type-1");
+    formData.set("eventDate", "2026-08-19");
+    formData.set("timingMode", "endTime");
+    formData.set("endDate", "2026-08-19");
+
+    expect(
+      getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" }),
+    ).toBeNull();
+  });
+
+  it("requires an end date when an end time is provided", () => {
+    const formData = new FormData();
+    formData.set("athleteId", "athlete-1");
+    formData.set("eventTypeId", "event-type-1");
+    formData.set("eventDate", "2026-08-19");
+    formData.set("timingMode", "endTime");
+    formData.set("endTime", "18:30");
+
+    expect(getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" })).toBe(
+      "Enter an end date",
+    );
+  });
+
+  it("allows empty or complete end fields in end time mode", () => {
+    const formData = new FormData();
+    formData.set("athleteId", "athlete-1");
+    formData.set("eventTypeId", "event-type-1");
+    formData.set("eventDate", "2026-08-19");
+    formData.set("timingMode", "endTime");
+
+    expect(
+      getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" }),
+    ).toBeNull();
+
+    formData.set("endDate", "2026-08-19");
+    formData.set("endTime", "18:30");
+
+    expect(
+      getEventFormValidationError(formData, [], null, { timeZone: "Europe/Helsinki" }),
+    ).toBeNull();
+  });
 });
 
 describe("getEventFormTextError", () => {

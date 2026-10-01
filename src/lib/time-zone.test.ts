@@ -24,8 +24,8 @@ describe("zonedDateTimeToUtcIso", () => {
     );
   });
 
-  it("defaults missing event time to local noon", () => {
-    expect(zonedDateTimeToUtcIso("2026-08-05", "", "Europe/Oslo")).toBe("2026-08-05T10:00:00.000Z");
+  it("defaults missing event time to local midnight", () => {
+    expect(zonedDateTimeToUtcIso("2026-08-05", "", "Europe/Oslo")).toBe("2026-08-04T22:00:00.000Z");
   });
 
   it("rejects invalid local dates and times", () => {

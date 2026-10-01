@@ -35,8 +35,10 @@ import { EVENT_DURATION_FIELDS } from "@/lib/event-metric-form";
 import { getZonedDateString, getZonedTimeString } from "@/lib/time-zone";
 import {
   EVENT_DESCRIPTION_MAX_LENGTH,
+  EVENT_TIMING_MODE_FIELD,
   EVENT_TITLE_MAX_LENGTH,
   getEventFormValidationError,
+  type EventTimingMode,
 } from "@/lib/event-form-schema";
 import type { Event, EventIntensity, EventType, EventTypeMetricDefinition } from "@/lib/types";
 
@@ -114,6 +116,11 @@ export function EventForm({
   );
   const [eventTypeId, setEventTypeId] = useState(values.eventTypeId);
   const [eventDate, setEventDate] = useState(values.eventDate);
+  const [timingMode, setTimingMode] = useState<EventTimingMode>(
+    event?.endedAt && !event.durationSeconds ? "endTime" : "duration",
+  );
+  const [endFieldsResetKey, setEndFieldsResetKey] = useState(0);
+  const [endFieldsCleared, setEndFieldsCleared] = useState(false);
   const [selectedEventTypeId, setSelectedEventTypeId] = useState(values.eventTypeId);
   const [metricMappings, setMetricMappings] = useState<EventTypeMetricDefinition[]>([]);
   const [metricFieldsLoading, setMetricFieldsLoading] = useState(Boolean(values.eventTypeId));
@@ -221,12 +228,14 @@ export function EventForm({
   }, [
     eventTypeId,
     eventDate,
+    endFieldsResetKey,
     metricFieldsLoadError,
     metricFieldsLoading,
     metricMappings,
     itemCatalog,
     itemFieldsLoadError,
     itemFieldsLoading,
+    timingMode,
     syncValidationFromForm,
   ]);
 
@@ -310,22 +319,73 @@ export function EventForm({
               defaultValue={values.eventTime}
               placeholder={messages.events.selectTime}
               className={inputClassName}
+              clearable
             />
-            <span className="text-xs text-zinc-500">{messages.events.noonHint}</span>
+            <span className="text-xs text-zinc-500">{messages.events.midnightHint}</span>
           </label>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DurationPartsFields
-            hoursName={EVENT_DURATION_FIELDS.hours}
-            minutesName={EVENT_DURATION_FIELDS.minutes}
-            secondsName={EVENT_DURATION_FIELDS.seconds}
-            defaultHours={values.durationHours}
-            defaultMinutes={values.durationMinutes}
-            defaultSeconds={values.durationSeconds}
-            label={messages.common.duration}
-            inputClassName={inputClassName}
-          />
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2 text-sm">
+              <span className="font-medium text-zinc-300">{messages.events.timing}</span>
+              <OptionPills
+                name={EVENT_TIMING_MODE_FIELD}
+                options={[
+                  { value: "duration", label: messages.common.duration },
+                  { value: "endTime", label: messages.events.endTime },
+                ]}
+                defaultValue={timingMode}
+                onValueChange={(value) => {
+                  if (value === "duration" || value === "endTime") {
+                    setTimingMode(value);
+                  }
+                }}
+              />
+            </div>
+
+            <fieldset disabled={timingMode !== "duration"} hidden={timingMode !== "duration"}>
+              <DurationPartsFields
+                hoursName={EVENT_DURATION_FIELDS.hours}
+                minutesName={EVENT_DURATION_FIELDS.minutes}
+                secondsName={EVENT_DURATION_FIELDS.seconds}
+                defaultHours={values.durationHours}
+                defaultMinutes={values.durationMinutes}
+                defaultSeconds={values.durationSeconds}
+                label={messages.common.duration}
+                inputClassName={inputClassName}
+              />
+            </fieldset>
+
+            <fieldset disabled={timingMode !== "endTime"} hidden={timingMode !== "endTime"}>
+              <div key={endFieldsResetKey} className="grid gap-3 sm:grid-cols-2">
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium text-zinc-300">{messages.events.endDate}</span>
+                  <DatePickerInput
+                    name="endDate"
+                    defaultValue={endFieldsCleared ? "" : values.endDate}
+                    placeholder={messages.events.selectDate}
+                    className={inputClassName}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium text-zinc-300">{messages.events.endTime}</span>
+                  <TimePickerInput
+                    name="endTime"
+                    defaultValue={endFieldsCleared ? "" : values.endTime}
+                    placeholder={messages.events.selectTime}
+                    className={inputClassName}
+                    clearable
+                    onClear={() => {
+                      setEndFieldsCleared(true);
+                      setEndFieldsResetKey((current) => current + 1);
+                    }}
+                  />
+                </label>
+              </div>
+            </fieldset>
+          </div>
 
           <div className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-zinc-300">{messages.events.intensity}</span>
@@ -393,7 +453,10 @@ export function EventForm({
         </label>
 
         <div className="flex flex-col gap-3 pt-1">
-          <FormMessage error={clientError ?? state.error} success={state.success} />
+          <FormMessage
+            error={clientError ?? state.error}
+            success={onSuccess ? undefined : state.success}
+          />
           <div className="flex sm:justify-end">
             <SubmitButton
               pending={isPending}

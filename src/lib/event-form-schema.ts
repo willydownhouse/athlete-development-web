@@ -6,10 +6,13 @@ import {
   validateMetricForm,
 } from "./event-metric-form";
 import { validateEventItemsForm, type EventItemFormCatalog } from "./event-item-form";
+import { zonedDateTimeToUtcIso } from "./time-zone";
 import type { EventIntensity, EventTypeMetricDefinition } from "./types";
 
 export const EVENT_TITLE_MAX_LENGTH = 100;
 export const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
+export const EVENT_TIMING_MODE_FIELD = "timingMode";
+export type EventTimingMode = "duration" | "endTime";
 
 function readField(value: FormDataEntryValue | null): string {
   return typeof value === "string" ? value.trim() : "";
@@ -36,6 +39,21 @@ function getEventFormTextErrorFromFormData(formData: FormData): string | null {
 
 function readTextField(formData: FormData, key: string): string {
   return readField(formData.get(key));
+}
+
+export function readEventTimingMode(formData: FormData): EventTimingMode {
+  return readTextField(formData, EVENT_TIMING_MODE_FIELD) === "endTime" ? "endTime" : "duration";
+}
+
+export function readEventEndedAt(formData: FormData, timeZone: string): string | null {
+  const endDate = readTextField(formData, "endDate");
+  const endTime = readTextField(formData, "endTime");
+
+  if (!endDate && !endTime) {
+    return null;
+  }
+
+  return zonedDateTimeToUtcIso(endDate, endTime, timeZone);
 }
 
 export type EventFormValidationOptions = {
@@ -86,9 +104,23 @@ export function getEventFormValidationError(
     return textError;
   }
 
-  const durationError = validateDurationPartsForm(formData, EVENT_DURATION_FIELDS, "Duration");
-  if (durationError) {
-    return durationError;
+  const timingMode = readEventTimingMode(formData);
+  if (timingMode === "endTime") {
+    const endDate = readTextField(formData, "endDate");
+    const endTime = readTextField(formData, "endTime");
+
+    if (endTime && !endDate) {
+      return "Enter an end date";
+    }
+
+    if (endDate && !readEventEndedAt(formData, options.timeZone ?? "")) {
+      return "End date and time are invalid";
+    }
+  } else {
+    const durationError = validateDurationPartsForm(formData, EVENT_DURATION_FIELDS, "Duration");
+    if (durationError) {
+      return durationError;
+    }
   }
 
   const metricError = validateMetricForm(formData, metricMappings);

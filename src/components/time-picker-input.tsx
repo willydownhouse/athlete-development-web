@@ -24,6 +24,8 @@ type TimePickerInputProps = {
   defaultValue?: string;
   placeholder?: string;
   className?: string;
+  clearable?: boolean;
+  onClear?: () => void;
 };
 
 function parseTimeValue(value: string | undefined): TimeParts | undefined {
@@ -106,6 +108,8 @@ export function TimePickerInput({
   defaultValue,
   placeholder,
   className,
+  clearable = false,
+  onClear,
 }: TimePickerInputProps) {
   const locale = useAppLocale();
   const messages = getMessages(locale);
@@ -254,26 +258,44 @@ export function TimePickerInput({
   return (
     <>
       <input type="hidden" name={name} value={formattedValue} />
-      <button
-        ref={triggerRef}
-        id={inputId}
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
-        onClick={() => {
-          if (open) {
-            setOpen(false);
-            return;
-          }
+      <div className="relative">
+        <button
+          ref={triggerRef}
+          id={inputId}
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={open ? panelId : undefined}
+          onClick={() => {
+            if (open) {
+              setOpen(false);
+              return;
+            }
 
-          openPanel();
-        }}
-        className={`flex w-full items-center justify-between gap-3 text-left ${className ?? ""}`}
-      >
-        <span className={selected ? "text-white" : "text-zinc-500"}>{displayValue}</span>
-        <ClockIcon />
-      </button>
+            openPanel();
+          }}
+          style={clearable && selected ? { paddingRight: "3rem" } : undefined}
+          className={`flex w-full items-center justify-between gap-3 text-left ${className ?? ""}`}
+        >
+          <span className={selected ? "text-white" : "text-zinc-500"}>{displayValue}</span>
+          {clearable && selected ? null : <ClockIcon />}
+        </button>
+        {clearable && selected ? (
+          <button
+            type="button"
+            aria-label={messages.events.clear}
+            title={messages.events.clear}
+            onClick={() => {
+              setSelected(undefined);
+              setOpen(false);
+              onClear?.();
+            }}
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-200"
+          >
+            <ClearIcon />
+          </button>
+        ) : null}
+      </div>
       {panel}
     </>
   );
@@ -291,6 +313,22 @@ function ClockIcon() {
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l3.5 2" />
       <path strokeLinecap="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+    </svg>
+  );
+}
+
+function ClearIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    >
+      <path d="m6 6 8 8M14 6l-8 8" />
     </svg>
   );
 }

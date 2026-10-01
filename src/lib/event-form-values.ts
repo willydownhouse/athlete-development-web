@@ -6,6 +6,8 @@ export type EventFormValues = {
   eventTypeId: string;
   eventDate: string;
   eventTime: string;
+  endDate: string;
+  endTime: string;
   durationHours: string;
   durationMinutes: string;
   durationSeconds: string;
@@ -16,6 +18,7 @@ export type EventFormValues = {
 
 export function eventToFormValues(event: Event, timeZone = getSystemTimeZone()): EventFormValues {
   const startedAt = new Date(event.startedAt);
+  const endedAt = event.endedAt ? new Date(event.endedAt) : null;
   const durationParts = event.durationSeconds
     ? secondsToDurationParts(event.durationSeconds)
     : { hours: "", minutes: "", seconds: "" };
@@ -24,6 +27,8 @@ export function eventToFormValues(event: Event, timeZone = getSystemTimeZone()):
     eventTypeId: event.eventTypeId,
     eventDate: getZonedDateString(timeZone, startedAt),
     eventTime: getZonedTimeString(timeZone, startedAt),
+    endDate: endedAt ? getZonedDateString(timeZone, endedAt) : "",
+    endTime: endedAt ? getZonedTimeString(timeZone, endedAt) : "",
     durationHours: durationParts.hours,
     durationMinutes: durationParts.minutes,
     durationSeconds: durationParts.seconds,
@@ -42,6 +47,8 @@ export function defaultCreateFormValues(
     eventTypeId: defaultEventTypeId ?? "",
     eventDate: today,
     eventTime,
+    endDate: "",
+    endTime: "",
     durationHours: "",
     durationMinutes: "",
     durationSeconds: "",
