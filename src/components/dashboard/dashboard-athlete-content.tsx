@@ -19,7 +19,8 @@ import { DashboardAthletePhoto } from "./dashboard-athlete-photo";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { QuickLogSection } from "./quick-log-section";
-import { TodaysEventsSkeleton } from "./dashboard-skeletons";
+import { StreakCard } from "./streak-card";
+import { StreakCardSkeleton, TodaysEventsSkeleton } from "./dashboard-skeletons";
 import { TodaysEventsCard } from "./todays-events-card";
 
 const inlineSkeletonClassName =
@@ -109,6 +110,9 @@ export async function DashboardAthleteContent({
       <div className="mt-6 flex flex-col gap-3.5">
         <Suspense fallback={<TodaysEventsSkeleton />}>
           <DashboardTodaysEventsSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
+        </Suspense>
+        <Suspense fallback={<StreakCardSkeleton />}>
+          <StreakCard athleteId={selectedAthlete.id} timeZone={timeZone} />
         </Suspense>
         <QuickLogSection
           eventTypes={eventTypes}

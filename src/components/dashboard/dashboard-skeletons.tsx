@@ -15,6 +15,29 @@ function EventListRowSkeleton() {
   );
 }
 
+export function StreakCardSkeleton() {
+  return (
+    <section className={CARD_CLASS}>
+      <Skeleton className="h-5 w-24" />
+      <div className="mt-6 flex justify-between">
+        {Array.from({ length: 7 }, (_, index) => (
+          <Skeleton key={index} className="size-9 rounded-[16px]" />
+        ))}
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="space-y-2.5">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="space-y-2.5">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function TodaysEventsSkeleton({ count = 2 }: { count?: number }) {
   return (
     <section className={CARD_CLASS}>

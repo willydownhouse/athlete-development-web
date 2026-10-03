@@ -12,6 +12,7 @@ import type {
   ChatThread,
   ChatTurn,
   Event,
+  AthleteStreak,
   EventAggregate,
   EventAggregateKind,
   EventCategory,
@@ -130,6 +131,19 @@ async function apiFetch<T>(token: string, path: string, options: RequestInit = {
 
 export async function fetchCurrentAppUser(token: string): Promise<AppUser> {
   return apiFetch<AppUser>(token, "/api/auth/me");
+}
+
+export async function fetchAthleteStreak(
+  token: string,
+  athleteId: string,
+  timeZone: string,
+): Promise<AthleteStreak> {
+  const params = new URLSearchParams({ timeZone });
+
+  return apiFetch<AthleteStreak>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/streak?${params.toString()}`,
+  );
 }
 
 export async function fetchMonthlyUsage(token: string): Promise<MonthlyUsage> {
