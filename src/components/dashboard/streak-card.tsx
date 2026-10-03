@@ -108,6 +108,9 @@ function StreakSummary({
               >
                 {weekdayLabel(day.date, locale)}
               </span>
+              <span className="sr-only">
+                {day.logged ? messages.streakDayLogged : messages.streakDayNotLogged}
+              </span>
             </li>
           );
         })}
