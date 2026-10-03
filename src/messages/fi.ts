@@ -76,6 +76,9 @@ export const fi = {
     streakDayLogged: "kirjattu",
     streakDayNotLogged: "ei kirjattu",
     streakLoadError: "Putkea ei voitu ladata.",
+    streakHelpLabel: "Miten putki lasketaan",
+    streakHelpCount: "Päivä lasketaan tapahtuman alkamisajan mukaan.",
+    streakHelpRest: "Muista, että lepo on myös tapahtuma. 🙂",
     noEventsToday: "Tälle päivälle ei ole kirjattu tapahtumia.",
     quickLog: "Pikakirjaus",
     noEventTypesInScope: (scopeLabel: string) =>
