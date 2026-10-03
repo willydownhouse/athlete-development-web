@@ -244,6 +244,18 @@ export type EventListResponse = {
 
 export type EventAggregateKind = "count" | "durationSeconds" | "metric" | "metricAverage";
 
+type AthleteStreakDay = {
+  date: string;
+  logged: boolean;
+};
+
+export type AthleteStreak = {
+  timeZone: string;
+  currentStreakDays: number;
+  bestStreakDays: number;
+  days: AthleteStreakDay[];
+};
+
 export type EventAggregate = {
   athleteId: string;
   aggregation: EventAggregateKind;

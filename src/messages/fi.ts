@@ -73,7 +73,7 @@ export const fi = {
     streakCurrent: "Nykyinen putki",
     streakBest: "Paras putki",
     streakDays: (count: number) => (count === 1 ? "1 päivä" : `${count} päivää`),
-    streakWeekdays: ["La", "Su", "Ma", "Ti", "Ke", "To", "Pe"],
+    streakLoadError: "Putkea ei voitu ladata.",
     noEventsToday: "Tälle päivälle ei ole kirjattu tapahtumia.",
     quickLog: "Pikakirjaus",
     noEventTypesInScope: (scopeLabel: string) =>

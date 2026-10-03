@@ -70,7 +70,7 @@ export const en = {
     streakCurrent: "Current streak",
     streakBest: "Best streak",
     streakDays: (count: number) => (count === 1 ? "1 day" : `${count} days`),
-    streakWeekdays: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+    streakLoadError: "Could not load the streak.",
     noEventsToday: "No events logged for today.",
     quickLog: "Quick log",
     noEventTypesInScope: (scopeLabel: string) => `No ${scopeLabel} event types available yet.`,

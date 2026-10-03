@@ -1,8 +1,20 @@
+import { intlDateLocale } from "@/lib/date-fns-locale";
 import { getRequestLocale } from "@/lib/locale-server";
+import type { AppLocale } from "@/lib/locale";
+import { loadAthleteStreak } from "@/lib/load-athlete-streak";
 import { getMessages } from "@/lib/messages";
+import { getZonedDateString } from "@/lib/time-zone";
+import type { AthleteStreak } from "@/lib/types";
 
-const CURRENT_STREAK_DAYS = 0;
-const BEST_STREAK_DAYS = 0;
+function weekdayLabel(date: string, locale: AppLocale): string {
+  const [year, month, day] = date.split("-").map((part) => Number.parseInt(part, 10));
+  const formatted = new Intl.DateTimeFormat(intlDateLocale(locale), {
+    timeZone: "UTC",
+    weekday: "short",
+  }).format(new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1)));
+
+  return formatted.replace(/\.$/, "");
+}
 
 function DayBall({ logged }: { logged: boolean }) {
   return (
@@ -66,21 +78,27 @@ function StreakFlame({ variant }: { variant: "current" | "best" }) {
   );
 }
 
-export async function StreakCard() {
-  const messages = getMessages(await getRequestLocale()).dashboard;
-  const days = messages.streakWeekdays;
+function StreakSummary({
+  streak,
+  timeZone,
+  locale,
+}: {
+  streak: AthleteStreak;
+  timeZone: string;
+  locale: AppLocale;
+}) {
+  const messages = getMessages(locale).dashboard;
+  const today = getZonedDateString(timeZone);
 
   return (
-    <section aria-label={messages.streakTitle} className="rounded-2xl bg-[#171b22] px-4 py-4">
-      <h2 className="text-base font-semibold text-white">{messages.streakTitle}</h2>
-
+    <>
       <ol className="mt-6 flex justify-between">
-        {days.map((label, index) => {
-          const isToday = index === 0;
+        {streak.days.map((day) => {
+          const isToday = day.date === today;
 
           return (
-            <li key={label} className="flex w-9 flex-col items-center gap-2.5">
-              <DayBall logged={isToday} />
+            <li key={day.date} className="flex w-9 flex-col items-center gap-2.5">
+              <DayBall logged={day.logged} />
               <span
                 className={
                   isToday
@@ -88,7 +106,7 @@ export async function StreakCard() {
                     : "text-sm font-semibold leading-none text-[#8e8e93]"
                 }
               >
-                {label}
+                {weekdayLabel(day.date, locale)}
               </span>
             </li>
           );
@@ -102,7 +120,7 @@ export async function StreakCard() {
           </p>
           <p className="mt-2.5 flex items-center gap-2 text-base font-semibold leading-none text-white">
             <StreakFlame variant="current" />
-            {messages.streakDays(CURRENT_STREAK_DAYS)}
+            {messages.streakDays(streak.currentStreakDays)}
           </p>
         </div>
         <div>
@@ -111,10 +129,29 @@ export async function StreakCard() {
           </p>
           <p className="mt-2.5 flex items-center gap-2 text-base font-semibold leading-none text-white">
             <StreakFlame variant="best" />
-            {messages.streakDays(BEST_STREAK_DAYS)}
+            {messages.streakDays(streak.bestStreakDays)}
           </p>
         </div>
       </div>
+    </>
+  );
+}
+
+export async function StreakCard({ athleteId, timeZone }: { athleteId: string; timeZone: string }) {
+  const [locale, result] = await Promise.all([
+    getRequestLocale(),
+    loadAthleteStreak(athleteId, timeZone),
+  ]);
+  const messages = getMessages(locale).dashboard;
+
+  return (
+    <section aria-label={messages.streakTitle} className="rounded-2xl bg-[#171b22] px-4 py-4">
+      <h2 className="text-base font-semibold text-white">{messages.streakTitle}</h2>
+      {result.streak ? (
+        <StreakSummary streak={result.streak} timeZone={timeZone} locale={locale} />
+      ) : (
+        <p className="mt-4 text-sm text-red-300">{result.error}</p>
+      )}
     </section>
   );
 }
