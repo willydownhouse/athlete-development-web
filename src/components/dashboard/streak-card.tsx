@@ -1,3 +1,4 @@
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { intlDateLocale } from "@/lib/date-fns-locale";
 import { getRequestLocale } from "@/lib/locale-server";
 import type { AppLocale } from "@/lib/locale";
@@ -149,7 +150,15 @@ export async function StreakCard({ athleteId, timeZone }: { athleteId: string; t
 
   return (
     <section aria-label={messages.streakTitle} className="rounded-2xl bg-[#171b22] px-4 py-4">
-      <h2 className="text-base font-semibold text-white">{messages.streakTitle}</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-white">{messages.streakTitle}</h2>
+        <InfoTooltip label={messages.streakHelpLabel} align="end">
+          <div className="space-y-2 text-sm text-zinc-300">
+            <p>{messages.streakHelpCount}</p>
+            <p>{messages.streakHelpRest}</p>
+          </div>
+        </InfoTooltip>
+      </div>
       {result.streak ? (
         <StreakSummary streak={result.streak} timeZone={timeZone} locale={locale} />
       ) : (

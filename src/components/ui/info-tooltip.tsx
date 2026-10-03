@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 type InfoTooltipProps = {
   label: string;
   children: ReactNode;
+  align?: "start" | "end";
 };
 
 function InfoIcon() {
@@ -25,7 +26,7 @@ function InfoIcon() {
   );
 }
 
-export function InfoTooltip({ label, children }: InfoTooltipProps) {
+export function InfoTooltip({ label, children, align = "start" }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const tooltipId = useId();
@@ -95,7 +96,9 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
         <div
           id={tooltipId}
           role="tooltip"
-          className="absolute left-0 top-full z-50 mt-2 w-[min(calc(100vw-2rem),22rem)] rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+          className={`absolute top-full z-50 mt-2 w-[min(calc(100vw-2rem),22rem)] rounded-xl border border-white/10 bg-[#1c222c] p-3 shadow-[0_20px_45px_rgba(0,0,0,0.45)] ${
+            align === "end" ? "right-0" : "left-0"
+          }`}
         >
           {children}
         </div>
