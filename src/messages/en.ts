@@ -430,10 +430,10 @@ export const en = {
     measureNotAvailable: (label: string) => `${label} is not available`,
   },
   unavailable: {
-    line1: "Demo",
+    line1: "Early",
     line2: "access only",
-    body: "Athlete Development Center is currently available only for demo users.",
-    contactPrefix: "If you would like to try the demo, contact support at",
+    body: "Athlete Development Center is currently available only to early access users.",
+    contactPrefix: "If you would like early access, contact support at",
   },
 } as const;
 

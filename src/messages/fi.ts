@@ -440,8 +440,8 @@ export const fi = {
   },
   unavailable: {
     line1: "Vain",
-    line2: "demokäyttö",
-    body: "Athlete Development Center on tällä hetkellä käytettävissä vain demokäyttäjille.",
-    contactPrefix: "Jos haluat kokeilla demoa, ota yhteyttä tukeen osoitteeseen",
+    line2: "ennakkokäyttö",
+    body: "Athlete Development Center on tällä hetkellä käytettävissä vain ennakkokäyttäjille.",
+    contactPrefix: "Jos haluat mukaan ennakkokäyttöön, ota yhteyttä tukeen osoitteeseen",
   },
 } satisfies Messages;
