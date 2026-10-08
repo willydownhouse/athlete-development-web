@@ -10,7 +10,7 @@ import type {
   AthleteListResponse,
   ChatMessageListResponse,
   ChatThread,
-  ChatTurn,
+  ChatRun,
   Event,
   AthleteStreak,
   EventAggregate,
@@ -1170,8 +1170,8 @@ export async function submitChatMessage(
     locale: AppLocale;
     eventId?: string;
   },
-): Promise<ChatTurn> {
-  return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
+): Promise<ChatRun> {
+  return apiFetch<ChatRun>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
     method: "POST",
     body: JSON.stringify(body),
   });

@@ -1129,7 +1129,7 @@ describe("api client", () => {
       timeZone: "Europe/Helsinki",
       locale: "en" as const,
     };
-    const turn = await submitChatMessage("test-token", threadId, body);
+    const run = await submitChatMessage("test-token", threadId, body);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       `http://api.test/api/chat/threads/${threadId}/messages`,
@@ -1137,7 +1137,7 @@ describe("api client", () => {
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.method).toBe("POST");
     expect(JSON.parse(String(options.body))).toEqual(body);
-    expect(turn.status).toBe("completed");
+    expect(run.status).toBe("completed");
   });
 
   it("submits a focused event update message", async () => {

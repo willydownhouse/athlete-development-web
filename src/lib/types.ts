@@ -516,7 +516,7 @@ type ChatToolCall = {
   completedAt: string | null;
 };
 
-export type ChatTurn = {
+export type ChatRun = {
   id: string;
   chatThreadId: string;
   status: ChatRunStatus;
