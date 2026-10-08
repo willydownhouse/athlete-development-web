@@ -86,13 +86,6 @@ describe("api client", () => {
         limitReached: false,
         inputTokens: { used: 50, limit: 500000, remaining: 499950 },
         outputTokens: { used: 7, limit: 30000, remaining: 29993 },
-        features: [
-          {
-            feature: "event_logging",
-            inputTokens: 50,
-            outputTokens: 7,
-          },
-        ],
       }),
     });
 
@@ -106,7 +99,7 @@ describe("api client", () => {
     expect(options.cache).toBe("no-store");
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(usage.inputTokens.used).toBe(50);
-    expect(usage.features[0]?.feature).toBe("event_logging");
+    expect(usage.outputTokens.used).toBe(7);
   });
 
   it("fetches athletes for the logged-in user", async () => {
@@ -1013,7 +1006,6 @@ describe("api client", () => {
       ok: true,
       json: async () => ({
         id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        type: "event_logging",
         createdAt: "2026-09-01T12:00:00.000Z",
         updatedAt: "2026-09-01T12:00:00.000Z",
       }),
@@ -1029,7 +1021,7 @@ describe("api client", () => {
     expect(options.method).toBe("POST");
     expect(options.cache).toBe("no-store");
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
-    expect(thread.type).toBe("event_logging");
+    expect(thread.id).toBe("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
   });
 
   it("fetches chat messages", async () => {

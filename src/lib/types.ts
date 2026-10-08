@@ -1,17 +1,9 @@
 export type UserRole = "user" | "maintainer" | "admin";
 
-type UsageFeature = "event_logging";
-
 type UsageUnitTotals = {
   used: number;
   limit: number;
   remaining: number;
-};
-
-type FeatureUsageTotals = {
-  feature: UsageFeature;
-  inputTokens: number;
-  outputTokens: number;
 };
 
 export type MonthlyUsage = {
@@ -20,7 +12,6 @@ export type MonthlyUsage = {
   limitReached: boolean;
   inputTokens: UsageUnitTotals;
   outputTokens: UsageUnitTotals;
-  features: FeatureUsageTotals[];
 };
 
 export type AthleteAccessRole = "parent" | "athlete";
@@ -493,8 +484,6 @@ export type MediaReadUrlResponse = {
   posterExpiresAt: string | null;
 };
 
-type ChatThreadType = "event_logging";
-
 type ChatMessageRole = "user" | "assistant";
 
 type ChatRunStatus = "received" | "processing" | "completed" | "failed";
@@ -503,7 +492,6 @@ type ChatToolCallStatus = "requested" | "succeeded" | "failed";
 
 export type ChatThread = {
   id: string;
-  type: ChatThreadType;
   createdAt: string;
   updatedAt: string;
 };
