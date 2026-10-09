@@ -31,7 +31,7 @@ export async function EventMediaPlayerSection({
   if ("error" in result) {
     return (
       <>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">
+        <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only">
           {getMessages(locale).nav.video}
         </h1>
         <p className="mt-6 rounded-2xl bg-[#2a1717] px-4 py-3 text-sm text-red-300">

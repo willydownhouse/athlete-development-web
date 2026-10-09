@@ -10,8 +10,10 @@ export default async function InvitesPage() {
 
   return (
     <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
-      <h1 className="text-2xl font-semibold tracking-tight text-white">{messages.invites.title}</h1>
-      <p className="mt-2 text-sm text-zinc-400">{messages.invites.pageHint}</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only">
+        {messages.invites.title}
+      </h1>
+      <p className="text-sm text-zinc-400 lg:mt-2">{messages.invites.pageHint}</p>
       <div className="mt-6">
         <Suspense fallback={<InvitesListSkeleton />}>
           <InvitesList />

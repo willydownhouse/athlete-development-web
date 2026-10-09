@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Oswald } from "next/font/google";
 
 import { auth } from "@/auth";
+import { AcentAppWordmark } from "@/components/acent-app-wordmark";
 import { SignOutButton } from "@/components/sign-out-button";
 import { DEMO_SUPPORT_EMAIL } from "@/lib/demo-access";
 import { getRequestLocale } from "@/lib/locale-server";
@@ -39,7 +40,7 @@ export default async function UnavailablePage() {
             <span className="block">{messages.unavailable.line2}</span>
           </h1>
           <p className="landing-fade-up-delayed max-w-md text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            {messages.unavailable.body}
+            <AcentAppWordmark as="span" className="text-[1em]" /> {messages.unavailable.body}
           </p>
           <p className="max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
             {messages.unavailable.contactPrefix}{" "}

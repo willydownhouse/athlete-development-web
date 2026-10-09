@@ -74,7 +74,7 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
         {backToTodayLabel(locale)}
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
         {getMessages(locale).nav.history}
       </h1>
 

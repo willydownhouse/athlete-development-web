@@ -39,10 +39,12 @@ export default async function AthleteAccessPage({ params }: AthleteAccessPagePro
         {backToTodayLabel(locale)}
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
         {messages.nav.access}
       </h1>
-      <p className="mt-2 text-sm text-zinc-400">{messages.access.pageHint(selectedAthlete.name)}</p>
+      <p className="mt-4 text-sm text-zinc-400 lg:mt-2">
+        {messages.access.pageHint(selectedAthlete.name)}
+      </p>
 
       <div className="mt-6 space-y-6">
         <Suspense fallback={<AccessListSkeleton />}>

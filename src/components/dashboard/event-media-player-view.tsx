@@ -272,20 +272,22 @@ export function EventMediaPlayerView({
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">{messages.nav.video}</h1>
+        <h1 className="min-w-0 text-2xl font-semibold tracking-tight text-white max-lg:sr-only">
+          {messages.nav.video}
+        </h1>
+        <div className="ml-auto">
+          <EventActionMenu
+            aria-label={messages.media.videoActions}
+            items={[
+              {
+                label: pending ? messages.common.deleting : messages.media.deleteVideo,
+                onClick: openDeleteConfirm,
+                disabled: pending,
+                destructive: true,
+              },
+            ]}
+          />
         </div>
-        <EventActionMenu
-          aria-label={messages.media.videoActions}
-          items={[
-            {
-              label: pending ? messages.common.deleting : messages.media.deleteVideo,
-              onClick: openDeleteConfirm,
-              disabled: pending,
-              destructive: true,
-            },
-          ]}
-        />
       </div>
 
       <div className="mt-6">
@@ -375,10 +377,10 @@ export function EventMediaPlayerSkeleton() {
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="hidden min-w-0 flex-1 lg:block">
           <Skeleton className="h-8 w-28" />
         </div>
-        <Skeleton className="h-8 w-8 rounded-lg" />
+        <Skeleton className="ml-auto h-8 w-8 rounded-lg" />
       </div>
       <div
         className="relative mx-auto mt-6 overflow-hidden rounded-lg"

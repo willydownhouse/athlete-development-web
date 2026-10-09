@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { AcentAppWordmark } from "@/components/acent-app-wordmark";
 import { SignOutButton } from "@/components/sign-out-button";
 
 import { AdminNav } from "./admin-nav";
@@ -71,19 +72,19 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Admin</p>
-            <p className="mt-1 text-lg font-semibold text-white">Athlete Development Center</p>
+        <div className="border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Admin</p>
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <AcentAppWordmark as="p" className="text-lg" />
+            <button
+              type="button"
+              className="shrink-0 rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
+              aria-label="Close menu"
+              onClick={closeMobile}
+            >
+              <CloseIcon />
+            </button>
           </div>
-          <button
-            type="button"
-            className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-            aria-label="Close menu"
-            onClick={closeMobile}
-          >
-            <CloseIcon />
-          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
@@ -116,7 +117,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
           </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">Admin</p>
-            <p className="truncate text-xs text-zinc-500">Athlete Development Center</p>
+            <AcentAppWordmark as="p" className="truncate text-xs" />
           </div>
         </header>
 

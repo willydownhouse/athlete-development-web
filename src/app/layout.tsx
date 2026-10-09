@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Athlete Development Center",
+  title: "AcentApp",
   description: "AI-assisted athlete development for parents, coaches, and young athletes.",
 };
 

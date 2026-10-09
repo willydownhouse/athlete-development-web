@@ -65,8 +65,8 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
           {backToTodayLabel(locale)}
         </Link>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
+        <div className="lg:mt-4 lg:flex lg:items-center lg:justify-between lg:gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only">
             {messages.nav.profile}
           </h1>
           <nav className="hidden shrink-0 items-center gap-3 lg:flex">
