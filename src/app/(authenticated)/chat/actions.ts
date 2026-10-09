@@ -2,24 +2,20 @@
 
 import { updateTag } from "next/cache";
 
-import {
-  fetchFocusedEventChatMessages,
-  fetchOlderChatMessages,
-  submitChatMessage,
-} from "@/lib/api";
+import { fetchScopedChatMessages, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { CHAT_MESSAGE_CONTENT_MAX_LENGTH } from "@/lib/constants";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
-import type { ChatMessage, ChatTurn } from "@/lib/types";
+import type { ChatMessage, ChatRun } from "@/lib/types";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type SendChatMessageState = {
   error?: string;
-  turn?: ChatTurn;
+  run?: ChatRun;
 };
 
 async function actionError(error: unknown): Promise<{ error: string }> {
@@ -74,7 +70,7 @@ export async function sendChatMessageAction(
   const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
 
   try {
-    const turn = await submitChatMessage(token, threadId, {
+    const run = await submitChatMessage(token, threadId, {
       content,
       clientRequestId,
       timeZone,
@@ -89,11 +85,11 @@ export async function sendChatMessageAction(
       updateTag(athleteEventsCacheTag(athleteId));
     }
 
-    if (turn.status === "failed") {
-      return { turn, error: turn.failureMessage ?? actions.couldNotCompleteReply };
+    if (run.status === "failed") {
+      return { run, error: run.failureMessage ?? actions.couldNotCompleteReply };
     }
 
-    return { turn };
+    return { run };
   } catch (error) {
     return await actionError(error);
   }
@@ -150,7 +146,7 @@ export async function loadFocusedEventChatMessagesAction(
   }
 
   try {
-    const result = await fetchFocusedEventChatMessages(token, threadId, focusedEventId, {
+    const result = await fetchScopedChatMessages(token, threadId, "event", focusedEventId, {
       ...(before ? { before } : {}),
     });
     return {

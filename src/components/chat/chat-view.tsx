@@ -102,7 +102,7 @@ export function ChatView({
   const seededThreadId = useRef(threadId);
   const typewriterMessageId = useIncomingAssistantTypewriter(
     isPending,
-    state.turn?.assistantMessage?.id ?? null,
+    state.run?.assistantMessage?.id ?? null,
   );
   const displayedMessages = useMemo(() => {
     const pending =
@@ -115,8 +115,8 @@ export function ChatView({
           }
         : null;
 
-    return displayedChatMessages({ messages, turn: state.turn, pending });
-  }, [isPending, messages, nowIso, pendingContent, pendingRequestId, state.turn, threadId]);
+    return displayedChatMessages({ messages, run: state.run, pending });
+  }, [isPending, messages, nowIso, pendingContent, pendingRequestId, state.run, threadId]);
 
   useEffect(() => {
     if (threadId === seededThreadId.current) {
@@ -216,7 +216,7 @@ export function ChatView({
   }
 
   const showEmpty = displayedMessages.length === 0 && !isPending && !loadError;
-  const composerKey = state.turn?.id ?? "draft";
+  const composerKey = state.run?.id ?? "draft";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -290,11 +290,11 @@ export function ChatView({
           isPending={isPending}
           examplePlaceholder={chatEventLoggingExample(exampleAthleteName, locale)}
           onSend={({ content, clientRequestId }) => {
-            const turn = state.turn;
-            if (turn) {
-              const next = [turn.userMessage];
-              if (turn.assistantMessage) {
-                next.push(turn.assistantMessage);
+            const run = state.run;
+            if (run) {
+              const next = [run.userMessage];
+              if (run.assistantMessage) {
+                next.push(run.assistantMessage);
               }
               setMessages((current) => mergeMessages(current, next));
             }
