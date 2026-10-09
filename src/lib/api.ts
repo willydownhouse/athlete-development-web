@@ -1080,7 +1080,7 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
-    excludeFocused: "true",
+    unscoped: "true",
   });
 
   if (options.before) {
@@ -1128,15 +1128,17 @@ export async function fetchOlderChatMessages(
   return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
 }
 
-export async function fetchFocusedEventChatMessages(
+export async function fetchScopedChatMessages(
   token: string,
   threadId: string,
-  focusedEventId: string,
+  scope: "event",
+  scopeId: string,
   options: { limit?: number; before?: string } = {},
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
-    focusedEventId,
+    scope,
+    scopeId,
   });
 
   if (options.before) {

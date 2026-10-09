@@ -2,11 +2,7 @@
 
 import { updateTag } from "next/cache";
 
-import {
-  fetchFocusedEventChatMessages,
-  fetchOlderChatMessages,
-  submitChatMessage,
-} from "@/lib/api";
+import { fetchScopedChatMessages, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
@@ -150,7 +146,7 @@ export async function loadFocusedEventChatMessagesAction(
   }
 
   try {
-    const result = await fetchFocusedEventChatMessages(token, threadId, focusedEventId, {
+    const result = await fetchScopedChatMessages(token, threadId, "event", focusedEventId, {
       ...(before ? { before } : {}),
     });
     return {
