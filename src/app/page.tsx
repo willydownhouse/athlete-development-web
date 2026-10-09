@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
-import { Oswald } from "next/font/google";
 
 import { auth } from "@/auth";
+import { AcentAppWordmark } from "@/components/acent-app-wordmark";
 import { SignInButton } from "@/components/sign-in-button";
-
-const oswald = Oswald({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
 
 export default async function HomePage() {
   const session = await auth();
@@ -26,17 +21,8 @@ export default async function HomePage() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col justify-center px-6 py-16 sm:px-10">
-        <div className="landing-fade-up space-y-6">
-          <h1
-            className={`${oswald.className} text-[2.75rem] font-semibold uppercase leading-[1.05] tracking-[0.02em] text-white sm:text-6xl md:text-7xl`}
-          >
-            <span className="block">Athlete</span>
-            <span className="block">Development</span>
-            <span className="block">Center</span>
-          </h1>
-          <p className="landing-fade-up-delayed max-w-md text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            Only if you take your training seriously.
-          </p>
+        <div className="landing-fade-up">
+          <AcentAppWordmark as="h1" tagline className="text-[3.25rem] min-[360px]:text-6xl md:text-7xl" />
         </div>
 
         <div className="landing-fade-up-late mt-10">

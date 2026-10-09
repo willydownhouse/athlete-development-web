@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
+import { AcentAppWordmark } from "@/components/acent-app-wordmark";
 import { AppShellNav } from "@/components/app-shell-nav";
 import {
   activeAthleteIdFromPath,
   appShellMobileTitle,
   athleteEventIdFromPath,
-  isOnboardingPath,
   pendingInvitesMenuButtonLabel,
 } from "@/components/dashboard/dashboard-nav";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -59,7 +59,6 @@ export function AppShellClient({
   const activeAthleteId = activeAthleteIdFromPath(pathname);
   const selectedAthlete = athletes.find((athlete) => athlete.id === activeAthleteId) ?? null;
   const [mobileOpen, setMobileOpen] = useState(false);
-  const onboarding = isOnboardingPath(pathname);
   const messages = getMessages(locale);
 
   const closeMobile = useCallback(() => {
@@ -107,25 +106,18 @@ export function AppShellClient({
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex items-start justify-between border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
-            <div>
-              {onboarding ? (
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                  {messages.nav.addAthlete}
-                </p>
-              ) : null}
-              <p className={`text-lg font-semibold text-white ${onboarding ? "mt-1" : ""}`}>
-                {messages.brand}
-              </p>
+          <div className="border-b border-white/5 px-4 py-5 sm:px-5 sm:py-6">
+            <div className="flex items-center justify-between gap-3">
+              <AcentAppWordmark as="p" className="text-lg" />
+              <button
+                type="button"
+                className="shrink-0 rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
+                aria-label={messages.common.closeMenu}
+                onClick={closeMobile}
+              >
+                <CloseIcon />
+              </button>
             </div>
-            <button
-              type="button"
-              className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
-              aria-label={messages.common.closeMenu}
-              onClick={closeMobile}
-            >
-              <CloseIcon />
-            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-4">
@@ -170,7 +162,7 @@ export function AppShellClient({
               <p className="truncate text-sm font-semibold text-white">
                 {appShellMobileTitle(pathname, locale)}
               </p>
-              <p className="truncate text-xs text-zinc-500">{messages.brand}</p>
+              <AcentAppWordmark as="p" className="truncate text-xs" />
             </div>
           </header>
 

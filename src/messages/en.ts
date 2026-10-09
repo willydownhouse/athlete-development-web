@@ -1,5 +1,5 @@
 export const en = {
-  brand: "Athlete Development Center",
+  brand: "AcentApp",
   common: {
     general: "General",
     signOut: "Sign out",
@@ -432,7 +432,7 @@ export const en = {
   unavailable: {
     line1: "Early",
     line2: "access only",
-    body: "Athlete Development Center is currently available only to early access users.",
+    body: "is currently available only to early access users.",
     contactPrefix: "If you would like early access, contact support at",
   },
 } as const;

@@ -1,7 +1,7 @@
 import type { Messages } from "./en";
 
 export const fi = {
-  brand: "Athlete Development Center",
+  brand: "AcentApp",
   common: {
     general: "Yleinen",
     signOut: "Kirjaudu ulos",
@@ -441,7 +441,7 @@ export const fi = {
   unavailable: {
     line1: "Vain",
     line2: "ennakkokäyttö",
-    body: "Athlete Development Center on tällä hetkellä käytettävissä vain ennakkokäyttäjille.",
+    body: "on tällä hetkellä käytettävissä vain ennakkokäyttäjille.",
     contactPrefix: "Jos haluat mukaan ennakkokäyttöön, ota yhteyttä tukeen osoitteeseen",
   },
 } satisfies Messages;
