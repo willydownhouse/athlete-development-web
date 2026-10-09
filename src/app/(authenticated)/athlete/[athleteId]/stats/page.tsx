@@ -48,7 +48,7 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
         {backToTodayLabel(locale)}
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
         {messages.stats.title}
       </h1>
 

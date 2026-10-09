@@ -22,7 +22,11 @@ export default async function HomePage() {
 
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col justify-center px-6 py-16 sm:px-10">
         <div className="landing-fade-up">
-          <AcentAppWordmark as="h1" tagline className="text-[3.25rem] min-[360px]:text-6xl md:text-7xl" />
+          <AcentAppWordmark
+            as="h1"
+            tagline
+            className="text-[3.25rem] min-[360px]:text-6xl md:text-7xl"
+          />
         </div>
 
         <div className="landing-fade-up-late mt-10">
