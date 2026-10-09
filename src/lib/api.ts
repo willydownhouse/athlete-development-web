@@ -1080,7 +1080,7 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
-    unscoped: "true",
+    excludeCapabilities: "event_update",
   });
 
   if (options.before) {
@@ -1137,6 +1137,7 @@ export async function fetchScopedChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
+    capability: "event_update",
     scope,
     scopeId,
   });

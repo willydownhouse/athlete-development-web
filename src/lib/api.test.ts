@@ -1042,7 +1042,7 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&unscoped=true`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("force-cache");
@@ -1070,7 +1070,7 @@ describe("api client", () => {
     const result = await fetchOlderChatMessages("test-token", threadId, before);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&unscoped=true&before=${before}`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&before=${before}`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
@@ -1095,7 +1095,7 @@ describe("api client", () => {
     const result = await fetchScopedChatMessages("test-token", threadId, "event", focusedEventId);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&scope=event&scopeId=${focusedEventId}`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&capability=event_update&scope=event&scopeId=${focusedEventId}`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
