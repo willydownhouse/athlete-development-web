@@ -115,10 +115,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
           >
             <MenuIcon />
           </button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">Admin</p>
-            <AcentAppWordmark as="p" className="truncate text-xs" />
-          </div>
+          <p className="min-w-0 truncate text-lg font-semibold text-white">Admin</p>
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
