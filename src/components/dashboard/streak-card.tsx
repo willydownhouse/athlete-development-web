@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { athleteCalendarHref } from "@/components/dashboard/dashboard-nav";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { intlDateLocale } from "@/lib/date-fns-locale";
 import { getRequestLocale } from "@/lib/locale-server";
@@ -17,15 +20,25 @@ function weekdayLabel(date: string, locale: AppLocale): string {
   return formatted.replace(/\.$/, "");
 }
 
-function DayBall({ logged, today }: { logged: boolean; today: boolean }) {
+function DayBall({
+  logged,
+  today,
+  href,
+  label,
+}: {
+  logged: boolean;
+  today: boolean;
+  href: string;
+  label: string;
+}) {
   const className = logged
-    ? "flex size-9 shrink-0 items-center justify-center self-center rounded-[16px] bg-[#ff9f0a]"
+    ? "flex size-9 shrink-0 items-center justify-center self-center rounded-[16px] bg-[#ff9f0a] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9f0a]/70"
     : today
-      ? "size-9 shrink-0 self-center rounded-[16px] border-[3px] border-[#ff9f0a]"
-      : "size-9 shrink-0 self-center rounded-[16px] bg-[#3a3a3c]";
+      ? "size-9 shrink-0 self-center rounded-[16px] border-[3px] border-[#ff9f0a] transition hover:bg-[#ff9f0a]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9f0a]/70"
+      : "size-9 shrink-0 self-center rounded-[16px] bg-[#3a3a3c] transition hover:bg-[#4a4a4c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9f0a]/70";
 
   return (
-    <span className={className}>
+    <Link href={href} aria-label={label} className={className}>
       {logged ? (
         <svg
           viewBox="0 0 20 20"
@@ -38,7 +51,7 @@ function DayBall({ logged, today }: { logged: boolean; today: boolean }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="m5 10.5 3.5 3.5 6.5-8" />
         </svg>
       ) : null}
-    </span>
+    </Link>
   );
 }
 
@@ -83,12 +96,14 @@ function StreakSummary({
   streak,
   timeZone,
   locale,
+  calendarHref,
 }: {
   streak: AthleteStreak;
   timeZone: string;
   locale: AppLocale;
+  calendarHref: string;
 }) {
-  const messages = getMessages(locale).dashboard;
+  const messages = getMessages(locale);
   const today = getZonedDateString(timeZone);
 
   return (
@@ -97,9 +112,16 @@ function StreakSummary({
         {streak.days.map((day) => {
           const isToday = day.date === today;
 
+          const weekday = weekdayLabel(day.date, locale);
+
           return (
             <li key={day.date} className="flex w-9 flex-col items-center gap-2.5">
-              <DayBall logged={day.logged} today={isToday} />
+              <DayBall
+                logged={day.logged}
+                today={isToday}
+                href={calendarHref}
+                label={`${weekday}, ${day.logged ? messages.dashboard.streakDayLogged : messages.dashboard.streakDayNotLogged}. ${messages.nav.calendar}`}
+              />
               <span
                 className={
                   isToday
@@ -107,10 +129,7 @@ function StreakSummary({
                     : "text-sm font-semibold leading-none text-[#8e8e93]"
                 }
               >
-                {weekdayLabel(day.date, locale)}
-              </span>
-              <span className="sr-only">
-                {day.logged ? messages.streakDayLogged : messages.streakDayNotLogged}
+                {weekday}
               </span>
             </li>
           );
@@ -120,20 +139,20 @@ function StreakSummary({
       <div className="mt-6 grid grid-cols-2 gap-4">
         <div>
           <p className="text-[11px] font-semibold tracking-[0.14em] text-[#8e8e93] uppercase">
-            {messages.streakCurrent}
+            {messages.dashboard.streakCurrent}
           </p>
           <p className="mt-2.5 flex items-center gap-2 text-base font-semibold leading-none text-white">
             <StreakFlame variant="current" />
-            {messages.streakDays(streak.currentStreakDays)}
+            {messages.dashboard.streakDays(streak.currentStreakDays)}
           </p>
         </div>
         <div>
           <p className="text-[11px] font-semibold tracking-[0.14em] text-[#8e8e93] uppercase">
-            {messages.streakBest}
+            {messages.dashboard.streakBest}
           </p>
           <p className="mt-2.5 flex items-center gap-2 text-base font-semibold leading-none text-white">
             <StreakFlame variant="best" />
-            {messages.streakDays(streak.bestStreakDays)}
+            {messages.dashboard.streakDays(streak.bestStreakDays)}
           </p>
         </div>
       </div>
@@ -160,7 +179,12 @@ export async function StreakCard({ athleteId, timeZone }: { athleteId: string; t
         </InfoTooltip>
       </div>
       {result.streak ? (
-        <StreakSummary streak={result.streak} timeZone={timeZone} locale={locale} />
+        <StreakSummary
+          streak={result.streak}
+          timeZone={timeZone}
+          locale={locale}
+          calendarHref={athleteCalendarHref(athleteId)}
+        />
       ) : (
         <p className="mt-4 text-sm text-red-300">{result.error}</p>
       )}
