@@ -158,12 +158,9 @@ export function AppShellClient({
                 />
               ) : null}
             </button>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">
-                {appShellMobileTitle(pathname, locale)}
-              </p>
-              <AcentAppWordmark as="p" className="truncate text-xs" />
-            </div>
+            <p className="min-w-0 truncate text-lg font-semibold text-white">
+              {appShellMobileTitle(pathname, locale)}
+            </p>
           </header>
 
           <AppShellAthletesProvider athletes={athletes}>{children}</AppShellAthletesProvider>

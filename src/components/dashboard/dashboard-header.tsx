@@ -33,10 +33,10 @@ export async function DashboardHeader({
 
   return (
     <header>
-      <p className="text-sm text-zinc-400">{messages.dashboard.todayEyebrow}</p>
+      <p className="hidden text-sm text-zinc-400 lg:block">{messages.dashboard.todayEyebrow}</p>
       {selectedAthlete ? (
         <>
-          <div className="mt-1 flex items-center gap-3">
+          <div className="flex items-center gap-3 lg:mt-1">
             {photo}
             <h1 className="min-w-0 truncate text-3xl font-semibold tracking-tight text-white">
               {selectedAthlete.name}
@@ -94,7 +94,7 @@ export async function DashboardHeader({
         </>
       ) : (
         <>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
+          <h1 className="text-3xl font-semibold tracking-tight text-white lg:mt-1">
             {messages.dashboard.getStarted}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">{messages.dashboard.getStartedHint}</p>
