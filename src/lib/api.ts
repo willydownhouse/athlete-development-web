@@ -10,7 +10,7 @@ import type {
   AthleteListResponse,
   ChatMessageListResponse,
   ChatThread,
-  ChatTurn,
+  ChatRun,
   Event,
   AthleteStreak,
   EventAggregate,
@@ -1080,7 +1080,7 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
-    excludeFocused: "true",
+    excludeCapabilities: "event_update",
   });
 
   if (options.before) {
@@ -1128,15 +1128,18 @@ export async function fetchOlderChatMessages(
   return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
 }
 
-export async function fetchFocusedEventChatMessages(
+export async function fetchScopedChatMessages(
   token: string,
   threadId: string,
-  focusedEventId: string,
+  scope: "event",
+  scopeId: string,
   options: { limit?: number; before?: string } = {},
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
-    focusedEventId,
+    capability: "event_update",
+    scope,
+    scopeId,
   });
 
   if (options.before) {
@@ -1170,8 +1173,8 @@ export async function submitChatMessage(
     locale: AppLocale;
     eventId?: string;
   },
-): Promise<ChatTurn> {
-  return apiFetch<ChatTurn>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
+): Promise<ChatRun> {
+  return apiFetch<ChatRun>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {
     method: "POST",
     body: JSON.stringify(body),
   });

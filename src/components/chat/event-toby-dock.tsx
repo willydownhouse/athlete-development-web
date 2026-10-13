@@ -48,8 +48,8 @@ export function EventTobyDock({
   const locale = useAppLocale();
   const messages = getMessages(locale);
   const loadingOlderRef = useRef(false);
-  const composerKey = state.turn?.id ?? "draft";
-  const assistantMessage = state.turn?.assistantMessage ?? null;
+  const composerKey = state.run?.id ?? "draft";
+  const assistantMessage = state.run?.assistantMessage ?? null;
   const assistantContent = assistantMessage?.content ?? null;
   const typewriterMessageId = useIncomingAssistantTypewriter(
     isPending,
@@ -60,16 +60,16 @@ export function EventTobyDock({
   );
   const showLatestReply = !historyOpen && !isPending && Boolean(assistantContent);
   const displayedHistoryMessages = useMemo(() => {
-    const turn = state.turn;
-    if (!historyLoaded || !turn) {
+    const run = state.run;
+    if (!historyLoaded || !run) {
       return historyMessages;
     }
 
     return mergeMessages(historyMessages, [
-      turn.userMessage,
-      ...(turn.assistantMessage ? [turn.assistantMessage] : []),
+      run.userMessage,
+      ...(run.assistantMessage ? [run.assistantMessage] : []),
     ]);
-  }, [historyLoaded, historyMessages, state.turn]);
+  }, [historyLoaded, historyMessages, state.run]);
 
   async function loadHistory(before?: string) {
     if (!threadId) {

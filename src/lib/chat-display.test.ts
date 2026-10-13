@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { displayedChatMessages, mergeMessages } from "./chat-display";
-import type { ChatMessage, ChatTurn } from "./types";
+import type { ChatMessage, ChatRun } from "./types";
 
 function message(
   input: Partial<ChatMessage> & Pick<ChatMessage, "id" | "role" | "content">,
@@ -14,7 +14,7 @@ function message(
   };
 }
 
-function turn(input: { id: string; user: ChatMessage; assistant?: ChatMessage | null }): ChatTurn {
+function run(input: { id: string; user: ChatMessage; assistant?: ChatMessage | null }): ChatRun {
   return {
     id: input.id,
     chatThreadId: "thread-1",
@@ -46,7 +46,7 @@ describe("displayedChatMessages", () => {
     expect(displayed[0]?.id).toBe("pending-req-1");
   });
 
-  it("does not append the optimistic user message after the turn arrives", () => {
+  it("does not append the optimistic user message after the run arrives", () => {
     const user = message({
       id: "user-1",
       role: "user",
@@ -61,7 +61,7 @@ describe("displayedChatMessages", () => {
 
     const displayed = displayedChatMessages({
       messages: [],
-      turn: turn({ id: "run-1", user, assistant }),
+      run: run({ id: "run-1", user, assistant }),
       pending: {
         content: "Lisa had ice practice",
         clientRequestId: "req-1",
@@ -76,7 +76,7 @@ describe("displayedChatMessages", () => {
     ]);
   });
 
-  it("keeps earlier turns when a later send is still pending", () => {
+  it("keeps earlier messages when a later send is still pending", () => {
     const firstUser = message({
       id: "user-1",
       role: "user",
@@ -91,7 +91,7 @@ describe("displayedChatMessages", () => {
 
     const displayed = displayedChatMessages({
       messages: [firstUser, firstAssistant],
-      turn: turn({ id: "run-1", user: firstUser, assistant: firstAssistant }),
+      run: run({ id: "run-1", user: firstUser, assistant: firstAssistant }),
       pending: {
         content: "Second",
         clientRequestId: "req-2",

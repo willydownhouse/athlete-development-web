@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatTurn } from "@/lib/types";
+import type { ChatMessage, ChatRun } from "@/lib/types";
 
 export function mergeMessages(earlier: ChatMessage[], later: ChatMessage[]): ChatMessage[] {
   const seenIds = new Set<string>();
@@ -27,7 +27,7 @@ export function mergeMessages(earlier: ChatMessage[], later: ChatMessage[]): Cha
 
 export function displayedChatMessages(input: {
   messages: ChatMessage[];
-  turn?: ChatTurn;
+  run?: ChatRun;
   pending?: {
     content: string;
     clientRequestId: string;
@@ -35,21 +35,18 @@ export function displayedChatMessages(input: {
     createdAt: string;
   } | null;
 }): ChatMessage[] {
-  const fromTurn = input.turn
-    ? [
-        input.turn.userMessage,
-        ...(input.turn.assistantMessage ? [input.turn.assistantMessage] : []),
-      ]
+  const fromRun = input.run
+    ? [input.run.userMessage, ...(input.run.assistantMessage ? [input.run.assistantMessage] : [])]
     : [];
-  const withTurn = mergeMessages(input.messages, fromTurn);
+  const withRun = mergeMessages(input.messages, fromRun);
   const pending = input.pending;
 
   if (!pending) {
-    return withTurn;
+    return withRun;
   }
 
-  if (withTurn.some((message) => message.clientRequestId === pending.clientRequestId)) {
-    return withTurn;
+  if (withRun.some((message) => message.clientRequestId === pending.clientRequestId)) {
+    return withRun;
   }
 
   const optimistic: ChatMessage = {
@@ -61,5 +58,5 @@ export function displayedChatMessages(input: {
     createdAt: pending.createdAt,
   };
 
-  return [...withTurn, optimistic];
+  return [...withRun, optimistic];
 }
