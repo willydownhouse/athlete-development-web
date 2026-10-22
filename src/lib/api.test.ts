@@ -12,6 +12,7 @@ import {
   endAthleteAccessGrant,
   fetchAllEvents,
   fetchAthleteAccess,
+  fetchAthleteProfileFields,
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
@@ -35,6 +36,7 @@ import {
   revokeAthleteInvitation,
   submitChatMessage,
   updateAthlete,
+  updateAthleteProfileFields,
 } from "./api";
 
 describe("api client", () => {
@@ -164,6 +166,59 @@ describe("api client", () => {
     );
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athlete.name).toBe("Leo Updated");
+  });
+
+  it("fetches and updates athlete profile fields", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const positionId = "00000000-0000-4000-8000-000000000801";
+    const items = [
+      {
+        id: positionId,
+        sportId: "33333333-3333-4333-8333-333333333333",
+        key: "position",
+        name: "Pelipaikka",
+        description: "Pelipaikka jäällä.",
+        valueType: "text",
+        options: [{ value: "forward", name: "Hyökkääjä" }],
+        sortOrder: 10,
+        value: { textValue: "forward", numericValue: null, booleanValue: null },
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const listed = await fetchAthleteProfileFields("test-token", athleteId, "fi");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/profile-fields?locale=fi`,
+    );
+    expect(listed[0]?.name).toBe("Pelipaikka");
+
+    const saved = await updateAthleteProfileFields("test-token", athleteId, "fi", [
+      { profileFieldId: positionId, textValue: "defense" },
+      { profileFieldId: "00000000-0000-4000-8000-000000000803", textValue: null },
+    ]);
+
+    const options = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/profile-fields?locale=fi`,
+    );
+    expect(options.method).toBe("PATCH");
+    expect(options.body).toBe(
+      JSON.stringify({
+        values: [
+          { profileFieldId: positionId, textValue: "defense" },
+          { profileFieldId: "00000000-0000-4000-8000-000000000803", textValue: null },
+        ],
+      }),
+    );
+    expect(saved).toEqual(items);
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {

@@ -8,6 +8,8 @@ import type {
   AthleteInvitation,
   AthleteInvitationInboxResponse,
   AthleteListResponse,
+  AthleteProfileField,
+  AthleteProfileFieldUpdate,
   ChatMessageListResponse,
   ChatThread,
   ChatRun,
@@ -259,6 +261,37 @@ export async function updateAthlete(
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function fetchAthleteProfileFields(
+  token: string,
+  athleteId: string,
+  locale: AppLocale,
+): Promise<AthleteProfileField[]> {
+  const result = await apiFetch<{ items: AthleteProfileField[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/profile-fields${catalogQuery(locale)}`,
+  );
+
+  return result.items;
+}
+
+export async function updateAthleteProfileFields(
+  token: string,
+  athleteId: string,
+  locale: AppLocale,
+  values: AthleteProfileFieldUpdate[],
+): Promise<AthleteProfileField[]> {
+  const result = await apiFetch<{ items: AthleteProfileField[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/profile-fields${catalogQuery(locale)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ values }),
+    },
+  );
+
+  return result.items;
 }
 
 export async function fetchSports(locale: AppLocale): Promise<Sport[] | null> {

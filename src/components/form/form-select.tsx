@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -23,6 +24,34 @@ export type FormSelectGroup = {
   label: string;
   options: FormSelectOption[];
 };
+
+const HIDDEN_MENU_STYLE: CSSProperties = {
+  position: "fixed",
+  left: 0,
+  top: 0,
+  width: 0,
+  visibility: "hidden",
+  zIndex: 60,
+};
+
+function overlayMenuStyle(trigger: HTMLElement): CSSProperties {
+  const rect = trigger.getBoundingClientRect();
+  const menuMaxHeight = 240;
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+  const spaceAbove = rect.top - 12;
+  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+  const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
+
+  return {
+    position: "fixed",
+    left: rect.left,
+    width: rect.width,
+    top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
+    maxHeight,
+    visibility: "visible",
+    zIndex: 60,
+  };
+}
 
 type FormSelectProps = {
   name?: string;
@@ -67,8 +96,14 @@ export function FormSelect({
   const isControlled = value !== undefined;
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const currentValue = isControlled ? value : uncontrolledValue;
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>(HIDDEN_MENU_STYLE);
   const closeListbox = useCallback(() => setOpen(false), []);
+
+  function placeMenu() {
+    if (triggerRef.current) {
+      setMenuStyle(overlayMenuStyle(triggerRef.current));
+    }
+  }
 
   const allOptions = flattenOptions(options, groups);
   const selectedOption = allOptions.find((option) => option.value === currentValue);
@@ -96,8 +131,8 @@ export function FormSelect({
     onClose: closeListbox,
   });
 
-  useEffect(() => {
-    if (!open || !triggerRef.current) {
+  useLayoutEffect(() => {
+    if (!open) {
       return;
     }
 
@@ -107,21 +142,7 @@ export function FormSelect({
         return;
       }
 
-      const rect = trigger.getBoundingClientRect();
-      const menuMaxHeight = 240;
-      const spaceBelow = window.innerHeight - rect.bottom - 12;
-      const spaceAbove = rect.top - 12;
-      const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
-      const maxHeight = Math.min(menuMaxHeight, openUp ? spaceAbove : spaceBelow);
-
-      setMenuStyle({
-        position: "fixed",
-        left: rect.left,
-        width: rect.width,
-        top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
-        maxHeight,
-        zIndex: 60,
-      });
+      setMenuStyle(overlayMenuStyle(trigger));
     }
 
     updatePosition();
@@ -191,7 +212,7 @@ export function FormSelect({
             id={listboxId}
             role="listbox"
             style={menuStyle}
-            className="scheme-dark overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
+            className="scheme-dark fixed overflow-y-auto rounded-xl border border-white/10 bg-[#1c222c] py-1 shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
           >
             {groups
               ? groups.map((group) => (
@@ -238,7 +259,13 @@ export function FormSelect({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
-          onClick={() => setOpen((current) => !current)}
+          onClick={() => {
+            if (!open) {
+              placeMenu();
+            }
+
+            setOpen((current) => !current);
+          }}
           onKeyDown={(event) => {
             if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
               return;
@@ -247,6 +274,7 @@ export function FormSelect({
             event.preventDefault();
 
             if (!open) {
+              placeMenu();
               setOpen(true);
             }
           }}

@@ -10,6 +10,7 @@ import {
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { DatePickerInput } from "@/components/date-picker-input";
+import { FormSelect } from "@/components/form/form-select";
 import { ATHLETE_NAME_MAX_LENGTH } from "@/lib/constants";
 import { dateFnsLocale, datePickerDisplayFormat } from "@/lib/date-fns-locale";
 import {
@@ -20,7 +21,12 @@ import {
 import type { AppLocale } from "@/lib/locale";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
-import type { AthleteAccessRole } from "@/lib/types";
+import {
+  profileFieldControlName,
+  profileFieldInputValue,
+  profileFieldSavedName,
+} from "@/lib/profile-field-form";
+import type { AthleteAccessRole, AthleteProfileField } from "@/lib/types";
 
 const initialState: ProfileActionState = {};
 
@@ -33,7 +39,16 @@ type AthleteProfileFormProps = {
   dateOfBirth: string;
   focusSportName: string;
   relationshipToAthlete: AthleteAccessRole;
+  profileFields: AthleteProfileField[];
 };
+
+function fieldValuesFrom(fields: AthleteProfileField[]): Record<string, string> {
+  return Object.fromEntries(fields.map((field) => [field.id, profileFieldInputValue(field)]));
+}
+
+function profileFieldsSignature(fields: AthleteProfileField[]): string {
+  return fields.map((field) => `${field.id}=${profileFieldInputValue(field)}`).join("\n");
+}
 
 export function AthleteProfileForm({
   athleteId,
@@ -41,30 +56,51 @@ export function AthleteProfileForm({
   dateOfBirth,
   focusSportName,
   relationshipToAthlete,
+  profileFields,
 }: AthleteProfileFormProps) {
   const [state, formAction] = useActionState(updateAthleteProfileAction, initialState);
   const [savedValues, setSavedValues] = useState({ name, dateOfBirth });
   const [nameValue, setNameValue] = useState(name);
   const [dateOfBirthValue, setDateOfBirthValue] = useState(dateOfBirth);
+  const [savedFieldValues, setSavedFieldValues] = useState(() => fieldValuesFrom(profileFields));
+  const [fieldValues, setFieldValues] = useState(() => fieldValuesFrom(profileFields));
+  const [savedFieldSignature, setSavedFieldSignature] = useState(() =>
+    profileFieldsSignature(profileFields),
+  );
   const locale = useAppLocale();
   const messages = getMessages(locale);
   const canChangeDateOfBirth = canChangeProfileDateOfBirth(relationshipToAthlete, dateOfBirth);
   const isAdultAthlete = relationshipToAthlete === "athlete" && canChangeDateOfBirth;
-  const isDirty =
-    nameValue.trim() !== savedValues.name.trim() ||
-    (canChangeDateOfBirth && dateOfBirthValue !== savedValues.dateOfBirth);
+  const fieldSignature = profileFieldsSignature(profileFields);
 
-  if (name !== savedValues.name || dateOfBirth !== savedValues.dateOfBirth) {
+  if (
+    name !== savedValues.name ||
+    dateOfBirth !== savedValues.dateOfBirth ||
+    fieldSignature !== savedFieldSignature
+  ) {
+    const nextFieldValues = fieldValuesFrom(profileFields);
     setSavedValues({ name, dateOfBirth });
     setNameValue(name);
     setDateOfBirthValue(dateOfBirth);
+    setSavedFieldSignature(fieldSignature);
+    setSavedFieldValues(nextFieldValues);
+    setFieldValues(nextFieldValues);
   }
+
+  const fieldsDirty = profileFields.some(
+    (field) => (fieldValues[field.id] ?? "") !== (savedFieldValues[field.id] ?? ""),
+  );
+  const isDirty =
+    nameValue.trim() !== savedValues.name.trim() ||
+    (canChangeDateOfBirth && dateOfBirthValue !== savedValues.dateOfBirth) ||
+    fieldsDirty;
 
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="athleteId" value={athleteId} />
       <input type="hidden" name="relationshipToAthlete" value={relationshipToAthlete} />
       <input type="hidden" name="savedDateOfBirth" value={dateOfBirth} />
+      <input type="hidden" name="savedAthleteName" value={name} />
       <FormMessage error={state.error} success={state.success} />
 
       <div className="flex flex-col gap-1 text-sm lg:text-base">
@@ -106,6 +142,21 @@ export function AthleteProfileForm({
         ) : null}
       </label>
 
+      {profileFields.map((field) => (
+        <ProfileFieldControl
+          key={field.id}
+          field={field}
+          value={fieldValues[field.id] ?? ""}
+          savedValue={profileFieldInputValue(field)}
+          placeholder={messages.profile.selectValue}
+          yesLabel={messages.profile.yes}
+          noLabel={messages.profile.no}
+          onChange={(nextValue) =>
+            setFieldValues((current) => ({ ...current, [field.id]: nextValue }))
+          }
+        />
+      ))}
+
       {isDirty ? (
         <div className="flex justify-end">
           <SubmitButton
@@ -117,6 +168,67 @@ export function AthleteProfileForm({
         </div>
       ) : null}
     </form>
+  );
+}
+
+function ProfileFieldControl({
+  field,
+  value,
+  savedValue,
+  placeholder,
+  yesLabel,
+  noLabel,
+  onChange,
+}: {
+  field: AthleteProfileField;
+  value: string;
+  savedValue: string;
+  placeholder: string;
+  yesLabel: string;
+  noLabel: string;
+  onChange: (value: string) => void;
+}) {
+  const catalogOptions =
+    field.options?.map((option) => ({ value: option.value, label: option.name })) ?? [];
+  const options =
+    catalogOptions.length > 0
+      ? catalogOptions
+      : field.valueType === "boolean"
+        ? [
+            { value: "true", label: yesLabel },
+            { value: "false", label: noLabel },
+          ]
+        : [];
+  const useSelect = options.length > 0;
+
+  return (
+    <label className="flex flex-col gap-1 text-sm lg:text-base">
+      <span className="font-medium text-zinc-300">{field.name}</span>
+      <input type="hidden" name={profileFieldSavedName(field)} value={savedValue} />
+      {useSelect ? (
+        <FormSelect
+          name={profileFieldControlName(field)}
+          value={value}
+          placeholder={placeholder}
+          className={inputClassName}
+          options={options}
+          onValueChange={onChange}
+        />
+      ) : (
+        <input
+          name={profileFieldControlName(field)}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          inputMode={field.valueType === "number" ? "numeric" : "text"}
+          maxLength={field.valueType === "text" ? 100 : undefined}
+          autoComplete="off"
+          className={inputClassName}
+        />
+      )}
+      {field.description ? (
+        <span className="text-xs text-zinc-500 lg:text-sm">{field.description}</span>
+      ) : null}
+    </label>
   );
 }
 

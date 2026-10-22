@@ -16,13 +16,6 @@ export type MonthlyUsage = {
 
 export type AthleteAccessRole = "parent" | "athlete";
 
-type AthleteProfile = {
-  id: string;
-  athleteId: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type Athlete = {
   id: string;
   focusSportId: string;
@@ -32,7 +25,6 @@ export type Athlete = {
   deletedAt: string | null;
   relationshipToAthlete: AthleteAccessRole;
   focusSport: Sport;
-  profile: AthleteProfile | null;
 };
 
 export type AthleteListResponse = {
@@ -42,6 +34,33 @@ export type AthleteListResponse = {
     offset: number;
     total: number;
   };
+};
+
+type AthleteProfileFieldValueType = "number" | "text" | "boolean";
+
+type AthleteProfileFieldValue = {
+  textValue: string | null;
+  numericValue: string | null;
+  booleanValue: boolean | null;
+};
+
+export type AthleteProfileField = {
+  id: string;
+  sportId: string | null;
+  key: string;
+  name: string;
+  description: string | null;
+  valueType: AthleteProfileFieldValueType;
+  options: Array<{ value: string; name: string }> | null;
+  sortOrder: number;
+  value: AthleteProfileFieldValue | null;
+};
+
+export type AthleteProfileFieldUpdate = {
+  profileFieldId: string;
+  textValue?: string | null;
+  numericValue?: number | null;
+  booleanValue?: boolean | null;
 };
 
 type AthleteInvitationStatus = "pending" | "accepted" | "declined" | "revoked" | "expired";
