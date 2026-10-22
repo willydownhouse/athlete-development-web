@@ -272,6 +272,10 @@ export const en = {
     photoUploadFailed: "Photo upload failed.",
     photoProcessingFailed: "Photo processing failed.",
     sport: "Sport",
+    selectValue: "Select",
+    yes: "Yes",
+    no: "No",
+    invalidNumber: "Enter a valid number.",
   },
   invites: {
     title: "Invites",

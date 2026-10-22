@@ -277,6 +277,10 @@ export const fi = {
     photoUploadFailed: "Kuvan lataus epäonnistui.",
     photoProcessingFailed: "Kuvan käsittely epäonnistui.",
     sport: "Laji",
+    selectValue: "Valitse",
+    yes: "Kyllä",
+    no: "Ei",
+    invalidNumber: "Anna kelvollinen numero.",
   },
   invites: {
     title: "Kutsut",
