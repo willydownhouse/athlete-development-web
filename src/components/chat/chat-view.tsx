@@ -14,7 +14,7 @@ import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { useAppShellAthletes } from "@/lib/app-shell-context";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
-import { chatEmptyIntro, chatEventLoggingExample } from "@/lib/chat-intro";
+import { chatEmptyIntro, chatEventLoggingExample, chatOnboardingIntro } from "@/lib/chat-intro";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 import type { ChatMessage } from "@/lib/types";
@@ -25,6 +25,7 @@ type ChatViewProps = {
   hasMore: boolean;
   timeZone: string;
   nowIso: string;
+  onboardingAthleteId?: string | null;
   loadError?: string | null;
 };
 
@@ -60,15 +61,19 @@ function ChatNeedsAthleteState() {
   );
 }
 
-function ChatEmptyState({ athleteName }: { athleteName: string }) {
+function ChatEmptyState({ athleteName, onboarding }: { athleteName: string; onboarding: boolean }) {
   const locale = useAppLocale();
   const messages = getMessages(locale);
 
   return (
     <div className="flex flex-1 flex-col justify-center py-6">
       <ChatIntroMessage
-        heading={messages.chat.nothingLogged}
-        content={chatEmptyIntro(athleteName, locale)}
+        heading={onboarding ? messages.chat.interviewHeading : messages.chat.nothingLogged}
+        content={
+          onboarding
+            ? chatOnboardingIntro(athleteName, locale)
+            : chatEmptyIntro(athleteName, locale)
+        }
       />
     </div>
   );
@@ -80,10 +85,13 @@ export function ChatView({
   hasMore: initialHasMore,
   timeZone,
   nowIso,
+  onboardingAthleteId = null,
   loadError,
 }: ChatViewProps) {
   const athletes = useAppShellAthletes();
   const exampleAthleteName = athletes[0]?.name ?? "";
+  const interviewAthleteName =
+    athletes.find((athlete) => athlete.id === onboardingAthleteId)?.name ?? "";
   const canSend = athletes.length > 0;
   const [state, formAction, isPending] = useActionState(sendChatMessageAction, {});
   const [messages, setMessages] = useState(initialMessages);
@@ -172,7 +180,11 @@ export function ChatView({
     setLoadingOlder(true);
     setOlderError(null);
 
-    const result = await loadOlderChatMessagesAction(threadId, beforeId);
+    const result = await loadOlderChatMessagesAction(
+      threadId,
+      beforeId,
+      onboardingAthleteId ?? undefined,
+    );
 
     if (result.error || !result.items) {
       setOlderError(result.error ?? copy.actions.loadOlderMessages);
@@ -193,7 +205,7 @@ export function ChatView({
 
       list.scrollTop = previousTop + (list.scrollHeight - previousHeight);
     });
-  }, [copy.actions.loadOlderMessages, hasMore, messages, threadId]);
+  }, [copy.actions.loadOlderMessages, hasMore, messages, onboardingAthleteId, threadId]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -254,7 +266,10 @@ export function ChatView({
           ) : null}
           {showEmpty ? (
             canSend ? (
-              <ChatEmptyState athleteName={exampleAthleteName} />
+              <ChatEmptyState
+                athleteName={onboardingAthleteId ? interviewAthleteName : exampleAthleteName}
+                onboarding={onboardingAthleteId !== null}
+              />
             ) : (
               <ChatNeedsAthleteState />
             )
@@ -288,7 +303,12 @@ export function ChatView({
           threadId={threadId}
           formAction={formAction}
           isPending={isPending}
-          examplePlaceholder={chatEventLoggingExample(exampleAthleteName, locale)}
+          onboardingAthleteId={onboardingAthleteId ?? undefined}
+          examplePlaceholder={
+            onboardingAthleteId
+              ? copy.chat.interviewReply
+              : chatEventLoggingExample(exampleAthleteName, locale)
+          }
           onSend={({ content, clientRequestId }) => {
             const run = state.run;
             if (run) {

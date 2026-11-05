@@ -2,7 +2,12 @@
 
 import { updateTag } from "next/cache";
 
-import { fetchScopedChatMessages, fetchOlderChatMessages, submitChatMessage } from "@/lib/api";
+import {
+  fetchOnboardingChatMessages,
+  fetchScopedChatMessages,
+  fetchOlderChatMessages,
+  submitChatMessage,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { athleteEventsCacheTag, eventCacheTag } from "@/lib/cache-tags";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
@@ -42,6 +47,7 @@ export async function sendChatMessageAction(
   const content = readString(formData, "content");
   const eventId = readString(formData, "eventId");
   const athleteId = readString(formData, "athleteId");
+  const onboardingAthleteId = readString(formData, "onboardingAthleteId");
 
   if (!threadId || !UUID_PATTERN.test(threadId)) {
     return { error: actions.chatThreadMissing };
@@ -67,6 +73,14 @@ export async function sendChatMessageAction(
     return { error: actions.couldNotSendMessage };
   }
 
+  if (onboardingAthleteId && !UUID_PATTERN.test(onboardingAthleteId)) {
+    return { error: actions.couldNotSendMessage };
+  }
+
+  if (onboardingAthleteId && (eventId || athleteId)) {
+    return { error: actions.couldNotSendMessage };
+  }
+
   const [timeZone, locale] = await Promise.all([getRequestTimeZone(), getRequestLocale()]);
 
   try {
@@ -76,6 +90,7 @@ export async function sendChatMessageAction(
       timeZone,
       locale,
       ...(eventId ? { eventId } : {}),
+      ...(onboardingAthleteId ? { onboardingAthleteId } : {}),
     });
 
     if (eventId) {
@@ -104,6 +119,7 @@ export type LoadOlderChatMessagesResult = {
 export async function loadOlderChatMessagesAction(
   threadId: string,
   before: string,
+  onboardingAthleteId?: string,
 ): Promise<LoadOlderChatMessagesResult> {
   const [token, actions] = await Promise.all([getAuthBearerToken(), getActionMessages()]);
 
@@ -115,8 +131,14 @@ export async function loadOlderChatMessagesAction(
     return { error: actions.loadOlderMessages };
   }
 
+  if (onboardingAthleteId && !UUID_PATTERN.test(onboardingAthleteId)) {
+    return { error: actions.loadOlderMessages };
+  }
+
   try {
-    const result = await fetchOlderChatMessages(token, threadId, before);
+    const result = onboardingAthleteId
+      ? await fetchOnboardingChatMessages(token, threadId, onboardingAthleteId, { before })
+      : await fetchOlderChatMessages(token, threadId, before);
     return {
       items: result.items,
       hasMore: result.pagination.hasMore,

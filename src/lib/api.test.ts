@@ -24,6 +24,7 @@ import {
   fetchEventItemTypesChildTypes,
   fetchEventItemTypesMetricDefinitions,
   fetchEvents,
+  fetchOnboardingChatMessages,
   fetchScopedChatMessages,
   fetchInvitationInbox,
   fetchLatestChatMessages,
@@ -1097,7 +1098,7 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&excludeCapabilities=onboarding`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("force-cache");
@@ -1125,11 +1126,39 @@ describe("api client", () => {
     const result = await fetchOlderChatMessages("test-token", threadId, before);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&before=${before}`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&excludeCapabilities=onboarding&before=${before}`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
     expect(result.items[0]?.id).toBe("msg-0");
+  });
+
+  it("fetches onboarding interview messages for one athlete", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const athleteId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const before = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-interview" }],
+        pagination: { limit: 20, total: 1, hasMore: false },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchOnboardingChatMessages("test-token", threadId, athleteId, {
+      before,
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&capability=onboarding&athleteId=${athleteId}&before=${before}`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(result.items[0]?.id).toBe("msg-interview");
   });
 
   it("fetches focused event chat messages", async () => {
@@ -1223,6 +1252,40 @@ describe("api client", () => {
       timeZone: "Europe/Helsinki",
       locale: "fi" as const,
       eventId,
+    };
+    await submitChatMessage("test-token", threadId, body);
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual(body);
+  });
+
+  it("submits an onboarding interview message for one athlete", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const onboardingAthleteId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: "run-onboarding",
+        chatThreadId: threadId,
+        status: "completed",
+        failureCode: null,
+        failureMessage: null,
+        userMessage: { id: "msg-1", role: "user", content: "I'm ready." },
+        assistantMessage: { id: "msg-2", role: "assistant", content: "Let's begin." },
+        toolCalls: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = {
+      content: "I'm ready.",
+      clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      timeZone: "Europe/Helsinki",
+      locale: "en" as const,
+      onboardingAthleteId,
     };
     await submitChatMessage("test-token", threadId, body);
 

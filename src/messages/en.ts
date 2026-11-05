@@ -91,6 +91,7 @@ export const en = {
       `${inviterName} invited you to ${athleteName}'s profile. Open Invites to accept it and start following along.`,
     invitationsBody: "Open Invites to accept them and start following those athlete profiles.",
     viewInvites: "View invites",
+    startInterview: "Start interview",
   },
   events: {
     eventType: "Event type",
@@ -223,6 +224,17 @@ export const en = {
         "Just tell me about a practice, game, or rest day and I'll add it to the timeline. Name the athlete if you have more than one, and include the day and time when you can.",
         "I'm not here to plan training, suggest what to practice, or answer coaching questions.",
         `Try something like: *${example}*`,
+      ].join("\n\n"),
+    interviewHeading: "Onboarding interview",
+    interviewReply: "Reply when you're ready",
+    interviewIntro: (name: string | null) =>
+      [
+        "Hey — I'm Toby. 🙂",
+        name
+          ? `Let's get to know ${name}. In this short interview, I'd like to learn the background so far, goals ahead, what a normal week looks like, and other hobbies. That becomes the starting point for the profile and for long-term development.`
+          : "Let's get to know this athlete. In this short interview, I'd like to learn the background so far, goals ahead, what a normal week looks like, and other hobbies. That becomes the starting point for the profile and for long-term development.",
+        "At the end, I'll summarize what I understood. I'll only save it after you confirm that it sounds right, or tell me what you want to change or add.",
+        "Are you ready to start?",
       ].join("\n\n"),
     needsAthleteIntro: [
       "Hey — I'm Toby, your event logging agent.",

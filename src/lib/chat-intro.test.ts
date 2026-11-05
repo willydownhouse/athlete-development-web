@@ -5,6 +5,7 @@ import {
   chatEventLoggingExample,
   chatEventUpdateExample,
   chatExampleAthleteName,
+  chatOnboardingIntro,
 } from "./chat-intro";
 
 describe("chatExampleAthleteName", () => {
@@ -32,6 +33,28 @@ describe("chatEventLoggingExample", () => {
 describe("chatEventUpdateExample", () => {
   it("suggests changing time or RPE on this event", () => {
     expect(chatEventUpdateExample()).toBe("Move this to 6pm, add RPE 7…");
+  });
+});
+
+describe("chatOnboardingIntro", () => {
+  it("names the athlete and explains the interview and confirmation", () => {
+    expect(chatOnboardingIntro("Lisa")).toContain("Let's get to know Lisa.");
+    expect(chatOnboardingIntro("Lisa")).toContain("what a normal week looks like");
+    expect(chatOnboardingIntro("Lisa")).toContain("other hobbies");
+    expect(chatOnboardingIntro("Lisa")).toContain(
+      "only save it after you confirm that it sounds right, or tell me what you want to change or add",
+    );
+    expect(chatOnboardingIntro("Lisa", "fi")).toContain("Tutustutaan urheilijaan Lisa.");
+    expect(chatOnboardingIntro("Lisa", "fi")).toContain("tavallisesta viikosta");
+    expect(chatOnboardingIntro("Lisa", "fi")).toContain("muista harrastuksista");
+    expect(chatOnboardingIntro("Lisa", "fi")).toContain(
+      "kun vahvistat niiden olevan oikein tai kerrot, mitä haluat muuttaa tai lisätä",
+    );
+  });
+
+  it("stays generic when the name is blank", () => {
+    expect(chatOnboardingIntro("  ")).toContain("this athlete");
+    expect(chatOnboardingIntro("  ", "fi")).toContain("tähän urheilijaan");
   });
 });
 

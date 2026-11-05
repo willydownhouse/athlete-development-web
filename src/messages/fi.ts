@@ -96,6 +96,7 @@ export const fi = {
     invitationsBody:
       "Avaa Kutsut hyväksyäksesi ne ja aloittaaksesi näiden urheilijaprofiilien seuraamisen.",
     viewInvites: "Näytä kutsut",
+    startInterview: "Aloita haastattelu",
   },
   events: {
     eventType: "Tapahtumatyyppi",
@@ -229,6 +230,17 @@ export const fi = {
         "Kerro minulle harjoituksesta, pelistä tai lepopäivästä, niin lisään sen aikajanalle. Mainitse urheilija, jos sinulla on useampi, ja lisää päivä ja kellonaika kun voit.",
         "En ole täällä suunnittelemassa harjoittelua, ehdottamassa mitä treenata tai vastaamassa valmennuskysymyksiin.",
         `Kokeile esimerkiksi: *${example}*`,
+      ].join("\n\n"),
+    interviewHeading: "Aloitushaastattelu",
+    interviewReply: "Vastaa, kun olet valmis",
+    interviewIntro: (name: string | null) =>
+      [
+        "Hei — olen Toby. 🙂",
+        name
+          ? `Tutustutaan urheilijaan ${name}. Tässä lyhyessä haastattelussa haluaisin kuulla tähänastaisesta taustasta, tulevista tavoitteista, tavallisesta viikosta ja muista harrastuksista. Siitä syntyy lähtökohta urheilijaprofiilille ja pitkäaikaiselle kehityshistorialle.`
+          : "Tutustutaan tähän urheilijaan. Tässä lyhyessä haastattelussa haluaisin kuulla tähänastaisesta taustasta, tulevista tavoitteista, tavallisesta viikosta ja muista harrastuksista. Siitä syntyy lähtökohta urheilijaprofiilille ja pitkäaikaiselle kehityshistorialle.",
+        "Lopuksi tiivistän ymmärtämäni. Tallennan tiedot vasta, kun vahvistat niiden olevan oikein tai kerrot, mitä haluat muuttaa tai lisätä.",
+        "Oletko valmis aloittamaan?",
       ].join("\n\n"),
     needsAthleteIntro: [
       "Hei — olen Toby, tapahtumien kirjausagenttisi.",

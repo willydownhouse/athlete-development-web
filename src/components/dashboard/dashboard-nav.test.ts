@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   athleteEventIdFromPath,
+  onboardingInterviewHref,
   athleteSectionNavHrefs,
   appShellMobileTitle,
   ACCESS_NAV_LABEL,
@@ -32,6 +33,16 @@ describe("athleteEventIdFromPath", () => {
     expect(athleteEventIdFromPath("/athlete/ath-1/events")).toBeNull();
     expect(athleteEventIdFromPath("/athlete/ath-1/calendar")).toBeNull();
     expect(athleteEventIdFromPath("/athlete/ath-1/event/event-1/extra")).toBeNull();
+  });
+});
+
+describe("onboarding interview link", () => {
+  it("opens chat with the athlete id", () => {
+    expect(onboardingInterviewHref("ath-1")).toBe("/chat?onboardingAthleteId=ath-1");
+  });
+
+  it("encodes the athlete id", () => {
+    expect(onboardingInterviewHref("ath/1")).toBe("/chat?onboardingAthleteId=ath%2F1");
   });
 });
 

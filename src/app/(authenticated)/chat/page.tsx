@@ -6,11 +6,15 @@ import { VisibleViewportFrame } from "@/components/visible-viewport-frame";
 
 export const maxDuration = 240;
 
-export default function ChatPage() {
+type ChatPageProps = {
+  searchParams: Promise<{ onboardingAthleteId?: string | string[] }>;
+};
+
+export default function ChatPage({ searchParams }: ChatPageProps) {
   return (
     <VisibleViewportFrame className="relative mx-auto flex h-[calc(100svh-3.75rem)] w-full max-w-md flex-col overflow-hidden px-4 pt-4 sm:px-6 lg:h-svh lg:max-w-3xl lg:px-10">
       <Suspense fallback={<ChatSectionSkeleton />}>
-        <ChatSection />
+        <ChatSection searchParams={searchParams} />
       </Suspense>
     </VisibleViewportFrame>
   );
