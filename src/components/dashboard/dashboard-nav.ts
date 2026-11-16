@@ -1,3 +1,4 @@
+import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
 import { getMessages } from "@/lib/messages";
@@ -72,6 +73,32 @@ export function athleteAccessHref(athleteId: string): string {
 
 export function athleteProfileHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/profile`;
+}
+
+export type AthleteSectionNavPage = "calendar" | "stats" | "history" | "profile" | "access";
+
+type AthleteSectionNavAthlete = {
+  id: string;
+  focusSport: { slug: string };
+};
+
+export function athleteSectionNavHrefs(
+  athlete: AthleteSectionNavAthlete,
+  current: AthleteSectionNavPage,
+) {
+  const statsHref =
+    current === "stats" || athlete.focusSport.slug !== HOCKEY_SPORT_SLUG
+      ? undefined
+      : athleteStatsHref(athlete.id);
+
+  return {
+    todayHref: dashboardHref(athlete.id),
+    statsHref,
+    calendarHref: current === "calendar" ? undefined : athleteCalendarHref(athlete.id),
+    historyHref: current === "history" ? undefined : athleteEventsHref(athlete.id),
+    profileHref:
+      current === "profile" || current === "access" ? undefined : athleteProfileHref(athlete.id),
+  };
 }
 
 export function defaultDashboardHref(athletes: { id: string }[]): string {

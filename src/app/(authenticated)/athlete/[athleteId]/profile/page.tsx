@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
-import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
+import { AthleteSectionBottomNav } from "@/components/dashboard/athlete-section-bottom-nav";
 import {
   athleteAccessHref,
   athleteCalendarHref,
@@ -60,15 +60,23 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-6 pb-24 sm:px-6 lg:max-w-3xl lg:px-10 lg:pb-6">
         <Link
           href={dashboardHref(selectedAthlete.id)}
-          className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+          className="hidden items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200 lg:inline-flex"
         >
           {backToTodayLabel(locale)}
         </Link>
 
-        <div className="lg:mt-4 lg:flex lg:items-center lg:justify-between lg:gap-3">
+        <div className="flex items-center justify-between gap-3 lg:mt-4">
           <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only">
             {messages.nav.profile}
           </h1>
+          {accessHref ? (
+            <Link
+              href={accessHref}
+              className="ml-auto text-sm font-medium text-zinc-300 transition hover:text-white lg:hidden"
+            >
+              {messages.nav.access}
+            </Link>
+          ) : null}
           <nav className="hidden shrink-0 items-center gap-3 lg:flex">
             {statsHref ? (
               <Link
@@ -120,12 +128,7 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
           </div>
         </section>
       </div>
-      <DashboardBottomNav
-        statsHref={statsHref}
-        calendarHref={calendarHref}
-        historyHref={historyHref}
-        accessHref={accessHref}
-      />
+      <AthleteSectionBottomNav athlete={selectedAthlete} current="profile" />
     </>
   );
 }

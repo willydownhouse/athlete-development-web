@@ -10,6 +10,7 @@ const stretchedLinkClassName = `${sharedLinkClassName} flex-1`;
 const compactLinkClassName = `${sharedLinkClassName} min-w-16`;
 
 type DashboardBottomNavProps = {
+  todayHref?: string;
   statsHref?: string;
   calendarHref?: string;
   historyHref?: string;
@@ -18,6 +19,7 @@ type DashboardBottomNavProps = {
 };
 
 export async function DashboardBottomNav({
+  todayHref,
   statsHref,
   calendarHref,
   historyHref,
@@ -25,9 +27,14 @@ export async function DashboardBottomNav({
   accessHref,
 }: DashboardBottomNavProps) {
   const messages = getMessages(await getRequestLocale());
-  const itemCount = [statsHref, calendarHref, historyHref, profileHref, accessHref].filter(
-    Boolean,
-  ).length;
+  const itemCount = [
+    todayHref,
+    statsHref,
+    calendarHref,
+    historyHref,
+    profileHref,
+    accessHref,
+  ].filter(Boolean).length;
   const singleItem = itemCount === 1;
 
   return (
@@ -40,6 +47,14 @@ export async function DashboardBottomNav({
           singleItem ? "justify-end" : ""
         }`}
       >
+        {todayHref ? (
+          <NavLink
+            href={todayHref}
+            icon={<TodayIcon />}
+            label={messages.nav.today}
+            compact={singleItem}
+          />
+        ) : null}
         {statsHref ? (
           <NavLink
             href={statsHref}
@@ -101,6 +116,25 @@ function NavLink({
       {icon}
       <span className="text-[11px] font-medium leading-none">{label}</span>
     </Link>
+  );
+}
+
+function TodayIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.5 10.5 12 4l8.5 6.5M6 10v8.5a1 1 0 0 0 1 1h3.5V15a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 14.5 15v4.5H18a1 1 0 0 0 1-1V10"
+      />
+    </svg>
   );
 }
 

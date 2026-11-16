@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { AthleteSectionBottomNav } from "@/components/dashboard/athlete-section-bottom-nav";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { EventsListSkeleton } from "@/components/dashboard/dashboard-skeletons";
 import { EventsListFilters } from "@/components/dashboard/events-list-filters";
@@ -66,39 +67,42 @@ export default async function AthleteEventsPage({ params, searchParams }: Athlet
   );
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
-      <Link
-        href={dashboardHref(selectedAthlete.id)}
-        className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
-      >
-        {backToTodayLabel(locale)}
-      </Link>
+    <>
+      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-24 pt-6 sm:px-6 lg:max-w-3xl lg:px-10 lg:pb-6">
+        <Link
+          href={dashboardHref(selectedAthlete.id)}
+          className="hidden items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200 lg:inline-flex"
+        >
+          {backToTodayLabel(locale)}
+        </Link>
 
-      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
-        {getMessages(locale).nav.history}
-      </h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
+          {getMessages(locale).nav.history}
+        </h1>
 
-      <div className="mt-6 space-y-4">
-        <EventsListFilters
-          key={eventsListFilterKey(listParams)}
-          eventTypes={eventTypes}
-          eventTypeMetrics={eventTypeMetrics}
-          itemTypes={itemTypes}
-          itemMeasureMetrics={itemMeasureMetrics}
-          focusSportName={selectedAthlete.focusSport.name}
-          params={listParams}
-        />
-
-        <Suspense key={eventsListSuspenseKey(listParams)} fallback={<EventsListSkeleton />}>
-          <EventsListSection
-            athleteId={selectedAthlete.id}
-            timeZone={timeZone}
-            params={listParams}
+        <div className="mt-6 space-y-4">
+          <EventsListFilters
+            key={eventsListFilterKey(listParams)}
+            eventTypes={eventTypes}
+            eventTypeMetrics={eventTypeMetrics}
             itemTypes={itemTypes}
-            itemTypeChildTypes={itemTypeChildTypes}
+            itemMeasureMetrics={itemMeasureMetrics}
+            focusSportName={selectedAthlete.focusSport.name}
+            params={listParams}
           />
-        </Suspense>
+
+          <Suspense key={eventsListSuspenseKey(listParams)} fallback={<EventsListSkeleton />}>
+            <EventsListSection
+              athleteId={selectedAthlete.id}
+              timeZone={timeZone}
+              params={listParams}
+              itemTypes={itemTypes}
+              itemTypeChildTypes={itemTypeChildTypes}
+            />
+          </Suspense>
+        </div>
       </div>
-    </div>
+      <AthleteSectionBottomNav athlete={selectedAthlete} current="history" />
+    </>
   );
 }

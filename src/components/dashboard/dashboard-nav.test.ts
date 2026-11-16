@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   athleteEventIdFromPath,
+  athleteSectionNavHrefs,
   appShellMobileTitle,
   ACCESS_NAV_LABEL,
   HISTORY_NAV_LABEL,
@@ -79,6 +80,54 @@ describe("invites nav", () => {
   it("adds a pending count to the mobile menu button label", () => {
     expect(pendingInvitesMenuButtonLabel(0)).toBe("Open menu");
     expect(pendingInvitesMenuButtonLabel(2)).toBe("Open menu, 2 pending");
+  });
+});
+
+describe("athleteSectionNavHrefs", () => {
+  const hockeyAthlete = {
+    id: "ath-1",
+    focusSport: { slug: "hockey" },
+  };
+
+  it("omits the current page and keeps the other athlete sections", () => {
+    expect(athleteSectionNavHrefs(hockeyAthlete, "calendar")).toEqual({
+      todayHref: "/athlete/ath-1/dashboard",
+      statsHref: "/athlete/ath-1/stats?statsPeriod=week",
+      calendarHref: undefined,
+      historyHref: "/athlete/ath-1/events",
+      profileHref: "/athlete/ath-1/profile",
+    });
+  });
+
+  it("hides stats for a non-hockey sport", () => {
+    expect(
+      athleteSectionNavHrefs(
+        {
+          id: "ath-1",
+          focusSport: { slug: "soccer" },
+        },
+        "history",
+      ),
+    ).toEqual({
+      todayHref: "/athlete/ath-1/dashboard",
+      statsHref: undefined,
+      calendarHref: "/athlete/ath-1/calendar",
+      historyHref: undefined,
+      profileHref: "/athlete/ath-1/profile",
+    });
+  });
+
+  it("omits profile on the profile and access pages", () => {
+    const profileArea = {
+      todayHref: "/athlete/ath-1/dashboard",
+      statsHref: "/athlete/ath-1/stats?statsPeriod=week",
+      calendarHref: "/athlete/ath-1/calendar",
+      historyHref: "/athlete/ath-1/events",
+      profileHref: undefined,
+    };
+
+    expect(athleteSectionNavHrefs(hockeyAthlete, "profile")).toEqual(profileArea);
+    expect(athleteSectionNavHrefs(hockeyAthlete, "access")).toEqual(profileArea);
   });
 });
 

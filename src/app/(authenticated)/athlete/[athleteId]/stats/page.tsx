@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { AthleteSectionBottomNav } from "@/components/dashboard/athlete-section-bottom-nav";
 import { dashboardHref, backToTodayLabel } from "@/components/dashboard/dashboard-nav";
 import { HockeyStats } from "@/components/dashboard/hockey-stats";
 import { HockeyStatsSection } from "@/components/dashboard/hockey-stats-section";
@@ -40,34 +41,37 @@ export default async function AthleteStatsPage({ params, searchParams }: Athlete
   const period = parseHockeyStatsPeriod(statsPeriod);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 pt-6 sm:px-6 lg:max-w-3xl lg:px-10">
-      <Link
-        href={dashboardHref(selectedAthlete.id)}
-        className="inline-flex items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
-      >
-        {backToTodayLabel(locale)}
-      </Link>
-
-      <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
-        {messages.stats.title}
-      </h1>
-
-      <div className="mt-6">
-        <HockeyStatsSection
-          athleteId={selectedAthlete.id}
-          sportName={selectedAthlete.focusSport.name}
-          period={period}
+    <>
+      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-24 pt-6 sm:px-6 lg:max-w-3xl lg:px-10 lg:pb-6">
+        <Link
+          href={dashboardHref(selectedAthlete.id)}
+          className="hidden items-center text-sm font-medium text-zinc-400 transition hover:text-zinc-200 lg:inline-flex"
         >
-          <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
-            <HockeyStats
-              athleteId={selectedAthlete.id}
-              sportId={selectedAthlete.focusSportId}
-              period={period}
-              timeZone={timeZone}
-            />
-          </Suspense>
-        </HockeyStatsSection>
+          {backToTodayLabel(locale)}
+        </Link>
+
+        <h1 className="text-2xl font-semibold tracking-tight text-white max-lg:sr-only lg:mt-4">
+          {messages.stats.title}
+        </h1>
+
+        <div className="mt-6">
+          <HockeyStatsSection
+            athleteId={selectedAthlete.id}
+            sportName={selectedAthlete.focusSport.name}
+            period={period}
+          >
+            <Suspense key={period} fallback={<HockeyStatsGridSkeleton />}>
+              <HockeyStats
+                athleteId={selectedAthlete.id}
+                sportId={selectedAthlete.focusSportId}
+                period={period}
+                timeZone={timeZone}
+              />
+            </Suspense>
+          </HockeyStatsSection>
+        </div>
       </div>
-    </div>
+      <AthleteSectionBottomNav athlete={selectedAthlete} current="stats" />
+    </>
   );
 }
