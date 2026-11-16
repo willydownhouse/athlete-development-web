@@ -17,9 +17,6 @@ const eslintConfig = defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
-    },
     rules: {
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unnecessary-condition": "error",
