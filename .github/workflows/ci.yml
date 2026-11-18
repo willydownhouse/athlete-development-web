@@ -57,7 +57,7 @@ jobs:
             -v "$PWD/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" \
             -v "$RUNNER_TEMP/letsencrypt:/etc/letsencrypt:ro" \
             -v "$RUNNER_TEMP/certbot:/var/www/certbot:ro" \
-            nginx:1.27-alpine nginx -t
+            nginx:1.31-alpine nginx -t
 
   build-web:
     name: Build Web Image
