@@ -56,6 +56,14 @@ export type AthleteProfileField = {
   value: AthleteProfileFieldValue | null;
 };
 
+export type AthleteOnboardingSummary = {
+  id: string;
+  sportId: string;
+  type: "onboarding";
+  text: string;
+  updatedAt: string;
+};
+
 export type AthleteProfileFieldUpdate = {
   profileFieldId: string;
   textValue?: string | null;

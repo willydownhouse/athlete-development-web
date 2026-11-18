@@ -12,6 +12,7 @@ import {
   dashboardHref,
 } from "@/components/dashboard/dashboard-nav";
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
+import { ProfileOnboardingSection } from "@/components/profile/profile-onboarding-section";
 import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
 import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { fetchAthleteProfileFields } from "@/lib/api";
@@ -132,6 +133,12 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
             />
           </div>
         </section>
+
+        <ProfileOnboardingSection
+          athleteId={selectedAthlete.id}
+          relationshipToAthlete={selectedAthlete.relationshipToAthlete}
+          dateOfBirth={selectedAthlete.dateOfBirth}
+        />
       </div>
       <AthleteSectionBottomNav athlete={selectedAthlete} current="profile" />
     </>

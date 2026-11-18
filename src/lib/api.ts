@@ -8,6 +8,7 @@ import type {
   AthleteInvitation,
   AthleteInvitationInboxResponse,
   AthleteListResponse,
+  AthleteOnboardingSummary,
   AthleteProfileField,
   AthleteProfileFieldUpdate,
   ChatMessageListResponse,
@@ -261,6 +262,18 @@ export async function updateAthlete(
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function fetchAthleteOnboardingSummary(
+  token: string,
+  athleteId: string,
+): Promise<AthleteOnboardingSummary | null> {
+  const result = await apiFetch<{ summary: AthleteOnboardingSummary | null }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/summaries?type=onboarding`,
+  );
+
+  return result.summary;
 }
 
 export async function fetchAthleteProfileFields(

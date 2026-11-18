@@ -12,6 +12,7 @@ import {
   endAthleteAccessGrant,
   fetchAllEvents,
   fetchAthleteAccess,
+  fetchAthleteOnboardingSummary,
   fetchAthleteProfileFields,
   fetchAthletes,
   fetchCurrentAppUser,
@@ -220,6 +221,46 @@ describe("api client", () => {
       }),
     );
     expect(saved).toEqual(items);
+  });
+
+  it("fetches the onboarding summary for the current sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const summary = {
+      id: "00000000-0000-4000-8000-000000000010",
+      sportId: "33333333-3333-4333-8333-333333333333",
+      type: "onboarding" as const,
+      text: "Plays defense and trains four times a week.",
+      updatedAt: "2026-11-18T12:00:00.000Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ summary: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ summary }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const empty = await fetchAthleteOnboardingSummary("test-token", athleteId);
+    const saved = await fetchAthleteOnboardingSummary("test-token", athleteId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/summaries?type=onboarding`,
+    );
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/summaries?type=onboarding`,
+    );
+    expect(
+      new Headers((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).get("Authorization"),
+    ).toBe("Bearer test-token");
+    expect(empty).toBeNull();
+    expect(saved).toEqual(summary);
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {

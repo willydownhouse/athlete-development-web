@@ -91,7 +91,6 @@ export const en = {
       `${inviterName} invited you to ${athleteName}'s profile. Open Invites to accept it and start following along.`,
     invitationsBody: "Open Invites to accept them and start following those athlete profiles.",
     viewInvites: "View invites",
-    startInterview: "Start interview",
   },
   events: {
     eventType: "Event type",
@@ -283,6 +282,9 @@ export const en = {
     photoOversize: "Image must be 15 MB or smaller.",
     photoUploadFailed: "Photo upload failed.",
     photoProcessingFailed: "Photo processing failed.",
+    onboarding: "Onboarding",
+    startInterview: "Start interview",
+    updateInterview: "Update interview",
     sport: "Sport",
     selectValue: "Select",
     yes: "Yes",

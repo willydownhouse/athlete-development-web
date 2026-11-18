@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canChangeProfileDateOfBirth,
+  canStartOnboardingInterview,
   dateOnlyInputValue,
   isAtLeastAgeYears,
   isValidDateOnly,
@@ -62,6 +63,25 @@ describe("latestSelfAthleteBirthDate", () => {
     const now = new Date("2024-02-29T12:00:00.000Z");
 
     expect(latestSelfAthleteBirthDate(now)).toEqual(new Date(2006, 1, 28));
+  });
+});
+
+describe("canStartOnboardingInterview", () => {
+  const now = new Date("2026-09-19T15:00:00.000Z");
+
+  it("lets a parent start at any age", () => {
+    expect(canStartOnboardingInterview("parent", "2016-09-19", now)).toBe(true);
+    expect(canStartOnboardingInterview("parent", null, now)).toBe(true);
+  });
+
+  it("lets an athlete start on the 18th birthday", () => {
+    expect(canStartOnboardingInterview("athlete", "2008-09-19", now)).toBe(true);
+    expect(canStartOnboardingInterview("athlete", "2008-09-19T00:00:00.000Z", now)).toBe(true);
+  });
+
+  it("keeps an under-18 athlete out", () => {
+    expect(canStartOnboardingInterview("athlete", "2008-09-20", now)).toBe(false);
+    expect(canStartOnboardingInterview("athlete", null, now)).toBe(false);
   });
 });
 

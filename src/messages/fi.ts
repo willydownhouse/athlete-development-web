@@ -96,7 +96,6 @@ export const fi = {
     invitationsBody:
       "Avaa Kutsut hyväksyäksesi ne ja aloittaaksesi näiden urheilijaprofiilien seuraamisen.",
     viewInvites: "Näytä kutsut",
-    startInterview: "Aloita haastattelu",
   },
   events: {
     eventType: "Tapahtumatyyppi",
@@ -288,6 +287,9 @@ export const fi = {
     photoOversize: "Kuvan on oltava enintään 15 Mt.",
     photoUploadFailed: "Kuvan lataus epäonnistui.",
     photoProcessingFailed: "Kuvan käsittely epäonnistui.",
+    onboarding: "Aloitus",
+    startInterview: "Aloita haastattelu",
+    updateInterview: "Päivitä haastattelu",
     sport: "Laji",
     selectValue: "Valitse",
     yes: "Kyllä",

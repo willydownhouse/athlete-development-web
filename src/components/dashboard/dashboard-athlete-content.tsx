@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
@@ -15,7 +14,6 @@ import {
   athleteEventsHref,
   athleteProfileHref,
   athleteStatsHref,
-  onboardingInterviewHref,
 } from "./dashboard-nav";
 import { DashboardAthletePhoto } from "./dashboard-athlete-photo";
 import { DashboardHeader } from "./dashboard-header";
@@ -110,12 +108,6 @@ export async function DashboardAthleteContent({
         }
       />
       <div className="mt-6 flex flex-col gap-3.5">
-        <Link
-          href={onboardingInterviewHref(selectedAthlete.id)}
-          className="inline-flex w-full items-center justify-center rounded-xl bg-[#b7d7ec] px-4 py-3 text-sm font-medium text-[#1a2430] transition hover:bg-[#c5dff0] lg:w-auto lg:self-start lg:px-5"
-        >
-          {getMessages(locale).dashboard.startInterview}
-        </Link>
         <Suspense fallback={<TodaysEventsSkeleton />}>
           <DashboardTodaysEventsSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
         </Suspense>
