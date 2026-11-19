@@ -64,6 +64,15 @@ export type AthleteOnboardingSummary = {
   updatedAt: string;
 };
 
+export type AthleteGoalType = "near" | "season" | "long_term";
+
+export type AthleteGoal = {
+  id: string;
+  goalType: AthleteGoalType;
+  title: string | null;
+  description: string | null;
+};
+
 export type AthleteProfileFieldUpdate = {
   profileFieldId: string;
   textValue?: string | null;

@@ -12,6 +12,7 @@ import {
   endAthleteAccessGrant,
   fetchAllEvents,
   fetchAthleteAccess,
+  fetchAthleteGoals,
   fetchAthleteOnboardingSummary,
   fetchAthleteProfileFields,
   fetchAthletes,
@@ -261,6 +262,40 @@ describe("api client", () => {
     ).toBe("Bearer test-token");
     expect(empty).toBeNull();
     expect(saved).toEqual(summary);
+  });
+
+  it("fetches the current goals", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const goals = [
+      {
+        id: "00000000-0000-4000-8000-000000000020",
+        goalType: "near" as const,
+        title: null,
+        description: "Improve backward skating",
+      },
+      {
+        id: "00000000-0000-4000-8000-000000000021",
+        goalType: "season" as const,
+        title: "U16",
+        description: "Make the U16 team",
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ goals }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const saved = await fetchAthleteGoals("test-token", athleteId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`http://api.test/api/athletes/${athleteId}/goals`);
+    expect(
+      new Headers((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).get("Authorization"),
+    ).toBe("Bearer test-token");
+    expect(saved).toEqual(goals);
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {

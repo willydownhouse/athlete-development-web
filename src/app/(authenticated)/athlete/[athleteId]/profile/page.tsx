@@ -12,10 +12,11 @@ import {
   dashboardHref,
 } from "@/components/dashboard/dashboard-nav";
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
+import { ProfileGoalsSection } from "@/components/profile/profile-goals-section";
 import { ProfileOnboardingSection } from "@/components/profile/profile-onboarding-section";
 import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
 import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
-import { fetchAthleteProfileFields } from "@/lib/api";
+import { fetchAthleteGoals, fetchAthleteProfileFields } from "@/lib/api";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
@@ -44,9 +45,10 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
     redirect("/dashboard");
   }
 
-  const [profileMedia, profileFields] = await Promise.all([
+  const [profileMedia, profileFields, goals] = await Promise.all([
     loadAthleteProfileMedia(token, selectedAthlete.id),
     fetchAthleteProfileFields(token, selectedAthlete.id, locale),
+    fetchAthleteGoals(token, selectedAthlete.id),
   ]);
   const messages = getMessages(locale);
 
@@ -133,6 +135,8 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
             />
           </div>
         </section>
+
+        <ProfileGoalsSection athleteId={selectedAthlete.id} goals={goals} />
 
         <ProfileOnboardingSection
           athleteId={selectedAthlete.id}

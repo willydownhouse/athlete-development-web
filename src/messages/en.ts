@@ -283,6 +283,13 @@ export const en = {
     photoUploadFailed: "Photo upload failed.",
     photoProcessingFailed: "Photo processing failed.",
     onboarding: "Onboarding",
+    summaryUpdated: (when: string) => `Updated ${when}`,
+    goals: "Goals",
+    goalTypes: {
+      near: "Near-term",
+      season: "This season",
+      long_term: "Long-term",
+    },
     startInterview: "Start interview",
     updateInterview: "Update interview",
     sport: "Sport",

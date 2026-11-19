@@ -5,6 +5,7 @@ import type {
   Athlete,
   AthleteAccessListResponse,
   AthleteAccessRole,
+  AthleteGoal,
   AthleteInvitation,
   AthleteInvitationInboxResponse,
   AthleteListResponse,
@@ -262,6 +263,15 @@ export async function updateAthlete(
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function fetchAthleteGoals(token: string, athleteId: string): Promise<AthleteGoal[]> {
+  const result = await apiFetch<{ goals: AthleteGoal[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/goals`,
+  );
+
+  return result.goals;
 }
 
 export async function fetchAthleteOnboardingSummary(

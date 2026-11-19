@@ -5,9 +5,21 @@ import { onboardingInterviewHref } from "@/components/dashboard/dashboard-nav";
 import { fetchAthleteOnboardingSummary } from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { canStartOnboardingInterview } from "@/lib/date-of-birth";
+import type { AppLocale } from "@/lib/locale";
 import { getRequestLocale } from "@/lib/locale-server";
 import { getMessages } from "@/lib/messages";
+import { formatZonedShortDate, formatZonedTime } from "@/lib/time-zone";
+import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { AthleteAccessRole } from "@/lib/types";
+
+function formatSummaryUpdatedAt(iso: string, timeZone: string, locale: AppLocale): string | null {
+  const updatedAt = new Date(iso);
+  if (Number.isNaN(updatedAt.getTime())) {
+    return null;
+  }
+
+  return `${formatZonedShortDate(timeZone, updatedAt, new Date(), locale)} ${formatZonedTime(timeZone, updatedAt)}`;
+}
 
 type ProfileOnboardingSectionProps = {
   athleteId: string;
@@ -25,12 +37,16 @@ export async function ProfileOnboardingSection({
     redirect("/");
   }
 
-  const [summary, locale] = await Promise.all([
+  const [summary, locale, timeZone] = await Promise.all([
     fetchAthleteOnboardingSummary(token, athleteId),
     getRequestLocale(),
+    getRequestTimeZone(),
   ]);
   const messages = getMessages(locale);
   const canStart = canStartOnboardingInterview(relationshipToAthlete, dateOfBirth);
+  const updatedAtLabel = summary
+    ? formatSummaryUpdatedAt(summary.updatedAt, timeZone, locale)
+    : null;
 
   if (!summary && !canStart) {
     return null;
@@ -39,6 +55,11 @@ export async function ProfileOnboardingSection({
   return (
     <section className="mt-6 rounded-2xl bg-[#171b22] px-4 py-5 sm:px-5">
       <h2 className="text-base font-semibold text-white">{messages.profile.onboarding}</h2>
+      {summary && updatedAtLabel ? (
+        <time dateTime={summary.updatedAt} className="mt-1 block text-xs text-zinc-500">
+          {messages.profile.summaryUpdated(updatedAtLabel)}
+        </time>
+      ) : null}
       {summary ? (
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-300">{summary.text}</p>
       ) : null}
