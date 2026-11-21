@@ -26,7 +26,7 @@ describe("getHockeyStatsRange", () => {
   });
 
   it("returns a seven-day range for week", () => {
-    const weekRange = getHockeyStatsRange("week");
+    const weekRange = getHockeyStatsRange("week", "UTC");
 
     expect(
       new Date(weekRange.startedAtTo).getTime() - new Date(weekRange.startedAtFrom).getTime(),

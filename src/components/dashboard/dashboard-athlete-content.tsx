@@ -17,6 +17,7 @@ import {
 } from "./dashboard-nav";
 import { DashboardAthletePhoto } from "./dashboard-athlete-photo";
 import { DashboardHeader } from "./dashboard-header";
+import { DashboardInterviewCard } from "./dashboard-interview-card";
 import { DashboardInteractionsProvider } from "./dashboard-interactions";
 import { QuickLogSection } from "./quick-log-section";
 import { StreakCard } from "./streak-card";
@@ -108,6 +109,9 @@ export async function DashboardAthleteContent({
         }
       />
       <div className="mt-6 flex flex-col gap-3.5">
+        <Suspense fallback={null}>
+          <DashboardInterviewCard athlete={selectedAthlete} />
+        </Suspense>
         <Suspense fallback={<TodaysEventsSkeleton />}>
           <DashboardTodaysEventsSection selectedAthlete={selectedAthlete} timeZone={timeZone} />
         </Suspense>

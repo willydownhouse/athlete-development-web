@@ -5,9 +5,13 @@ import type {
   Athlete,
   AthleteAccessListResponse,
   AthleteAccessRole,
+  AthleteGoal,
   AthleteInvitation,
   AthleteInvitationInboxResponse,
   AthleteListResponse,
+  AthleteOnboardingSummary,
+  AthleteProfileField,
+  AthleteProfileFieldUpdate,
   ChatMessageListResponse,
   ChatThread,
   ChatRun,
@@ -259,6 +263,58 @@ export async function updateAthlete(
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function fetchAthleteGoals(token: string, athleteId: string): Promise<AthleteGoal[]> {
+  const result = await apiFetch<{ goals: AthleteGoal[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/goals`,
+  );
+
+  return result.goals;
+}
+
+export async function fetchAthleteOnboardingSummary(
+  token: string,
+  athleteId: string,
+): Promise<AthleteOnboardingSummary | null> {
+  const result = await apiFetch<{ summary: AthleteOnboardingSummary | null }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/summaries?type=onboarding`,
+  );
+
+  return result.summary;
+}
+
+export async function fetchAthleteProfileFields(
+  token: string,
+  athleteId: string,
+  locale: AppLocale,
+): Promise<AthleteProfileField[]> {
+  const result = await apiFetch<{ items: AthleteProfileField[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/profile-fields${catalogQuery(locale)}`,
+  );
+
+  return result.items;
+}
+
+export async function updateAthleteProfileFields(
+  token: string,
+  athleteId: string,
+  locale: AppLocale,
+  values: AthleteProfileFieldUpdate[],
+): Promise<AthleteProfileField[]> {
+  const result = await apiFetch<{ items: AthleteProfileField[] }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/profile-fields${catalogQuery(locale)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ values }),
+    },
+  );
+
+  return result.items;
 }
 
 export async function fetchSports(locale: AppLocale): Promise<Sport[] | null> {
@@ -1080,8 +1136,9 @@ async function fetchChatMessages(
 ): Promise<ChatMessageListResponse> {
   const params = new URLSearchParams({
     limit: String(options.limit),
-    excludeCapabilities: "event_update",
   });
+  params.append("excludeCapabilities", "event_update");
+  params.append("excludeCapabilities", "onboarding");
 
   if (options.before) {
     params.set("before", options.before);
@@ -1128,6 +1185,39 @@ export async function fetchOlderChatMessages(
   return fetchChatMessages(token, threadId, { limit, before, cache: "no-store" });
 }
 
+export async function fetchOnboardingChatMessages(
+  token: string,
+  threadId: string,
+  athleteId: string,
+  options: { limit?: number; before?: string } = {},
+): Promise<ChatMessageListResponse> {
+  const params = new URLSearchParams({
+    limit: String(options.limit ?? CHAT_MESSAGES_PAGE_SIZE),
+    capability: "onboarding",
+    athleteId,
+  });
+
+  if (options.before) {
+    params.set("before", options.before);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/chat/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseApiError(response);
+  }
+
+  return response.json() as Promise<ChatMessageListResponse>;
+}
+
 export async function fetchScopedChatMessages(
   token: string,
   threadId: string,
@@ -1172,6 +1262,7 @@ export async function submitChatMessage(
     timeZone: string;
     locale: AppLocale;
     eventId?: string;
+    onboardingAthleteId?: string;
   },
 ): Promise<ChatRun> {
   return apiFetch<ChatRun>(token, `/api/chat/threads/${encodeURIComponent(threadId)}/messages`, {

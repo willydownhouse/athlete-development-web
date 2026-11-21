@@ -44,7 +44,7 @@ export const fi = {
   },
   nav: {
     today: "Tänään",
-    chat: "Event Agent Toby",
+    chat: "Toby",
     usage: "Käyttö",
     invites: "Kutsut",
     history: "Historia",
@@ -96,6 +96,9 @@ export const fi = {
     invitationsBody:
       "Avaa Kutsut hyväksyäksesi ne ja aloittaaksesi näiden urheilijaprofiilien seuraamisen.",
     viewInvites: "Näytä kutsut",
+    interviewPendingTitle: "Onboarding",
+    interviewPendingBody: (name: string) =>
+      `Urheilijalle ${name} ei ole vielä tehty onboarding-haastattelua.`,
   },
   events: {
     eventType: "Tapahtumatyyppi",
@@ -215,24 +218,44 @@ export const fi = {
     message: "Viesti",
     thinking: "Miettii",
     addAthleteFirst: "Lisää ensin urheilija",
-    nothingLogged: "Ei kirjauksia vielä",
+    nothingLogged: "Harjoittelun tekoälyavustajasi",
     loadingEarlier: "Ladataan aiempia viestejä…",
     unavailable: "Keskustelu ei ole käytettävissä, ennen kuin se latautuu.",
     addAthleteToLog: "Lisää urheilija jatkaaksesi kirjaamista.",
     fallbackAthlete: "urheilijasi",
     loggingExample: (name: string) => `${name}: jääharjoitus tänään klo 14`,
     updateExample: "Siirrä tämä kello 18:een, lisää RPE 7…",
-    emptyIntro: (example: string) =>
+    emptyIntro: [
+      "Hei — olen Toby, harjoittelun tekoälyavustajasi. 🙂",
+      "Voin esimerkiksi suunnitella ja kirjata harjoitteluasi. Voin myös opastaa sinua tämän sovelluksen käytössä. Kysy vain, olen täällä auttamassa!",
+    ].join("\n\n"),
+    interviewHeading: "Aloitushaastattelu",
+    interviewReply: "Vastaa, kun olet valmis",
+    interviewUpdateReply: "Mitä haluat päivittää?",
+    interviewIntro: (name: string | null) =>
       [
-        "Hei — olen Toby, tapahtumien kirjausagenttisi. 🙂",
-        "Olen täällä tekemässä päivittäisestä tapahtumien kirjaamisesta mahdollisimman helppoa.",
-        "Kerro minulle harjoituksesta, pelistä tai lepopäivästä, niin lisään sen aikajanalle. Mainitse urheilija, jos sinulla on useampi, ja lisää päivä ja kellonaika kun voit.",
-        "En ole täällä suunnittelemassa harjoittelua, ehdottamassa mitä treenata tai vastaamassa valmennuskysymyksiin.",
-        `Kokeile esimerkiksi: *${example}*`,
+        "Hei — olen Toby. 🙂",
+        name
+          ? `Tutustutaan urheilijaan ${name}. Tässä lyhyessä haastattelussa haluaisin kuulla taustasta, tulevista tavoitteista, tavallisesta viikosta ja muista harrastuksista. Haastattelun pohjalta luon yhteenvedon, ja se on lähtökohta urheilijan profiilille ja kehityshistorialle. Yhteenvedon näet aina urheilijan profiilisivulla.`
+          : "Tutustutaan tähän urheilijaan. Tässä lyhyessä haastattelussa haluaisin kuulla taustasta, tulevista tavoitteista, tavallisesta viikosta ja muista harrastuksista. Haastattelun pohjalta luon yhteenvedon, ja se on lähtökohta urheilijan profiilille ja kehityshistorialle. Yhteenvedon näet aina urheilijan profiilisivulla.",
+        "Tästä haastattelusta voin myös luoda lyhyen aikavälin, tämän kauden ja pitkän aikavälin tavoitteita. Näet ne aikajanalla ja urheilijan profiilisivulla. Tavoitteet ovat tärkeitä, koska tulen aina vertaamaan harjoitteluasi niihin tulevaisuudessa, kun laadin viikko-, kuukausi- ja kausiraportteja.",
+        "Voit myös kertoa asioita, joita en välttämättä hoksaa kysyä, jos koet että niistä voi tulevaisuudessa olla hyötyä kun autan sinua.",
+        "Lopuksi tiivistän ymmärtämäni. Tallennan tiedot vasta, kun vahvistat niiden olevan oikein tai kerrot, mitä haluat muuttaa tai lisätä.",
+        "Älä huoli, kaikkea ei tarvitse saada kerralla oikein. Voit aina palata tähän haastatteluun muokkaamaan tietoja.",
+        "Oletko valmis aloittamaan?",
+      ].join("\n\n"),
+    interviewUpdateIntro: (name: string | null) =>
+      [
+        "Hei — olen Toby. 🙂",
+        name
+          ? `Urheilijalle ${name} on jo tehty onboarding-haastattelu, mutta voit edelleen muuttaa tai täydentää sen tietoja tässä keskustelussa.`
+          : "Tälle urheilijalle on jo tehty onboarding-haastattelu, mutta voit edelleen muuttaa tai täydentää sen tietoja tässä keskustelussa.",
+        "Kerron takaisin, mitä ymmärsin. Tallennan päivityksen vasta, kun vahvistat sen olevan oikein tai kerrot, mitä haluat muuttaa tai lisätä.",
+        "Mitä haluat päivittää?",
       ].join("\n\n"),
     needsAthleteIntro: [
-      "Hei — olen Toby, tapahtumien kirjausagenttisi.",
-      "Olen täällä tekemässä päivittäisestä tapahtumien kirjaamisesta mahdollisimman helppoa. Lisää urheilija aloittaaksesi.",
+      "Hei — olen Toby. 🙂",
+      "Lisää urheilija, niin olen täällä auttamassa.",
     ].join("\n\n"),
     yesterday: "Eilen",
     earlierUpdates: "Aiemmat päivitykset",
@@ -245,9 +268,6 @@ export const fi = {
   },
   onboarding: {
     setupTitle: "Luodaan urheilijaprofiili",
-    setupBody1: "Tämä luo lähtökohdan urheilijaprofiilille ja pitkäaikaiselle kehityshistorialle.",
-    setupBody2:
-      "Mitä enemmän jaat meille hyödyllistä kontekstia — harjoittelua, palautumista ja arjen havaintoja — sitä paremmin voimme tukea urheilijasi matkaa.",
     noSports: "Lajeja ei ole juuri nyt saatavilla. Yritä myöhemmin uudelleen.",
     whoFor: "Kenelle tämä profiili on?",
     myChild: "Lapselleni",
@@ -276,7 +296,21 @@ export const fi = {
     photoOversize: "Kuvan on oltava enintään 15 Mt.",
     photoUploadFailed: "Kuvan lataus epäonnistui.",
     photoProcessingFailed: "Kuvan käsittely epäonnistui.",
+    onboarding: "Onboarding",
+    summaryUpdated: (when: string) => `Päivitetty ${when}`,
+    goals: "Tavoitteet",
+    goalTypes: {
+      near: "Lähiaika",
+      season: "Tämä kausi",
+      long_term: "Pitkä aikaväli",
+    },
+    startInterview: "Avaa haastattelu",
+    updateInterview: "Päivitä haastattelu",
     sport: "Laji",
+    selectValue: "Valitse",
+    yes: "Kyllä",
+    no: "Ei",
+    invalidNumber: "Anna kelvollinen numero.",
   },
   invites: {
     title: "Kutsut",

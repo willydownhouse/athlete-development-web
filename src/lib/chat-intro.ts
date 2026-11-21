@@ -19,9 +19,22 @@ export function chatEventUpdateExample(locale: AppLocale = DEFAULT_APP_LOCALE): 
   return getMessages(locale).chat.updateExample;
 }
 
-export function chatEmptyIntro(
+export function chatEmptyIntro(locale: AppLocale = DEFAULT_APP_LOCALE): string {
+  return getMessages(locale).chat.emptyIntro;
+}
+
+export function chatOnboardingIntro(
   athleteName: string,
   locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
-  return getMessages(locale).chat.emptyIntro(chatEventLoggingExample(athleteName, locale));
+  const name = athleteName.trim();
+  return getMessages(locale).chat.interviewIntro(name || null);
+}
+
+export function chatOnboardingUpdateIntro(
+  athleteName: string,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  const name = athleteName.trim();
+  return getMessages(locale).chat.interviewUpdateIntro(name || null);
 }

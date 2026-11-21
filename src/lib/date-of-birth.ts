@@ -91,6 +91,20 @@ export function latestSelfAthleteBirthDate(now = new Date()): Date {
   );
 }
 
+/** A parent can start the interview at any age. An athlete caller must already be at least 18. */
+export function canStartOnboardingInterview(
+  relationshipToAthlete: string,
+  dateOfBirth: string | null,
+  now = new Date(),
+): boolean {
+  if (relationshipToAthlete === "parent") {
+    return true;
+  }
+
+  const dateOnly = dateOnlyInputValue(dateOfBirth);
+  return dateOnly.length > 0 && isAtLeastAgeYears(dateOnly, SELF_ATHLETE_MIN_AGE_YEARS, now);
+}
+
 /** A parent can set any date. An athlete login can change the date only while the saved age is already at least 18. */
 export function canChangeProfileDateOfBirth(
   relationshipToAthlete: string,

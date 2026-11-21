@@ -63,6 +63,7 @@ type ChatComposerProps = {
   examplePlaceholder?: string;
   eventId?: string;
   athleteId?: string;
+  onboardingAthleteId?: string;
   messageFieldId?: string;
   hideFieldLabel?: boolean;
   formClassName?: string;
@@ -82,6 +83,7 @@ export function ChatComposer({
   examplePlaceholder,
   eventId,
   athleteId,
+  onboardingAthleteId,
   messageFieldId = "chat-message",
   hideFieldLabel = false,
   formClassName = "shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
@@ -135,6 +137,9 @@ export function ChatComposer({
       <input type="hidden" name="threadId" value={threadId} />
       {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
       {athleteId ? <input type="hidden" name="athleteId" value={athleteId} /> : null}
+      {onboardingAthleteId ? (
+        <input type="hidden" name="onboardingAthleteId" value={onboardingAthleteId} />
+      ) : null}
       <input type="hidden" name="clientRequestId" defaultValue="" />
       {hideFieldLabel ? null : (
         <label htmlFor={messageFieldId} className="sr-only">
