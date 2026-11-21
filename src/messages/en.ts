@@ -209,35 +209,44 @@ export const en = {
     message: "Message",
     thinking: "Thinking",
     addAthleteFirst: "Add an athlete first",
-    nothingLogged: "Nothing logged yet",
+    nothingLogged: "Your AI training assistant",
     loadingEarlier: "Loading earlier messages…",
     unavailable: "Chat is unavailable until the thread loads.",
     addAthleteToLog: "Add an athlete to keep logging.",
     fallbackAthlete: "your athlete",
     loggingExample: (name: string) => `${name} had ice practice today at 2pm`,
     updateExample: "Move this to 6pm, add RPE 7…",
-    emptyIntro: (example: string) =>
-      [
-        "Hey — I'm Toby, your event logging agent. 🙂",
-        "I'm here to make your daily event logging as easy as possible.",
-        "Just tell me about a practice, game, or rest day and I'll add it to the timeline. Name the athlete if you have more than one, and include the day and time when you can.",
-        "I'm not here to plan training, suggest what to practice, or answer coaching questions.",
-        `Try something like: *${example}*`,
-      ].join("\n\n"),
+    emptyIntro: [
+      "Hey — I'm Toby, your AI training assistant. 🙂",
+      "I can plan and log your training, for example. I can also guide you through how to use this app. Just ask me — I'm here to help!",
+    ].join("\n\n"),
     interviewHeading: "Onboarding interview",
     interviewReply: "Reply when you're ready",
+    interviewUpdateReply: "What would you like to update?",
     interviewIntro: (name: string | null) =>
       [
         "Hey — I'm Toby. 🙂",
         name
-          ? `Let's get to know ${name}. In this short interview, I'd like to learn the background so far, goals ahead, what a normal week looks like, and other hobbies. That becomes the starting point for the profile and for long-term development.`
-          : "Let's get to know this athlete. In this short interview, I'd like to learn the background so far, goals ahead, what a normal week looks like, and other hobbies. That becomes the starting point for the profile and for long-term development.",
+          ? `Let's get to know ${name}. In this short interview, I'd like to learn the background, goals ahead, what a normal week looks like, and other hobbies. From this interview I'll write a summary, and that becomes the starting point for the athlete's profile and development history. You can always see the summary on the athlete's profile page.`
+          : "Let's get to know this athlete. In this short interview, I'd like to learn the background, goals ahead, what a normal week looks like, and other hobbies. From this interview I'll write a summary, and that becomes the starting point for the athlete's profile and development history. You can always see the summary on the athlete's profile page.",
+        "From this interview I can also create three kinds of goals: near-term, this season, and long-term. You can see them on the timeline and on the athlete's profile page. Goals matter, because I'll always compare your training to them in the future when I write weekly, monthly, and season reports.",
+        "You can also tell me things I might not think to ask, if you feel they could be useful later when I help you.",
         "At the end, I'll summarize what I understood. I'll only save it after you confirm that it sounds right, or tell me what you want to change or add.",
+        "Don't worry, it doesn't all have to be right the first time. You can always come back to this interview and change the details.",
         "Are you ready to start?",
       ].join("\n\n"),
+    interviewUpdateIntro: (name: string | null) =>
+      [
+        "Hey — I'm Toby. 🙂",
+        name
+          ? `An onboarding interview has already been done for ${name}, but you can still change or add to its information in this conversation.`
+          : "An onboarding interview has already been done for this athlete, but you can still change or add to its information in this conversation.",
+        "I'll say back what I understood. I'll only save the update after you confirm that it sounds right, or tell me what you want to change or add.",
+        "What would you like to update?",
+      ].join("\n\n"),
     needsAthleteIntro: [
-      "Hey — I'm Toby, your event logging agent.",
-      "I'm here to make daily event logging as easy as possible. Add an athlete to get started.",
+      "Hey — I'm Toby. 🙂",
+      "Add an athlete, and I'll be here to help.",
     ].join("\n\n"),
     yesterday: "Yesterday",
     earlierUpdates: "Earlier updates",
@@ -250,10 +259,6 @@ export const en = {
   },
   onboarding: {
     setupTitle: "Let's set up your athlete profile",
-    setupBody1:
-      "This setup creates the starting point for your athlete profile and long-term development memory.",
-    setupBody2:
-      "The more useful context you share with us — training, recovery, and everyday observations — the better we can support your athlete's journey.",
     noSports: "No sports are available right now. Please try again later.",
     whoFor: "Who is this profile for?",
     myChild: "My child",

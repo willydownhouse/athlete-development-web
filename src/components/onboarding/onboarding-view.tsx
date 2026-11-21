@@ -27,10 +27,6 @@ export async function OnboardingView({ userName, sports, loadError }: Onboarding
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:mt-3 lg:text-3xl">
             {messages.onboarding.setupTitle}
           </h1>
-          <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-relaxed text-zinc-300 lg:mt-6 lg:space-y-4 lg:text-base lg:leading-7">
-            <p>{messages.onboarding.setupBody1}</p>
-            <p>{messages.onboarding.setupBody2}</p>
-          </div>
         </div>
 
         <div>

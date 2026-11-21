@@ -1,6 +1,11 @@
 import { ChatView } from "@/components/chat/chat-view";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
-import { createChatThread, fetchLatestChatMessages, fetchOnboardingChatMessages } from "@/lib/api";
+import {
+  createChatThread,
+  fetchAthleteOnboardingSummary,
+  fetchLatestChatMessages,
+  fetchOnboardingChatMessages,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { ONBOARDING_ATHLETE_QUERY_PARAM, onboardingChatQuery } from "@/lib/onboarding-chat";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
@@ -21,6 +26,7 @@ export async function ChatSection({ searchParams }: ChatSectionProps) {
 
   const onboardingAthleteId = query.kind === "interview" ? query.athleteId : null;
   const transcriptKey = query.kind === "interview" ? query.athleteId : query.kind;
+  let onboardingHasSummary = false;
 
   if (!token) {
     return (
@@ -32,6 +38,7 @@ export async function ChatSection({ searchParams }: ChatSectionProps) {
         timeZone={timeZone}
         nowIso={nowIso}
         onboardingAthleteId={onboardingAthleteId}
+        onboardingHasSummary={false}
         loadError={actions.signInAgain}
       />
     );
@@ -59,6 +66,15 @@ export async function ChatSection({ searchParams }: ChatSectionProps) {
     } catch (error) {
       loadError = passthroughOrGeneric(error, actions.loadMessages);
     }
+
+    if (!loadError && messages.length === 0) {
+      try {
+        onboardingHasSummary =
+          (await fetchAthleteOnboardingSummary(token, query.athleteId)) !== null;
+      } catch {
+        onboardingHasSummary = false;
+      }
+    }
   } else if (threadId) {
     try {
       const latest = await fetchLatestChatMessages(token, threadId);
@@ -78,6 +94,7 @@ export async function ChatSection({ searchParams }: ChatSectionProps) {
       timeZone={timeZone}
       nowIso={nowIso}
       onboardingAthleteId={onboardingAthleteId}
+      onboardingHasSummary={onboardingHasSummary}
       loadError={loadError}
     />
   );

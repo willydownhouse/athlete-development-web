@@ -14,7 +14,12 @@ import { ChatTypewriterContent } from "@/components/chat/chat-typewriter-content
 import { useIncomingAssistantTypewriter } from "@/hooks/use-chat-typewriter";
 import { useAppShellAthletes } from "@/lib/app-shell-context";
 import { displayedChatMessages, mergeMessages } from "@/lib/chat-display";
-import { chatEmptyIntro, chatEventLoggingExample, chatOnboardingIntro } from "@/lib/chat-intro";
+import {
+  chatEmptyIntro,
+  chatEventLoggingExample,
+  chatOnboardingIntro,
+  chatOnboardingUpdateIntro,
+} from "@/lib/chat-intro";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 import type { ChatMessage } from "@/lib/types";
@@ -26,6 +31,7 @@ type ChatViewProps = {
   timeZone: string;
   nowIso: string;
   onboardingAthleteId?: string | null;
+  onboardingHasSummary?: boolean;
   loadError?: string | null;
 };
 
@@ -61,7 +67,15 @@ function ChatNeedsAthleteState() {
   );
 }
 
-function ChatEmptyState({ athleteName, onboarding }: { athleteName: string; onboarding: boolean }) {
+function ChatEmptyState({
+  athleteName,
+  onboarding,
+  onboardingHasSummary,
+}: {
+  athleteName: string;
+  onboarding: boolean;
+  onboardingHasSummary: boolean;
+}) {
   const locale = useAppLocale();
   const messages = getMessages(locale);
 
@@ -71,8 +85,10 @@ function ChatEmptyState({ athleteName, onboarding }: { athleteName: string; onbo
         heading={onboarding ? messages.chat.interviewHeading : messages.chat.nothingLogged}
         content={
           onboarding
-            ? chatOnboardingIntro(athleteName, locale)
-            : chatEmptyIntro(athleteName, locale)
+            ? onboardingHasSummary
+              ? chatOnboardingUpdateIntro(athleteName, locale)
+              : chatOnboardingIntro(athleteName, locale)
+            : chatEmptyIntro(locale)
         }
       />
     </div>
@@ -86,6 +102,7 @@ export function ChatView({
   timeZone,
   nowIso,
   onboardingAthleteId = null,
+  onboardingHasSummary = false,
   loadError,
 }: ChatViewProps) {
   const athletes = useAppShellAthletes();
@@ -269,6 +286,7 @@ export function ChatView({
               <ChatEmptyState
                 athleteName={onboardingAthleteId ? interviewAthleteName : exampleAthleteName}
                 onboarding={onboardingAthleteId !== null}
+                onboardingHasSummary={onboardingAthleteId !== null && onboardingHasSummary}
               />
             ) : (
               <ChatNeedsAthleteState />
@@ -306,7 +324,9 @@ export function ChatView({
           onboardingAthleteId={onboardingAthleteId ?? undefined}
           examplePlaceholder={
             onboardingAthleteId
-              ? copy.chat.interviewReply
+              ? onboardingHasSummary
+                ? copy.chat.interviewUpdateReply
+                : copy.chat.interviewReply
               : chatEventLoggingExample(exampleAthleteName, locale)
           }
           onSend={({ content, clientRequestId }) => {
