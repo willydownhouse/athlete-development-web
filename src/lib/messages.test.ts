@@ -5,12 +5,12 @@ import { getMessages } from "./messages";
 describe("getMessages", () => {
   it("returns English chrome by default", () => {
     expect(getMessages().nav.today).toBe("Today");
-    expect(getMessages("en").nav.chat).toBe("Event Agent Toby");
+    expect(getMessages("en").nav.chat).toBe("Toby");
   });
 
   it("returns Finnish chrome", () => {
     expect(getMessages("fi").nav.today).toBe("Tänään");
-    expect(getMessages("fi").nav.chat).toBe("Event Agent Toby");
+    expect(getMessages("fi").nav.chat).toBe("Toby");
     expect(getMessages("fi").dashboard.todaysEvents).toBe("Tänään");
   });
 

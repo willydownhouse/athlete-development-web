@@ -53,9 +53,9 @@ describe("chat nav", () => {
     expect(isChatPath("/dashboard")).toBe(false);
   });
 
-  it("uses Event Agent Toby as the mobile title", () => {
-    expect(appShellMobileTitle("/chat")).toBe("Event Agent Toby");
-    expect(appShellMobileTitle("/chat", "fi")).toBe("Event Agent Toby");
+  it("uses Toby as the mobile title", () => {
+    expect(appShellMobileTitle("/chat")).toBe("Toby");
+    expect(appShellMobileTitle("/chat", "fi")).toBe("Toby");
   });
 });
 

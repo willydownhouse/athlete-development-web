@@ -44,7 +44,7 @@ export const fi = {
   },
   nav: {
     today: "Tänään",
-    chat: "Event Agent Toby",
+    chat: "Toby",
     usage: "Käyttö",
     invites: "Kutsut",
     history: "Historia",
@@ -96,6 +96,9 @@ export const fi = {
     invitationsBody:
       "Avaa Kutsut hyväksyäksesi ne ja aloittaaksesi näiden urheilijaprofiilien seuraamisen.",
     viewInvites: "Näytä kutsut",
+    interviewPendingTitle: "Onboarding",
+    interviewPendingBody: (name: string) =>
+      `Urheilijalle ${name} ei ole vielä tehty onboarding-haastattelua.`,
   },
   events: {
     eventType: "Tapahtumatyyppi",
@@ -301,7 +304,7 @@ export const fi = {
       season: "Tämä kausi",
       long_term: "Pitkä aikaväli",
     },
-    startInterview: "Aloita haastattelu",
+    startInterview: "Avaa haastattelu",
     updateInterview: "Päivitä haastattelu",
     sport: "Laji",
     selectValue: "Valitse",

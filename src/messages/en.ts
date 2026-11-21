@@ -42,7 +42,7 @@ export const en = {
   },
   nav: {
     today: "Today",
-    chat: "Event Agent Toby",
+    chat: "Toby",
     usage: "Usage",
     invites: "Invites",
     history: "History",
@@ -91,6 +91,9 @@ export const en = {
       `${inviterName} invited you to ${athleteName}'s profile. Open Invites to accept it and start following along.`,
     invitationsBody: "Open Invites to accept them and start following those athlete profiles.",
     viewInvites: "View invites",
+    interviewPendingTitle: "Onboarding interview",
+    interviewPendingBody: (name: string) =>
+      `The onboarding interview for ${name} hasn't been done yet.`,
   },
   events: {
     eventType: "Event type",
@@ -244,10 +247,9 @@ export const en = {
         "I'll say back what I understood. I'll only save the update after you confirm that it sounds right, or tell me what you want to change or add.",
         "What would you like to update?",
       ].join("\n\n"),
-    needsAthleteIntro: [
-      "Hey — I'm Toby. 🙂",
-      "Add an athlete, and I'll be here to help.",
-    ].join("\n\n"),
+    needsAthleteIntro: ["Hey — I'm Toby. 🙂", "Add an athlete, and I'll be here to help."].join(
+      "\n\n",
+    ),
     yesterday: "Yesterday",
     earlierUpdates: "Earlier updates",
     hide: "Hide",
@@ -295,7 +297,7 @@ export const en = {
       season: "This season",
       long_term: "Long-term",
     },
-    startInterview: "Start interview",
+    startInterview: "Open interview",
     updateInterview: "Update interview",
     sport: "Sport",
     selectValue: "Select",
