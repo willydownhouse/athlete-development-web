@@ -12,6 +12,9 @@ import {
   endAthleteAccessGrant,
   fetchAllEvents,
   fetchAthleteAccess,
+  fetchAthleteGoals,
+  fetchAthleteOnboardingSummary,
+  fetchAthleteProfileFields,
   fetchAthletes,
   fetchCurrentAppUser,
   fetchEventTypes,
@@ -23,6 +26,7 @@ import {
   fetchEventItemTypesChildTypes,
   fetchEventItemTypesMetricDefinitions,
   fetchEvents,
+  fetchOnboardingChatMessages,
   fetchScopedChatMessages,
   fetchInvitationInbox,
   fetchLatestChatMessages,
@@ -35,6 +39,7 @@ import {
   revokeAthleteInvitation,
   submitChatMessage,
   updateAthlete,
+  updateAthleteProfileFields,
 } from "./api";
 
 describe("api client", () => {
@@ -164,6 +169,133 @@ describe("api client", () => {
     );
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer test-token");
     expect(athlete.name).toBe("Leo Updated");
+  });
+
+  it("fetches and updates athlete profile fields", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const positionId = "00000000-0000-4000-8000-000000000801";
+    const items = [
+      {
+        id: positionId,
+        sportId: "33333333-3333-4333-8333-333333333333",
+        key: "position",
+        name: "Pelipaikka",
+        description: "Pelipaikka jäällä.",
+        valueType: "text",
+        options: [{ value: "forward", name: "Hyökkääjä" }],
+        sortOrder: 10,
+        value: { textValue: "forward", numericValue: null, booleanValue: null },
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const listed = await fetchAthleteProfileFields("test-token", athleteId, "fi");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/profile-fields?locale=fi`,
+    );
+    expect(listed[0]?.name).toBe("Pelipaikka");
+
+    const saved = await updateAthleteProfileFields("test-token", athleteId, "fi", [
+      { profileFieldId: positionId, textValue: "defense" },
+      { profileFieldId: "00000000-0000-4000-8000-000000000803", textValue: null },
+    ]);
+
+    const options = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/profile-fields?locale=fi`,
+    );
+    expect(options.method).toBe("PATCH");
+    expect(options.body).toBe(
+      JSON.stringify({
+        values: [
+          { profileFieldId: positionId, textValue: "defense" },
+          { profileFieldId: "00000000-0000-4000-8000-000000000803", textValue: null },
+        ],
+      }),
+    );
+    expect(saved).toEqual(items);
+  });
+
+  it("fetches the onboarding summary for the current sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const summary = {
+      id: "00000000-0000-4000-8000-000000000010",
+      sportId: "33333333-3333-4333-8333-333333333333",
+      type: "onboarding" as const,
+      text: "Plays defense and trains four times a week.",
+      updatedAt: "2026-11-18T12:00:00.000Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ summary: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ summary }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const empty = await fetchAthleteOnboardingSummary("test-token", athleteId);
+    const saved = await fetchAthleteOnboardingSummary("test-token", athleteId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/summaries?type=onboarding`,
+    );
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/summaries?type=onboarding`,
+    );
+    expect(
+      new Headers((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).get("Authorization"),
+    ).toBe("Bearer test-token");
+    expect(empty).toBeNull();
+    expect(saved).toEqual(summary);
+  });
+
+  it("fetches the current goals", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const goals = [
+      {
+        id: "00000000-0000-4000-8000-000000000020",
+        goalType: "near" as const,
+        title: null,
+        description: "Improve backward skating",
+      },
+      {
+        id: "00000000-0000-4000-8000-000000000021",
+        goalType: "season" as const,
+        title: "U16",
+        description: "Make the U16 team",
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ goals }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const saved = await fetchAthleteGoals("test-token", athleteId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`http://api.test/api/athletes/${athleteId}/goals`);
+    expect(
+      new Headers((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).get("Authorization"),
+    ).toBe("Bearer test-token");
+    expect(saved).toEqual(goals);
   });
 
   it("fetches the invitation inbox with a bearer token", async () => {
@@ -1042,7 +1174,7 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&excludeCapabilities=onboarding`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("force-cache");
@@ -1070,11 +1202,39 @@ describe("api client", () => {
     const result = await fetchOlderChatMessages("test-token", threadId, before);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&before=${before}`,
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&excludeCapabilities=event_update&excludeCapabilities=onboarding&before=${before}`,
     );
     const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(options.cache).toBe("no-store");
     expect(result.items[0]?.id).toBe("msg-0");
+  });
+
+  it("fetches onboarding interview messages for one athlete", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const athleteId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const before = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ id: "msg-interview" }],
+        pagination: { limit: 20, total: 1, hasMore: false },
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchOnboardingChatMessages("test-token", threadId, athleteId, {
+      before,
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/chat/threads/${threadId}/messages?limit=20&capability=onboarding&athleteId=${athleteId}&before=${before}`,
+    );
+    const options = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.cache).toBe("no-store");
+    expect(result.items[0]?.id).toBe("msg-interview");
   });
 
   it("fetches focused event chat messages", async () => {
@@ -1168,6 +1328,40 @@ describe("api client", () => {
       timeZone: "Europe/Helsinki",
       locale: "fi" as const,
       eventId,
+    };
+    await submitChatMessage("test-token", threadId, body);
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual(body);
+  });
+
+  it("submits an onboarding interview message for one athlete", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const threadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const onboardingAthleteId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: "run-onboarding",
+        chatThreadId: threadId,
+        status: "completed",
+        failureCode: null,
+        failureMessage: null,
+        userMessage: { id: "msg-1", role: "user", content: "I'm ready." },
+        assistantMessage: { id: "msg-2", role: "assistant", content: "Let's begin." },
+        toolCalls: [],
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = {
+      content: "I'm ready.",
+      clientRequestId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      timeZone: "Europe/Helsinki",
+      locale: "en" as const,
+      onboardingAthleteId,
     };
     await submitChatMessage("test-token", threadId, body);
 

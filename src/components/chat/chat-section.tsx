@@ -1,11 +1,22 @@
 import { ChatView } from "@/components/chat/chat-view";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
-import { createChatThread, fetchLatestChatMessages } from "@/lib/api";
+import {
+  createChatThread,
+  fetchAthleteOnboardingSummary,
+  fetchLatestChatMessages,
+  fetchOnboardingChatMessages,
+} from "@/lib/api";
 import { getAuthBearerToken } from "@/lib/auth-token";
+import { ONBOARDING_ATHLETE_QUERY_PARAM, onboardingChatQuery } from "@/lib/onboarding-chat";
 import { getRequestTimeZone } from "@/lib/time-zone-server";
 import type { ChatMessage } from "@/lib/types";
 
-export async function ChatSection() {
+type ChatSectionProps = {
+  searchParams: Promise<Partial<Record<typeof ONBOARDING_ATHLETE_QUERY_PARAM, string | string[]>>>;
+};
+
+export async function ChatSection({ searchParams }: ChatSectionProps) {
+  const query = onboardingChatQuery((await searchParams)[ONBOARDING_ATHLETE_QUERY_PARAM]);
   const [token, timeZone, actions] = await Promise.all([
     getAuthBearerToken(),
     getRequestTimeZone(),
@@ -13,14 +24,21 @@ export async function ChatSection() {
   ]);
   const nowIso = new Date().toISOString();
 
+  const onboardingAthleteId = query.kind === "interview" ? query.athleteId : null;
+  const transcriptKey = query.kind === "interview" ? query.athleteId : query.kind;
+  let onboardingHasSummary = false;
+
   if (!token) {
     return (
       <ChatView
+        key={transcriptKey}
         threadId={null}
         messages={[]}
         hasMore={false}
         timeZone={timeZone}
         nowIso={nowIso}
+        onboardingAthleteId={onboardingAthleteId}
+        onboardingHasSummary={false}
         loadError={actions.signInAgain}
       />
     );
@@ -38,7 +56,26 @@ export async function ChatSection() {
     loadError = passthroughOrGeneric(error, actions.loadChat);
   }
 
-  if (threadId) {
+  if (threadId && query.kind === "invalid") {
+    loadError = actions.loadMessages;
+  } else if (threadId && query.kind === "interview") {
+    try {
+      const latest = await fetchOnboardingChatMessages(token, threadId, query.athleteId);
+      messages = latest.items;
+      hasMore = latest.pagination.hasMore;
+    } catch (error) {
+      loadError = passthroughOrGeneric(error, actions.loadMessages);
+    }
+
+    if (!loadError && messages.length === 0) {
+      try {
+        onboardingHasSummary =
+          (await fetchAthleteOnboardingSummary(token, query.athleteId)) !== null;
+      } catch {
+        onboardingHasSummary = false;
+      }
+    }
+  } else if (threadId) {
     try {
       const latest = await fetchLatestChatMessages(token, threadId);
       messages = latest.items;
@@ -50,11 +87,14 @@ export async function ChatSection() {
 
   return (
     <ChatView
+      key={transcriptKey}
       threadId={threadId}
       messages={messages}
       hasMore={hasMore}
       timeZone={timeZone}
       nowIso={nowIso}
+      onboardingAthleteId={onboardingAthleteId}
+      onboardingHasSummary={onboardingHasSummary}
       loadError={loadError}
     />
   );

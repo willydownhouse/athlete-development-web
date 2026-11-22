@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   athleteEventIdFromPath,
+  onboardingInterviewHref,
   athleteSectionNavHrefs,
   appShellMobileTitle,
   ACCESS_NAV_LABEL,
@@ -35,6 +36,16 @@ describe("athleteEventIdFromPath", () => {
   });
 });
 
+describe("onboarding interview link", () => {
+  it("opens chat with the athlete id", () => {
+    expect(onboardingInterviewHref("ath-1")).toBe("/chat?onboardingAthleteId=ath-1");
+  });
+
+  it("encodes the athlete id", () => {
+    expect(onboardingInterviewHref("ath/1")).toBe("/chat?onboardingAthleteId=ath%2F1");
+  });
+});
+
 describe("chat nav", () => {
   it("treats /chat as the chat path", () => {
     expect(isChatPath("/chat")).toBe(true);
@@ -42,9 +53,9 @@ describe("chat nav", () => {
     expect(isChatPath("/dashboard")).toBe(false);
   });
 
-  it("uses Event Agent Toby as the mobile title", () => {
-    expect(appShellMobileTitle("/chat")).toBe("Event Agent Toby");
-    expect(appShellMobileTitle("/chat", "fi")).toBe("Event Agent Toby");
+  it("uses Toby as the mobile title", () => {
+    expect(appShellMobileTitle("/chat")).toBe("Toby");
+    expect(appShellMobileTitle("/chat", "fi")).toBe("Toby");
   });
 });
 

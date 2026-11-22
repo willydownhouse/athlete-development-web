@@ -2,6 +2,7 @@ import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
 import { getMessages } from "@/lib/messages";
+import { ONBOARDING_ATHLETE_QUERY_PARAM } from "@/lib/onboarding-chat";
 
 export const CHAT_HREF = "/chat";
 export const USAGE_HREF = "/usage";
@@ -73,6 +74,14 @@ export function athleteAccessHref(athleteId: string): string {
 
 export function athleteProfileHref(athleteId: string): string {
   return `/athlete/${encodeURIComponent(athleteId)}/profile`;
+}
+
+export function onboardingInterviewHref(athleteId: string): string {
+  const params = new URLSearchParams({
+    [ONBOARDING_ATHLETE_QUERY_PARAM]: athleteId,
+  });
+
+  return `${CHAT_HREF}?${params.toString()}`;
 }
 
 export type AthleteSectionNavPage = "calendar" | "stats" | "history" | "profile" | "access";

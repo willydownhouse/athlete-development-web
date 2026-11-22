@@ -9,7 +9,9 @@ import {
   deleteAthleteMedia,
   getAthleteMedia,
   updateAthlete,
+  updateAthleteProfileFields,
 } from "@/lib/api";
+import { readChangedProfileFieldValues } from "@/lib/profile-field-form";
 import { getActionMessages, passthroughOrGeneric } from "@/lib/action-messages";
 import { revalidateAppShell } from "@/lib/app-shell-revalidation";
 import { getAuthBearerToken } from "@/lib/auth-token";
@@ -49,7 +51,9 @@ export async function updateAthleteProfileAction(
   const dateField = formData.get("dateOfBirth");
   const dateOfBirth = typeof dateField === "string" ? dateField.trim() : null;
   const savedDateOfBirth = readString(formData, "savedDateOfBirth");
+  const savedName = readString(formData, "savedAthleteName");
   const relationshipToAthlete = readString(formData, "relationshipToAthlete");
+  const profileUpdates = readChangedProfileFieldValues(formData);
 
   if (!athleteId) {
     return { error: actions.athleteRequired };
@@ -57,6 +61,10 @@ export async function updateAthleteProfileAction(
 
   if (!name) {
     return { error: actions.athleteNameRequired };
+  }
+
+  if (!profileUpdates.ok) {
+    return { error: messages.profile.invalidNumber };
   }
 
   const dateUpdate = resolveProfileDateOfBirthUpdate({
@@ -77,16 +85,38 @@ export async function updateAthleteProfileAction(
     return { error: messages.onboarding.minAgeHint(SELF_ATHLETE_MIN_AGE_YEARS) };
   }
 
+  const nameChanged = name !== savedName;
+  const dateChanged = dateUpdate.status === "include";
+  let saved = false;
+
   try {
-    await updateAthlete(token, athleteId, {
-      name,
-      ...(dateUpdate.status === "include" ? { dateOfBirth: dateUpdate.dateOfBirth } : {}),
-    });
-    revalidatePath(athleteProfileHref(athleteId));
-    revalidatePath(dashboardHref(athleteId));
-    revalidateAppShell();
+    if (nameChanged || dateChanged) {
+      await updateAthlete(token, athleteId, {
+        ...(nameChanged ? { name } : {}),
+        ...(dateUpdate.status === "include" ? { dateOfBirth: dateUpdate.dateOfBirth } : {}),
+      });
+      saved = true;
+    }
+
+    if (profileUpdates.values.length > 0) {
+      await updateAthleteProfileFields(token, athleteId, locale, profileUpdates.values);
+      saved = true;
+    }
+
+    if (saved) {
+      revalidatePath(athleteProfileHref(athleteId));
+      revalidatePath(dashboardHref(athleteId));
+      revalidateAppShell();
+    }
+
     return { success: actions.profileSaved };
   } catch (error) {
+    if (saved) {
+      revalidatePath(athleteProfileHref(athleteId));
+      revalidatePath(dashboardHref(athleteId));
+      revalidateAppShell();
+    }
+
     return await actionError(error);
   }
 }

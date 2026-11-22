@@ -12,8 +12,11 @@ import {
   dashboardHref,
 } from "@/components/dashboard/dashboard-nav";
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
+import { ProfileGoalsSection } from "@/components/profile/profile-goals-section";
+import { ProfileOnboardingSection } from "@/components/profile/profile-onboarding-section";
 import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
 import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
+import { fetchAthleteGoals, fetchAthleteProfileFields } from "@/lib/api";
 import { isParentRelationship } from "@/lib/athlete-access-display";
 import { getAuthBearerToken } from "@/lib/auth-token";
 import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
@@ -42,7 +45,11 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
     redirect("/dashboard");
   }
 
-  const profileMedia = await loadAthleteProfileMedia(token, selectedAthlete.id);
+  const [profileMedia, profileFields, goals] = await Promise.all([
+    loadAthleteProfileMedia(token, selectedAthlete.id),
+    fetchAthleteProfileFields(token, selectedAthlete.id, locale),
+    fetchAthleteGoals(token, selectedAthlete.id),
+  ]);
   const messages = getMessages(locale);
 
   const dateOfBirth = dateOnlyInputValue(selectedAthlete.dateOfBirth);
@@ -124,9 +131,18 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
               dateOfBirth={dateOfBirth}
               focusSportName={selectedAthlete.focusSport.name}
               relationshipToAthlete={selectedAthlete.relationshipToAthlete}
+              profileFields={profileFields}
             />
           </div>
         </section>
+
+        <ProfileGoalsSection athleteId={selectedAthlete.id} goals={goals} />
+
+        <ProfileOnboardingSection
+          athleteId={selectedAthlete.id}
+          relationshipToAthlete={selectedAthlete.relationshipToAthlete}
+          dateOfBirth={selectedAthlete.dateOfBirth}
+        />
       </div>
       <AthleteSectionBottomNav athlete={selectedAthlete} current="profile" />
     </>
