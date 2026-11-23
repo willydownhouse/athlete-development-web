@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AthleteAvatarImage } from "@/components/dashboard/athlete-avatar-image";
 import { athleteInitials } from "@/components/dashboard/athlete-meta";
 import { navLinkClass } from "@/components/app-shell-nav-styles";
 import {
-  activeAthleteIdFromPath,
+  activeSidebarAthleteId,
   CHAT_HREF,
   dashboardHref,
   defaultDashboardHref,
   isAthleteDashboardPath,
   isChatPath,
+  isGeneralChat,
   isInvitesPath,
   isOnboardingPath,
   isUsagePath,
@@ -23,6 +25,7 @@ import {
 } from "@/components/dashboard/dashboard-nav";
 import { useAppLocale } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
+import { ONBOARDING_ATHLETE_QUERY_PARAM } from "@/lib/onboarding-chat";
 import { roundedTileClassName } from "@/lib/rounded-tile";
 import type { Athlete } from "@/lib/types";
 
@@ -39,13 +42,15 @@ function AthleteNavList({
   athletes,
   athleteAvatarUrls,
   onNavigate,
+  onboardingAthleteId = null,
 }: {
   athletes: Athlete[];
   athleteAvatarUrls: Record<string, string>;
   onNavigate?: () => void;
+  onboardingAthleteId?: string | null;
 }) {
   const pathname = usePathname();
-  const activeAthleteId = activeAthleteIdFromPath(pathname);
+  const activeAthleteId = activeSidebarAthleteId(pathname, onboardingAthleteId);
 
   return athletes.map((athlete) => (
     <AthleteNavLink
@@ -211,6 +216,30 @@ function AdminIcon() {
   );
 }
 
+function AthleteNavListWithSearch(
+  props: Omit<Parameters<typeof AthleteNavList>[0], "onboardingAthleteId">,
+) {
+  const onboardingAthleteId = useSearchParams().get(ONBOARDING_ATHLETE_QUERY_PARAM);
+
+  return <AthleteNavList {...props} onboardingAthleteId={onboardingAthleteId} />;
+}
+
+function ChatNavLink({ label, onNavigate }: { label: string; onNavigate?: () => void }) {
+  const pathname = usePathname();
+  const onboardingAthleteId = useSearchParams().get(ONBOARDING_ATHLETE_QUERY_PARAM);
+
+  return (
+    <NavLink
+      href={CHAT_HREF}
+      active={isGeneralChat(pathname, onboardingAthleteId)}
+      icon={<ChatIcon />}
+      onNavigate={onNavigate}
+    >
+      {label}
+    </NavLink>
+  );
+}
+
 export function AppShellNav({
   isAdmin = false,
   athletes = [],
@@ -239,23 +268,39 @@ export function AppShellNav({
 
         {athletes.length > 0 ? (
           <div className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-3">
-            <AthleteNavList
-              athletes={athletes}
-              athleteAvatarUrls={athleteAvatarUrls}
-              onNavigate={onNavigate}
-            />
+            <Suspense
+              fallback={
+                <AthleteNavList
+                  athletes={athletes}
+                  athleteAvatarUrls={athleteAvatarUrls}
+                  onNavigate={onNavigate}
+                />
+              }
+            >
+              <AthleteNavListWithSearch
+                athletes={athletes}
+                athleteAvatarUrls={athleteAvatarUrls}
+                onNavigate={onNavigate}
+              />
+            </Suspense>
           </div>
         ) : null}
       </div>
 
-      <NavLink
-        href={CHAT_HREF}
-        active={isChatPath(pathname)}
-        icon={<ChatIcon />}
-        onNavigate={onNavigate}
+      <Suspense
+        fallback={
+          <NavLink
+            href={CHAT_HREF}
+            active={isChatPath(pathname)}
+            icon={<ChatIcon />}
+            onNavigate={onNavigate}
+          >
+            {messages.nav.chat}
+          </NavLink>
+        }
       >
-        {messages.nav.chat}
-      </NavLink>
+        <ChatNavLink onNavigate={onNavigate} label={messages.nav.chat} />
+      </Suspense>
 
       <NavLink
         href={INVITES_HREF}

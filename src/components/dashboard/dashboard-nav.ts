@@ -2,7 +2,7 @@ import { HOCKEY_SPORT_SLUG } from "@/lib/constants";
 import type { HockeyStatsPeriod } from "@/lib/hockey-stats/period";
 import { DEFAULT_APP_LOCALE, type AppLocale } from "@/lib/locale";
 import { getMessages } from "@/lib/messages";
-import { ONBOARDING_ATHLETE_QUERY_PARAM } from "@/lib/onboarding-chat";
+import { ONBOARDING_ATHLETE_QUERY_PARAM, onboardingChatQuery } from "@/lib/onboarding-chat";
 
 export const CHAT_HREF = "/chat";
 export const USAGE_HREF = "/usage";
@@ -126,12 +126,63 @@ export function activeAthleteIdFromPath(pathname: string): string | null {
   return athleteId ? decodeURIComponent(athleteId) : null;
 }
 
+export function activeSidebarAthleteId(
+  pathname: string,
+  onboardingAthleteId: string | string[] | null | undefined,
+): string | null {
+  const fromPath = activeAthleteIdFromPath(pathname);
+  if (fromPath) {
+    return fromPath;
+  }
+
+  if (!isOnboardingChat(pathname, onboardingAthleteId)) {
+    return null;
+  }
+
+  const query = onboardingChatQuery(onboardingAthleteId ?? undefined);
+  return query.kind === "interview" ? query.athleteId : null;
+}
+
 export function isAthleteDashboardPath(pathname: string): boolean {
   return /^\/athlete\/[^/]+\/dashboard\/?$/.test(pathname);
 }
 
 export function isChatPath(pathname: string): boolean {
   return pathname === CHAT_HREF || pathname.startsWith(`${CHAT_HREF}/`);
+}
+
+export function onboardingHeaderCaption(
+  athletes: ReadonlyArray<{ id: string; name: string }>,
+  onboardingAthleteId: string | string[] | null | undefined,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
+): string {
+  const label = getMessages(locale).nav.onboarding;
+  const query = onboardingChatQuery(onboardingAthleteId ?? undefined);
+  const athleteId = query.kind === "interview" ? query.athleteId : null;
+  const name = athletes.find((athlete) => athlete.id === athleteId)?.name.trim() ?? "";
+
+  if (!name) {
+    return label;
+  }
+
+  return `${name} ${label.toLowerCase()}`;
+}
+
+export function isOnboardingChat(
+  pathname: string,
+  onboardingAthleteId: string | string[] | null | undefined,
+): boolean {
+  return (
+    isChatPath(pathname) &&
+    onboardingChatQuery(onboardingAthleteId ?? undefined).kind === "interview"
+  );
+}
+
+export function isGeneralChat(
+  pathname: string,
+  onboardingAthleteId: string | string[] | null | undefined,
+): boolean {
+  return isChatPath(pathname) && !isOnboardingChat(pathname, onboardingAthleteId);
 }
 
 export function isUsagePath(pathname: string): boolean {
