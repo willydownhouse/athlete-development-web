@@ -43,6 +43,7 @@ export const en = {
   nav: {
     today: "Today",
     chat: "Toby",
+    onboarding: "Onboarding",
     usage: "Usage",
     invites: "Invites",
     history: "History",

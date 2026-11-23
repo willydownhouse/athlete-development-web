@@ -3,11 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   athleteEventIdFromPath,
   onboardingInterviewHref,
+  activeSidebarAthleteId,
   athleteSectionNavHrefs,
   appShellMobileTitle,
   ACCESS_NAV_LABEL,
   HISTORY_NAV_LABEL,
   isChatPath,
+  isGeneralChat,
+  isOnboardingChat,
+  onboardingHeaderCaption,
   isInvitesPath,
   isOnboardingPath,
   isUsagePath,
@@ -56,6 +60,45 @@ describe("chat nav", () => {
   it("uses Toby as the mobile title", () => {
     expect(appShellMobileTitle("/chat")).toBe("Toby");
     expect(appShellMobileTitle("/chat", "fi")).toBe("Toby");
+  });
+
+  it("recognizes the onboarding interview as a separate chat", () => {
+    const athleteId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+    expect(isOnboardingChat("/chat", athleteId)).toBe(true);
+    expect(isOnboardingChat("/chat/", `  ${athleteId}  `)).toBe(true);
+    expect(isOnboardingChat("/chat", [athleteId])).toBe(true);
+    expect(isOnboardingChat("/chat", undefined)).toBe(false);
+    expect(isOnboardingChat("/chat", null)).toBe(false);
+    expect(isOnboardingChat("/chat", "")).toBe(false);
+    expect(isOnboardingChat("/chat", "ath-1")).toBe(false);
+    expect(isOnboardingChat("/dashboard", athleteId)).toBe(false);
+    expect(appShellMobileTitle("/chat")).toBe("Toby");
+    expect(isGeneralChat("/chat", null)).toBe(true);
+    expect(isGeneralChat("/chat", athleteId)).toBe(false);
+    expect(isGeneralChat("/dashboard", null)).toBe(false);
+    expect(activeSidebarAthleteId("/chat", athleteId)).toBe(athleteId);
+    expect(activeSidebarAthleteId("/chat", null)).toBeNull();
+    expect(activeSidebarAthleteId("/athlete/ath-1/dashboard", athleteId)).toBe("ath-1");
+  });
+
+  it("names the athlete in the onboarding caption when that athlete is already loaded", () => {
+    const athleteId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "Lisa" }], athleteId)).toBe(
+      "Lisa onboarding",
+    );
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "Lisa" }], `  ${athleteId}  `)).toBe(
+      "Lisa onboarding",
+    );
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "Lisa" }], [athleteId])).toBe(
+      "Lisa onboarding",
+    );
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "  Lisa  " }], athleteId, "fi")).toBe(
+      "Lisa onboarding",
+    );
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "Lisa" }], "other")).toBe("Onboarding");
+    expect(onboardingHeaderCaption([{ id: athleteId, name: "   " }], athleteId)).toBe("Onboarding");
   });
 });
 

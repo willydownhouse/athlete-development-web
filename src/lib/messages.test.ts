@@ -6,11 +6,13 @@ describe("getMessages", () => {
   it("returns English chrome by default", () => {
     expect(getMessages().nav.today).toBe("Today");
     expect(getMessages("en").nav.chat).toBe("Toby");
+    expect(getMessages("en").nav.onboarding).toBe("Onboarding");
   });
 
   it("returns Finnish chrome", () => {
     expect(getMessages("fi").nav.today).toBe("Tänään");
     expect(getMessages("fi").nav.chat).toBe("Toby");
+    expect(getMessages("fi").nav.onboarding).toBe("Onboarding");
     expect(getMessages("fi").dashboard.todaysEvents).toBe("Tänään");
   });
 

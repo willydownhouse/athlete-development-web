@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { AcentAppWordmark } from "@/components/acent-app-wordmark";
 import { AppShellNav } from "@/components/app-shell-nav";
@@ -9,6 +9,8 @@ import {
   activeAthleteIdFromPath,
   appShellMobileTitle,
   athleteEventIdFromPath,
+  isOnboardingChat,
+  onboardingHeaderCaption,
   pendingInvitesMenuButtonLabel,
 } from "@/components/dashboard/dashboard-nav";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -18,7 +20,36 @@ import type { AppLocale } from "@/lib/locale";
 import { LocaleProvider } from "@/lib/locale-context";
 import { getMessages } from "@/lib/messages";
 import { forgetLocalEventVideosOutsideEvent } from "@/lib/local-event-video";
+import { ONBOARDING_ATHLETE_QUERY_PARAM } from "@/lib/onboarding-chat";
 import type { Athlete } from "@/lib/types";
+
+const mobileHeaderTitleClassName = "min-w-0 truncate text-lg font-semibold text-white";
+
+function MobileHeaderTitle({
+  pathname,
+  locale,
+  athletes,
+}: {
+  pathname: string;
+  locale: AppLocale;
+  athletes: Athlete[];
+}) {
+  const onboardingAthleteId = useSearchParams().get(ONBOARDING_ATHLETE_QUERY_PARAM);
+  const title = appShellMobileTitle(pathname, locale);
+
+  if (!isOnboardingChat(pathname, onboardingAthleteId)) {
+    return <p className={mobileHeaderTitleClassName}>{title}</p>;
+  }
+
+  return (
+    <div className="min-w-0">
+      <p className="truncate text-lg font-semibold leading-tight text-white">{title}</p>
+      <p className="mt-px truncate text-xs leading-tight text-zinc-500">
+        {onboardingHeaderCaption(athletes, onboardingAthleteId, locale)}
+      </p>
+    </div>
+  );
+}
 
 type AppShellClientProps = {
   userEmail: string;
@@ -158,9 +189,15 @@ export function AppShellClient({
                 />
               ) : null}
             </button>
-            <p className="min-w-0 truncate text-lg font-semibold text-white">
-              {appShellMobileTitle(pathname, locale)}
-            </p>
+            <Suspense
+              fallback={
+                <p className={mobileHeaderTitleClassName}>
+                  {appShellMobileTitle(pathname, locale)}
+                </p>
+              }
+            >
+              <MobileHeaderTitle pathname={pathname} locale={locale} athletes={athletes} />
+            </Suspense>
           </header>
 
           <AppShellAthletesProvider athletes={athletes}>{children}</AppShellAthletesProvider>

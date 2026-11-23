@@ -45,6 +45,7 @@ export const fi = {
   nav: {
     today: "Tänään",
     chat: "Toby",
+    onboarding: "Onboarding",
     usage: "Käyttö",
     invites: "Kutsut",
     history: "Historia",
