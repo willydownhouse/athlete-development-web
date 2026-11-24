@@ -10,6 +10,7 @@ import type {
   AthleteInvitationInboxResponse,
   AthleteListResponse,
   AthleteOnboardingSummary,
+  AthleteWeeklySummary,
   AthleteProfileField,
   AthleteProfileFieldUpdate,
   ChatMessageListResponse,
@@ -281,6 +282,18 @@ export async function fetchAthleteOnboardingSummary(
   const result = await apiFetch<{ summary: AthleteOnboardingSummary | null }>(
     token,
     `/api/athletes/${encodeURIComponent(athleteId)}/summaries?type=onboarding`,
+  );
+
+  return result.summary;
+}
+
+export async function fetchAthleteWeeklySummary(
+  token: string,
+  athleteId: string,
+): Promise<AthleteWeeklySummary | null> {
+  const result = await apiFetch<{ summary: AthleteWeeklySummary | null }>(
+    token,
+    `/api/athletes/${encodeURIComponent(athleteId)}/summaries?type=weekly`,
   );
 
   return result.summary;

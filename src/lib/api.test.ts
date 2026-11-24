@@ -14,6 +14,7 @@ import {
   fetchAthleteAccess,
   fetchAthleteGoals,
   fetchAthleteOnboardingSummary,
+  fetchAthleteWeeklySummary,
   fetchAthleteProfileFields,
   fetchAthletes,
   fetchCurrentAppUser,
@@ -261,6 +262,44 @@ describe("api client", () => {
       new Headers((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).get("Authorization"),
     ).toBe("Bearer test-token");
     expect(empty).toBeNull();
+    expect(saved).toEqual(summary);
+  });
+
+  it("fetches the latest weekly report for the current sport", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+
+    const athleteId = "22222222-2222-4222-8222-222222222222";
+    const summary = {
+      id: "00000000-0000-4000-8000-000000000011",
+      sportId: "33333333-3333-4333-8333-333333333333",
+      type: "weekly" as const,
+      periodStart: "2026-10-19",
+      periodEnd: "2026-10-26",
+      report: {
+        whatHappened: "Two practices.",
+        effort: { level: "moderate" as const, reason: "Most of the rated time was moderate." },
+        goalProgress: [],
+        highlights: [],
+        concerns: [],
+        patterns: [],
+        nextFocus: [],
+        dataQuality: "One session had no RPE.",
+      },
+      updatedAt: "2026-11-18T12:00:00.000Z",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ summary }),
+      }),
+    );
+
+    const saved = await fetchAthleteWeeklySummary("test-token", athleteId);
+
+    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe(
+      `http://api.test/api/athletes/${athleteId}/summaries?type=weekly`,
+    );
     expect(saved).toEqual(summary);
   });
 

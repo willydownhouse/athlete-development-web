@@ -64,6 +64,38 @@ export type AthleteOnboardingSummary = {
   updatedAt: string;
 };
 
+export type WeeklyReportGoalStatus = "forward" | "held_back" | "untouched";
+
+export type WeeklyEffortLevel = "easy" | "moderate" | "hard";
+
+export type AthleteWeeklyReport = {
+  whatHappened: string;
+  effort: {
+    level: WeeklyEffortLevel;
+    reason: string;
+  };
+  goalProgress: Array<{
+    goalId: string;
+    status: WeeklyReportGoalStatus;
+    evidence: string[];
+  }>;
+  highlights: string[];
+  concerns: string[];
+  patterns: string[];
+  nextFocus: Array<{ goalId: string; text: string }>;
+  dataQuality: string;
+};
+
+export type AthleteWeeklySummary = {
+  id: string;
+  sportId: string;
+  type: "weekly";
+  periodStart: string;
+  periodEnd: string;
+  report: AthleteWeeklyReport;
+  updatedAt: string;
+};
+
 export type AthleteGoalType = "near" | "season" | "long_term";
 
 export type AthleteGoal = {

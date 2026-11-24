@@ -14,6 +14,7 @@ import {
 import { AthleteProfileForm } from "@/components/profile/athlete-profile-form";
 import { ProfileGoalsSection } from "@/components/profile/profile-goals-section";
 import { ProfileOnboardingSection } from "@/components/profile/profile-onboarding-section";
+import { ProfileWeeklyReportSection } from "@/components/profile/profile-weekly-report-section";
 import { AthleteProfilePhoto } from "@/components/profile/athlete-profile-photo";
 import { loadAccessibleAthlete } from "@/lib/accessible-athlete";
 import { fetchAthleteGoals, fetchAthleteProfileFields } from "@/lib/api";
@@ -137,6 +138,8 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
         </section>
 
         <ProfileGoalsSection athleteId={selectedAthlete.id} goals={goals} />
+
+        <ProfileWeeklyReportSection athleteId={selectedAthlete.id} goals={goals} />
 
         <ProfileOnboardingSection
           athleteId={selectedAthlete.id}
